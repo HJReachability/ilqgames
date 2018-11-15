@@ -17,15 +17,24 @@ vh0 = [-10.0, 0.0];
 pr0 = [0.0, 0.0];
 vr0 = [10.0, 0.0];
 
-%% Hardcode human trajectory and nominal robot trajectory as straight lines
-% at constant speed.
-% TODO! For now assuming just moving at initial velocity.
-
-%% Loop over time and figure out maximal T (time to potential unavoidable
-% collision), and apply corresponding control.
+%% Time definition
 dt = 0.1;
 max_time = 5.0;
 times = 0.0:dt:max_time;
+
+
+%% Hardcode human trajectory and nominal robot trajectory as straight lines
+% at constant speed.
+% TODO! For now assuming just moving at initial velocity.
+u_h = zeros(2, length(times));
+half_T = floor(length(times) / 2);
+k = 5;
+u_h(2,half_T-k:half_T) = -1.0;
+u_h(2,half_T+1:half_T+k*2+2) = 1.0;
+
+
+%% Loop over time and figure out maximal T (time to potential unavoidable
+% collision), and apply corresponding control.
 
 ph = ph0; vh = vh0;
 pr = pr0; vr = vr0;
@@ -34,9 +43,10 @@ fgh = figure();
 axh = axes('Parent',fgh); 
 scatter(ph(2), ph(1), 'ro');
 scatter(pr(2), pr(1), 'bo');
-axis([-4 4 0 100]);
+axis([-8 4 0 100]);
 
-for t = times
+for i=1:length(times)
+  %t = times(i);
   % Compute time till states get close in x, y.
   p_rel = ph - pr; 
   vr_desired = vr0;
@@ -55,20 +65,25 @@ for t = times
       end
   end
 
+  vh
+  u_h(:,i)'
+  vh = vh + u_h(:,i)' * dt;
+  
+  
   % Update human and robot states.
   ph = ph + vh * dt;
   pr = pr + vr_desired * dt;
-
   
-  vr_desired
-  vh0
+  %vr_desired
+  %vh0
+  
+  %ph
   % Plot/animate this over time.
   % TODO!
   pause(dt);
   hold all; 
   scatter(ph(2), ph(1), 'ro');
   scatter(pr(2), pr(1), 'bo');
-  
    
 end
 
@@ -96,6 +111,6 @@ function [tx, ty] = compute_max_tx_ty(ph, vh, pr, vr, max_velocity_delta, ...
          sqrt(v_rel(2)*v_rel(2) + u_max * (abs(p_rel(2)) - min_dist)) / u_max;
   end
   
-  tx
-  ty
+  %tx
+  %ty
 end
