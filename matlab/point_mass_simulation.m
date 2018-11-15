@@ -27,10 +27,10 @@ times = 0.0:dt:max_time;
 % at constant speed.
 % TODO! For now assuming just moving at initial velocity.
 u_h = zeros(2, length(times));
-half_T = floor(length(times) / 2);
+half_T = floor(length(times) / 2) + 3;
 k = 5;
-u_h(2,half_T-k:half_T) = -1.0;
-u_h(2,half_T+1:half_T+k*2+2) = 1.0;
+u_h(2,half_T-k:half_T) = 4.0;
+u_h(2,half_T+1:half_T+k+2) = -4.0;
 
 
 %% Loop over time and figure out maximal T (time to potential unavoidable
@@ -66,9 +66,9 @@ for i=1:length(times)
   end
 
   vh
-  u_h(:,i)'
+  vr_desired
+  %u_h(:,i)'
   vh = vh + u_h(:,i)' * dt;
-  
   
   % Update human and robot states.
   ph = ph + vh * dt;
@@ -84,6 +84,8 @@ for i=1:length(times)
   hold all; 
   scatter(ph(2), ph(1), 'ro');
   scatter(pr(2), pr(1), 'bo');
+  %title(['t = '  int2str(times(i))]);
+  title(['t = '  int2str(times(i)) ', ' sprintf('v_r = %f', vr_desired(1))]);  
    
 end
 
