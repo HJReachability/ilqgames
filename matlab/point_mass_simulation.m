@@ -9,6 +9,7 @@
 u_max = 4.0; % Maximum acceleration/deceleration (m/s/s).
 max_velocity_delta = 5.0; % Maximum velocity change (m/s).
 min_dist = 1.0; % Closest vehicles should ever get (m).
+gif_output = 'out.gif';
 
 %% Initial states (p = position, v = velocity).
 ph0 = [60.0, -4.0];
@@ -84,7 +85,17 @@ for i=1:length(times)
   hold all; 
   scatter(ph(2), ph(1), 'ro');
   scatter(pr(2), pr(1), 'bo');
-   
+  
+  if ~isempty(gif_output)
+    frame = getframe(fgh);
+    im = frame2im(frame);
+    [imind, cm] = rgb2ind(im, 256); 
+    if i == 1
+      imwrite(imind, cm, gif_output, 'gif', 'DelayTime', dt, 'LoopCount', inf);
+    else
+      imwrite(imind, cm, gif_output, 'gif', 'WriteMode', 'append', 'DelayTime', dt);
+    end
+  end
 end
 
 %% Utility function to compute max time to "collision" in x and y.
