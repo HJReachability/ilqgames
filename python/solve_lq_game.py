@@ -42,7 +42,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 import numpy as np
 from collections import deque
 
-def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
+def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s):
     """
     Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
     feedback strategies for both players).
@@ -69,10 +69,16 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
     :type Q1s: [np.array]
     :param Q2s: state costs for player 2 (antagonist)
     :type Q2s: [np.array]
+    :param l1s: linear state costs for player 1
+    :type l1s: [np.array]
+    :param l2s: linear state costs for player 2
+    :type l2s: [np.array]
     :param R11s: control costs for player 1
     :type R11s: [np.array]
-    :param R12s: joint control costs for players 1 and 2
+    :param R12s: control cost for player 1 associated to player 2's control
     :type R12s: [np.array]
+    :param R21s: control cost for player 2 associated to player 1's control
+    :type R21s: [np.array]
     :param R22s: control costs for player 2
     :type R22s: [np.array]
     :return: gain matrices and constant offsets (ui_k = -Pi_k - alphai_k)
@@ -82,11 +88,11 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
 
     # Assertions to check valid input.
     assert len(As) == len(B1s) == len(B2s) == len(cs) == len(Q1s) == \
-        len(Q2s) == len(R11s) == len(R12s) == len(R22s)
+        len(Q2s) == len(R11s) == len(R12s) == len(R21s) == len(R22s)
     horizon = len(As) - 1
 
     # Cache dimensions of control and state.
-    u_dim = Bs[0].shape[1]
+    u1_dim = B1s[0].shape[1]
     x_dim = As[0].shape[0]
 
     # Note: notation and variable naming closely follows that introduced in
@@ -97,15 +103,15 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
     # Use deques for efficient prepending.
     Z1s = deque([Q1s[-1]])
     Z2s = deque([Q2s[-1]])
-    zeta1s = deque([np.zeros(x_dim)])
-    zeta2s = deque([np.zeros(x_dim)])
+    zeta1s = deque([l1s[-1]])
+    zeta2s = deque([l2s[-1]])
     Fs = deque()
     P1s = deque()
     P2s = deque()
     betas = deque()
     alpha1s = deque()
     alpha2s = deque()
-    for k in range(start=horizon, stop=-1, step=-1):
+    for k in range(horizon, -1, -1):
         # Unpack all relevant variables.
         A = As[k]
         B1 = B1s[k]
@@ -113,9 +119,11 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
         c = cs[k]
         Q1 = Q1s[k]
         Q2 = Q2s[k]
+        l1 = l1s[k]
+        l2 = l2s[k]
         R11 = R11s[k]
         R12 = R12s[k]
-        R21 = R12.T
+        R21 = R21s[k]
         R22 = R22s[k]
         Z1 = Z1s[0]
         Z2 = Z2s[0]
@@ -139,8 +147,8 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
         Y = np.concatenate([Y1, Y2], axis=0)
 
         P = np.linalg.solve(a=S, b=Y)
-        P1 = P[:u_dim, :]
-        P2 = P[u_dim:, :]
+        P1 = P[:u1_dim, :]
+        P2 = P[u1_dim:, :]
         P1s.appendleft(P1)
         P2s.appendleft(P2)
 
@@ -171,8 +179,8 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
         Y = np.concatenate([Y1, Y2], axis=0)
 
         alpha = np.linalg.solve(a=S, b=Y)
-        alpha1 = alpha[:u_dim]
-        alpha2 = alpha[u_dim:]
+        alpha1 = alpha[:u1_dim]
+        alpha2 = alpha[u1_dim:]
         alpha1s.appendleft(alpha1)
         alpha2s.appendleft(alpha2)
 
@@ -185,9 +193,9 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, R11s, R12s, R22s):
 
         # Update zeta1 and zeta2 to be the next step earlier in time (now they
         # correspond to time k+1).
-        zeta1s.appendleft(F.T @ (zeta1 + Z1 @ beta) +
+        zeta1s.appendleft(F.T @ (zeta1 + Z1 @ beta) + l1 +
                           P1.T @ R11 @ alpha1 + P2.T @ R12 @ alpha2)
-        zeta2s.appendleft(F.T @ (zeta2 + Z2 @ beta) +
+        zeta2s.appendleft(F.T @ (zeta2 + Z2 @ beta) + l2 +
                           P1.T @ R21 @ alpha1 + P2.T @ R22 @ alpha2)
 
     # Return P1s, P2s, alpha1s, alpha2s

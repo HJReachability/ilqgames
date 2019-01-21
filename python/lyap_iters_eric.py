@@ -1,16 +1,11 @@
-import tensorflow  as tf
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow.contrib.slim as slim
 import copy
-from tensorflow.python.ops import array_ops, tensor_array_ops
-from sklearn.datasets import make_spd_matrix as pd_mat
-
 
 # Coupled Discrete Algebraic Riccati Equation solver. *** Does not work for non-zero R12 and R21 (I think).
 
 def coupled_DARE_solve(A, B1, B2, Q1, Q2,
-					  R11, R12=0, R21=0, R22, N=500, ):
+					   R11, R12, R21, R22, N=500):
 	'''Solves the Coupled Algebraic Riccati Equation
 	by Lyapunov iterations'''
 	inv = np.linalg.inv
