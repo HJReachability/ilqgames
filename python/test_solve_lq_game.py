@@ -68,12 +68,12 @@ l2 = l1; l2s = [l2] * NUM_TIMESTEPS
 R11 = np.array([[1.0]]); R11s = [R11] * NUM_TIMESTEPS
 R12 = np.array([[0.0]]); R12s = [R12] * NUM_TIMESTEPS
 R21 = np.array([[0.0]]); R21s = [R21] * NUM_TIMESTEPS
-R22 = np.array([[1.0]]); R22s = [R22] * NUM_TIMESTEPS
+R22 = np.array([[10.0]]); R22s = [R22] * NUM_TIMESTEPS
 
 class TestSolveLQGame(unittest.TestCase):
     """ Tests for solving LQ games. """
 
-    def testTimeInvariantLongHorizon(self):
+    def testInfiniteHorizon(self):
         """
         For a time invariant, long horizon problem, the solution should be
         essentially the same as that found by Lyapunov iteration.
@@ -89,8 +89,8 @@ class TestSolveLQGame(unittest.TestCase):
         print("Time varying Ps: ", P1s[0], " / ", P2s[0])
         print("Time varying alphas: ", alpha1s[0], " / ", alpha2s[0])
 
-        np.testing.assert_array_almost_equal(P1_lyap, P1s[0], decimal=4)
-        np.testing.assert_array_almost_equal(P2_lyap, P2s[0], decimal=4)
+        np.testing.assert_array_almost_equal(P1_lyap, P1s[0], decimal=2)
+        np.testing.assert_array_almost_equal(P2_lyap, P2s[0], decimal=2)
         np.testing.assert_array_almost_equal(alpha1s[0], 0.0)
         np.testing.assert_array_almost_equal(alpha2s[0], 0.0)
 
@@ -110,6 +110,7 @@ class TestSolveLQGame(unittest.TestCase):
 
         # Check that random perturbations of each players' strategies (holding
         # the other player's strategy fixed) results in higher cost.
+        NUM_RANDOM_PERTURBATIONS = 100
         for ii in range(NUM_RANDOM_PERTURBATIONS):
             # Copy Nash solution.
             P1s_copy = copy.deepcopy(P1s)
