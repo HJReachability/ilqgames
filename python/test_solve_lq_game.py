@@ -73,7 +73,7 @@ R22 = np.array([[10.0]]); R22s = [R22] * NUM_TIMESTEPS
 class TestSolveLQGame(unittest.TestCase):
     """ Tests for solving LQ games. """
 
-    def testInfiniteHorizon(self):
+    def testLyapunov(self):
         """
         For a time invariant, long horizon problem, the solution should be
         essentially the same as that found by Lyapunov iteration.
