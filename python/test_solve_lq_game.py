@@ -59,8 +59,8 @@ B2 = np.array([[0.5 * DT * DT], [DT]]); B2s = [B2] * NUM_TIMESTEPS
 c = np.array([[0.0], [0.0]]); cs = [c] * NUM_TIMESTEPS
 
 # State costs.
-Q1 = np.array([[1.0, 0.0], [0.0, 0.1]]); Q1s = [Q1] * NUM_TIMESTEPS
-Q2 = -Q1; Q2s = [Q2] * NUM_TIMESTEPS
+Q1 = np.array([[1.0, 0.0], [0.0, 1.0]]); Q1s = [Q1] * NUM_TIMESTEPS
+Q2 = np.array([[1.0, 0.25], [0.25, 1.0]]); Q2s = [Q2] * NUM_TIMESTEPS
 l1 = np.array([[0.0], [0.0]]); l1s = [l1] * NUM_TIMESTEPS
 l2 = l1; l2s = [l2] * NUM_TIMESTEPS
 
@@ -85,9 +85,9 @@ class TestSolveLQGame(unittest.TestCase):
         P1s, P2s, alpha1s, alpha2s = solve_lq_game(
             As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
 
-        print("Lyapunov iterations: ", P1_lyap, " / ", P2_lyap, " test: ", test)
-        print("Time varying Ps: ", P1s[0], " / ", P2s[0])
-        print("Time varying alphas: ", alpha1s[0], " / ", alpha2s[0])
+#        print("Lyapunov iterations: ", P1_lyap, " / ", P2_lyap, " test: ", test)
+#        print("Time varying Ps: ", P1s[0], " / ", P2s[0])
+#        print("Time varying alphas: ", alpha1s[0], " / ", alpha2s[0])
 
         np.testing.assert_array_almost_equal(P1_lyap, P1s[0], decimal=2)
         np.testing.assert_array_almost_equal(P2_lyap, P2s[0], decimal=2)
@@ -105,8 +105,6 @@ class TestSolveLQGame(unittest.TestCase):
         optimal_cost1, optimal_cost2 = evaluate_lq_game_cost(
             As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
             P1s, P2s, alpha1s, alpha2s, x0)
-        print("optimal costs: ", optimal_cost1, " / ", optimal_cost2)
-
 
         # Check that random perturbations of each players' strategies (holding
         # the other player's strategy fixed) results in higher cost.
