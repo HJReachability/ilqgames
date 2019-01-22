@@ -50,17 +50,19 @@ HORIZON = 10.0
 NUM_TIMESTEPS = int(HORIZON / DT)
 
 # For a simple, interpretable test, we'll just do a 1D point mass.
-# Point mass dynamics (discrete time) with both control signals
-# affecting acceleration.
-# NOTE: could also have player 2 introduce some friction...
+# Point mass dynamics (discrete time) with both different B matrices.
+# NOTE: if both B matrices are the same then testLyapunov won't pass
+# unless R22 >> R11.
 A = np.array([[1.0, DT], [0.0, 1.0]]); As = [A] * NUM_TIMESTEPS
 B1 = np.array([[0.5 * DT * DT], [DT]]); B1s = [B1] * NUM_TIMESTEPS
-B2 = np.array([[0.5 * DT * DT], [DT]]); B2s = [B2] * NUM_TIMESTEPS
+#B2 = np.array([[0.5 * DT * DT], [DT]]); B2s = [B2] * NUM_TIMESTEPS
+B2 = np.array([[0.32 * DT * DT], [0.11 * DT]]); B2s = [B2] * NUM_TIMESTEPS
 c = np.array([[0.0], [0.0]]); cs = [c] * NUM_TIMESTEPS
 
 # State costs.
 Q1 = np.array([[1.0, 0.0], [0.0, 1.0]]); Q1s = [Q1] * NUM_TIMESTEPS
-Q2 = np.array([[1.0, 0.25], [0.25, 1.0]]); Q2s = [Q2] * NUM_TIMESTEPS
+Q2 = -Q1; Q2s = [Q2] * NUM_TIMESTEPS
+#Q2 = np.array([[1.0, 0.25], [0.25, 1.0]]); Q2s = [Q2] * NUM_TIMESTEPS
 l1 = np.array([[0.0], [0.0]]); l1s = [l1] * NUM_TIMESTEPS
 l2 = l1; l2s = [l2] * NUM_TIMESTEPS
 
@@ -68,7 +70,7 @@ l2 = l1; l2s = [l2] * NUM_TIMESTEPS
 R11 = np.array([[1.0]]); R11s = [R11] * NUM_TIMESTEPS
 R12 = np.array([[0.0]]); R12s = [R12] * NUM_TIMESTEPS
 R21 = np.array([[0.0]]); R21s = [R21] * NUM_TIMESTEPS
-R22 = np.array([[10.0]]); R22s = [R22] * NUM_TIMESTEPS
+R22 = np.array([[1.0]]); R22s = [R22] * NUM_TIMESTEPS
 
 class TestSolveLQGame(unittest.TestCase):
     """ Tests for solving LQ games. """
@@ -85,12 +87,12 @@ class TestSolveLQGame(unittest.TestCase):
         P1s, P2s, alpha1s, alpha2s = solve_lq_game(
             As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
 
-#        print("Lyapunov iterations: ", P1_lyap, " / ", P2_lyap, " test: ", test)
+#        print("Lyapunov iterations: ", P1_lyap, " / ", P2_lyap, " test ", test)
 #        print("Time varying Ps: ", P1s[0], " / ", P2s[0])
 #        print("Time varying alphas: ", alpha1s[0], " / ", alpha2s[0])
 
-        np.testing.assert_array_almost_equal(P1_lyap, P1s[0], decimal=2)
-        np.testing.assert_array_almost_equal(P2_lyap, P2s[0], decimal=2)
+        np.testing.assert_array_almost_equal(P1_lyap, P1s[0], decimal=3)
+        np.testing.assert_array_almost_equal(P2_lyap, P2s[0], decimal=3)
         np.testing.assert_array_almost_equal(alpha1s[0], 0.0)
         np.testing.assert_array_almost_equal(alpha2s[0], 0.0)
 
