@@ -1,7 +1,7 @@
 """
 BSD 3-Clause License
 
-Copyright (c) 2018, HJ Reachability Group
+Copyright (c) 2019, HJ Reachability Group
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
