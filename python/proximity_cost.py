@@ -33,42 +33,34 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Semiquadratic cost that takes effect a fixed distance away from a Polyline.
+# Proximity cost, derived from Cost base class. Implements a cost function that
+# depends only on state and penalizes -min(distance, max_distance)^2.
 #
 ################################################################################
 
 import torch
 
 from cost import Cost
-from point import Point
-from polyline import Polyline
 
-class SemiquadraticPolylineCost(Cost):
-    def __init__(self, polyline, signed_distance_threshold, oriented_right,
-                 position_indices):
+class ProximityCost(Cost):
+    def __init__(self, position_indices1, position_indices2, max_distance):
         """
-        Initialize with a polyline, a threshold in signed distance from the
-        polyline, and an orientation. If `oriented_right` is `True`, that
-        indicates that the cost starts taking effect once signed distance
-        exceeds the signed distance threshold. If `False`, that indicates
-        that the cost will take effect once signed distance falls below the
-        threshold.
+        Initialize with dimension to add cost to and threshold BELOW which
+        to impose quadratic cost.
 
-        :param polyline: piecewise linear path which defines signed distances
-        :type polyline: Polyline
-        :param signed_distance_threshold: value above/below which to penalize
-        :type signed_distance_threshold: float
-        :param oriented_right: Boolean flag determining which side of threshold
-          to penalize
-        :type oriented_right: bool
-        :param position_indices: indices of input corresponding to (x, y)
-        :type position_indices: (uint, uint)
+        :param position_indices1: indices of input corresponding to (x, y) for
+          vehicle 1
+        :type position_indices1: (uint, uint)
+        :param position_indices2: indices of input corresponding to (x, y) for
+          vehicle 2
+        :type position_indices2: (uint, uint)
+        :param max_distance: maximum value of distance to penalize
+        :type threshold: float
         """
-        self._polyline = polyline
-        self._signed_distance_threshold = signed_distance_threshold
-        self._oriented_right = oriented_right
-        self._x_index, self._y_index = position_indices
-        super(SemiquadraticPolylineCost, self).__init__()
+        self._x_index1, self._y_index1 = position_indices1
+        self._x_index2, self._y_index2 = position_indices2
+        self._max_squared_distance = max_distance**2
+        super(ProximityCost, self).__init__()
 
     def __call__(self, xu):
         """
@@ -77,19 +69,19 @@ class SemiquadraticPolylineCost(Cost):
         NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
         NOTE: `xu` should be a column vector.
 
-        :param xu: state of the system
+        Here, `xu` is just the concatenated state of the two systems.
+
+        :param xu: concatenated state of the two systems
         :type xu: torch.Tensor
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
-        signed_distance = self._polyline.signed_distance_to(
-            Point(xu[self._x_index, 0], xu[self._y_index, 0]))
+        # Compute relative distance.
+        dx = xu[self._x_index1, 0] - xu[self._x_index2, 0]
+        dy = xu[self._y_index1, 0] - xu[self._y_index2, 0]
+        relative_squared_distance = dx*dx + dy*dy
 
-        if self._oriented_right:
-            if signed_distance > self._signed_distance_threshold:
-                return (signed_distance - self._signed_distance_threshold) ** 2
-        else:
-            if signed_distance < self._signed_distance_threshold:
-                return (self._signed_distance_threshold - signed_distance) ** 2
+        if relative_squared_distance < self._max_squared_distance:
+            return -relative_squared_distance
 
-        return torch.zeros(1, 1)
+        return -self._max_squared_distance * torch.ones(1, 1)
