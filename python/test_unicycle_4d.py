@@ -76,7 +76,7 @@ class TestUnicycle4D(unittest.TestCase):
         # TIME_PER_CYCLE elapses.
         x_final = dynamics.integrate(X0, U, TIME_PER_CIRCLE, DT)
         x_final[2, 0] = wrap_angle(x_final[2, 0])
-        self.assertTrue(np.linalg.norm(X0 - x_final) < SMALL_NUMBER)
+        self.assertLess(np.linalg.norm(X0 - x_final), SMALL_NUMBER)
 
         # Check that after half a circle we're in the right place.
         x_final = dynamics.integrate(X0, U, 0.5 * TIME_PER_CIRCLE, DT)
@@ -87,6 +87,34 @@ class TestUnicycle4D(unittest.TestCase):
                                wrap_angle(np.pi - X0[2, 0]),
                                delta=SMALL_NUMBER)
         self.assertAlmostEqual(x_final[3, 0], X0[3, 0], delta=SMALL_NUMBER)
+
+    def testJacobian(self):
+        dynamics = Unicycle4D()
+
+        # Custom Jacobian.
+        def jacobian(x0, u0):
+            A = np.array([
+                [0.0, 0.0, -x0[3, 0] * np.sin(x0[2, 0]), np.cos(x0[2, 0])],
+                [0.0, 0.0, x0[3, 0] * np.cos(x0[2, 0]), np.sin(x0[2, 0])],
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0]])
+            B = np.array([[0.0, 0.0],
+                          [0.0, 0.0],
+                          [1.0, 0.0],
+                          [0.0, 1.0]])
+            return A, B
+
+        # Pick a bunch of random states and controls and compare Jacobians.
+        NUM_RANDOM_TRIALS = 100
+        for ii in range(NUM_RANDOM_TRIALS):
+            x0 = np.random.normal(0.0, 1.0, (dynamics._x_dim, 1))
+            u0 = np.random.normal(0.0, 1.0, (dynamics._u_dim, 1))
+
+            test_A, test_B = dynamics.linearize(x0, u0)
+            custom_A, custom_B = jacobian(x0, u0)
+
+            self.assertLess(np.linalg.norm(test_A - custom_A), SMALL_NUMBER)
+            self.assertLess(np.linalg.norm(test_B - custom_B), SMALL_NUMBER)
 
 if __name__ == '__main__':
     unittest.main()
