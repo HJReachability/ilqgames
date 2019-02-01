@@ -18,6 +18,23 @@ while True:
     if ii % 100 == 0:
         print(x)
 
+# Try computing a full Jacobian.
+print("Computing a Jacobian.")
+def foo(x):
+    out = torch.empty(2, 1)
+    out[0, 0] = 5.0 * torch.sin(x[0, 0]) + 3.0 * x[1, 0] * x[1, 0]
+    out[1, 0] = 5.0 * torch.cos(x[1, 0])
+    return out
+
+x = torch.ones(2, 1, requires_grad=True)
+f = foo(x)
+J = []
+for ii in range(len(x)):
+    J.append(torch.autograd.grad(f[ii], x, retain_graph=True)[0])
+
+J = torch.cat(J, dim=1).detach().numpy().copy().T
+print(J)
+
 # Try computing a Hessian.
 print("Trying to compute a Hessian.")
 x = torch.ones(2, 1, requires_grad=True)
