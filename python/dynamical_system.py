@@ -104,12 +104,12 @@ class DynamicalSystem(object):
 
         return x
 
-    def linearize(self, x, u):
+    def linearize(self, x0, u0):
         """
         Compute the Jacobian linearization of the dynamics for a particular
-        state `x` and control `u`. Outputs `A` and `B` matrices of a linear
+        state `x0` and control `u0`. Outputs `A` and `B` matrices of a linear
         system:
-                            ```\dot x = Ax + Bu```
+                   ```\dot x - f(x0, u0) = A (x - x0) + B (u - u0)```
 
         :param x: state
         :type x: np.array
@@ -118,14 +118,19 @@ class DynamicalSystem(object):
         :return: (A, B) matrices of linearized system
         :rtype: np.array, np.array
         """
-        x_torch = torch.from_numpy(x).requires_grad_(True)
-        u_torch = torch.from_numpy(u)
+        x_torch = torch.from_numpy(x0).requires_grad_(True)
+        u_torch = torch.from_numpy(u0).requires_grad_(True)
 
         x_dot = self.__call__(x_torch, u_torch)
 
-        gradient_list = []
+        x_gradient_list = []
+        u_gradient_list = []
         for ii in range(self._x_dim):
-            gradient_list.append(torch.autograd.grad(
+            x_gradient_list.append(torch.autograd.grad(
                 x_dot[ii, 0], x_torch, retain_graph=True)[0])
+            u_gradient_list.append(torch.autograd.grad(
+                x_dot[ii, 0], u_torch, retain_graph=True)[0])
 
-        return torch.cat(gradient_list, dim=1).detach().numpy().copy().T
+        A = torch.cat(x_gradient_list, dim=1).detach().numpy().copy().T
+        B = torch.cat(u_gradient_list, dim=1).detach().numpy().copy().T
+        return A, B
