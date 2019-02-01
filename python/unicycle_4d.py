@@ -55,6 +55,7 @@ class Unicycle4D(DynamicalSystem):
     def __call__(self, x, u):
         """
         Compute the time derivative of state for a particular state/control.
+        NOTE: `x` and `u` should be 2D (i.e. column vectors).
 
         :param x: current state
         :type x: torch.Tensor or np.array
@@ -63,4 +64,19 @@ class Unicycle4D(DynamicalSystem):
         :return: current time derivative of state
         :rtype: torch.Tensor or np.array
         """
-        raise NotImplementedError("__call__() has not been implemented.")
+        if isinstance(x, np.ndarray):
+            assert isinstance(u, np.ndarray)
+            x_dot = np.zeros((self._x_dim, 1))
+            cos = np.cos
+            sin = np.sin
+        else:
+            assert isinstance(u, torch.Tensor)
+            x_dot = torch.zeros((self._x_dim, 1))
+            cos = torch.cos
+            sin = torch.sin
+
+        x_dot[0, 0] = x[3, 0] * cos(x[2, 0])
+        x_dot[1, 0] = x[3, 0] * sin(x[2, 0])
+        x_dot[2, 0] = u[0, 0]
+        x_dot[3, 0] = u[1, 0]
+        return x_dot
