@@ -72,8 +72,6 @@ def quadratize(c, x0, u0):
     x_deriv = x_deriv_torch[0].detach().numpy().copy() 
     u_deriv = u_deriv_torch[0].detach().numpy().copy() 
 
-    # x_u_deriv_torch = torch.cat((x_deriv, u_deriv), dim=1)
-
     f = np.append(x_deriv, u_deriv)
 
     # Compute Q
