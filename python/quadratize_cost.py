@@ -41,7 +41,7 @@ def quadratize(c, x0, u0):
     for a given state `x0` and `u0.` Outputs `Q` and `f` of 
     the following equation
 
-        c(x,u) = c(x0,u0) + f^Tz + 0.5z^T Qz
+        c(x,u) = c(x0,u0) + f^Tz + 1/2z^T Qz
 
     where 
         z = [x-x0; u-u0]
@@ -65,26 +65,37 @@ def quadratize(c, x0, u0):
     xu_dim = x_dim + u_dim
 
     # Compute f
-    x_deriv_torch = torch.autograd.grad(c_x0_u0, x_torch, retain_graph=True)
+    x_deriv_torch = torch.autograd.grad(c_x0_u0, x_torch, create_graph=True)
 
-    u_deriv_torch = torch.autograd.grad(c_x0_u0, u_torch, retain_graph=True)
+    u_deriv_torch = torch.autograd.grad(c_x0_u0, u_torch, create_graph=True)
 
-    x_u_deriv_torch = torch.cat((x_deriv_torch, u_deriv_torch), dim=1)
+    x_deriv = x_deriv_torch[0].detach().numpy().copy() 
+    u_deriv = u_deriv_torch[0].detach().numpy().copy() 
 
-    x_deriv = x_deriv_torch.detach().numpy().copy() 
-    u_deriv = u_deriv_torch.detach().numpy().copy() 
+    # x_u_deriv_torch = torch.cat((x_deriv, u_deriv), dim=1)
 
     f = np.append(x_deriv, u_deriv)
 
     # Compute Q
     Q = np.zeros((xu_dim, xu_dim))
-    for ii in range(xu_dim):
-        curr_x_deriv = torch.autograd.grad(x_u_deriv_torch[ii,0], x_torch, retain_graph=True)
-     
-        curr_u_deriv = torch.autograd.grad(x_u_deriv_torch[ii,0], u_torch, retain_graph=True)
 
-        Q[ii,:x_dim] = curr_x_deriv.detach().numpy().copy() 
+    # Compute dxx
+    for ii in range(x_dim):
+        curr_x_deriv = torch.autograd.grad(x_deriv_torch[0][ii], x_torch, create_graph=True)
+        Q[ii,:x_dim] = np.reshape(curr_x_deriv[0].detach().numpy().copy(), (x_dim,))
+       
+    # Compute duu
+    for ii in range(u_dim):
+        curr_u_deriv = torch.autograd.grad(u_deriv_torch[0][ii], u_torch, create_graph=True)
+        Q[x_dim+ii,x_dim:] = np.reshape(curr_u_deriv[0].detach().numpy().copy(), (u_dim,))
+        
 
-        Q[ii,x_dim:] = curr_u_deriv.detach().numpy().copy() 
+    # Compute dxdu
+    for ii in range(x_dim):
+        curr_u_deriv = torch.autograd.grad(x_deriv_torch[0][ii], u_torch, create_graph=True)
+        Q[ii,x_dim:] = np.reshape(curr_u_deriv[0].detach().numpy().copy(), (u_dim,))
 
+    # Compute dudx based on symmetry
+    Q[x_dim:,:x_dim] = Q[:x_dim,x_dim:].T
+        
     return Q, f

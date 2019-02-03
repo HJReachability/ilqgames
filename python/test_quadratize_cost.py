@@ -48,13 +48,21 @@ class TestQuadratizeCost(unittest.TestCase):
     """ Tests for quadratize. """
 
     def testQuadratize(self):
-
         def cost(x, u):
             """
             c(x,u) = 2x1^2 + x2^2u2u1 + u1^2
 
             """
-            return 2 * pow(x[0],2) + pow(x[1],2)*u[0]*u[1] + pow(u[1],2)
+            return 2*pow(x[0],2)+pow(x[1],2)*u[0]*u[1]+pow(u[0],2)
+
+        def torch_cost(x_torch, u_torch):
+            """
+            The PyTorch version of the above cost function. 
+
+            """
+            return 2*x_torch[0,0]*x_torch[0,0] + \
+                x_torch[1,0]*x_torch[1,0]*u_torch[0,0]*u_torch[1,0] + \
+                u_torch[0,0]*u_torch[0,0] 
 
         def quadratize_ground_truth(x, u):
             """
@@ -68,7 +76,7 @@ class TestQuadratizeCost(unittest.TestCase):
                 0  2u1x2   x2^2    0
             """
             f = np.zeros(4)
-            f[0] = 2 * x[0]
+            f[0] = 4 * x[0]
             f[1] = 2 * u[0] * u[1] * x[1]
             f[2] = x[1]*x[1]*u[1] + 2*u[0]
             f[3] = x[1]*x[1]*u[0]
@@ -84,7 +92,7 @@ class TestQuadratizeCost(unittest.TestCase):
             Q[3,1] = Q[1,3]
             Q[3,2] = Q[2,3]
 
-            return f, q
+            return Q, f
 
         # Pick a bunch of random states and controls and compare quadratize Q and f
         NUM_RANDOM_TRIALS = 100
@@ -94,11 +102,11 @@ class TestQuadratizeCost(unittest.TestCase):
             x0 = np.random.normal(0.0, 1.0, (X_DIM, 1))
             u0 = np.random.normal(0.0, 1.0, (U_DIM, 1))
 
-            test_f, test_Q = quadratize(x0, u0)
-            true_f, true_Q = quadratize_ground_truth(x0, u0)
+            true_Q, true_f = quadratize_ground_truth(x0, u0)
+            test_Q, test_f = quadratize(torch_cost, x0, u0)
 
-            self.assertLess(np.linalg.norm(test_f - true_f), SMALL_NUMBER)
             self.assertLess(np.linalg.norm(test_Q - true_Q), SMALL_NUMBER)
+            self.assertLess(np.linalg.norm(test_f - true_f), SMALL_NUMBER)
 
 if __name__ == '__main__':
     unittest.main()
