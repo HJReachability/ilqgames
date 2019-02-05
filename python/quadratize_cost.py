@@ -32,18 +32,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Author(s): Chia-Yin Shih (cshih@berkeley.edu)
 """
 
-import torch 
+import torch
 import numpy as np
 
 def quadratize(c, x0, u0):
     """
     Compute the quadratic approximation of the cost objective
-    for a given state `x0` and `u0.` Outputs `Q` and `f` of 
-    the following equation
+    for a given state `x0` and `u0.` Outputs `Q` and `f` of
+    the following equation:
 
         c(x,u) = c(x0,u0) + f^Tz + 1/2z^T Qz
 
-    where 
+    where
         z = [x-x0; u-u0]
 
     :param c: cost function that takes in state and input
@@ -59,41 +59,47 @@ def quadratize(c, x0, u0):
     u_torch = torch.from_numpy(u0).requires_grad_(True)
 
     c_x0_u0 = c(x_torch, u_torch)
-    
+
     x_dim = len(x0)
     u_dim = len(u0)
     xu_dim = x_dim + u_dim
 
-    # Compute f
+    # Compute f.
     x_deriv_torch = torch.autograd.grad(c_x0_u0, x_torch, create_graph=True)
 
     u_deriv_torch = torch.autograd.grad(c_x0_u0, u_torch, create_graph=True)
 
-    x_deriv = x_deriv_torch[0].detach().numpy().copy() 
-    u_deriv = u_deriv_torch[0].detach().numpy().copy() 
+    x_deriv = x_deriv_torch[0].detach().numpy().copy()
+    u_deriv = u_deriv_torch[0].detach().numpy().copy()
 
     f = np.append(x_deriv, u_deriv)
 
-    # Compute Q
+    # Compute Q.
     Q = np.zeros((xu_dim, xu_dim))
 
-    # Compute dxx
+    # Compute dxx.
     for ii in range(x_dim):
-        curr_x_deriv = torch.autograd.grad(x_deriv_torch[0][ii], x_torch, create_graph=True)
-        Q[ii,:x_dim] = np.reshape(curr_x_deriv[0].detach().numpy().copy(), (x_dim,))
-       
-    # Compute duu
+        curr_x_deriv = torch.autograd.grad(
+            x_deriv_torch[0][ii], x_torch, create_graph=True)
+        Q[ii, :x_dim] = np.reshape(
+            curr_x_deriv[0].detach().numpy().copy(), (x_dim,))
+
+    # Compute duu.
     for ii in range(u_dim):
-        curr_u_deriv = torch.autograd.grad(u_deriv_torch[0][ii], u_torch, create_graph=True)
-        Q[x_dim+ii,x_dim:] = np.reshape(curr_u_deriv[0].detach().numpy().copy(), (u_dim,))
-        
+        curr_u_deriv = torch.autograd.grad(
+            u_deriv_torch[0][ii], u_torch, create_graph=True)
+        Q[x_dim + ii, x_dim:] = np.reshape(
+            curr_u_deriv[0].detach().numpy().copy(), (u_dim,))
 
-    # Compute dxdu
+
+    # Compute dxdu.
     for ii in range(x_dim):
-        curr_u_deriv = torch.autograd.grad(x_deriv_torch[0][ii], u_torch, create_graph=True)
-        Q[ii,x_dim:] = np.reshape(curr_u_deriv[0].detach().numpy().copy(), (u_dim,))
+        curr_u_deriv = torch.autograd.grad(
+            x_deriv_torch[0][ii], u_torch, create_graph=True)
+        Q[ii,x_dim:] = np.reshape(
+            curr_u_deriv[0].detach().numpy().copy(), (u_dim,))
 
-    # Compute dudx based on symmetry
-    Q[x_dim:,:x_dim] = Q[:x_dim,x_dim:].T
-        
+    # Compute dudx based on symmetry.
+    Q[x_dim:, :x_dim] = Q[:x_dim, x_dim:].T
+
     return Q, f
