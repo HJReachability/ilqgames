@@ -49,48 +49,36 @@ class TestQuadratizeCost(unittest.TestCase):
 
     def testQuadratize(self):
         def cost(x, u):
-            """
-            c(x,u) = 2x1^2 + x2^2u2u1 + u1^2
-
-            """
-            return 2*pow(x[0],2)+pow(x[1],2)*u[0]*u[1]+pow(u[0],2)
-
-        def torch_cost(x_torch, u_torch):
-            """
-            The PyTorch version of the above cost function. 
-
-            """
-            return 2*x_torch[0,0]*x_torch[0,0] + \
-                x_torch[1,0]*x_torch[1,0]*u_torch[0,0]*u_torch[1,0] + \
-                u_torch[0,0]*u_torch[0,0] 
+            """ c(x,u) = 2x1^2 + x2^2u2u1 + u1^2 """
+            return 2.0 * x[0, 0]**2 + x[1, 0]**2 * u[0, 0]*u[1, 0] + u[0, 0]**2
 
         def quadratize_ground_truth(x, u):
             """
 
             f = [4x1, 2u1u2x2, x2^2u2 + 2u1, x2^2u1]
 
-            Q = 
-                4  0        0      0 
+            Q =
+                4  0        0      0
                 0  2u1u2  2x2u2   2u1x2
                 0  2u2x2    2      x2^2
                 0  2u1x2   x2^2    0
             """
-            f = np.zeros(4)
-            f[0] = 4 * x[0]
-            f[1] = 2 * u[0] * u[1] * x[1]
-            f[2] = x[1]*x[1]*u[1] + 2*u[0]
-            f[3] = x[1]*x[1]*u[0]
+            f = np.zeros((4, 1))
+            f[0, 0] = 4 * x[0, 0]
+            f[1, 0] = 2 * u[0, 0] * u[1, 0] * x[1, 0]
+            f[2, 0] = x[1, 0] * x[1, 0] * u[1, 0] + 2.0 * u[0, 0]
+            f[3, 0] = x[1, 0] * x[1, 0] * u[0, 0]
 
-            Q = np.zeros((4,4))
-            Q[0,0] = 4
-            Q[1,1] = 2*u[0]*u[1]
-            Q[2,2] = 2
-            Q[1,2] = 2*x[1]*u[1]
-            Q[1,3] = 2*x[1]*u[0]
-            Q[2,3] = x[1]*x[1]
-            Q[2,1] = Q[1,2]
-            Q[3,1] = Q[1,3]
-            Q[3,2] = Q[2,3]
+            Q = np.zeros((4, 4))
+            Q[0, 0] = 4.0
+            Q[1, 1] = 2.0 * u[0, 0] * u[1, 0]
+            Q[2, 2] = 2.0
+            Q[1, 2] = 2.0 * x[1, 0] * u[1, 0]
+            Q[1, 3] = 2.0 * x[1, 0] * u[0, 0]
+            Q[2, 3] = x[1, 0] * x[1, 0]
+            Q[2, 1] = Q[1, 2]
+            Q[3, 1] = Q[1, 3]
+            Q[3, 2] = Q[2, 3]
 
             return Q, f
 
@@ -103,7 +91,7 @@ class TestQuadratizeCost(unittest.TestCase):
             u0 = np.random.normal(0.0, 1.0, (U_DIM, 1))
 
             true_Q, true_f = quadratize_ground_truth(x0, u0)
-            test_Q, test_f = quadratize(torch_cost, x0, u0)
+            test_Q, test_f = quadratize(cost, x0, u0)
 
             self.assertLess(np.linalg.norm(test_Q - true_Q), SMALL_NUMBER)
             self.assertLess(np.linalg.norm(test_f - true_f), SMALL_NUMBER)
