@@ -29,13 +29,14 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Author(s): Chia-Yin Shih (cshih@berkeley.edu)
+Author(s): Chia-Yin Shih        ( cshih@berkeley.edu )
+           David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 
 import torch
 import numpy as np
 
-def quadratize(c, x0, u0):
+def quadratize(game_cost, x0, u0):
     """
     Compute the quadratic approximation of the cost objective
     for a given state `x0` and `u0.` Outputs `Q` and `f` of
