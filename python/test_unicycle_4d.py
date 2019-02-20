@@ -43,7 +43,6 @@ import unittest
 
 from unicycle_4d import Unicycle4D
 
-DT = 0.1
 SMALL_NUMBER = 1e-2
 
 def wrap_angle(angle):
@@ -57,8 +56,6 @@ class TestUnicycle4D(unittest.TestCase):
         Tests that if we maintain a constant speed and turning rate
         we go in a circle.
         """
-        dynamics = Unicycle4D()
-
         # Set fixed control inputs omega (rad/s) and acceleration (m/s/s).
         OMEGA = 0.5
         ACCELERATION = 0.0
@@ -74,12 +71,14 @@ class TestUnicycle4D(unittest.TestCase):
 
         # Check that we end up where we started if we end up after
         # TIME_PER_CYCLE elapses.
-        x_final = dynamics.integrate(X0, U, TIME_PER_CIRCLE, DT)
+        dynamics = Unicycle4D(T=TIME_PER_CIRCLE)
+        x_final = dynamics.integrate(X0, U)
         x_final[2, 0] = wrap_angle(x_final[2, 0])
         self.assertLess(np.linalg.norm(X0 - x_final), SMALL_NUMBER)
 
         # Check that after half a circle we're in the right place.
-        x_final = dynamics.integrate(X0, U, 0.5 * TIME_PER_CIRCLE, DT)
+        dynamics = Unicycle4D(T=0.5 * TIME_PER_CIRCLE)
+        x_final = dynamics.integrate(X0, U)
         self.assertAlmostEqual(x_final[0, 0], X0[0, 0], delta=SMALL_NUMBER)
         self.assertAlmostEqual(x_final[1, 0], X0[1, 0] + 2.0 * TURNING_RADIUS,
                                delta=SMALL_NUMBER)
@@ -117,9 +116,9 @@ class TestUnicycle4D(unittest.TestCase):
             self.assertLess(np.linalg.norm(test_B - custom_B), SMALL_NUMBER)
 
     def testLinearizeDiscrete(self):
-        dynamics = Unicycle4D()
+        dynamics = Unicycle4D(T=0.1)
 
-        # Pick a bunch of random states and controls and compare discrete-time 
+        # Pick a bunch of random states and controls and compare discrete-time
         # linearization with an Euler approximation.
         NUM_RANDOM_TRIALS = 100
         for ii in range(NUM_RANDOM_TRIALS):
@@ -130,19 +129,20 @@ class TestUnicycle4D(unittest.TestCase):
             test_c_cont = dynamics(x0, u0)
 
             test_A_disc, test_B_disc, test_c_disc = dynamics.linearize_discrete(x0, u0)
-            
-            # The Euler approximation to \dot{x} = Ax + Bu + c gives 
+
+            # The Euler approximation to \dot{x} = Ax + Bu + c gives
             # x(k + 1) = x(k) + ATx(k) + BTu(k) + cT
-            # So we want A_disc to be close to (I + AT), B_disc to be close to 
+            # So we want A_disc to be close to (I + AT), B_disc to be close to
             # BT, and c_disc to be close to c.
-            self.assertLess(np.linalg.norm(test_A_disc - 
+            LESS_SMALL_NUMBER = 5.0 * dynamics._T
+            self.assertLess(np.linalg.norm(test_A_disc -
                                            (np.eye(dynamics._x_dim) + test_A_cont * dynamics._T)),
-                            SMALL_NUMBER)
+                            LESS_SMALL_NUMBER)
             self.assertLess(np.linalg.norm(test_B_disc - test_B_cont * dynamics._T),
-                            SMALL_NUMBER)
+                            LESS_SMALL_NUMBER)
             self.assertLess(np.linalg.norm(test_c_disc - test_c_cont * dynamics._T),
-                            SMALL_NUMBER)
-        
+                            LESS_SMALL_NUMBER)
+
 
 if __name__ == '__main__':
     unittest.main()

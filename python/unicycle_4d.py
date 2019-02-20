@@ -49,8 +49,8 @@ from dynamical_system import DynamicalSystem
 class Unicycle4D(DynamicalSystem):
     """ 4D unicycle model. """
 
-    def __init__(self):
-        super(Unicycle4D, self).__init__(4, 2)
+    def __init__(self, T=0.1):
+        super(Unicycle4D, self).__init__(4, 2, T)
 
     def __call__(self, x, u):
         """

@@ -40,7 +40,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import torch
 import numpy as np
-import scipy as sp
+from scipy.linalg import expm
 
 class DynamicalSystem(object):
     """ Base class for all dynamical systems. """
@@ -144,7 +144,7 @@ class DynamicalSystem(object):
     def linearize_discrete(self, x0, u0):
         """
         Compute the Jacobian linearization of the dynamics for a particular
-        state `x0` and control `u0`. Outputs `A` and `B` matrices and `c` 
+        state `x0` and control `u0`. Outputs `A` and `B` matrices and `c`
         offset vector of a discrete-time linear system:
                    ```x(k + 1) = A x(k) + B u(k) + c```
 
@@ -152,24 +152,20 @@ class DynamicalSystem(object):
         :type x0: np.array
         :param u0: control input
         :type u0: np.array
-        :return: (A, B, c) matrices and offset vector of the disctete-time 
+        :return: (A, B, c) matrices and offset vector of the disctete-time
                  linearized system
         :rtype: np.array, np.array, np.array
         """
         A_cont, B_cont = self.linearize(x0, u0)
         c_cont = self.__call__(x0, u0)
 
-        eAT = sp.linalg.expm(A * self._T)
-        Ainv = np.linalg.inv(A)
+        eAT = expm(A_cont * self._T)
+        Ainv = np.linalg.pinv(A_cont)
 
         # See https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models
-        # for derivation of discrete-time from continuous time linear system. 
+        # for derivation of discrete-time from continuous time linear system.
         A_disc = eAT
         B_disc = Ainv @ (eAT - np.eye(self._x_dim)) @ B_cont
         c_disc = Ainv @ (eAT - np.eye(self._x_dim)) @ c_cont
 
         return A_disc, B_disc, c_disc
-
-        
-
-        
