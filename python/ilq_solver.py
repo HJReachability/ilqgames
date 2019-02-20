@@ -77,8 +77,17 @@ class ILQSolver(object):
         :param alpha2s: list of constant offsets for player 2
         :type alpha2s: [np.array]
         """
-        # TODO!
-        pass
+        self._dynamics1 = dynamics1
+        self._dynamics2 = dynamics2
+        self._player1_cost = player1_cost
+        self._player2_cost = player2_cost
+        self._x1 = x1
+        self._x2 = x2
+        self._P1s = P1s
+        self._P2s = P2s
+        self._alpha1s = alpha1s
+        self._alpha2s = alpha2s
+        self._horizon = len(P1s)
 
     def run(self):
         """ Run the algorithm for the specified parameters. """
@@ -92,8 +101,33 @@ class ILQSolver(object):
         pass
 
     def _compute_operating_point(self):
-        """ Compute current operating point by propagating through dynamics. """
-        pass
+        """ Compute current operating point by propagating through dynamics. 
+        
+        :return: states and controls for both players (x1s, u1s, x2s, u2s)
+        :rtype: [np.array], [np.array], [np.array], [np.array]
+        """
+        x1s = [self._x1]
+        u1s = []
+        x2s = [self._x2]
+        u2s = []
+
+        for k in range(self._horizon):
+            u1 = -self._P1s[k] @ x1s[k] - self._alpha1s[k]
+            u2 = -self._P2s[k] @ x2s[k] - self._alpha2s[k]
+
+            u1s.append(u1)
+            u2s.append(u2)
+
+            if k == self._horizon - 1: 
+                break
+
+            x1 = self._dynamics1.integrate(x1s[k], u1)
+            x2 = self._dynamics2.integrate(x2s[k], u2)
+
+            x1s.append(x1)
+            x2s.append(x2)
+
+        return x1s, u1s, x2s, u2s
 
     def _linesearch(self):
         """ Linesearch for both players separately. """
