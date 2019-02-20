@@ -38,12 +38,15 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 ################################################################################
 
 import numpy as np
+from scipy.linalg import block_diag
 import torch
 
+from dynamical_system import DynamicalSystem
 from player_cost import PlayerCost
 from semiquadratic_cost import SemiquadraticCost
 from semiquadratic_polyline_cost import SemiquadraticPolylineCost
 from proximity_cost import ProximityCost
+from solve_lq_game import solve_lq_game
 
 from polyline import Polyline
 from point import Polyline
@@ -89,20 +92,60 @@ class ILQSolver(object):
         self._alpha2s = alpha2s
         self._horizon = len(P1s)
 
+        # Current and previous operating points (states/controls) for use
+        # in checking convergence.
+        self._last_operating_point = None
+        self._current_operating_point = self._compute_operating_point()
+
     def run(self):
         """ Run the algorithm for the specified parameters. """
-        # TODO: loop out here.
-        # (1) Compute current operating point.
-        # (2) Linearize about this operating point.
-        # (3) Quadraticize costs.
-        # (4) Compute feedback Nash equilibrium of the resulting LQ game.
-        # (5) Linesearch separately for both players.
-        # TODO: figure out if this is actually the right thing to do here.
-        pass
+        while not self._is_converged():
+            # (1) Compute current operating point.
+            x1s, u1s, x2s, u2s = self._compute_operating_point()
+
+            # (2) Linearize about this operating point. Make sure to
+            # stack appropriately since we will concatenate state vectors
+            # but not control vectors, so that
+            #    ``` x_{k+1}= A_k x_k + B1_k u1_k + B2_k u2_k + c_k ```
+            As = []
+            B1s = []
+            B2s = []
+            cs = []
+            for ii in range(self._horizon):
+                A1, B1, c1 = self._dynamics1.linearize_discrete(
+                    x1s[ii], u1s[ii])
+                A2, B2, c2 = self._dynamics2.linearize_discrete(
+                    x2s[ii], u2s[ii])
+
+                As.append(block_diag(A1, A2))
+                B1s.append(B1)
+                B2s.append(B2)
+                cs.append(np.concatenate([c1, c2], axis=0))
+
+            # (3) Quadraticize costs.
+            cost1s = []; Q1s = []; l1s = []; R11s = []; R12s = []
+            cost2s = []; Q2s = []; l2s = []; R21s = []; R22s = []
+            for ii in range(self._horizon):
+                # Concatenate state vectors.
+                x = np.concatenate([x1s[ii], x2s[ii]], axis=0)
+
+                # Quadraticize everything!
+                cost1, l1, Q1, R11, R12 = self._player1_cost.quadraticize(
+                    x, u1s[ii], u2s[ii])
+                cost2, l2, Q2, R21, R22 = self._player2_cost.quadraticize(
+                    x, u1s[ii], u2s[ii])
+
+            # (4) Compute feedback Nash equilibrium of the resulting LQ game.
+            P1s, P2s, alpha1s, alpha2s = solve_lq_game(
+                As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
+
+            # (5) Linesearch separately for both players.
+            self._linesearch()
 
     def _compute_operating_point(self):
-        """ Compute current operating point by propagating through dynamics. 
-        
+        """
+        Compute current operating point by propagating through dynamics.
+
         :return: states and controls for both players (x1s, u1s, x2s, u2s)
         :rtype: [np.array], [np.array], [np.array], [np.array]
         """
@@ -118,7 +161,7 @@ class ILQSolver(object):
             u1s.append(u1)
             u2s.append(u2)
 
-            if k == self._horizon - 1: 
+            if k == self._horizon - 1:
                 break
 
             x1 = self._dynamics1.integrate(x1s[k], u1)
@@ -132,3 +175,23 @@ class ILQSolver(object):
     def _linesearch(self):
         """ Linesearch for both players separately. """
         pass
+
+    def _is_converged(self):
+        """ Check if the last two operating points are close enough. """
+        if self._last_operating_point is None:
+            return False
+
+        # Tolerance for comparing operating points. If all states changes
+        # within this tolerance in the Euclidean norm then we've converged.
+        TOLERANCE = 1e-4
+        for ii in range(self._horizon):
+            last_x1 = self._last_operating_point[0][ii]
+            current_x1 = self._current_operating_point[0][ii]
+            last_x2 = self._last_operating_point[2][ii]
+            current_x2 = self._current_operating_point[2][ii]
+
+            if np.linalg.norm(last_x1 - current_x1) > TOLERANCE or \
+               np.linalg.norm(last_x2 - current_x2) > TOLERANCE:
+                return False
+
+        return True
