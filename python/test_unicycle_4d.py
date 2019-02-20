@@ -116,5 +116,33 @@ class TestUnicycle4D(unittest.TestCase):
             self.assertLess(np.linalg.norm(test_A - custom_A), SMALL_NUMBER)
             self.assertLess(np.linalg.norm(test_B - custom_B), SMALL_NUMBER)
 
+    def testLinearizeDiscrete(self):
+        dynamics = Unicycle4D()
+
+        # Pick a bunch of random states and controls and compare discrete-time 
+        # linearization with an Euler approximation.
+        NUM_RANDOM_TRIALS = 100
+        for ii in range(NUM_RANDOM_TRIALS):
+            x0 = np.random.normal(0.0, 1.0, (dynamics._x_dim, 1))
+            u0 = np.random.normal(0.0, 1.0, (dynamics._u_dim, 1))
+
+            test_A_cont, test_B_cont = dynamics.linearize(x0, u0)
+            test_c_cont = dynamics(x0, u0)
+
+            test_A_disc, test_B_disc, test_c_disc = dynamics.linearize_discrete(x0, u0)
+            
+            # The Euler approximation to \dot{x} = Ax + Bu + c gives 
+            # x(k + 1) = x(k) + ATx(k) + BTu(k) + cT
+            # So we want A_disc to be close to (I + AT), B_disc to be close to 
+            # BT, and c_disc to be close to c.
+            self.assertLess(np.linalg.norm(test_A_disc - 
+                                           (np.eye(dynamics._x_dim) + test_A_cont * dynamics._T)),
+                            SMALL_NUMBER)
+            self.assertLess(np.linalg.norm(test_B_disc - test_B_cont * dynamics._T),
+                            SMALL_NUMBER)
+            self.assertLess(np.linalg.norm(test_c_disc - test_c_cont * dynamics._T),
+                            SMALL_NUMBER)
+        
+
 if __name__ == '__main__':
     unittest.main()
