@@ -47,6 +47,11 @@ from proximity_cost import ProximityCost
 from semiquadratic_cost import SemiquadraticCost
 from player_cost import PlayerCost
 
+# General parameters.
+TIME_HORIZON = 10.0   # s
+TIME_RESOLUTION = 0.1 # s
+HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
+
 # Create the example environment. It will have a couple of circular obstacles
 # laid out like this:
 #                           x goal
@@ -62,7 +67,7 @@ obstacle_radii = [5.0, 5.0, 5.0]
 
 goal_cost = ProximityCost(
     position_indices=(0, 1), point=goal, max_distance=np.inf)
-obstacle_costs = [ProximityCost(position_indices(0, 1), point=p, max_distance=r)
+obstacle_costs = [ProximityCost(position_indices=(0, 1), point=p, max_distance=r)
                   for p, r in zip(obstacle_centers, obstacle_radii)]
 
 # Control costs for both players to keep control in a box.
@@ -76,7 +81,7 @@ w_cost_lower = SemiquadraticCost(
 
 a_cost_upper = SemiquadraticCost(
     dimension=1, threshold=max_a, oriented_right=True)
-a_cost_upper = SemiquadraticCost(
+a_cost_lower = SemiquadraticCost(
     dimension=1, threshold=-max_a, oriented_right=False)
 
 max_dvx = 0.1 # m/s
@@ -122,3 +127,15 @@ x0 = np.array([[0.0],
                [0.0],
                [np.pi / 4.0], # 45 degree heading
                [10.0]])       # 10 m/s initial speed
+
+P1s = [np.zeros((dynamics._u1_dim, dynamics._x_dim))] * HORIZON_STEPS
+P2s = [np.zeros((dynamics._u2_dim, dynamics._x_dim))] * HORIZON_STEPS
+alpha1s = [np.zeros((dynamics._u1_dim, 1))] * HORIZON_STEPS
+alpha2s = [np.zeros((dynamics._u2_dim, 1))] * HORIZON_STEPS
+
+# Set up ILQSolver.
+solver = ILQSolver(dynamics, player1_cost, player2_cost,
+                   x0, P1s, P2s, alpha1s, alpha2s)
+
+solver.run()
+print("P1s: ", P1s)

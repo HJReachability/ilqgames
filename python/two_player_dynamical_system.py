@@ -33,7 +33,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Base class for all two-player continuous-time dynamical systems. Supports 
+# Base class for all two-player continuous-time dynamical systems. Supports
 # numerical integration and linearization.
 #
 ################################################################################
@@ -81,7 +81,7 @@ class TwoPlayerDynamicalSystem(object):
 
     def integrate(self, x0, u1, u2, dt=None):
         """
-        Integrate initial state x0 (applying constant controls u1 and 
+        Integrate initial state x0 (applying constant controls u1 and
         u2) over a time interval of length T, using a time discretization
         of dt.
 
@@ -120,7 +120,7 @@ class TwoPlayerDynamicalSystem(object):
     def linearize(self, x0, u10, u20):
         """
         Compute the Jacobian linearization of the dynamics for a particular
-        state `x0` and controls `u10` and `u20`. Outputs `A` and `B` matrices 
+        state `x0` and controls `u10` and `u20`. Outputs `A` and `B` matrices
         of a linear system:
                    ```\dot x - f(x0, u10, u20) = A (x - x0) + B1 (u1 - u10) + B2 (u2 - u20)```
 
@@ -158,7 +158,7 @@ class TwoPlayerDynamicalSystem(object):
     def linearize_discrete(self, x0, u10, u20):
         """
         Compute the Jacobian linearization of the dynamics for a particular
-        state `x0` and controls `u10` and `u20`. Outputs `A`, `B1`, and 
+        state `x0` and controls `u10` and `u20`. Outputs `A`, `B1`, and
         `B2` matrices and `c` offset vector of a discrete-time linear system:
                    ```x(k + 1) - x0 = A (x(k) - x0) + B1 (u1(k) - u10) + B2 (u2(k) - u20) + c```
 
@@ -168,22 +168,21 @@ class TwoPlayerDynamicalSystem(object):
         :type u10: np.array
         :param u20: control input player 2
         :type u20: np.array
-        :return: (A, B1, B2, c) matrices and offset vector of the discrete-time 
+        :return: (A, B1, B2, c) matrices and offset vector of the discrete-time
                  linearized system
         :rtype: np.array, np.array, np.array, np.array
         """
         A_cont, B1_cont, B2_cont = self.linearize(x0, u10, u20)
         c_cont = self.__call__(x0, u10, u20)
 
-        eAT = sp.linalg.expm(A * self._T)
-        Ainv = np.linalg.inv(A)
+        eAT = sp.linalg.expm(A_cont * self._T)
+        Ainv = np.linalg.pinv(A_cont)
 
         # See https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models
-        # for derivation of discrete-time from continuous time linear system. 
+        # for derivation of discrete-time from continuous time linear system.
         A_disc = eAT
         B1_disc = Ainv @ (eAT - np.eye(self._x_dim)) @ B1_cont
         B2_disc = Ainv @ (eAT - np.eye(self._x_dim)) @ B2_cont
         c_disc = Ainv @ (eAT - np.eye(self._x_dim)) @ c_cont
 
         return A_disc, B1_disc, B2_disc, c_disc
-
