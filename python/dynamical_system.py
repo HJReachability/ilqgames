@@ -146,7 +146,7 @@ class DynamicalSystem(object):
         Compute the Jacobian linearization of the dynamics for a particular
         state `x0` and control `u0`. Outputs `A` and `B` matrices and `c`
         offset vector of a discrete-time linear system:
-                   ```x(k + 1) = A x(k) + B u(k) + c```
+                   ```x(k + 1) - x0 = A (x(k) - x0) + B (u(k) - u0) + c```
 
         :param x0: state
         :type x0: np.array
