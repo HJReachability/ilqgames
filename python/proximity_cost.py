@@ -77,7 +77,7 @@ class ProximityCost(Cost):
         relative_squared_distance = dx*dx + dy*dy
 
         if relative_squared_distance < self._max_squared_distance:
-            return -relative_squared_distance
+            return -relative_squared_distance * torch.ones(1, 1)
 
         return -self._max_squared_distance * torch.ones(1, 1)
 

@@ -43,14 +43,7 @@ import torch
 
 from two_player_dynamical_system import TwoPlayerDynamicalSystem
 from player_cost import PlayerCost
-from semiquadratic_cost import SemiquadraticCost
-from semiquadratic_polyline_cost import SemiquadraticPolylineCost
-from proximity_cost import ProximityCost
 from solve_lq_game import solve_lq_game
-
-from polyline import Polyline
-from point import Polyline
-from line_segment import LineSegment
 
 class ILQSolver(object):
     def __init__(self, dynamics, player1_cost, player2_cost,
@@ -59,13 +52,13 @@ class ILQSolver(object):
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
 
-        :param dynamics: two-player dynamical system 
+        :param dynamics: two-player dynamical system
         :type dynamics: TwoPlayerDynamicalSystem
         :param player1_cost: cost function for player 1
         :type player1_cost: PlayerCost
         :param player2_cost: cost function for player 2
         :type player2_cost: PlayerCost
-        :param x0: initial state 
+        :param x0: initial state
         :type x0: np.array
         :param P1s: list of feedback gains for player 1
         :type P1s: [np.array]
@@ -103,7 +96,7 @@ class ILQSolver(object):
             # (2) Linearize about this operating point. Make sure to
             # stack appropriately since we will concatenate state vectors
             # but not control vectors, so that
-            #    ``` x_{k+1} - xs_k = A_k (x_k - xs_k) + 
+            #    ``` x_{k+1} - xs_k = A_k (x_k - xs_k) +
             #          B1_k (u1_k - u1s_k) + B2_k (u2_k - u2s_k) + c_k ```
             As = []
             B1s = []
@@ -111,7 +104,7 @@ class ILQSolver(object):
             cs = []
             for ii in range(self._horizon):
                 A, B1, B2, c = self._dynamics.linearize_discrete(
-                    x1s[ii], u1s[ii], u2s[ii])
+                    xs[ii], u1s[ii], u2s[ii])
 
                 As.append(A)
                 B1s.append(B1)
@@ -171,7 +164,7 @@ class ILQSolver(object):
     def _linesearch(self):
         """ Linesearch for both players separately. """
 
-        # HACK: This is simple, need an actual linesearch. 
+        # HACK: This is simple, need an actual linesearch.
         for ii in range(self._horizon):
             self._alpha1s[ii] *= self._alpha_scaling
             self._alpha2s[ii] *= self._alpha_scaling
