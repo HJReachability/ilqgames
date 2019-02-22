@@ -41,8 +41,47 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 import torch
 
 from cost import Cost
+from point import Point
 
 class ProximityCost(Cost):
+    def __init__(self, position_indices, point, max_distance):
+        """
+        Initialize with dimension to add cost to and threshold BELOW which
+        to impose quadratic cost.
+
+        :param position_indices: indices of input corresponding to (x, y)
+        :type position_indices: (uint, uint)
+        :param point: point from which to compute proximity
+        :type point: Point
+        :param max_distance: maximum value of distance to penalize
+        :type threshold: float
+        """
+        self._x_index, self._y_index = position_indices
+        self._point = point
+        self._max_squared_distance = max_distance**2
+        super(ProximityCost, self).__init__()
+
+    def __call__(self, x):
+        """
+        Evaluate this cost function on the given input state.
+        NOTE: `x` should be a column vector.
+
+        :param x: concatenated state of the two systems
+        :type x: torch.Tensor
+        :return: scalar value of cost
+        :rtype: torch.Tensor
+        """
+        # Compute relative distance.
+        dx = x[self._x_index, 0] - self._point.x
+        dy = x[self._y_index, 0] - self._point.y
+        relative_squared_distance = dx*dx + dy*dy
+
+        if relative_squared_distance < self._max_squared_distance:
+            return -relative_squared_distance
+
+        return -self._max_squared_distance * torch.ones(1, 1)
+
+class ConcatenatedStateProximityCost(Cost):
     def __init__(self, position_indices1, position_indices2, max_distance):
         """
         Initialize with dimension to add cost to and threshold BELOW which

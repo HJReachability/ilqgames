@@ -44,7 +44,7 @@ import torch
 from cost import Cost
 
 class SemiquadraticCost(Cost):
-    def __init__(self, dimension, threshold):
+    def __init__(self, dimension, threshold, oriented_right):
         """
         Initialize with dimension to add cost to and threshold above which
         to impose quadratic cost.
@@ -53,9 +53,13 @@ class SemiquadraticCost(Cost):
         :type dimension: uint
         :param threshold: value above which to impose quadratic cost
         :type threshold: float
+        :param oriented_right: Boolean flag determining which side of threshold
+          to penalize
+        :type oriented_right: bool
         """
         self._dimension = dimension
         self._threshold = threshold
+        self._oriented_right = oriented_right
         super(SemiquadraticCost, self).__init__()
 
     def __call__(self, xu):
@@ -70,7 +74,11 @@ class SemiquadraticCost(Cost):
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
-        if xu[self._dimension, 0] > self._threshold:
-            return (xu[self._dimension, 0] - self._threshold) ** 2
+        if self._oriented_right:
+            if xu[self._dimension, 0] > self._threshold:
+                return (xu[self._dimension, 0] - self._threshold) ** 2
+        else:
+            if xu[self._dimension, 0] < self._threshold:
+                return (xu[self._dimension, 0] - self._threshold) ** 2
 
         return torch.zeros(1, 1)
