@@ -42,6 +42,7 @@ from scipy.linalg import block_diag
 import torch
 
 from dynamical_system import DynamicalSystem
+from two_player_dynamical_system import TwoPlayerDynamicalSystem
 from player_cost import PlayerCost
 from semiquadratic_cost import SemiquadraticCost
 from semiquadratic_polyline_cost import SemiquadraticPolylineCost
@@ -97,6 +98,9 @@ class ILQSolver(object):
         self._last_operating_point = None
         self._current_operating_point = self._compute_operating_point()
 
+        # Fixed step size for the linesearch.
+        self._alpha_scaling = 0.1
+
     def run(self):
         """ Run the algorithm for the specified parameters. """
         while not self._is_converged():
@@ -139,6 +143,12 @@ class ILQSolver(object):
             P1s, P2s, alpha1s, alpha2s = solve_lq_game(
                 As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
 
+            # Update the member variables.
+            self._P1s = P1s
+            self._P2s = P2s
+            self._alpha1s = alpha1s
+            self._alpha2s = alpha2s
+
             # (5) Linesearch separately for both players.
             self._linesearch()
 
@@ -174,7 +184,11 @@ class ILQSolver(object):
 
     def _linesearch(self):
         """ Linesearch for both players separately. """
-        pass
+
+        # HACK: This is simple, need an actual linesearch. 
+        for ii in range(self._horizon):
+            self._alpha1s[ii] *= self._alpha_scaling
+            self._alpha2s[ii] *= self._alpha_scaling
 
     def _is_converged(self):
         """ Check if the last two operating points are close enough. """
