@@ -99,7 +99,6 @@ dvy_cost_lower = SemiquadraticCost(
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
-
 player1_cost.add_cost(goal_cost, "x", -1.0)
 for cost in obstacle_costs:
     player1_cost.add_cost(cost, "x", 10.0)
@@ -110,9 +109,9 @@ player1_cost.add_cost(a_cost_upper, "u1", 10.0)
 player1_cost.add_cost(a_cost_lower, "u1", 10.0)
 
 player2_cost = PlayerCost()
-player1_cost.add_cost(goal_cost, "x", 1.0)
+player2_cost.add_cost(goal_cost, "x", 1.0)
 for cost in obstacle_costs:
-    player1_cost.add_cost(cost, "x", -10.0)
+    player2_cost.add_cost(cost, "x", -10.0)
 
 player2_cost.add_cost(dvx_cost_upper, "u2", 10.0)
 player2_cost.add_cost(dvx_cost_lower, "u2", 10.0)
