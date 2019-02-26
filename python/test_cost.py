@@ -54,12 +54,12 @@ class TestCost(unittest.TestCase):
         """ Tests that PlayerCost can quadraticize correctly. """
         # TODO: use a more complicated custom test Cost that has cross
         # terms in Hessians.
-        x = np.array([[1.0], [1.0]], dtype=np.float64)
-        u1 = np.array([[1.0], [1.0]], dtype=np.float64)
-        u2 = np.array([[1.0], [1.0]], dtype=np.float64)
+        x = np.array([[1.0], [1.0]])
+        u1 = np.array([[1.0], [1.0]])
+        u2 = np.array([[1.0], [1.0]])
 
-        semi0 = SemiquadraticCost(0, 0.0)
-        semi1 = SemiquadraticCost(1, 0.0)
+        semi0 = SemiquadraticCost(0, 0.0, True)
+        semi1 = SemiquadraticCost(1, 0.0, True)
         cost = PlayerCost()
         cost.add_cost(semi0, "x", 1.0)
         cost.add_cost(semi1, "x", 2.0)

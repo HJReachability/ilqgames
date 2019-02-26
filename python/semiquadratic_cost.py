@@ -81,4 +81,4 @@ class SemiquadraticCost(Cost):
             if xu[self._dimension, 0] < self._threshold:
                 return (xu[self._dimension, 0] - self._threshold) ** 2
 
-        return torch.zeros(1, 1)
+        return torch.zeros(1, 1, requires_grad=True).double()

@@ -121,6 +121,20 @@ class ILQSolver(object):
                 cost2, l2, Q2, R21, R22 = self._player2_cost.quadraticize(
                     xs[ii], u1s[ii], u2s[ii])
 
+                cost1s.append(cost1)
+                Q1s.append(Q1)
+                l1s.append(l1)
+                R11s.append(R11)
+                R12s.append(R12)
+
+                cost2s.append(cost2)
+                Q2s.append(Q2)
+                l2s.append(l2)
+                R21s.append(R21)
+                R22s.append(R22)
+
+            print("Cost 1 vs. 2: %f vs %f" % (cost1, cost2))
+
             # (4) Compute feedback Nash equilibrium of the resulting LQ game.
             P1s, P2s, alpha1s, alpha2s = solve_lq_game(
                 As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
@@ -156,7 +170,6 @@ class ILQSolver(object):
                 break
 
             x = self._dynamics.integrate(xs[k], u1, u2)
-
             xs.append(x)
 
         return xs, u1s, u2s
