@@ -40,15 +40,17 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 import numpy as np
 from scipy.linalg import block_diag
 import torch
+import matplotlib.pyplot as plt
 
 from two_player_dynamical_system import TwoPlayerDynamicalSystem
 from player_cost import PlayerCost
 from solve_lq_game import solve_lq_game
 from evaluate_lq_game_cost import evaluate_lq_game_cost
+from visualizer import Visualizer
 
 class ILQSolver(object):
     def __init__(self, dynamics, player1_cost, player2_cost,
-                 x0, P1s, P2s, alpha1s, alpha2s):
+                 x0, P1s, P2s, alpha1s, alpha2s, visualizer=None):
         """
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
@@ -69,6 +71,8 @@ class ILQSolver(object):
         :type alpha1s: [np.array]
         :param alpha2s: list of constant offsets for player 2
         :type alpha2s: [np.array]
+        :param visualizer: optional visualizer
+        :type visualizer: Visualizer
         """
         self._dynamics = dynamics
         self._player1_cost = player1_cost
@@ -83,16 +87,31 @@ class ILQSolver(object):
         # Current and previous operating points (states/controls) for use
         # in checking convergence.
         self._last_operating_point = None
-        self._current_operating_point = self._compute_operating_point()
+        self._current_operating_point = None
+#        self._current_operating_point = self._compute_operating_point()
 
         # Fixed step size for the linesearch.
-        self._alpha_scaling = 0.01
+        self._alpha_scaling = 0.1
+
+        # Set up visualizer.
+        self._visualizer = visualizer
 
     def run(self):
         """ Run the algorithm for the specified parameters. """
+        iteration = 0
+
         while not self._is_converged():
-            # (1) Compute current operating point.
+            # (1) Compute current operating point and update last one.
             xs, u1s, u2s = self._compute_operating_point()
+            self._last_operating_point = self._current_operating_point
+            self._current_operating_point = (xs, u1s, u2s)
+
+            if self._visualizer is not None:
+                self._visualizer.add_trajectory(iteration, {
+                    "xs" : xs, "u1s" : u1s, "u2s" : u2s})
+                plt.clf()
+                self._visualizer.plot()
+                plt.pause(0.1)
 
             # (2) Linearize about this operating point. Make sure to
             # stack appropriately since we will concatenate state vectors
@@ -153,6 +172,7 @@ class ILQSolver(object):
 
             # (5) Linesearch separately for both players.
             self._linesearch()
+            iteration += 1
 
     def _compute_operating_point(self):
         """
@@ -166,8 +186,19 @@ class ILQSolver(object):
         u2s = []
 
         for k in range(self._horizon):
-            u1 = -self._P1s[k] @ xs[k] - self._alpha1s[k]
-            u2 = -self._P2s[k] @ xs[k] - self._alpha2s[k]
+            if self._current_operating_point is not None:
+                current_x = self._current_operating_point[0][k]
+                current_u1 = self._current_operating_point[1][k]
+                current_u2 = self._current_operating_point[2][k]
+            else:
+                current_x = np.zeros((self._dynamics._x_dim, 1))
+                current_u1 = np.zeros((self._dynamics._u1_dim, 1))
+                current_u2 = np.zeros((self._dynamics._u2_dim, 1))
+
+            u1 = current_u1 - self._P1s[k] @ (
+                xs[k] - current_x) - self._alpha1s[k]
+            u2 = current_u2 - self._P2s[k] @ (
+                xs[k] - current_x) - self._alpha2s[k]
 
             u1s.append(u1)
             u2s.append(u2)
@@ -182,7 +213,6 @@ class ILQSolver(object):
 
     def _linesearch(self):
         """ Linesearch for both players separately. """
-
         # HACK: This is simple, need an actual linesearch.
         for ii in range(self._horizon):
             self._alpha1s[ii] *= self._alpha_scaling
