@@ -137,7 +137,7 @@ alpha1s = [np.zeros((dynamics._u1_dim, 1))] * HORIZON_STEPS
 alpha2s = [np.zeros((dynamics._u2_dim, 1))] * HORIZON_STEPS
 
 # Visualizer.
-visualizer = Visualizer(0, 1)
+visualizer = Visualizer(0, 1, obstacle_centers, obstacle_radii, goal)
 
 # Set up ILQSolver.
 solver = ILQSolver(dynamics, player1_cost, player2_cost,

@@ -41,7 +41,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Visualizer(object):
-    def __init__(self, x_idx, y_idx, figure_number=1):
+    def __init__(self, x_idx, y_idx, obs_centers, obs_radii, goal_center, figure_number=1):
         """
         Construct from indices of x/y coordinates in state vector.
 
@@ -49,12 +49,21 @@ class Visualizer(object):
         :type x_idx: uint
         :param y_idx: index of y-coordinate of state
         :type y_idx: uint
+        :param obs_centers: list of obstacle center points
+        :type obs_centers: [Point]
+        :param obs_radii: list of obstacle radii
+        :type obs_radii: [float]
+        :param goal_center: position of the goal
+        :type goal_center: Point
         :param figure_number: which figure number to operate on
         :type figure_number: uint
         """
         self._x_idx = x_idx
         self._y_idx = y_idx
         self._figure_number = figure_number
+        self._obs_centers = obs_centers
+        self._obs_radii = obs_radii
+        self._goal_center = goal_center
 
         # Store history as list of trajectories.
         # Each trajectory is a dictionary of lists of states and controls.
@@ -76,6 +85,21 @@ class Visualizer(object):
     def plot(self):
         """ Plot everything. """
         plt.figure(self._figure_number)
+
+        # Plot the obstacles.
+        ax = plt.gca()
+        for center, radius in zip(self._obs_centers, self._obs_radii):
+            circle = plt.Circle(
+                (center.x, center.y), radius, color='r', fill=False)
+            ax.add_artist(circle)
+
+        # Plot the goal.
+        circle = plt.Circle(
+            (self._goal_center.x, self._goal_center.y),
+            0.5, color='b', fill=True)
+        ax.add_artist(circle)
+
+        # Plot the history of trajectories.
         for ii, traj in zip(self._iterations, self._history):
             xs = [x[self._x_idx, 0] for x in traj["xs"]]
             ys = [x[self._y_idx, 0] for x in traj["xs"]]
