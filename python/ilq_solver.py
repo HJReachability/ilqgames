@@ -44,6 +44,7 @@ import torch
 from two_player_dynamical_system import TwoPlayerDynamicalSystem
 from player_cost import PlayerCost
 from solve_lq_game import solve_lq_game
+from evaluate_lq_game_cost import evaluate_lq_game_cost
 
 class ILQSolver(object):
     def __init__(self, dynamics, player1_cost, player2_cost,
@@ -85,7 +86,7 @@ class ILQSolver(object):
         self._current_operating_point = self._compute_operating_point()
 
         # Fixed step size for the linesearch.
-        self._alpha_scaling = 0.1
+        self._alpha_scaling = 0.01
 
     def run(self):
         """ Run the algorithm for the specified parameters. """
@@ -133,11 +134,16 @@ class ILQSolver(object):
                 R21s.append(R21)
                 R22s.append(R22)
 
-            print("Cost 1 vs. 2: %f vs %f" % (cost1, cost2))
-
             # (4) Compute feedback Nash equilibrium of the resulting LQ game.
             P1s, P2s, alpha1s, alpha2s = solve_lq_game(
                 As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
+
+            # Accumulate total costs for both players.
+            total_cost1, total_cost2 = evaluate_lq_game_cost(
+                As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
+                P1s, P2s, alpha1s, alpha2s, xs[0])
+            print("Total cost for player 1 vs. 2: %f vs. %f." %
+                  (total_cost1, total_cost2))
 
             # Update the member variables.
             self._P1s = P1s
