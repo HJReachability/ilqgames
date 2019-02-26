@@ -46,6 +46,7 @@ from point import Point
 from proximity_cost import ProximityCost
 from semiquadratic_cost import SemiquadraticCost
 from player_cost import PlayerCost
+from visualizer import Visualizer
 
 # General parameters.
 TIME_HORIZON = 10.0   # s
@@ -97,6 +98,9 @@ dvy_cost_upper = SemiquadraticCost(
 dvy_cost_lower = SemiquadraticCost(
     dimension=1, threshold=-max_dvy, oriented_right=False)
 
+# Add light quadratic from origin for controls.
+# TODO!
+
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
 player1_cost.add_cost(goal_cost, "x", -1.0)
@@ -132,9 +136,12 @@ P2s = [np.zeros((dynamics._u2_dim, dynamics._x_dim))] * HORIZON_STEPS
 alpha1s = [np.zeros((dynamics._u1_dim, 1))] * HORIZON_STEPS
 alpha2s = [np.zeros((dynamics._u2_dim, 1))] * HORIZON_STEPS
 
+# Visualizer.
+visualizer = Visualizer(0, 1)
+
 # Set up ILQSolver.
 solver = ILQSolver(dynamics, player1_cost, player2_cost,
-                   x0, P1s, P2s, alpha1s, alpha2s)
+                   x0, P1s, P2s, alpha1s, alpha2s, visualizer)
 
 solver.run()
 print("P1s: ", P1s)
