@@ -66,33 +66,28 @@ class PlayerCost(object):
         """
         if isinstance(x, np.ndarray):
             assert isinstance(u1, np.ndarray) and isinstance(u2, np.ndarray)
-            total_cost = 0.0
         else:
             assert isinstance(x, torch.Tensor) and \
                 isinstance(u1, torch.Tensor) and isinstance(u2, torch.Tensor)
 
         first_time_through = True
         for cost, arg, weight in zip(self._costs, self._args, self._weights):
-            if first_time_through:
-                if arg == "x":
-                    total_cost = weight * cost(x)
-                elif arg == "u1":
-                    total_cost = weight * cost(u1)
-                elif arg == "u2":
-                    total_cost = weight * cost(u2)
-                else:
-                    raise RuntimeError("Unrecognized arg name: " + arg)
+            if arg == "x":
+                current_term = weight * cost(x)
+            elif arg == "u1":
+                current_term = weight * cost(u1)
+            elif arg == "u2":
+                current_term = weight * cost(u2)
             else:
-                if arg == "x":
-                    total_cost += weight * cost(x)
-                elif arg == "u1":
-                    total_cost += weight * cost(u1)
-                elif arg == "u2":
-                    total_cost += weight * cost(u2)
-                else:
-                    raise RuntimeError("Unrecognized arg name: " + arg)
+                raise RuntimeError("Unrecognized arg name: " + arg)
+
+            if first_time_through:
+                total_cost = current_term
+            else:
+                total_cost += current_term
 
             first_time_through = False
+
         return total_cost
 
     def add_cost(self, cost, arg, weight=1.0):
@@ -155,33 +150,37 @@ class PlayerCost(object):
         # Compute gradients (and store numpy versions).
         grad_x_torch = torch.autograd.grad(
             cost_torch, x_torch, create_graph=True, allow_unused=True)[0]
-        grad_x = grad_x_torch.detach().numpy().copy()
-
         grad_u1_torch = torch.autograd.grad(
-            cost_torch, u1_torch, create_graph=True)[0]
-        grad_u1 = grad_u1_torch.detach().numpy().copy()
-
+            cost_torch, u1_torch, create_graph=True, allow_unused=True)[0]
         grad_u2_torch = torch.autograd.grad(
-            cost_torch, u2_torch, create_graph=True)[0]
-        grad_u2 = grad_u2_torch.detach().numpy().copy()
+            cost_torch, u2_torch, create_graph=True, allow_unused=True)[0]
 
-        # Compute Hessians (and store numpy versions).
+        # Compute Hessians (and store numpy versions), and be careful to
+        # catch Nones (which indicate cost not depending on a particular
+        # variable).
         hess_x = np.zeros((len(x), len(x)))
-        for ii in range(len(x)):
-            hess_row = torch.autograd.grad(
-                grad_x_torch[ii, 0], x_torch, retain_graph=True)[0]
-            hess_x[ii, :] = hess_row.detach().numpy().copy().T
+        grad_x = np.zeros((len(x), 1))
+        if grad_x_torch is not None:
+            grad_x = grad_x_torch.detach().numpy().copy()
+            for ii in range(len(x)):
+                hess_row = torch.autograd.grad(
+                    grad_x_torch[ii, 0], x_torch, retain_graph=True)[0]
+                hess_x[ii, :] = hess_row.detach().numpy().copy().T
 
         hess_u1 = np.zeros((len(u1), len(u1)))
-        for ii in range(len(u1)):
-            hess_row = torch.autograd.grad(
-                grad_u1_torch[ii, 0], u1_torch, retain_graph=True)[0]
-            hess_u1[ii, :] = hess_row.detach().numpy().copy().T
+        if grad_u1_torch is not None:
+            grad_u1 = grad_u1_torch.detach().numpy().copy()
+            for ii in range(len(u1)):
+                hess_row = torch.autograd.grad(
+                    grad_u1_torch[ii, 0], u1_torch, retain_graph=True)[0]
+                hess_u1[ii, :] = hess_row.detach().numpy().copy().T
 
         hess_u2 = np.zeros((len(u2), len(u2)))
-        for ii in range(len(u2)):
-            hess_row = torch.autograd.grad(
-                grad_u2_torch[ii, 0], u2_torch, retain_graph=True)[0]
-            hess_u2[ii, :] = hess_row.detach().numpy().copy().T
+        if grad_u2_torch is not None:
+            grad_u2 = grad_u2_torch.detach().numpy().copy()
+            for ii in range(len(u2)):
+                hess_row = torch.autograd.grad(
+                    grad_u2_torch[ii, 0], u2_torch, retain_graph=True)[0]
+                hess_u2[ii, :] = hess_row.detach().numpy().copy().T
 
         return cost, grad_x, hess_x, hess_u1, hess_u2

@@ -85,10 +85,10 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s):
        for both players (P1s, P2s, alpha1s, alpha2s)
     :rtype: [np.array], [np.array], [np.array], [np.array]
     """
-
     # Assertions to check valid input.
     assert len(As) == len(B1s) == len(B2s) == len(cs) == len(Q1s) == \
-        len(Q2s) == len(R11s) == len(R12s) == len(R21s) == len(R22s)
+        len(Q2s) == len(l1s) == len(l2s) == len(R11s) == len(R12s) == \
+        len(R21s) == len(R22s)
     horizon = len(As) - 1
 
     # Cache dimensions of control and state.
@@ -146,7 +146,7 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s):
         Y2 = B2.T @ Z2 @ A
         Y = np.concatenate([Y1, Y2], axis=0)
 
-        P = np.linalg.solve(a=S, b=Y)
+        P, _, _, _ = np.linalg.lstsq(a=S, b=Y)
         P1 = P[:u1_dim, :]
         P2 = P[u1_dim:, :]
         P1s.appendleft(P1)
@@ -178,7 +178,7 @@ def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s):
         Y2 = B2.T @ (zeta2 + Z2 @ c)
         Y = np.concatenate([Y1, Y2], axis=0)
 
-        alpha = np.linalg.solve(a=S, b=Y)
+        alpha, _, _, _ = np.linalg.lstsq(a=S, b=Y)
         alpha1 = alpha[:u1_dim]
         alpha2 = alpha[u1_dim:]
         alpha1s.appendleft(alpha1)

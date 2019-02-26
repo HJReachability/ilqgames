@@ -77,9 +77,11 @@ class ProximityCost(Cost):
         relative_squared_distance = dx*dx + dy*dy
 
         if relative_squared_distance < self._max_squared_distance:
-            return -relative_squared_distance * torch.ones(1, 1)
+            return -relative_squared_distance * torch.ones(
+                1, 1, requires_grad=True).double()
 
-        return -self._max_squared_distance * torch.ones(1, 1)
+        return -self._max_squared_distance * torch.ones(
+            1, 1, requires_grad=True).double()
 
 class ConcatenatedStateProximityCost(Cost):
     def __init__(self, position_indices1, position_indices2, max_distance):
@@ -99,7 +101,7 @@ class ConcatenatedStateProximityCost(Cost):
         self._x_index1, self._y_index1 = position_indices1
         self._x_index2, self._y_index2 = position_indices2
         self._max_squared_distance = max_distance**2
-        super(ProximityCost, self).__init__()
+        super(ConcatenatedStateProximityCost, self).__init__()
 
     def __call__(self, xu):
         """
@@ -123,4 +125,5 @@ class ConcatenatedStateProximityCost(Cost):
         if relative_squared_distance < self._max_squared_distance:
             return -relative_squared_distance
 
-        return -self._max_squared_distance * torch.ones(1, 1)
+        return -self._max_squared_distance * torch.ones(
+            1, 1, requires_grad=True).double()
