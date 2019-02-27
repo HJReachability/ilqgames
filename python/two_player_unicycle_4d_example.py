@@ -99,7 +99,15 @@ dvy_cost_lower = SemiquadraticCost(
     dimension=1, threshold=-max_dvy, oriented_right=False)
 
 # Add light quadratic from origin for controls.
-# TODO!
+light_cost_upper0 = SemiquadraticCost(
+    dimension=0, threshold=0, oriented_right=True)
+light_cost_lower0 = SemiquadraticCost(
+    dimension=0, threshold=0, oriented_right=False)
+
+light_cost_upper1 = SemiquadraticCost(
+    dimension=1, threshold=0, oriented_right=True)
+light_cost_lower1 = SemiquadraticCost(
+    dimension=1, threshold=0, oriented_right=False)
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
@@ -112,6 +120,11 @@ player1_cost.add_cost(w_cost_lower, "u1", 10.0)
 player1_cost.add_cost(a_cost_upper, "u1", 10.0)
 player1_cost.add_cost(a_cost_lower, "u1", 10.0)
 
+player1_cost.add_cost(light_cost_upper0, "u1", 1.0)
+player1_cost.add_cost(light_cost_lower0, "u1", 1.0)
+player1_cost.add_cost(light_cost_upper1, "u1", 1.0)
+player1_cost.add_cost(light_cost_lower1, "u1", 1.0)
+
 player2_cost = PlayerCost()
 player2_cost.add_cost(goal_cost, "x", 1.0)
 for cost in obstacle_costs:
@@ -121,6 +134,11 @@ player2_cost.add_cost(dvx_cost_upper, "u2", 10.0)
 player2_cost.add_cost(dvx_cost_lower, "u2", 10.0)
 player2_cost.add_cost(dvy_cost_upper, "u2", 10.0)
 player2_cost.add_cost(dvy_cost_lower, "u2", 10.0)
+
+player2_cost.add_cost(light_cost_upper0, "u2", 1.0)
+player2_cost.add_cost(light_cost_lower0, "u2", 1.0)
+player2_cost.add_cost(light_cost_upper1, "u2", 1.0)
+player2_cost.add_cost(light_cost_lower1, "u2", 1.0)
 
 # Create dynamics.
 dynamics = TwoPlayerUnicycle4D(T=0.1)

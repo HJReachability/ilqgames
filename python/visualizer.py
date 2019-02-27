@@ -106,3 +106,4 @@ class Visualizer(object):
             plt.plot(xs, ys, label="Iteration " + str(ii))
 
         plt.legend()
+
