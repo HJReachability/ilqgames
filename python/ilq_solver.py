@@ -47,10 +47,11 @@ from player_cost import PlayerCost
 from solve_lq_game import solve_lq_game
 from evaluate_lq_game_cost import evaluate_lq_game_cost
 from visualizer import Visualizer
+from logger import Logger
 
 class ILQSolver(object):
     def __init__(self, dynamics, player1_cost, player2_cost,
-                 x0, P1s, P2s, alpha1s, alpha2s, visualizer=None):
+                 x0, P1s, P2s, alpha1s, alpha2s, logger=None, visualizer=None):
         """
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
@@ -71,6 +72,8 @@ class ILQSolver(object):
         :type alpha1s: [np.array]
         :param alpha2s: list of constant offsets for player 2
         :type alpha2s: [np.array]
+        :param logger: logging utility
+        :type logger: Logger
         :param visualizer: optional visualizer
         :type visualizer: Visualizer
         """
@@ -95,6 +98,7 @@ class ILQSolver(object):
 
         # Set up visualizer.
         self._visualizer = visualizer
+        self._logger = logger
 
     def run(self):
         """ Run the algorithm for the specified parameters. """
@@ -163,6 +167,15 @@ class ILQSolver(object):
                 P1s, P2s, alpha1s, alpha2s, xs[0])
             print("Total cost for player 1 vs. 2: %f vs. %f." %
                   (total_cost1, total_cost2))
+
+            # Log everything.
+            if self._logger is not None:
+                self._logger.log("xs", xs)
+                self._logger.log("u1s", u1s)
+                self._logger.log("u2s", u2s)
+                self._logger.log("total_cost1", total_cost1)
+                self._logger.log("total_cost2", total_cost2)
+                self._logger.dump()
 
             # Update the member variables.
             self._P1s = P1s

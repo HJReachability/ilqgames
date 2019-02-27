@@ -47,6 +47,7 @@ from proximity_cost import ProximityCost
 from semiquadratic_cost import SemiquadraticCost
 from player_cost import PlayerCost
 from visualizer import Visualizer
+from logger import Logger
 
 # General parameters.
 TIME_HORIZON = 10.0   # s
@@ -157,9 +158,11 @@ alpha2s = [np.zeros((dynamics._u2_dim, 1))] * HORIZON_STEPS
 # Visualizer.
 visualizer = Visualizer(0, 1, obstacle_centers, obstacle_radii, goal)
 
+# Logger.
+logger = Logger("./logs/unicycle_4d_example.pkl")
+
 # Set up ILQSolver.
 solver = ILQSolver(dynamics, player1_cost, player2_cost,
-                   x0, P1s, P2s, alpha1s, alpha2s, visualizer)
+                   x0, P1s, P2s, alpha1s, alpha2s, logger, visualizer)
 
 solver.run()
-print("P1s: ", P1s)
