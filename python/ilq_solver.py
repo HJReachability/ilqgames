@@ -117,7 +117,7 @@ class ILQSolver(object):
                 self._u1_reference_cost = ReferenceDeviationCost(u1s)
                 self._u2_reference_cost = ReferenceDeviationCost(u2s)
 
-                REFERENCE_DEVIATION_WEIGHT = 10000.0
+                REFERENCE_DEVIATION_WEIGHT = 1e-4
                 self._player1_cost.add_cost(
                     self._x_reference_cost, "x", REFERENCE_DEVIATION_WEIGHT)
                 self._player1_cost.add_cost(
@@ -125,11 +125,14 @@ class ILQSolver(object):
                 self._player2_cost.add_cost(
                     self._x_reference_cost, "x", REFERENCE_DEVIATION_WEIGHT)
                 self._player2_cost.add_cost(
-                    self._u1_reference_cost, "u2", REFERENCE_DEVIATION_WEIGHT)
+                    self._u2_reference_cost, "u2", REFERENCE_DEVIATION_WEIGHT)
             else:
-                self._x_reference_cost.reference = xs
-                self._u1_reference_cost.reference = u1s
-                self._u2_reference_cost.reference = u2s
+                self._x_reference_cost.reference = \
+                    self._last_operating_point[0]
+                self._u1_reference_cost.reference = \
+                    self._last_operating_point[1]
+                self._u2_reference_cost.reference = \
+                    self._last_operating_point[2]
 
             # Visualization.
             if self._visualizer is not None:
