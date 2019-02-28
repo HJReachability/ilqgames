@@ -65,7 +65,7 @@ HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
 #          x start
 goal = Point(125.0, 100.0)
 obstacle_centers = [Point(40.0, 85.0), Point(80.0, 110.0), Point(100.0, 65.0)]
-obstacle_radii = [5.0, 5.0, 5.0]
+obstacle_radii = [10.0, 10.0, 10.0]
 
 goal_cost = ProximityCost(
     position_indices=(0, 1), point=goal, max_distance=np.inf)
