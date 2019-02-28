@@ -70,20 +70,19 @@ class SemiquadraticPolylineCost(Cost):
         self._x_index, self._y_index = position_indices
         super(SemiquadraticPolylineCost, self).__init__()
 
-    def __call__(self, xu):
+    def __call__(self, x, k=0):
         """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
-        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
-        NOTE: `xu` should be a column vector.
+        Evaluate this cost function on the given state and time.
+        NOTE: `x` should be a PyTorch tensor with `requires_grad` set `True`.
+        NOTE: `x` should be a column vector.
 
-        :param xu: state of the system
-        :type xu: torch.Tensor
+        :param x: state of the system
+        :type x: torch.Tensor
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
         signed_distance = self._polyline.signed_distance_to(
-            Point(xu[self._x_index, 0], xu[self._y_index, 0]))
+            Point(x[self._x_index, 0], x[self._y_index, 0]))
 
         if self._oriented_right:
             if signed_distance > self._signed_distance_threshold:

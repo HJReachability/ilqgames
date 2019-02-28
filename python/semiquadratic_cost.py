@@ -62,10 +62,10 @@ class SemiquadraticCost(Cost):
         self._oriented_right = oriented_right
         super(SemiquadraticCost, self).__init__()
 
-    def __call__(self, xu):
+    def __call__(self, xu, k=0):
         """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
+        Evaluate this cost function on the given input and itme, which might
+        either be a state `x` or a control `u`. Hence the input is named `xu`.
         NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
         NOTE: `xu` should be a column vector.
 

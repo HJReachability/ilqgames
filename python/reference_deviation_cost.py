@@ -33,28 +33,37 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Base class for all cost functions. Structured as a functor
-# so that it can be treated like a function, but support inheritance.
+# Reference trajectory following cost. Penalizes sum of squared deviations from
+# a reference trajectory (of a given quantity, e.g. x or u1 or u2).
 #
 ################################################################################
 
-class Cost(object):
-    """ Base class for all cost functions. """
-    def __init__(self):
-        pass
+import torch
+
+from cost import Cost
+
+class ReferenceDeviationCost(Cost):
+    def __init__(self, reference):
+        """
+        Initialize with a reference trajectory, stored as a list of np.arrays.
+        NOTE: This list will be updated externally as the reference
+              trajectory evolves with each iteration.
+
+        :param reference: list of either states or controls
+        :type reference: [np.array]
+        """
+        self.reference = reference
+        super(ReferenceDeviationCost, self).__init__()
 
     def __call__(self, xu, k):
         """
-        Evaluate this cost function on the given input/time, which might either
-        be a state `x` or a control `u`. Hence the input is named `xu`.
+        Evaluate this cost function on the given vector and time.
         NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
         NOTE: `xu` should be a column vector.
 
-        :param xu: state of the system or control input
+        :param xu: state/control of the system
         :type xu: torch.Tensor
-        :param k: time step, if cost is time-varying
-        :type k: uint
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
-        raise NotImplementedError("__call__ is not implemented.")
+        return torch.norm(xu - torch.as_tensor(self.reference[k]))**2

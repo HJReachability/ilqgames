@@ -44,6 +44,7 @@ import matplotlib.pyplot as plt
 
 from two_player_dynamical_system import TwoPlayerDynamicalSystem
 from player_cost import PlayerCost
+from reference_deviation_cost import ReferenceDeviationCost
 from solve_lq_game import solve_lq_game
 from evaluate_lq_game_cost import evaluate_lq_game_cost
 from visualizer import Visualizer
@@ -91,7 +92,6 @@ class ILQSolver(object):
         # in checking convergence.
         self._last_operating_point = None
         self._current_operating_point = None
-#        self._current_operating_point = self._compute_operating_point()
 
         # Fixed step size for the linesearch.
         self._alpha_scaling = 0.02
@@ -110,6 +110,28 @@ class ILQSolver(object):
             self._last_operating_point = self._current_operating_point
             self._current_operating_point = (xs, u1s, u2s)
 
+            # If this is the first time through, then set up reference deviation
+            # costs and add to player costs. Otherwise, just update those costs.
+            if iteration == 0:
+                self._x_reference_cost = ReferenceDeviationCost(xs)
+                self._u1_reference_cost = ReferenceDeviationCost(u1s)
+                self._u2_reference_cost = ReferenceDeviationCost(u2s)
+
+                REFERENCE_DEVIATION_WEIGHT = 10000.0
+                self._player1_cost.add_cost(
+                    self._x_reference_cost, "x", REFERENCE_DEVIATION_WEIGHT)
+                self._player1_cost.add_cost(
+                    self._u1_reference_cost, "u1", REFERENCE_DEVIATION_WEIGHT)
+                self._player2_cost.add_cost(
+                    self._x_reference_cost, "x", REFERENCE_DEVIATION_WEIGHT)
+                self._player2_cost.add_cost(
+                    self._u1_reference_cost, "u2", REFERENCE_DEVIATION_WEIGHT)
+            else:
+                self._x_reference_cost.reference = xs
+                self._u1_reference_cost.reference = u1s
+                self._u2_reference_cost.reference = u2s
+
+            # Visualization.
             if self._visualizer is not None:
                 self._visualizer.add_trajectory(iteration, {
                     "xs" : xs, "u1s" : u1s, "u2s" : u2s})
@@ -141,9 +163,9 @@ class ILQSolver(object):
             for ii in range(self._horizon):
                 # Quadraticize everything!
                 cost1, l1, Q1, R11, R12 = self._player1_cost.quadraticize(
-                    xs[ii], u1s[ii], u2s[ii])
+                    xs[ii], u1s[ii], u2s[ii], ii)
                 cost2, l2, Q2, R21, R22 = self._player2_cost.quadraticize(
-                    xs[ii], u1s[ii], u2s[ii])
+                    xs[ii], u1s[ii], u2s[ii], ii)
 
                 cost1s.append(cost1)
                 Q1s.append(Q1)

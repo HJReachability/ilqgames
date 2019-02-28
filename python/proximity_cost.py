@@ -67,13 +67,15 @@ class ProximityCost(Cost):
         self._outside_weight = outside_weight
         super(ProximityCost, self).__init__()
 
-    def __call__(self, x):
+    def __call__(self, x, k=0):
         """
-        Evaluate this cost function on the given input state.
+        Evaluate this cost function on the given input state and time.
         NOTE: `x` should be a column vector.
 
         :param x: concatenated state of the two systems
         :type x: torch.Tensor
+        :param k: time step, if cost is time-varying
+        :type k: uint
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
@@ -121,23 +123,23 @@ class ConcatenatedStateProximityCost(Cost):
         self._outside_weight = outside_weight
         super(ConcatenatedStateProximityCost, self).__init__()
 
-    def __call__(self, xu):
+    def __call__(self, x, k=0):
         """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
-        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
-        NOTE: `xu` should be a column vector.
+        Evaluate this cost function on the given state and time.
+        NOTE: `x` should be a column vector.
 
-        Here, `xu` is just the concatenated state of the two systems.
+        Here, `x` is just the concatenated state of the two systems.
 
-        :param xu: concatenated state of the two systems
-        :type xu: torch.Tensor
+        :param x: concatenated state of the two systems
+        :type x: torch.Tensor
+        :param k: time step, if cost is time-varying
+        :type k: uint
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
         # Compute relative distance.
-        dx = xu[self._x_index1, 0] - xu[self._x_index2, 0]
-        dy = xu[self._y_index1, 0] - xu[self._y_index2, 0]
+        dx = x[self._x_index1, 0] - x[self._x_index2, 0]
+        dy = x[self._y_index1, 0] - x[self._y_index2, 0]
         relative_squared_distance = dx*dx + dy*dy
 
         if relative_squared_distance < self._max_squared_distance:
