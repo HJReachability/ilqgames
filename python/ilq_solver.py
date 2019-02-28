@@ -94,7 +94,7 @@ class ILQSolver(object):
 #        self._current_operating_point = self._compute_operating_point()
 
         # Fixed step size for the linesearch.
-        self._alpha_scaling = 0.01
+        self._alpha_scaling = 0.02
 
         # Set up visualizer.
         self._visualizer = visualizer
