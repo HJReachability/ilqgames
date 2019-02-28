@@ -39,15 +39,18 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 ################################################################################
 
 import torch
+import numpy as np
 
 from cost import Cost
 from point import Point
 
 class ProximityCost(Cost):
-    def __init__(self, position_indices, point, max_distance):
+    def __init__(self, position_indices, point,
+                 max_distance, outside_weight=0.01):
         """
         Initialize with dimension to add cost to and threshold BELOW which
-        to impose quadratic cost.
+        to impose quadratic cost. Above the threshold, we use a very light
+        quadratic cost. The overall cost is continuous.
 
         :param position_indices: indices of input corresponding to (x, y)
         :type position_indices: (uint, uint)
@@ -55,10 +58,13 @@ class ProximityCost(Cost):
         :type point: Point
         :param max_distance: maximum value of distance to penalize
         :type threshold: float
+        :param outside_weight: weight of quadratic cost outside threshold
+        :type outside_weight: float
         """
         self._x_index, self._y_index = position_indices
         self._point = point
         self._max_squared_distance = max_distance**2
+        self._outside_weight = outside_weight
         super(ProximityCost, self).__init__()
 
     def __call__(self, x):
@@ -80,14 +86,23 @@ class ProximityCost(Cost):
             return -relative_squared_distance * torch.ones(
                 1, 1, requires_grad=True).double()
 
-        return -self._max_squared_distance * torch.ones(
+        # Outside penalty is:
+        #   ``` outside_weight * (relative_distance - max_distance)**2 ```
+        # which can be computed from what we have already with only one sqrt.
+        outside_penalty = self._outside_weight * (
+            relative_squared_distance + self._max_squared_distance -
+            2.0 * torch.sqrt(
+                relative_squared_distance * self._max_squared_distance))
+        return -outside_penalty - self._max_squared_distance * torch.ones(
             1, 1, requires_grad=True).double()
 
 class ConcatenatedStateProximityCost(Cost):
-    def __init__(self, position_indices1, position_indices2, max_distance):
+    def __init__(self, position_indices1, position_indices2,
+                 max_distance, outside_weight=0.01):
         """
         Initialize with dimension to add cost to and threshold BELOW which
-        to impose quadratic cost.
+        to impose quadratic cost. Above the threshold, we use a very light
+        quadratic cost. The overall cost is continuous.
 
         :param position_indices1: indices of input corresponding to (x, y) for
           vehicle 1
@@ -97,10 +112,13 @@ class ConcatenatedStateProximityCost(Cost):
         :type position_indices2: (uint, uint)
         :param max_distance: maximum value of distance to penalize
         :type threshold: float
+        :param outside_weight: weight of quadratic cost outside threshold
+        :type outside_weight: float
         """
         self._x_index1, self._y_index1 = position_indices1
         self._x_index2, self._y_index2 = position_indices2
         self._max_squared_distance = max_distance**2
+        self._outside_weight = outside_weight
         super(ConcatenatedStateProximityCost, self).__init__()
 
     def __call__(self, xu):
@@ -123,7 +141,15 @@ class ConcatenatedStateProximityCost(Cost):
         relative_squared_distance = dx*dx + dy*dy
 
         if relative_squared_distance < self._max_squared_distance:
-            return -relative_squared_distance
+            return -relative_squared_distance * torch.ones(
+                1, 1, requires_grad=True).double()
 
-        return -self._max_squared_distance * torch.ones(
+        # Outside penalty is:
+        #   ``` outside_weight * (relative_distance - max_distance)**2 ```
+        # which can be computed from what we have already with only one sqrt.
+        outside_penalty = self._outside_weight * (
+            relative_squared_distance + self._max_squared_distance -
+            2.0 * torch.sqrt(
+                relative_squared_distance * self._max_squared_distance))
+        return -outside_penalty - self._max_squared_distance * torch.ones(
             1, 1, requires_grad=True).double()
