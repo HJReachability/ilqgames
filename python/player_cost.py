@@ -50,7 +50,7 @@ class PlayerCost(object):
         self._args = []
         self._weights = []
 
-    def __call__(self, x, u1, u2):
+    def __call__(self, x, u1, u2, k):
         """
         Evaluate the game cost function at the current state and controls.
         NOTE: `x`, `u1`, and `u2` are all column vectors.
@@ -61,6 +61,8 @@ class PlayerCost(object):
         :type u1: np.array or torch.Tensor
         :param u2: control for player 2
         :type u2: np.array or torch.Tensor
+        :param k: time step, if cost is time-varying
+        :type k: uint
         :return: scalar value of cost
         :rtype: float or torch.Tensor
         """
@@ -73,11 +75,11 @@ class PlayerCost(object):
         first_time_through = True
         for cost, arg, weight in zip(self._costs, self._args, self._weights):
             if arg == "x":
-                current_term = weight * cost(x)
+                current_term = weight * cost(x, k)
             elif arg == "u1":
-                current_term = weight * cost(u1)
+                current_term = weight * cost(u1, k)
             elif arg == "u2":
-                current_term = weight * cost(u2)
+                current_term = weight * cost(u2, k)
             else:
                 raise RuntimeError("Unrecognized arg name: " + arg)
 
@@ -109,16 +111,16 @@ class PlayerCost(object):
         self._args.append(arg)
         self._weights.append(weight)
 
-    def quadraticize(self, x, u1, u2):
+    def quadraticize(self, x, u1, u2, k):
         """
         Compute a quadratic approximation to the overall cost for a
         particular choice of state `x`, and controls `u1` (player 1) and
-        `u2` (player 2).
+        `u2` (player 2), at time-step `k`.
 
         Returns the gradient and Hessian of the overall cost such that:
         ```
-           cost(x + dx, u1 + du1, u2 + du2) \approx
-                cost(x, u1, u2) +
+           cost(x + dx, u1 + du1, u2 + du2, k) \approx
+                cost(x, u1, u2, k) +
                 grad_x^T dx +
                 0.5 * (dx^T hess_x dx + du1^T hess_u1 du1 + du2^T hess_u2 du2)
         ```
@@ -135,6 +137,8 @@ class PlayerCost(object):
         :type u1: np.array
         :param u2: control input of player 2
         :type u2: np.array
+        :param k: time step, if cost is time-varying
+        :type k: uint
         :return: cost(x, u1, u2), grad_x, hess_x, hess_u1, hess_u2
         :rtype: float, np.array, np.array, np.array, np.array
         """
@@ -144,7 +148,7 @@ class PlayerCost(object):
         u2_torch = torch.from_numpy(u2).requires_grad_(True)
 
         # Evaluate cost here.
-        cost_torch = self.__call__(x_torch, u1_torch, u2_torch)
+        cost_torch = self.__call__(x_torch, u1_torch, u2_torch, k)
         cost = cost_torch.item()
 
         # Compute gradients (and store numpy versions).
