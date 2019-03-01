@@ -5,7 +5,9 @@ initState = [10; 10; pi/4; 0];
 wMax = 1;
 aRange = [-2; 2];
 % dMax = [0.1; 0.1];
-dMax = [0; 0];
+% dMax = [0.8; 0.8];
+dMax = [1.9; 1.9];
+% dMax = [0; 0];
 % dMax = [2; 2];
 dynamics = Plane4D(initState, wMax, aRange, dMax);
 
@@ -15,20 +17,14 @@ dynamics = Plane4D(initState, wMax, aRange, dMax);
 gridCells = [15; 15; 15; 15];
 periodicDim = 3;
 
-% g = createGrid([0; 0; 0; -5], [150; 150; 2*pi; 10], gridCells, periodicDim);
-g = createGrid([0; 0; -pi; -5], [150; 150; pi; 25], gridCells, periodicDim);
+g = createGrid([0; 0; -pi; -1], [150; 150; pi; 30], gridCells, periodicDim);
 
 targetRadius = 10;
 targetCenter = [125; 100; 0; 0];
 target = shapeCylinder(g, [3 4], targetCenter, targetRadius);
 
-% obstacleCenters = [40, 80, 100; 85, 110, 65];
-obstacleCenters = [40, 80, 62.5; 85, 110, 50];
+obstacleCenters = [40, 80, 100; 85, 110, 65];
 obstacleRadii = [10, 10, 10];
-% obstacleRadii = [15, 15, 15];
-
-% obstacleCenters = [50; 50];
-% obstacleRadii = 10;
 
 obs1 = shapeCylinder(g, [3 4], obstacleCenters(:, 1), obstacleRadii(1));
 obs2 = shapeCylinder(g, [3 4], obstacleCenters(:, 2), obstacleRadii(2));
@@ -36,7 +32,6 @@ obs3 = shapeCylinder(g, [3 4], obstacleCenters(:, 3), obstacleRadii(3));
 
 obs = shapeUnion(obs1, obs2);
 obs = shapeUnion(obs, obs3);
-% obs = shapeUnion(obs1, obs3);
 
 % obs = shapeRectangleByCorners( ...
 %   g, [5; 5; -inf; -inf], [145; 145; inf; inf]);
@@ -45,10 +40,14 @@ obs = shapeUnion(obs, obs3);
 %% Compute reachable set
 tau = 0:0.5:500;
 
+uMode = 'min';
+dMode = 'max';
+minWith = 'none';
+
 schemeData.dynSys = dynamics;
 schemeData.grid = g;
-schemeData.uMode = 'min';
-schemeData.dMode = 'max';
+schemeData.uMode = uMode;
+schemeData.dMode = dMode;
 
 
 extraArgs.targets = target;
@@ -59,7 +58,7 @@ extraArgs.plotData.plotDims = [1 1 0 0];
 extraArgs.plotData.projpt = dynamics.x(3:4);
 extraArgs.deleteLastPlot = true;
 
-[data, tau2] = HJIPDE_solve(target, tau, schemeData, 'none', extraArgs);
+[data, tau2] = HJIPDE_solve(target, tau, schemeData, minWith, extraArgs);
 
 save(sprintf('%s.mat', mfilename), 'data', 'tau2', 'g');
 
@@ -91,32 +90,44 @@ if compTraj
     
     dynamics.x = initState; %set initial state of the dubins car
 
-    TrajextraArgs.uMode = 'min'; %set if control wants to min or max
-    TrajextraArgs.visualize = true; %show plot
-    TrajextraArgs.fig_num = 2; %figure number
+    trajExtraArgs.uMode = uMode; %set if control wants to min or max
+    trajExtraArgs.dMode = dMode;
+    trajExtraArgs.visualize = true; %show plot
+    trajExtraArgs.fig_num = 2; %figure number
     
     %we want to see the first two dimensions (x and y)
-    TrajextraArgs.projDim = [1 1 0 0]; 
+    trajExtraArgs.projDim = [1 1 0 0]; 
     
     %flip data time points so we start from the beginning of time
     dataTraj = flip(data, 5);
     
-    % [traj, traj_tau] = ...
-    % computeOptTraj(g, data, tau, dynSys, extraArgs)
+    % Set the duration of the trajectory to be 10 s.
+%     trajExtraArgs.duration = 10;
+%     trajExtraArgs.timeStep = 0.01;
+    
+    % Compute the optimal trajectory (with distrubance).
     [traj, traj_tau] = ...
-      computeOptTraj(g, dataTraj, tau2, dynamics, TrajextraArgs);
+      computeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
+
+    % Compute the optimal trajectory (with no disturbance).
+    dynamics.x = initState;
+    trajExtraArgs.dMode = 'none';
+    
+    [traj_no_d, traj_tau_no_d] = ...
+      computeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
   
     hold on;
     
-    plot(traj(1, :), traj(2, :));
+    plot(traj(1, :), traj(2, :), 'DisplayName', 'w/ dstb');
+    plot(traj_no_d(1, :), traj_no_d(2, :), 'DisplayName', 'w/o dstb');
     xlim([0 150]);
     ylim([0 150]);
+    legend();
     
     for ii = 1:size(obstacleRadii, 2)
-       plotCircle(obstacleCenters(:, ii), obstacleRadii(ii), 'blah'); 
+       plotCircle(obstacleCenters(:, ii), obstacleRadii(ii), 'obs'); 
     end
     
-%     hold off;
   else
     error(['Initial state is not in the BRS/BRT! It have a value of ' num2str(value, 2)])
   end
