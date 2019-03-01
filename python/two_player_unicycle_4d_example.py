@@ -46,6 +46,7 @@ from point import Point
 from proximity_cost import ProximityCost
 from semiquadratic_cost import SemiquadraticCost
 from player_cost import PlayerCost
+from box_constraint import BoxConstraint
 from visualizer import Visualizer
 from logger import Logger
 
@@ -88,6 +89,10 @@ a_cost_upper = SemiquadraticCost(
 a_cost_lower = SemiquadraticCost(
     dimension=1, threshold=-max_a, oriented_right=False, name="a_cost_lower")
 
+u1_lower = np.array([[-max_w], [-max_a]])
+u1_upper = np.array([[max_w], [max_a]])
+u1_constraint = BoxConstraint(u1_lower, u1_upper)
+
 max_dvx = 0.1 # m/s
 max_dvy = 0.1 # m/s
 
@@ -100,6 +105,10 @@ dvy_cost_upper = SemiquadraticCost(
     dimension=1, threshold=max_dvy, oriented_right=True, name="dvy_cost_upper")
 dvy_cost_lower = SemiquadraticCost(
     dimension=1, threshold=-max_dvy, oriented_right=False, name="dvy_cost_lower")
+
+u2_lower = np.array([[-max_dvx], [-max_dvy]])
+u2_upper = np.array([[max_dvx], [max_dvy]])
+u2_constraint = BoxConstraint(u2_lower, u2_upper)
 
 # Add light quadratic from origin for controls.
 light_cost_upper0 = SemiquadraticCost(
@@ -165,6 +174,8 @@ logger = Logger("./logs/unicycle_4d_example.pkl")
 
 # Set up ILQSolver.
 solver = ILQSolver(dynamics, player1_cost, player2_cost,
-                   x0, P1s, P2s, alpha1s, alpha2s, logger, visualizer)
+                   x0, P1s, P2s, alpha1s, alpha2s,
+                   u1_constraint, u2_constraint,
+                   logger, visualizer)
 
 solver.run()

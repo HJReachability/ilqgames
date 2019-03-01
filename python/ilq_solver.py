@@ -51,7 +51,9 @@ from logger import Logger
 
 class ILQSolver(object):
     def __init__(self, dynamics, player1_cost, player2_cost,
-                 x0, P1s, P2s, alpha1s, alpha2s, logger=None, visualizer=None):
+                 x0, P1s, P2s, alpha1s, alpha2s,
+                 u1_constraint, u2_constraint,
+                 logger=None, visualizer=None):
         """
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
@@ -72,6 +74,10 @@ class ILQSolver(object):
         :type alpha1s: [np.array]
         :param alpha2s: list of constant offsets for player 2
         :type alpha2s: [np.array]
+        :param u1_constraint: constraint on u1
+        :type u1_constraint: Constraint
+        :param u2_constraint: constraint on u2
+        :type u2_constraint: Constraint
         :param logger: logging utility
         :type logger: Logger
         :param visualizer: optional visualizer
@@ -85,6 +91,8 @@ class ILQSolver(object):
         self._P2s = P2s
         self._alpha1s = alpha1s
         self._alpha2s = alpha2s
+        self._u1_constraint = u1_constraint
+        self._u2_constraint = u2_constraint
         self._horizon = len(P1s)
 
         # Current and previous operating points (states/controls) for use
@@ -94,7 +102,7 @@ class ILQSolver(object):
 #        self._current_operating_point = self._compute_operating_point()
 
         # Fixed step size for the linesearch.
-        self._alpha_scaling = 0.02
+        self._alpha_scaling = 0.01
 
         # Set up visualizer.
         self._visualizer = visualizer
@@ -180,22 +188,6 @@ class ILQSolver(object):
             self._alpha1s = alpha1s
             self._alpha2s = alpha2s
 
-            # Clip large matrices.
-            MAX_FROBENIUS_NORM = 10.0
-            for ii in range(self._horizon):
-                if np.linalg.norm(self._P1s[ii]) > MAX_FROBENIUS_NORM:
-                    self._P1s[ii] *= \
-                        MAX_FROBENIUS_NORM / np.linalg.norm(self._P1s[ii])
-                if np.linalg.norm(self._P2s[ii]) > MAX_FROBENIUS_NORM:
-                    self._P2s[ii] *= \
-                        MAX_FROBENIUS_NORM / np.linalg.norm(self._P2s[ii])
-                if np.linalg.norm(self._alpha1s[ii]) > MAX_FROBENIUS_NORM:
-                    self._alpha1s[ii] *= \
-                        MAX_FROBENIUS_NORM / np.linalg.norm(self._alpha1s[ii])
-                if np.linalg.norm(self._alpha2s[ii]) > MAX_FROBENIUS_NORM:
-                    self._alpha2s[ii] *= \
-                        MAX_FROBENIUS_NORM / np.linalg.norm(self._alpha2s[ii])
-
             # (5) Linesearch separately for both players.
             self._linesearch()
             iteration += 1
@@ -227,6 +219,10 @@ class ILQSolver(object):
                 xs[k] - current_x) - self._alpha_scaling * self._alpha1s[k]
             u2 = current_u2 - self._P2s[k] @ (
                 xs[k] - current_x) - self._alpha_scaling * self._alpha2s[k]
+
+            # Clip u1 and u2.
+            u1 = self._u1_constraint.clip(u1)
+            u2 = self._u2_constraint.clip(u2)
 
             u1s.append(u1)
             u2s.append(u2)
