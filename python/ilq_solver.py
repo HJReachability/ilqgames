@@ -51,7 +51,9 @@ from logger import Logger
 
 class ILQSolver(object):
     def __init__(self, dynamics, player1_cost, player2_cost,
-                 x0, P1s, P2s, alpha1s, alpha2s, logger=None, visualizer=None):
+                 x0, P1s, P2s, alpha1s, alpha2s,
+                 u1_constraint, u2_constraint,
+                 logger=None, visualizer=None):
         """
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
@@ -72,6 +74,10 @@ class ILQSolver(object):
         :type alpha1s: [np.array]
         :param alpha2s: list of constant offsets for player 2
         :type alpha2s: [np.array]
+        :param u1_constraint: constraint on u1
+        :type u1_constraint: Constraint
+        :param u2_constraint: constraint on u2
+        :type u2_constraint: Constraint
         :param logger: logging utility
         :type logger: Logger
         :param visualizer: optional visualizer
@@ -85,6 +91,8 @@ class ILQSolver(object):
         self._P2s = P2s
         self._alpha1s = alpha1s
         self._alpha2s = alpha2s
+        self._u1_constraint = u1_constraint
+        self._u2_constraint = u2_constraint
         self._horizon = len(P1s)
 
         # Current and previous operating points (states/controls) for use
@@ -106,9 +114,9 @@ class ILQSolver(object):
 
         while not self._is_converged():
             # (1) Compute current operating point and update last one.
-            xs, u1s, u2s = self._compute_operating_point()
+            xs, u1s, u2s, cost1s, cost2s = self._compute_operating_point()
             self._last_operating_point = self._current_operating_point
-            self._current_operating_point = (xs, u1s, u2s)
+            self._current_operating_point = (xs, u1s, u2s, cost1s, cost2s)
 
             if self._visualizer is not None:
                 self._visualizer.add_trajectory(iteration, {
@@ -136,22 +144,20 @@ class ILQSolver(object):
                 cs.append(c)
 
             # (3) Quadraticize costs.
-            cost1s = []; Q1s = []; l1s = []; R11s = []; R12s = []
-            cost2s = []; Q2s = []; l2s = []; R21s = []; R22s = []
+            Q1s = []; l1s = []; R11s = []; R12s = []
+            Q2s = []; l2s = []; R21s = []; R22s = []
             for ii in range(self._horizon):
                 # Quadraticize everything!
-                cost1, l1, Q1, R11, R12 = self._player1_cost.quadraticize(
+                _, l1, Q1, R11, R12 = self._player1_cost.quadraticize(
                     xs[ii], u1s[ii], u2s[ii])
-                cost2, l2, Q2, R21, R22 = self._player2_cost.quadraticize(
+                _, l2, Q2, R21, R22 = self._player2_cost.quadraticize(
                     xs[ii], u1s[ii], u2s[ii])
 
-                cost1s.append(cost1)
                 Q1s.append(Q1)
                 l1s.append(l1)
                 R11s.append(R11)
                 R12s.append(R12)
 
-                cost2s.append(cost2)
                 Q2s.append(Q2)
                 l2s.append(l2)
                 R21s.append(R21)
@@ -162,9 +168,8 @@ class ILQSolver(object):
                 As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
 
             # Accumulate total costs for both players.
-            total_cost1, total_cost2 = evaluate_lq_game_cost(
-                As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
-                P1s, P2s, alpha1s, alpha2s, xs[0])
+            total_cost1 = sum(cost1s).item()
+            total_cost2 = sum(cost2s).item()
             print("Total cost for player 1 vs. 2: %f vs. %f." %
                   (total_cost1, total_cost2))
 
@@ -197,6 +202,8 @@ class ILQSolver(object):
         xs = [self._x0]
         u1s = []
         u2s = []
+        cost1s = []
+        cost2s = []
 
         for k in range(self._horizon):
             if self._current_operating_point is not None:
@@ -209,12 +216,23 @@ class ILQSolver(object):
                 current_u2 = np.zeros((self._dynamics._u2_dim, 1))
 
             u1 = current_u1 - self._P1s[k] @ (
-                xs[k] - current_x) - self._alpha1s[k]
+                xs[k] - current_x) - self._alpha_scaling * self._alpha1s[k]
             u2 = current_u2 - self._P2s[k] @ (
-                xs[k] - current_x) - self._alpha2s[k]
+                xs[k] - current_x) - self._alpha_scaling * self._alpha2s[k]
+
+            # Clip u1 and u2.
+            u1 = self._u1_constraint.clip(u1)
+            u2 = self._u2_constraint.clip(u2)
 
             u1s.append(u1)
             u2s.append(u2)
+
+            cost1s.append(self._player1_cost(torch.as_tensor(xs[k].copy()),
+                                             torch.as_tensor(u1.copy()),
+                                             torch.as_tensor(u2.copy())))
+            cost2s.append(self._player2_cost(torch.as_tensor(xs[k].copy()),
+                                             torch.as_tensor(u1.copy()),
+                                             torch.as_tensor(u2.copy())))
 
             if k == self._horizon - 1:
                 break
@@ -222,14 +240,15 @@ class ILQSolver(object):
             x = self._dynamics.integrate(xs[k], u1, u2)
             xs.append(x)
 
-        return xs, u1s, u2s
+        return xs, u1s, u2s, cost1s, cost2s
 
     def _linesearch(self):
         """ Linesearch for both players separately. """
+        pass
         # HACK: This is simple, need an actual linesearch.
-        for ii in range(self._horizon):
-            self._alpha1s[ii] *= self._alpha_scaling
-            self._alpha2s[ii] *= self._alpha_scaling
+#        for ii in range(self._horizon):
+#            self._alpha1s[ii] *= self._alpha_scaling
+#            self._alpha2s[ii] *= self._alpha_scaling
 
     def _is_converged(self):
         """ Check if the last two operating points are close enough. """

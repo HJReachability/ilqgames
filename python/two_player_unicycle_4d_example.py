@@ -46,6 +46,7 @@ from point import Point
 from proximity_cost import ProximityCost
 from semiquadratic_cost import SemiquadraticCost
 from player_cost import PlayerCost
+from box_constraint import BoxConstraint
 from visualizer import Visualizer
 from logger import Logger
 
@@ -65,11 +66,13 @@ HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
 #          x start
 goal = Point(125.0, 100.0)
 obstacle_centers = [Point(40.0, 85.0), Point(80.0, 110.0), Point(100.0, 65.0)]
-obstacle_radii = [5.0, 5.0, 5.0]
+obstacle_radii = [10.0, 10.0, 10.0]
 
 goal_cost = ProximityCost(
-    position_indices=(0, 1), point=goal, max_distance=np.inf)
-obstacle_costs = [ProximityCost(position_indices=(0, 1), point=p, max_distance=r)
+    position_indices=(0, 1), point=goal, max_distance=np.inf, name="goal")
+obstacle_costs = [ProximityCost(
+    position_indices=(0, 1), point=p, max_distance=r,
+    name="obstacle_%f_%f" % (p.x, p.y))
                   for p, r in zip(obstacle_centers, obstacle_radii)]
 
 # Control costs for both players to keep control in a box.
@@ -77,38 +80,46 @@ max_w = 1.0 # rad/s
 max_a = 2.0 # m/s/s
 
 w_cost_upper = SemiquadraticCost(
-    dimension=0, threshold=max_w, oriented_right=True)
+    dimension=0, threshold=max_w, oriented_right=True, name="w_cost_upper")
 w_cost_lower = SemiquadraticCost(
-    dimension=0, threshold=-max_w, oriented_right=False)
+    dimension=0, threshold=-max_w, oriented_right=False, name="w_cost_lower")
 
 a_cost_upper = SemiquadraticCost(
-    dimension=1, threshold=max_a, oriented_right=True)
+    dimension=1, threshold=max_a, oriented_right=True, name="a_cost_upper")
 a_cost_lower = SemiquadraticCost(
-    dimension=1, threshold=-max_a, oriented_right=False)
+    dimension=1, threshold=-max_a, oriented_right=False, name="a_cost_lower")
+
+u1_lower = np.array([[-max_w], [-max_a]])
+u1_upper = np.array([[max_w], [max_a]])
+u1_constraint = BoxConstraint(u1_lower, u1_upper)
 
 max_dvx = 0.1 # m/s
 max_dvy = 0.1 # m/s
 
 dvx_cost_upper = SemiquadraticCost(
-    dimension=0, threshold=max_dvx, oriented_right=True)
+    dimension=0, threshold=max_dvx, oriented_right=True, name="dvx_cost_upper")
 dvx_cost_lower = SemiquadraticCost(
-    dimension=0, threshold=-max_dvx, oriented_right=False)
+    dimension=0, threshold=-max_dvx, oriented_right=False, name="dvx_cost_lower")
 
 dvy_cost_upper = SemiquadraticCost(
-    dimension=1, threshold=max_dvy, oriented_right=True)
+    dimension=1, threshold=max_dvy, oriented_right=True, name="dvy_cost_upper")
 dvy_cost_lower = SemiquadraticCost(
-    dimension=1, threshold=-max_dvy, oriented_right=False)
+    dimension=1, threshold=-max_dvy, oriented_right=False, name="dvy_cost_lower")
+
+u2_lower = np.array([[-max_dvx], [-max_dvy]])
+u2_upper = np.array([[max_dvx], [max_dvy]])
+u2_constraint = BoxConstraint(u2_lower, u2_upper)
 
 # Add light quadratic from origin for controls.
 light_cost_upper0 = SemiquadraticCost(
-    dimension=0, threshold=0, oriented_right=True)
+    dimension=0, threshold=0, oriented_right=True, name="light_cost_upper0")
 light_cost_lower0 = SemiquadraticCost(
-    dimension=0, threshold=0, oriented_right=False)
+    dimension=0, threshold=0, oriented_right=False, name="light_cost_lower0")
 
 light_cost_upper1 = SemiquadraticCost(
-    dimension=1, threshold=0, oriented_right=True)
+    dimension=1, threshold=0, oriented_right=True, name="light_cost_upper1")
 light_cost_lower1 = SemiquadraticCost(
-    dimension=1, threshold=0, oriented_right=False)
+    dimension=1, threshold=0, oriented_right=False, name="light_cost_lower1")
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
@@ -163,6 +174,8 @@ logger = Logger("./logs/unicycle_4d_example.pkl")
 
 # Set up ILQSolver.
 solver = ILQSolver(dynamics, player1_cost, player2_cost,
-                   x0, P1s, P2s, alpha1s, alpha2s, logger, visualizer)
+                   x0, P1s, P2s, alpha1s, alpha2s,
+                   u1_constraint, u2_constraint,
+                   logger, visualizer)
 
 solver.run()
