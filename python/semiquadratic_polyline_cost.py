@@ -45,7 +45,7 @@ from polyline import Polyline
 
 class SemiquadraticPolylineCost(Cost):
     def __init__(self, polyline, signed_distance_threshold, oriented_right,
-                 position_indices):
+                 position_indices, name):
         """
         Initialize with a polyline, a threshold in signed distance from the
         polyline, and an orientation. If `oriented_right` is `True`, that
@@ -68,7 +68,7 @@ class SemiquadraticPolylineCost(Cost):
         self._signed_distance_threshold = signed_distance_threshold
         self._oriented_right = oriented_right
         self._x_index, self._y_index = position_indices
-        super(SemiquadraticPolylineCost, self).__init__()
+        super(SemiquadraticPolylineCost, self).__init__(name)
 
     def __call__(self, xu):
         """

@@ -33,52 +33,24 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Semiquadratic cost, derived from Cost base class. Implements a
-# cost function that is flat below a threshold and quadratic above, in the
-# given dimension.
+# Base class for all constraints. Supports clipping an np.array to satisfy the
+# constraint.
 #
 ################################################################################
 
-import torch
+class Constraint(object):
+    """ Base class for all constraints. """
+    def __init__(self):
+        pass
 
-from cost import Cost
-
-class SemiquadraticCost(Cost):
-    def __init__(self, dimension, threshold, oriented_right, name=""):
+    def clip(self, u):
         """
-        Initialize with dimension to add cost to and threshold above which
-        to impose quadratic cost.
+        Clip the input `u` to satisfy the constraint.
+        NOTE: `u` should be a column vector.
 
-        :param dimension: dimension to add cost
-        :type dimension: uint
-        :param threshold: value above which to impose quadratic cost
-        :type threshold: float
-        :param oriented_right: Boolean flag determining which side of threshold
-          to penalize
-        :type oriented_right: bool
+        :param u: control input
+        :type u: np.array
+        :return: clipped input
+        :rtype: np.array
         """
-        self._dimension = dimension
-        self._threshold = threshold
-        self._oriented_right = oriented_right
-        super(SemiquadraticCost, self).__init__(name)
-
-    def __call__(self, xu):
-        """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
-        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
-        NOTE: `xu` should be a column vector.
-
-        :param xu: state of the system
-        :type xu: torch.Tensor
-        :return: scalar value of cost
-        :rtype: torch.Tensor
-        """
-        if self._oriented_right:
-            if xu[self._dimension, 0] > self._threshold:
-                return (xu[self._dimension, 0] - self._threshold) ** 2
-        else:
-            if xu[self._dimension, 0] < self._threshold:
-                return (xu[self._dimension, 0] - self._threshold) ** 2
-
-        return torch.zeros(1, 1, requires_grad=True).double()
+        raise NotImplementedError("clip is not implemented.")
