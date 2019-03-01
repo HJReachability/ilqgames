@@ -46,7 +46,7 @@ from point import Point
 
 class ProximityCost(Cost):
     def __init__(self, position_indices, point,
-                 max_distance, outside_weight=0.01):
+                 max_distance, outside_weight=0.01, name=""):
         """
         Initialize with dimension to add cost to and threshold BELOW which
         to impose quadratic cost. Above the threshold, we use a very light
@@ -65,7 +65,7 @@ class ProximityCost(Cost):
         self._point = point
         self._max_squared_distance = max_distance**2
         self._outside_weight = outside_weight
-        super(ProximityCost, self).__init__()
+        super(ProximityCost, self).__init__(name)
 
     def __call__(self, x):
         """
@@ -98,7 +98,7 @@ class ProximityCost(Cost):
 
 class ConcatenatedStateProximityCost(Cost):
     def __init__(self, position_indices1, position_indices2,
-                 max_distance, outside_weight=0.01):
+                 max_distance, outside_weight=0.01, name=""):
         """
         Initialize with dimension to add cost to and threshold BELOW which
         to impose quadratic cost. Above the threshold, we use a very light
@@ -119,7 +119,7 @@ class ConcatenatedStateProximityCost(Cost):
         self._x_index2, self._y_index2 = position_indices2
         self._max_squared_distance = max_distance**2
         self._outside_weight = outside_weight
-        super(ConcatenatedStateProximityCost, self).__init__()
+        super(ConcatenatedStateProximityCost, self).__init__(name)
 
     def __call__(self, xu):
         """
