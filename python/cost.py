@@ -40,8 +40,8 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 class Cost(object):
     """ Base class for all cost functions. """
-
-    def __init__(self):
+    def __init__(self, name=""):
+        self._name = name
         pass
 
     def __call__(self, xu):

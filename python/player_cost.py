@@ -73,13 +73,18 @@ class PlayerCost(object):
         first_time_through = True
         for cost, arg, weight in zip(self._costs, self._args, self._weights):
             if arg == "x":
-                current_term = weight * cost(x)
+                cost_input = x
             elif arg == "u1":
-                current_term = weight * cost(u1)
+                cost_input = u1
             elif arg == "u2":
-                current_term = weight * cost(u2)
+                cost_input = u2
             else:
                 raise RuntimeError("Unrecognized arg name: " + arg)
+
+            current_term = weight * cost(cost_input)
+            if current_term > 1e8:
+                print("Warning: cost %s is %f" % (cost._name, current_term))
+                print("Input is: ", cost_input)
 
             if first_time_through:
                 total_cost = current_term
