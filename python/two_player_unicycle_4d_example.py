@@ -55,6 +55,22 @@ TIME_HORIZON = 10.0   # s
 TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
 
+# Create dynamics.
+dynamics = TwoPlayerUnicycle4D(T=0.1)
+
+# Choose an initial state and control laws.
+theta0 = np.pi / 4.0 # 45 degree heading
+v0 = 10.0            # 10 m/s initial speed
+x0 = np.array([[0.0],
+               [0.0],
+               [theta0],
+               [v0]])
+
+P1s = [np.zeros((dynamics._u1_dim, dynamics._x_dim))] * HORIZON_STEPS
+P2s = [np.zeros((dynamics._u2_dim, dynamics._x_dim))] * HORIZON_STEPS
+alpha1s = [np.zeros((dynamics._u1_dim, 1))] * HORIZON_STEPS
+alpha2s = [np.zeros((dynamics._u2_dim, 1))] * HORIZON_STEPS
+
 # Create the example environment. It will have a couple of circular obstacles
 # laid out like this:
 #                           x goal
@@ -112,20 +128,36 @@ u2_constraint = BoxConstraint(u2_lower, u2_upper)
 
 # Add light quadratic from origin for controls.
 light_cost_upper0 = SemiquadraticCost(
-    dimension=0, threshold=0, oriented_right=True, name="light_cost_upper0")
+    dimension=0, threshold=-0.01, oriented_right=True, name="light_cost_upper0")
 light_cost_lower0 = SemiquadraticCost(
-    dimension=0, threshold=0, oriented_right=False, name="light_cost_lower0")
+    dimension=0, threshold=-0.01, oriented_right=False, name="light_cost_lower0")
 
 light_cost_upper1 = SemiquadraticCost(
-    dimension=1, threshold=0, oriented_right=True, name="light_cost_upper1")
+    dimension=1, threshold=-0.01, oriented_right=True, name="light_cost_upper1")
 light_cost_lower1 = SemiquadraticCost(
-    dimension=1, threshold=0, oriented_right=False, name="light_cost_lower1")
+    dimension=1, threshold=-0.01, oriented_right=False, name="light_cost_lower1")
+
+# Add light quadratic around original values for theta/v.
+theta_light_cost_upper = SemiquadraticCost(
+    dimension=2, threshold=theta0-0.01, oriented_right=True, name="theta_light_cost_upper")
+theta_light_cost_lower = SemiquadraticCost(
+    dimension=2, threshold=theta0-0.01, oriented_right=False, name="theta_light_cost_lower")
+
+v_light_cost_upper = SemiquadraticCost(
+    dimension=3, threshold=v0-0.01, oriented_right=True, name="v_light_cost_upper")
+v_light_cost_lower = SemiquadraticCost(
+    dimension=3, threshold=v0-0.01, oriented_right=False, name="v_light_cost_lower")
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
 player1_cost.add_cost(goal_cost, "x", -1.0)
 for cost in obstacle_costs:
     player1_cost.add_cost(cost, "x", 10.0)
+
+player1_cost.add_cost(theta_light_cost_lower, "x", 0.1)
+player1_cost.add_cost(theta_light_cost_upper, "x", 0.1)
+player1_cost.add_cost(v_light_cost_lower, "x", 0.1)
+player1_cost.add_cost(v_light_cost_upper, "x", 0.1)
 
 player1_cost.add_cost(w_cost_upper, "u1", 10.0)
 player1_cost.add_cost(w_cost_lower, "u1", 10.0)
@@ -142,6 +174,11 @@ player2_cost.add_cost(goal_cost, "x", 1.0)
 for cost in obstacle_costs:
     player2_cost.add_cost(cost, "x", -10.0)
 
+player2_cost.add_cost(theta_light_cost_lower, "x", 0.1)
+player2_cost.add_cost(theta_light_cost_upper, "x", 0.1)
+player2_cost.add_cost(v_light_cost_lower, "x", 0.1)
+player2_cost.add_cost(v_light_cost_upper, "x", 0.1)
+
 player2_cost.add_cost(dvx_cost_upper, "u2", 10.0)
 player2_cost.add_cost(dvx_cost_lower, "u2", 10.0)
 player2_cost.add_cost(dvy_cost_upper, "u2", 10.0)
@@ -151,20 +188,6 @@ player2_cost.add_cost(light_cost_upper0, "u2", 1.0)
 player2_cost.add_cost(light_cost_lower0, "u2", 1.0)
 player2_cost.add_cost(light_cost_upper1, "u2", 1.0)
 player2_cost.add_cost(light_cost_lower1, "u2", 1.0)
-
-# Create dynamics.
-dynamics = TwoPlayerUnicycle4D(T=0.1)
-
-# Choose an initial state and control laws.
-x0 = np.array([[0.0],
-               [0.0],
-               [np.pi / 4.0], # 45 degree heading
-               [10.0]])       # 10 m/s initial speed
-
-P1s = [np.zeros((dynamics._u1_dim, dynamics._x_dim))] * HORIZON_STEPS
-P2s = [np.zeros((dynamics._u2_dim, dynamics._x_dim))] * HORIZON_STEPS
-alpha1s = [np.zeros((dynamics._u1_dim, 1))] * HORIZON_STEPS
-alpha2s = [np.zeros((dynamics._u2_dim, 1))] * HORIZON_STEPS
 
 # Visualizer.
 visualizer = Visualizer(0, 1, obstacle_centers, obstacle_radii, goal)
