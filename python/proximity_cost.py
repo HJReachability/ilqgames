@@ -46,7 +46,7 @@ from point import Point
 
 class ProximityCost(Cost):
     def __init__(self, position_indices, point,
-                 max_distance, outside_weight=0.01, name=""):
+                 max_distance, outside_weight=0.1, name=""):
         """
         Initialize with dimension to add cost to and threshold BELOW which
         to impose quadratic cost. Above the threshold, we use a very light

@@ -107,3 +107,14 @@ class Visualizer(object):
 
         plt.legend()
 
+#        plt.figure(self._figure_number + 1)
+#        for ii, traj in zip(self._iterations, self._history):
+#            plt.plot([np.linalg.norm(u1) for u1 in traj["u1s"]], label=str(ii) + ": u1")
+
+#        plt.legend()
+
+#        plt.figure(self._figure_number + 2)
+#        for ii, traj in zip(self._iterations, self._history):
+#            plt.plot([np.linalg.norm(u2) for u2 in traj["u2s"]], label=str(ii) + ": u2")
+
+#        plt.legend()

@@ -180,15 +180,21 @@ class ILQSolver(object):
             self._alpha1s = alpha1s
             self._alpha2s = alpha2s
 
+            # Clip large matrices.
+            MAX_FROBENIUS_NORM = 10.0
             for ii in range(self._horizon):
-                if np.linalg.norm(self._P1s[ii]) > 1e4:
-                    print(ii, ": P1 is big.")
-                if np.linalg.norm(self._P2s[ii]) > 1e4:
-                    print(ii, ": P2 is big.")
-                if np.linalg.norm(self._alpha1s[ii]) > 1e4:
-                    print(ii, ": alpha1 is big.")
-                if np.linalg.norm(self._alpha2s[ii]) > 1e4:
-                    print(ii, ": alpha2 is big.")
+                if np.linalg.norm(self._P1s[ii]) > MAX_FROBENIUS_NORM:
+                    self._P1s[ii] *= \
+                        MAX_FROBENIUS_NORM / np.linalg.norm(self._P1s[ii])
+                if np.linalg.norm(self._P2s[ii]) > MAX_FROBENIUS_NORM:
+                    self._P2s[ii] *= \
+                        MAX_FROBENIUS_NORM / np.linalg.norm(self._P2s[ii])
+                if np.linalg.norm(self._alpha1s[ii]) > MAX_FROBENIUS_NORM:
+                    self._alpha1s[ii] *= \
+                        MAX_FROBENIUS_NORM / np.linalg.norm(self._alpha1s[ii])
+                if np.linalg.norm(self._alpha2s[ii]) > MAX_FROBENIUS_NORM:
+                    self._alpha2s[ii] *= \
+                        MAX_FROBENIUS_NORM / np.linalg.norm(self._alpha2s[ii])
 
             # (5) Linesearch separately for both players.
             self._linesearch()
