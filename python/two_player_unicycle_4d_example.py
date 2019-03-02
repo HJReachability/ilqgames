@@ -49,11 +49,13 @@ from player_cost import PlayerCost
 from box_constraint import BoxConstraint
 from visualizer import Visualizer
 from logger import Logger
+import os
 
 # General parameters.
 TIME_HORIZON = 10.0   # s
 TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
+LOG_DIRECTORY = './logs'
 
 # Create dynamics.
 dynamics = TwoPlayerUnicycle4D(T=0.1)
@@ -193,7 +195,10 @@ player2_cost.add_cost(light_cost_lower1, "u2", 1.0)
 visualizer = Visualizer(0, 1, obstacle_centers, obstacle_radii, goal)
 
 # Logger.
-logger = Logger("./logs/unicycle_4d_example.pkl")
+if not os.path.exists(LOG_DIRECTORY):
+    os.makedirs(LOG_DIRECTORY)
+
+logger = Logger(os.path.join(LOG_DIRECTORY, 'unicycle_4d_example.pkl'))
 
 # Set up ILQSolver.
 solver = ILQSolver(dynamics, player1_cost, player2_cost,
