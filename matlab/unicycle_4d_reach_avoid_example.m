@@ -38,7 +38,8 @@ obs = shapeUnion(obs, obs3);
 % obs = -obs;
 
 %% Compute reachable set
-tau = 0:0.5:500;
+% tau = 0:0.5:500;
+tau = 0:0.5:1000;
 
 uMode = 'min';
 dMode = 'max';
@@ -52,11 +53,14 @@ schemeData.dMode = dMode;
 
 extraArgs.targets = target;
 extraArgs.obstacles = obs;
-extraArgs.stopInit = dynamics.x;
+% extraArgs.stopInit = dynamics.x;
 extraArgs.visualize = true;
 extraArgs.plotData.plotDims = [1 1 0 0];
 extraArgs.plotData.projpt = dynamics.x(3:4);
 extraArgs.deleteLastPlot = true;
+
+extraArgs.stopConverge = true;
+extraArgs.convergeThreshold = 2;
 
 [data, tau2] = HJIPDE_solve(target, tau, schemeData, minWith, extraArgs);
 
@@ -120,6 +124,7 @@ if compTraj
     
     plot(traj(1, :), traj(2, :), 'DisplayName', 'w/ dstb');
     plot(traj_no_d(1, :), traj_no_d(2, :), 'DisplayName', 'w/o dstb');
+    scatter(targetCenter(1), targetCenter(2), 'LineWidth', 3);
     xlim([0 150]);
     ylim([0 150]);
     legend();
