@@ -34,7 +34,7 @@ Author(s): Ellis Ratner         ( eratner@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Quadratic cost, derived from Cost base class. 
+# Quadratic cost, derived from Cost base class.
 #
 ################################################################################
 
@@ -71,4 +71,3 @@ class QuadraticCost(Cost):
         :rtype: torch.Tensor
         """
         return (xu[self._dimension, 0] - self._origin) ** 2
-
