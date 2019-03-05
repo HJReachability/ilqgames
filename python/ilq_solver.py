@@ -102,7 +102,7 @@ class ILQSolver(object):
 #        self._current_operating_point = self._compute_operating_point()
 
         # Fixed step size for the linesearch.
-        self._alpha_scaling = 0.01
+        self._alpha_scaling = 0.05
 
         # Set up visualizer.
         self._visualizer = visualizer
@@ -221,8 +221,8 @@ class ILQSolver(object):
                 xs[k] - current_x) - self._alpha_scaling * self._alpha2s[k]
 
             # Clip u1 and u2.
-            u1 = self._u1_constraint.clip(u1)
-            u2 = self._u2_constraint.clip(u2)
+#            u1 = self._u1_constraint.clip(u1)
+#            u2 = self._u2_constraint.clip(u2)
 
             u1s.append(u1)
             u2s.append(u2)
