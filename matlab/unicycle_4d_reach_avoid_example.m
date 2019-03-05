@@ -3,18 +3,17 @@
 % initState = [10; 10; pi/4; 10];
 initState = [10; 10; pi/4; 0];
 wMax = 1;
-aRange = [-2; 2];
-% dMax = [0.1; 0.1];
-% dMax = [0.8; 0.8];
+aMax = 2;
+aRange = [-aMax; aMax];
 dMax = [1.9; 1.9];
-% dMax = [0; 0];
-% dMax = [2; 2];
+%dMax = [0; 0];
 dynamics = Plane4D(initState, wMax, aRange, dMax);
 
 %% Target and obstacles.
 % gridCells = [25; 25; 25; 25];
 % gridCells = [21; 21; 21; 21];
 gridCells = [15; 15; 15; 15];
+%gridCells = [40; 40; 40; 40];
 periodicDim = 3;
 
 g = createGrid([0; 0; -pi; -1], [150; 150; pi; 30], gridCells, periodicDim);
@@ -37,18 +36,29 @@ obs = shapeUnion(obs, obs3);
 %   g, [5; 5; -inf; -inf], [145; 145; inf; inf]);
 % obs = -obs;
 
+cost_u = 1.0;
+cost_d = 1.0;
+
+R_u = eye(2) * cost_u;
+R_d = eye(2) * cost_d;
+
 %% Compute reachable set
-tau = 0:0.5:500;
+%tau = 0:0.5:500;
+tau = 0:0.5:50;
 
 uMode = 'min';
 dMode = 'max';
 minWith = 'none';
 
+% Temporary removed so that HJI PDE does not do the default computation
 schemeData.dynSys = dynamics;
 schemeData.grid = g;
 schemeData.uMode = uMode;
 schemeData.dMode = dMode;
-
+schemeData.hamFunc = @runningSumUnicycle4DHam;
+schemeData.partialFunc = @runningSumUnicycle4DPartial;
+schemeData.R_u = R_u;
+schemeData.R_d = R_d;
 
 extraArgs.targets = target;
 extraArgs.obstacles = obs;
@@ -60,7 +70,10 @@ extraArgs.deleteLastPlot = true;
 
 [data, tau2] = HJIPDE_solve(target, tau, schemeData, minWith, extraArgs);
 
-save(sprintf('%s.mat', mfilename), 'data', 'tau2', 'g');
+data_filename = [mfilename '_wMax_' num2str(wMax) '_aMax_' ...
+    num2str(aRange(2)) '_dMax_' num2str(dMax(2))];
+
+save(sprintf('%s.mat', data_filename), 'data', 'tau2', 'g');
 
 %% Compute optimal trajectory
 extraArgs.projDim = [1 1 0 0]; 
