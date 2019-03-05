@@ -41,8 +41,8 @@ if isfield(schemeData, 'dIn')
   dL = schemeData.dIn;
   
 else
-  dU = runningSumUnicycle4DOptDist(dynSys, derivMax, R_d)
-  dL = runningSumUnicycle4DOptDist(dynSys, derivMin, R_d)
+  dU = runningSumUnicycle4DOptDist(dynSys, derivMax, R_d);
+  dL = runningSumUnicycle4DOptDist(dynSys, derivMin, R_d);
 end
   
 %% Compute alpha
