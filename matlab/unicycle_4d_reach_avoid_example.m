@@ -1,20 +1,22 @@
+clear all;
+
 %% Parameters.
 % initState = [0; 0; pi/4; 10];
 % initState = [10; 10; pi/4; 10];
 initState = [10; 10; pi/4; 0];
 wMax = 1;
-aRange = [-2; 2];
-% dMax = [0.1; 0.1];
-% dMax = [0.8; 0.8];
-dMax = [1.9; 1.9];
-% dMax = [0; 0];
-% dMax = [2; 2];
+aMax = 2;
+aRange = [-aMax; aMax];
+%dMax = [1.9; 1.9];
+dMax = [0; 0];
 dynamics = Plane4D(initState, wMax, aRange, dMax);
+
 
 %% Target and obstacles.
 % gridCells = [25; 25; 25; 25];
 % gridCells = [21; 21; 21; 21];
 gridCells = [15; 15; 15; 15];
+%gridCells = [40; 40; 40; 40];
 periodicDim = 3;
 
 g = createGrid([0; 0; -pi; -1], [150; 150; pi; 30], gridCells, periodicDim);
@@ -37,19 +39,34 @@ obs = shapeUnion(obs, obs3);
 %   g, [5; 5; -inf; -inf], [145; 145; inf; inf]);
 % obs = -obs;
 
+cost_u = 0.0000000001;
+cost_d = 0.0000000001;
+
+R_u = eye(2) * cost_u;
+R_d = eye(2) * cost_d;
+
 %% Compute reachable set
+<<<<<<< HEAD
 % tau = 0:0.5:500;
 tau = 0:0.5:1000;
+=======
+%tau = 0:0.5:500;
+tau = 0:0.5:50;
+>>>>>>> 38aa1090537f9c913f42d4dd6fc6e04cf4ae45c1
 
 uMode = 'min';
 dMode = 'max';
 minWith = 'none';
 
+% Temporary removed so that HJI PDE does not do the default computation
 schemeData.dynSys = dynamics;
 schemeData.grid = g;
 schemeData.uMode = uMode;
 schemeData.dMode = dMode;
-
+schemeData.hamFunc = @runningSumUnicycle4DHam;
+schemeData.partialFunc = @runningSumUnicycle4DPartial;
+schemeData.R_u = R_u;
+schemeData.R_d = R_d;
 
 extraArgs.targets = target;
 extraArgs.obstacles = obs;
@@ -59,12 +76,29 @@ extraArgs.plotData.plotDims = [1 1 0 0];
 extraArgs.plotData.projpt = dynamics.x(3:4);
 extraArgs.deleteLastPlot = true;
 
+<<<<<<< HEAD
 extraArgs.stopConverge = true;
 extraArgs.convergeThreshold = 2;
 
 [data, tau2] = HJIPDE_solve(target, tau, schemeData, minWith, extraArgs);
+=======
+if isfield(schemeData, 'hamFunc')
+    data_filename = [mfilename '_wMax_' num2str(wMax) '_aMax_' ...
+        num2str(aRange(2)) '_dMax_' num2str(dMax(2)) '_cost_u_' ...
+        num2str(cost_u) '_cost_d_' num2str(cost_d) '.mat'];
+else
+    data_filename = [mfilename '_wMax_' num2str(wMax) '_aMax_' ...
+        num2str(aRange(2)) '_dMax_' num2str(dMax(2)) '.mat'];
+end
+>>>>>>> 38aa1090537f9c913f42d4dd6fc6e04cf4ae45c1
 
-save(sprintf('%s.mat', mfilename), 'data', 'tau2', 'g');
+if exist(data_filename, 'file')
+    load(data_filename);
+else
+    [data, tau2] = HJIPDE_solve(target, tau, schemeData, minWith, ...
+        extraArgs);
+    save(data_filename, 'data', 'tau2', 'g');
+end
 
 %% Compute optimal trajectory
 extraArgs.projDim = [1 1 0 0]; 
@@ -104,6 +138,12 @@ if compTraj
     
     %flip data time points so we start from the beginning of time
     dataTraj = flip(data, 5);
+    
+    % Add the optimal control and disturbance function
+    trajExtraArgs.optCtrl = @runningSumUnicycle4DOptCtrl;
+    trajExtraArgs.optDist = @runningSumUnicycle4DOptDist;
+    trajExtraArgs.R_u = R_u;
+    trajExtraArgs.R_d = R_d;
     
     % Set the duration of the trajectory to be 10 s.
 %     trajExtraArgs.duration = 10;
