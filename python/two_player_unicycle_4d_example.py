@@ -146,7 +146,7 @@ v_light_cost = QuadraticCost(
 player1_cost = PlayerCost()
 player1_cost.add_cost(goal_cost, "x", -10.0)
 for cost in obstacle_costs:
-    player1_cost.add_cost(cost, "x", 10.0)
+    player1_cost.add_cost(cost, "x", 5.0)
 
 player1_cost.add_cost(theta_light_cost, "x", 0.1)
 player1_cost.add_cost(v_light_cost, "x", 0.1)
@@ -162,7 +162,7 @@ player1_cost.add_cost(light_cost_1, "u1", 1.0)
 player2_cost = PlayerCost()
 player2_cost.add_cost(goal_cost, "x", 10.0)
 for cost in obstacle_costs:
-    player2_cost.add_cost(cost, "x", -10.0)
+    player2_cost.add_cost(cost, "x", -5.0)
 
 player2_cost.add_cost(theta_light_cost, "x", 0.1)
 player2_cost.add_cost(v_light_cost, "x", 0.1)
