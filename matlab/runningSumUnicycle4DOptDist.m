@@ -1,4 +1,4 @@
-function d = runningSumUnicycle4DOptDist(dynSys, deriv, R_d)
+function d = runningSumUnicycle4DOptDist(dynSys, deriv, R_d, dMode)
 %% Solves for the optimal control d for the following Hamiltonian:
 %
 %   min_u max_d grad_V^T f(x, u, d) + u^TR_u u - d^TR_d d
@@ -14,26 +14,48 @@ function d = runningSumUnicycle4DOptDist(dynSys, deriv, R_d)
         deriv = num2cell(deriv);
     end
     
-    d1_opt = 1.0 / (2 * R_d(1,1)) * deriv{1};
-    d1_opt(d1_opt > dynSys.dMax(1)) = dynSys.dMax(1);
-    d1_opt(d1_opt < -dynSys.dMax(1)) = -dynSys.dMax(1);
+    if nargin < 4
+        dMode = 'max';
+    end
     
-    d2_opt = 1.0 / (2 * R_d(2,2)) * deriv{2};
-    d2_opt(d2_opt > dynSys.dMax(2)) = dynSys.dMax(2);
-    d2_opt(d2_opt < -dynSys.dMax(2)) = -dynSys.dMax(2);
+    d1_opt = -1.0 / (2 * R_d(1,1));
+    d2_opt = -1.0 / (2 * R_d(2,2));
     
-    d{1} = d1_opt;
-    d{2} = d2_opt;
+    if ~isinf(d1_opt)
+        d1_opt = d1_opt * deriv{1};
+    else
+        d1_opt = d1_opt * ones(size(deriv{1}));
+    end
     
-%     mask = zeros(size(d1_opt));
-%     mask(d1_opt>=0) = -1.0;
-%     mask(d1_opt<0) = 1.0;
-%     d{1} = dynSys.dMax(1) * mask; 
-%     
-%     d2_opt = -1.0 / (2 * R_d(2,2)) * deriv{2};
-%     mask = zeros(size(d2_opt));
-%     mask(d2_opt>=0) = -1.0;
-%     mask(d2_opt<0) = 1.0;
-%     d{2} = dynSys.dMax(2) * mask; 
+    if ~isinf(d2_opt)
+        d2_opt = d2_opt * deriv{2};
+    else
+        d2_opt = d2_opt * ones(size(deriv{2}));
+    end
+    
+    if strcmp(dMode, 'max')
+        %d1_opt = 1.0 / (2 * R_d(1,1)) * deriv{1};
+        d1_opt(d1_opt > dynSys.dMax(1)) = dynSys.dMax(1);
+        d1_opt(d1_opt < -dynSys.dMax(1)) = -dynSys.dMax(1);
+        
+        %d2_opt = 1.0 / (2 * R_d(2,2)) * deriv{2};
+        d2_opt(d2_opt > dynSys.dMax(2)) = dynSys.dMax(2);
+        d2_opt(d2_opt < -dynSys.dMax(2)) = -dynSys.dMax(2);
+        
+        d{1} = d1_opt;
+        d{2} = d2_opt;
+    else
+        %d1_opt = 1.0 / (2 * R_d(1,1)) * deriv{1};
+        mask = zeros(size(d1_opt));
+        mask(d1_opt>=0) = -1.0;
+        mask(d1_opt<0) = 1.0;
+        d{1} = dynSys.dMax(1) * mask;
+        
+        %d2_opt = -1.0 / (2 * R_d(2,2)) * deriv{2};
+        mask = zeros(size(d2_opt));
+        mask(d2_opt>=0) = -1.0;
+        mask(d2_opt<0) = 1.0;
+        d{2} = dynSys.dMax(2) * mask;
+    end
 
 end

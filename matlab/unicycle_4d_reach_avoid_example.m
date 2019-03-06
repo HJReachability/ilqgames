@@ -3,7 +3,10 @@ clear all;
 %% Parameters.
 % initState = [0; 0; pi/4; 10];
 % initState = [10; 10; pi/4; 10];
-initState = [10; 10; pi/4; 0];
+%initState = [10; 10; pi/4; 0];
+initState = [10; 10; pi/4; 5];
+%initState = [125; 100; pi/4; 0];
+
 wMax = 1;
 aMax = 2;
 aRange = [-aMax; aMax];
@@ -24,8 +27,11 @@ g = createGrid([0; 0; -pi; -1], [150; 150; pi; 30], gridCells, periodicDim);
 targetRadius = 10;
 targetCenter = [125; 100; 0; 0];
 target = shapeCylinder(g, [3 4], targetCenter, targetRadius);
+% HACK
+%target(target<=0) = target(target<=0) * 1000;
 
 obstacleCenters = [40, 80, 100; 85, 110, 65];
+%obstacleCenters = [40, 80, 62.5; 85, 110, 50];
 obstacleRadii = [10, 10, 10];
 
 obs1 = shapeCylinder(g, [3 4], obstacleCenters(:, 1), obstacleRadii(1));
@@ -39,19 +45,29 @@ obs = shapeUnion(obs, obs3);
 %   g, [5; 5; -inf; -inf], [145; 145; inf; inf]);
 % obs = -obs;
 
-cost_u = 0.0000000001;
-cost_d = 0.0000000001;
+% cost_u = 0.01;
+% cost_d = 0.01;
+% cost_u = 1e-20;
+% cost_d = 1e-20;
+cost_u = 1;
+cost_d = 1;
 
 R_u = eye(2) * cost_u;
 R_d = eye(2) * cost_d;
 
 %% Compute reachable set
 %tau = 0:0.5:500;
-tau = 0:0.5:50;
+tau = 0:0.5:40;
 
 uMode = 'min';
 dMode = 'max';
+
+% uMode = 'max';
+% dMode = 'min';
 minWith = 'none';
+
+% For FRT, we set minWith to zero.
+%minWith = 'zero';
 
 % Temporary removed so that HJI PDE does not do the default computation
 schemeData.dynSys = dynamics;
@@ -62,9 +78,11 @@ schemeData.hamFunc = @runningSumUnicycle4DHam;
 schemeData.partialFunc = @runningSumUnicycle4DPartial;
 schemeData.R_u = R_u;
 schemeData.R_d = R_d;
+%schemeData.tMode = 'forward';
+schemeData.tMode = 'backward';
 
 extraArgs.targets = target;
-extraArgs.obstacles = obs;
+%extraArgs.obstacles = obs;
 extraArgs.stopInit = dynamics.x;
 extraArgs.visualize = true;
 extraArgs.plotData.plotDims = [1 1 0 0];
@@ -111,7 +129,14 @@ if compTraj
   %check if this initial state is in the BRS/BRT
   value = eval_u(g, data(:, :, :, :, end), initState);
   
-  if value <= 0 %if initial state is in BRS/BRT
+  % (HACK) Change bound for running cost
+  if isfield(schemeData, 'hamFunc')
+    init_pt_upper_V = 200;
+  else
+    init_pt_upper_V = 0;
+  end
+  
+  if value <= init_pt_upper_V %if initial state is in BRS/BRT
     % find optimal trajectory
     
     dynamics.x = initState; %set initial state of the dubins car
