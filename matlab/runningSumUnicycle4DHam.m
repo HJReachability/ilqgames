@@ -30,8 +30,8 @@ end
 R_u = schemeData.R_u;
 R_d = schemeData.R_d;
 
-u = runningSumUnicycle4DOptCtrl(dynSys, deriv, R_u);
-d = runningSumUnicycle4DOptDist(dynSys, deriv, R_d);
+u = runningSumUnicycle4DOptCtrl(dynSys, deriv, R_u, schemeData.uMode);
+d = runningSumUnicycle4DOptDist(dynSys, deriv, R_d, schemeData.dMode);
 
 %% Plug optimal control into dynamics to compute Hamiltonian
 hamValue = 0;
