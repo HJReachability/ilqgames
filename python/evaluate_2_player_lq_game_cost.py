@@ -42,8 +42,8 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import numpy as np
 
-def evaluate_lq_game_cost(
-        As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
+def evaluate_2_player_lq_game_cost(
+        As, B1s, B2s, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
         P1s, P2s, alpha1s, alpha2s, x0):
     """
     Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
@@ -65,8 +65,6 @@ def evaluate_lq_game_cost(
     :type B1s: [np.array]
     :param B2s: B2 matrices (dynamics)
     :type B2s: [np.array]
-    :param cs: drift terms (dynamics)
-    :type cs: [np.array]
     :param Q1s: state costs for player 1 (protagonist)
     :type Q1s: [np.array]
     :param Q2s: state costs for player 2 (antagonist)
@@ -98,7 +96,7 @@ def evaluate_lq_game_cost(
     """
 
     # Assertions to check valid input.
-    assert len(As) == len(B1s) == len(B2s) == len(cs) == len(Q1s) == \
+    assert len(As) == len(B1s) == len(B2s) == len(Q1s) == \
         len(Q2s) == len(R11s) == len(R12s) == len(R21s) == len(R22s) == \
         len(P1s) == len(P2s) == len(alpha1s) == len(alpha2s)
     horizon = len(As)
@@ -115,7 +113,7 @@ def evaluate_lq_game_cost(
         u2 = -P2s[k] @ x - alpha2s[k]
 
         # Propagate next state.
-        x = As[k] @ x + B1s[k] @ u1 + B2s[k] @ u2 + cs[k]
+        x = As[k] @ x + B1s[k] @ u1 + B2s[k] @ u2
 
         # Compute costs.
         cost1 += 0.5 * (x.T @ (Q1s[k] @ x + 2.0 * l1s[k]) + \
