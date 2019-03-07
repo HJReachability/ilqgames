@@ -81,7 +81,6 @@ class ILQSolver(object):
         self._u_constraints = u_constraints
         self._horizon = len(P1s)
         self._num_players = len(player_costs)
-        self._u_dims = [Pis[0].shape[0] for Pis in Ps]
 
         # Current and previous operating points (states/controls) for use
         # in checking convergence.
@@ -181,7 +180,8 @@ class ILQSolver(object):
                 current_u = self._current_operating_point[1][k]
             else:
                 current_x = np.zeros((self._dynamics._x_dim, 1))
-                current_u = [np.zeros((ui_dim, 1)) for ui_dim in self._u_dims]
+                current_u = [np.zeros((ui_dim, 1))
+                             for ui_dim in self._dynamics._u_dims]
 
             feedback = lambda x, u_ref, x_ref, P, alpha : \
                        u_ref - P @ (x - x_ref) - self._alpha_scaling * alpha
