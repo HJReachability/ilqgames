@@ -42,10 +42,8 @@ from scipy.linalg import block_diag
 import torch
 import matplotlib.pyplot as plt
 
-from two_player_dynamical_system import TwoPlayerDynamicalSystem
 from player_cost import PlayerCost
 from solve_lq_game import solve_lq_game
-from evaluate_lq_game_cost import evaluate_lq_game_cost
 from visualizer import Visualizer
 from logger import Logger
 
@@ -79,7 +77,7 @@ class ILQSolver(object):
         self._Ps = Ps
         self._alphas = alphas
         self._u_constraints = u_constraints
-        self._horizon = len(P1s)
+        self._horizon = len(Ps[0])
         self._num_players = len(player_costs)
 
         # Current and previous operating points (states/controls) for use
@@ -120,12 +118,14 @@ class ILQSolver(object):
             #    ``` x_{k+1} - xs_k = A_k (x_k - xs_k) +
             #          sum_i Bi_k (ui_k - uis_k) ```
             As = []
-            Bs = []
+            Bs = [[] for ii in range(self._num_players)]
             for k in range(self._horizon):
                 A, B = self._dynamics.linearize_discrete(
                     xs[k], [uis[k] for uis in us])
                 As.append(A)
-                Bs.append(B)
+
+                for ii in range(self._num_players):
+                    Bs[ii].append(B[ii])
 
             # (3) Quadraticize costs.
             Qs = [[] for ii in range(self._num_players)]
@@ -180,7 +180,8 @@ class ILQSolver(object):
         for k in range(self._horizon):
             if self._current_operating_point is not None:
                 current_x = self._current_operating_point[0][k]
-                current_u = self._current_operating_point[1][k]
+                current_u = [self._current_operating_point[1][ii][k]
+                             for ii in range(self._num_players)]
             else:
                 current_x = np.zeros((self._dynamics._x_dim, 1))
                 current_u = [np.zeros((ui_dim, 1))
@@ -188,7 +189,8 @@ class ILQSolver(object):
 
             feedback = lambda x, u_ref, x_ref, P, alpha : \
                        u_ref - P @ (x - x_ref) - self._alpha_scaling * alpha
-            u = [feedback(xs[k], current_u[ii], current_x, self._alphas[ii][k])
+            u = [feedback(xs[k], current_u[ii], current_x,
+                          self._Ps[ii][k], self._alphas[ii][k])
                  for ii in range(self._num_players)]
 
             # Clip u1 and u2.
