@@ -63,10 +63,10 @@ class TestCost(unittest.TestCase):
         cost = PlayerCost()
         cost.add_cost(semi0, "x", 1.0)
         cost.add_cost(semi1, "x", 2.0)
-        cost.add_cost(semi0, "u1", 1.0)
-        cost.add_cost(semi1, "u1", 2.0)
-        cost.add_cost(semi0, "u2", 1.0)
-        cost.add_cost(semi1, "u2", 2.0)
+        cost.add_cost(semi0, 0, 1.0)
+        cost.add_cost(semi1, 0, 2.0)
+        cost.add_cost(semi0, 1, 1.0)
+        cost.add_cost(semi1, 1, 2.0)
 
         # Compute what the cost should be.
         expected_cost = max(x[0, 0], 0.0)**2 + 2.0 * max(x[1, 0], 0.0)**2 + \
@@ -80,7 +80,7 @@ class TestCost(unittest.TestCase):
         expected_hess_u2 = expected_hess_x
 
         # Quadraticize and compare.
-        cost, grad_x, hess_x, hess_u1, hess_u2 = cost.quadraticize(x, u1, u2)
+        cost, grad_x, hess_x, [hess_u1, hess_u2] = cost.quadraticize(x, [u1, u2])
         self.assertAlmostEqual(cost, expected_cost, delta=SMALL_NUMBER)
         self.assertLess(np.linalg.norm(grad_x - expected_grad_x), SMALL_NUMBER)
         self.assertLess(np.linalg.norm(hess_x - expected_hess_x), SMALL_NUMBER)
