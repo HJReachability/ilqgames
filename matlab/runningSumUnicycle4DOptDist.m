@@ -18,27 +18,36 @@ function d = runningSumUnicycle4DOptDist(dynSys, deriv, R_d, dMode)
         dMode = 'max';
     end
     
-    d1_opt = -1.0 / (2 * R_d(1,1));
-    d2_opt = -1.0 / (2 * R_d(2,2));
-    
-    if ~isinf(d1_opt)
-        d1_opt = d1_opt * deriv{1};
+    if R_d(1,1) == 0
+        d1_opt = 1e20;
     else
-        d1_opt = d1_opt * ones(size(deriv{1}));
+        d1_opt = 1.0 / (2 * R_d(1,1));
     end
     
-    if ~isinf(d2_opt)
-        d2_opt = d2_opt * deriv{2};
+    if R_d(2,2) == 0
+        d2_opt = 1e20;
     else
-        d2_opt = d2_opt * ones(size(deriv{2}));
+        d2_opt = 1.0 / (2 * R_d(2,2));
     end
+    d1_opt = d1_opt * deriv{1};
+    d2_opt = d2_opt * deriv{2};
+    
+%     if ~isinf(d1_opt)
+%         d1_opt = d1_opt * deriv{1};
+%     else
+%         d1_opt = d1_opt * ones(size(deriv{1}));
+%     end
+%     
+%     if ~isinf(d2_opt)
+%         d2_opt = d2_opt * deriv{2};
+%     else
+%         d2_opt = d2_opt * ones(size(deriv{2}));
+%     end
     
     if strcmp(dMode, 'max')
-        %d1_opt = 1.0 / (2 * R_d(1,1)) * deriv{1};
         d1_opt(d1_opt > dynSys.dMax(1)) = dynSys.dMax(1);
         d1_opt(d1_opt < -dynSys.dMax(1)) = -dynSys.dMax(1);
         
-        %d2_opt = 1.0 / (2 * R_d(2,2)) * deriv{2};
         d2_opt(d2_opt > dynSys.dMax(2)) = dynSys.dMax(2);
         d2_opt(d2_opt < -dynSys.dMax(2)) = -dynSys.dMax(2);
         
