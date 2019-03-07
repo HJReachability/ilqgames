@@ -125,7 +125,7 @@ def solve_lq_game(As, Bs, Qs, ls, Rs):
         Y = np.concatenate(
             [B[ii].T @ Z[ii] @ A for ii in range(num_players)], axis=0)
 
-        P, _, _, _ = np.linalg.lstsq(a=S, b=Y)
+        P, _, _, _ = np.linalg.lstsq(a=S, b=Y, rcond=None)
         P_split = np.split(P, u_dims[:-1])
         for ii in range(num_players):
             Ps[ii].appendleft(P_split[ii])
@@ -150,7 +150,7 @@ def solve_lq_game(As, Bs, Qs, ls, Rs):
         Y = np.concatenate(
             [B[ii].T @ zeta[ii] for ii in range(num_players)], axis=0)
 
-        alpha, _, _, _ = np.linalg.lstsq(a=S, b=Y)
+        alpha, _, _, _ = np.linalg.lstsq(a=S, b=Y, rcond=None)
         alpha_split = np.split(alpha, u_dims[:-1])
         for ii in range(num_players):
             alphas[ii].appendleft(alpha_split[ii])
