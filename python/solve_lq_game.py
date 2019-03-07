@@ -42,161 +42,132 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 import numpy as np
 from collections import deque
 
-def solve_lq_game(As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s):
+def solve_lq_game(As, Bs, Qs, ls, Rs):
     """
     Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
     feedback strategies for both players).
     Assumes that dynamics are given by
-                    x_{k+1} = A_k x_k + B1_k u1_k + B2_k u2_k + c_k
+           ``` dx_{k+1} = A_k dx_k + \sum_i Bs[i]_k du[i]_k ```
 
-    NOTE: all of these lists of matrices must be the same length.
-    NOTE: all indices correspond to the "current time" k except for those
-    of Q1 and Q2, which correspond to the "next time" k+1. That is, the kth
-    entry of Q1s is the state cost corresponding to time step k+1. This makes
-    sense because there is no point assigning any state cost to the initial
-    state x_0.
-    Returns P1s, P2s, alpha1s, alpha2s
+    NOTE: Bs, Qs, ls, R1s, R2s are all lists of lists of matrices.
+    NOTE: all indices of inner lists correspond to the "current time" k except
+    for those of Q1 and Q2, which correspond to the "next time" k+1. That is,
+    the kth entry of Q1s is the state cost corresponding to time step k+1. This
+    makes sense because there is no point assigning any state cost to the
+    initial state x_0.
+    Returns Ps, alphas
 
-    :param As: A matrices (dynamics)
+    :param As: A matrices
     :type As: [np.array]
-    :param B1s: B1 matrices (dynamics)
-    :type B1s: [np.array]
-    :param B2s: B2 matrices (dynamics)
-    :type B2s: [np.array]
-    :param cs: drift terms (dynamics)
-    :type cs: [np.array]
-    :param Q1s: state costs for player 1 (protagonist)
-    :type Q1s: [np.array]
-    :param Q2s: state costs for player 2 (antagonist)
-    :type Q2s: [np.array]
-    :param l1s: linear state costs for player 1
-    :type l1s: [np.array]
-    :param l2s: linear state costs for player 2
-    :type l2s: [np.array]
-    :param R11s: control costs for player 1
-    :type R11s: [np.array]
-    :param R12s: control cost for player 1 associated to player 2's control
-    :type R12s: [np.array]
-    :param R21s: control cost for player 2 associated to player 1's control
-    :type R21s: [np.array]
-    :param R22s: control costs for player 2
-    :type R22s: [np.array]
-    :return: gain matrices and constant offsets (ui_k = -Pi_k - alphai_k)
-       for both players (P1s, P2s, alpha1s, alpha2s)
-    :rtype: [np.array], [np.array], [np.array], [np.array]
+    :param Bs: list of list of B matrices (1 list for each player)
+    :type Bs: [[np.array]]
+    :param Qs: list of list of quadratic state costs (1 list for each player)
+    :type Qs: [[np.array]]
+    :param ls: list of list of linear state costs (1 list for each player)
+    :type ls: [[np.array]]
+    :param Rs: list of list of lists of quadratic control costs. Each player
+        (outer list) has a list of lists of costs due to other players' control,
+        i.e. Rs[i][j][k] is R_{ij}(k) from Basar and Olsder.
+    :type Rs: [[[np.array]]]
+    :return: gain matrices P[i]_k and feedforward term alpha[i]_k for each
+        player, i.e. (u[i]_k = uref[i]_k -P[i]_k dx_k - alpha[i]_k).
+        Returned as a list of lists P, alpha (1 list for each player)
+    :rtype: [[np.array]], [[np.array]]
     """
-    # Assertions to check valid input.
-    assert len(As) == len(B1s) == len(B2s) == len(cs) == len(Q1s) == \
-        len(Q2s) == len(l1s) == len(l2s) == len(R11s) == len(R12s) == \
-        len(R21s) == len(R22s)
+    # Unpack horizon and number of players.
     horizon = len(As) - 1
+    num_players = len(Bs)
 
-    # Cache dimensions of control and state.
-    u1_dim = B1s[0].shape[1]
+    # Cache dimensions of state and controls for each player.
     x_dim = As[0].shape[0]
+    u_dims = [Bis[0].shape[1] for Bis in Bs]
 
     # Note: notation and variable naming closely follows that introduced in
     # the "Preliminary Notation for Corollary 6.1" section, which may be found
     # on pp. 279 of Basar and Olsder.
+    # NOTE: we will assume that `c` from Basar and Olsder is always `0`.
 
     # Recursive computation of all intermediate and final variables.
     # Use deques for efficient prepending.
-    Z1s = deque([Q1s[-1]])
-    Z2s = deque([Q2s[-1]])
-    zeta1s = deque([l1s[-1]])
-    zeta2s = deque([l2s[-1]])
+    Zs = [deque([Qis[-1]]) for Qis in Qs]
+    zetas = [deque([lis[-1]]) for lis in ls]
     Fs = deque()
-    P1s = deque()
-    P2s = deque()
+    Ps = [deque() for ii in range(num_players)]
     betas = deque()
-    alpha1s = deque()
-    alpha2s = deque()
+    alphas = [deque() for ii in range(num_players)]
     for k in range(horizon, -1, -1):
         # Unpack all relevant variables.
         A = As[k]
-        B1 = B1s[k]
-        B2 = B2s[k]
-        c = cs[k]
-        Q1 = Q1s[k]
-        Q2 = Q2s[k]
-        l1 = l1s[k]
-        l2 = l2s[k]
-        R11 = R11s[k]
-        R12 = R12s[k]
-        R21 = R21s[k]
-        R22 = R22s[k]
-        Z1 = Z1s[0]
-        Z2 = Z2s[0]
-        zeta1 = zeta1s[0]
-        zeta2 = zeta2s[0]
+        B = [Bis[k] for Bis in Bs]
+        Q = [Qis[k] for Qis in Qs]
+        l = [lis[k] for lis in ls]
+        R = [[Rijs[k] for Rijs in Ris] for Ris in Rs]
 
-        # Compute P1 and P2 given previously computed Z1 and Z2.
+        Z = [Zis[0] for Zis in Zs]
+        zeta = [zetais[0] for zetais in zetas]
+
+        # Compute Ps given previously computed Zs.
         # Refer to equation 6.17a in Basar and Olsder.
         # This will involve solving a system of matrix linear equations of the
-        # form [S11, S12; S21, S22] * [P1; P2] = [Y1; Y2].
-        S11 = R11 + B1.T @ Z1 @ B1
-        S12 = B1.T @ Z1 @ B2
-        S21 = B2.T @ Z2 @ B1
-        S22 = R22 + B2.T @ Z2 @ B2
-        S_top = np.concatenate([S11, S12], axis=1)
-        S_bot = np.concatenate([S21, S22], axis=1)
-        S = np.concatenate([S_top, S_bot], axis=0)
+        # form [S1s; S2s; ...] * [P1; P2; ...] = [Y1; Y2; ...].
+        S_rows = []
+        for ii in range(num_players):
+            Sis = []
+            for jj in range(num_players):
+                if jj == ii:
+                    Sis.append(R[ii][ii] + B[ii].T @ Z[ii] @ B[ii])
+                else:
+                    Sis.append(B[ii].T @ Z[ii] @ B[jj])
 
-        Y1 = B1.T @ Z1 @ A
-        Y2 = B2.T @ Z2 @ A
-        Y = np.concatenate([Y1, Y2], axis=0)
+            S_rows.append(np.concatenate(Sis, axis=1))
+
+        S = np.concatenate(S_rows, axis=0)
+        Y = np.concatenate(
+            [B[ii].T @ Z[ii] @ A for ii in range(num_players)], axis=0)
 
         P, _, _, _ = np.linalg.lstsq(a=S, b=Y)
-        P1 = P[:u1_dim, :]
-        P2 = P[u1_dim:, :]
-        P1s.appendleft(P1)
-        P2s.appendleft(P2)
+        P_split = np.split(P, u_dims[:-1])
+        for ii in range(num_players):
+            Ps[ii].appendleft(P_split[ii])
 
         # Compute F_k = A_k - B1_k P1_k - B2_k P2_k.
         # This is eq. 6.17c from Basar and Olsder.
-        F = A - B1 @ P1 - B2 @ P2
+        F = A - sum([B[ii] @ P_split[ii] for ii in range(num_players)])
         Fs.appendleft(F)
 
-        # Update Z1 and Z2 to be the next step earlier in time (now they
+        # Update Zs to be the next step earlier in time (now they
         # correspond to time k+1).
-        Z1s.appendleft(F.T @ Z1 @ F + Q1 + P1.T @ R11 @ P1 + P2.T @ R12 @ P2)
-        Z2s.appendleft(F.T @ Z2 @ F + Q2 + P1.T @ R21 @ P1 + P2.T @ R21 @ P2)
+        for ii in range(num_players):
+            Zs[ii].appendleft(F.T @ Z[ii] @ F + Q[ii] + sum(
+                [P_split[jj].T @ R[ii][jj] @ P_split[jj]
+                 for jj in range(num_players)]))
 
-        # Compute alpha1 and alpha2 using previously computed zeta1 and zeta2.
+        # Compute alphas using previously computed zetas.
         # Refer to equation 6.17d in Basar and Olsder.
         # This will involve solving a system of linear matrix equations of the
-        # form [S11, S12; S21, S22] * [alpha1; alpha2] = [Y1; Y2].
-        S11 = R11 + B1.T @ Z1 @ B1
-        S12 = B1.T @ Z1 @ B2
-        S21 = B2.T @ Z2 @ B1
-        S22 = R22 + B2.T @ Z2 @ B2
-        S_top = np.concatenate([S11, S12], axis=1)
-        S_bot = np.concatenate([S21, S22], axis=1)
-        S = np.concatenate([S_top, S_bot], axis=0)
-
-        Y1 = B1.T @ (zeta1 + Z1 @ c)
-        Y2 = B2.T @ (zeta2 + Z2 @ c)
-        Y = np.concatenate([Y1, Y2], axis=0)
+        # form [S1s; S2s; ...] * [alpha1; alpha2; ..] = [Y1; Y2; ...].
+        # In fact, this is the same S matrix as before (just a different Y).
+        Y = np.concatenate(
+            [B[ii].T @ zeta[ii] for ii in range(num_players)], axis=0)
 
         alpha, _, _, _ = np.linalg.lstsq(a=S, b=Y)
-        alpha1 = alpha[:u1_dim]
-        alpha2 = alpha[u1_dim:]
-        alpha1s.appendleft(alpha1)
-        alpha2s.appendleft(alpha2)
+        alpha_split = np.split(alpha, u_dims[:-1])
+        for ii in range(num_players):
+            alphas[ii].appendleft(alpha_split[ii])
 
-        # Compute beta_k = c_k - B1_k alpha1 - B2_k alpha2_k.
-        # This is eq. 6.17f in Basar and Olsder.
-        # NOTE: in eq. 6.17f, both B1 and B2 are transposed, but I believe
-        # that this is a typo.
-        beta = c - B1 @ alpha1 - B2 @ alpha2
+        # Compute beta_k = -B1_k alpha1 - B2_k alpha2_k.
+        # This is eq. 6.17f in Basar and Olsder (with `c = 0`).
+        # NOTE: in eq. 6.17f, the Bis are transposed, but I believe that this
+        # is a typo.
+        beta = -sum([B[ii] @ alpha_split[ii] for ii in range(num_players)])
         betas.appendleft(beta)
 
-        # Update zeta1 and zeta2 to be the next step earlier in time (now they
-        # correspond to time k+1).
-        zeta1s.appendleft(F.T @ (zeta1 + Z1 @ beta) + l1 +
-                          P1.T @ R11 @ alpha1 + P2.T @ R12 @ alpha2)
-        zeta2s.appendleft(F.T @ (zeta2 + Z2 @ beta) + l2 +
-                          P1.T @ R21 @ alpha1 + P2.T @ R22 @ alpha2)
+        # Update zetas to be the next step earlier in time (now they
+        # correspond to time k+1). This is Remark 6.3 in Basar and Olsder.
+        for ii in range(num_players):
+            zetas[ii].appendleft(F.T @ (zeta[ii] + Z[ii] @ beta) + l[ii] + sum(
+                [P_split[jj].T @ R[ii][jj] @ alpha_split[jj]
+                 for jj in range(num_players)]))
 
     # Return P1s, P2s, alpha1s, alpha2s
-    return list(P1s), list(P2s), list(alpha1s), list(alpha2s)
+    return [list(Pis) for Pis in Ps], [list(alphais) for alphais in alphas]

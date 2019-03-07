@@ -129,19 +129,16 @@ class ILQSolver(object):
             # stack appropriately since we will concatenate state vectors
             # but not control vectors, so that
             #    ``` x_{k+1} - xs_k = A_k (x_k - xs_k) +
-            #          B1_k (u1_k - u1s_k) + B2_k (u2_k - u2s_k) + c_k ```
+            #          B1_k (u1_k - u1s_k) + B2_k (u2_k - u2s_k) ```
             As = []
             B1s = []
             B2s = []
-            cs = []
             for ii in range(self._horizon):
-                A, B1, B2, c = self._dynamics.linearize_discrete(
+                A, B1, B2  = self._dynamics.linearize_discrete(
                     xs[ii], u1s[ii], u2s[ii])
-
                 As.append(A)
                 B1s.append(B1)
                 B2s.append(B2)
-                cs.append(c)
 
             # (3) Quadraticize costs.
             Q1s = []; l1s = []; R11s = []; R12s = []
