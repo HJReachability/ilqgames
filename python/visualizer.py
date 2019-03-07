@@ -39,9 +39,13 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib import animation
+
 
 class Visualizer(object):
-    def __init__(self, x_idx, y_idx, obs_centers, obs_radii, goal_center, figure_number=1):
+    def __init__(self, x_idx, y_idx, th_idx, obs_centers, obs_radii, goal_center,
+                 plot_lims=None, figure_number=1):
         """
         Construct from indices of x/y coordinates in state vector.
 
@@ -49,21 +53,27 @@ class Visualizer(object):
         :type x_idx: uint
         :param y_idx: index of y-coordinate of state
         :type y_idx: uint
+        :param th_idx: index of theta coordinate of state
+        :type th_idx: uint
         :param obs_centers: list of obstacle center points
         :type obs_centers: [Point]
         :param obs_radii: list of obstacle radii
         :type obs_radii: [float]
         :param goal_center: position of the goal
         :type goal_center: Point
+        :param plot_lims: plot limits [xlim_low, xlim_high, ylim_low, ylim_high]
+        :type plot_lims: [float, float, float, float]
         :param figure_number: which figure number to operate on
         :type figure_number: uint
         """
         self._x_idx = x_idx
         self._y_idx = y_idx
+        self._th_idx = th_idx
         self._figure_number = figure_number
         self._obs_centers = obs_centers
         self._obs_radii = obs_radii
         self._goal_center = goal_center
+        self._plot_lims = plot_lims
 
         # Store history as list of trajectories.
         # Each trajectory is a dictionary of lists of states and controls.
@@ -82,12 +92,19 @@ class Visualizer(object):
         self._iterations.append(iteration)
         self._history.append(traj)
 
-    def plot(self):
+    def plot(self, show_last_k=-1, fade_old=True):
         """ Plot everything. """
         plt.figure(self._figure_number)
 
-        # Plot the obstacles.
         ax = plt.gca()
+
+        if self._plot_lims is not None:
+            ax.set_xlim(self._plot_lims[0], self._plot_lims[1])
+            ax.set_ylim(self._plot_lims[2], self._plot_lims[3])
+
+        # ax.set_aspect("equal")
+
+        # Plot the obstacles.
         for center, radius in zip(self._obs_centers, self._obs_radii):
             circle = plt.Circle(
                 (center.x, center.y), radius, color='r', fill=False)
@@ -100,12 +117,22 @@ class Visualizer(object):
         ax.add_artist(circle)
 
         # Plot the history of trajectories.
-        for ii, traj in zip(self._iterations, self._history):
+        if show_last_k < 0 or show_last_k >= len(self._history):
+            show_last_k = len(self._history)
+
+        for kk in range(len(self._history) - show_last_k, len(self._history)):
+            traj = self._history[kk]
+            ii = self._iterations[kk]
             xs = [x[self._x_idx, 0] for x in traj["xs"]]
             ys = [x[self._y_idx, 0] for x in traj["xs"]]
-            plt.plot(xs, ys, label="Iteration " + str(ii))
 
-        plt.legend()
+            alpha = 1
+            if fade_old:
+                alpha = 1 - (len(self._history) - kk) / show_last_k
+
+            plt.plot(xs, ys, 'b', label="Iteration " + str(ii), alpha=alpha)
+
+        # plt.legend()
 
 #        plt.figure(self._figure_number + 1)
 #        for ii, traj in zip(self._iterations, self._history):
