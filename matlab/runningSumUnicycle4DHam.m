@@ -42,5 +42,6 @@ end
 
 hamValue = hamValue + R_u(1,1) * u{1}.^2 + R_u(2,2) * u{2}.^2;
 hamValue = hamValue - R_d(1,1) * d{1}.^2 - R_d(2,2) * d{2}.^2;
+hamValue = -hamValue;
 
 end
