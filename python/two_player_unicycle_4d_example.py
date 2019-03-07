@@ -136,7 +136,6 @@ light_cost_1 = QuadraticCost(
     dimension=1, origin=0, name="light_cost_1")
 
 # Add light quadratic around original values for theta/v.
-# TODO: change all of these to QuadraticCost
 theta_light_cost = QuadraticCost(
     dimension=2, origin=theta0, name="theta_light_cost")
 v_light_cost = QuadraticCost(
@@ -177,7 +176,7 @@ player2_cost.add_cost(light_cost_1, "u2", 1.0)
 
 # Visualizer.
 visualizer = Visualizer(
-    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 150, 0, 150])
+    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 175, 0, 175])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):

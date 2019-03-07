@@ -95,30 +95,37 @@ class Visualizer(object):
     def plot(self, show_last_k=-1, fade_old=True):
         """ Plot everything. """
         plt.figure(self._figure_number)
+        plt.rc("text", usetex=True)
 
         ax = plt.gca()
+        ax.set_xlabel("$x(t)$")
+        ax.set_ylabel("$y(t)$")
 
         if self._plot_lims is not None:
             ax.set_xlim(self._plot_lims[0], self._plot_lims[1])
             ax.set_ylim(self._plot_lims[2], self._plot_lims[3])
 
-        # ax.set_aspect("equal")
+        ax.set_aspect("equal")
 
         # Plot the obstacles.
         for center, radius in zip(self._obs_centers, self._obs_radii):
             circle = plt.Circle(
-                (center.x, center.y), radius, color='r', fill=False)
+                (center.x, center.y), radius, color='r', fill=True, alpha=0.75)
             ax.add_artist(circle)
+            ax.text(center.x - 1.25, center.y - 1.25, "obs", fontsize=8)
 
         # Plot the goal.
         circle = plt.Circle(
             (self._goal_center.x, self._goal_center.y),
-            0.5, color='b', fill=True)
+            1, color='g', fill=True, alpha=0.75)
         ax.add_artist(circle)
+        ax.text(self._goal_center.x + 1.5, self._goal_center.y + 1.5, "goal", fontsize=10)
 
         # Plot the history of trajectories.
         if show_last_k < 0 or show_last_k >= len(self._history):
             show_last_k = len(self._history)
+
+        iterations = []
 
         for kk in range(len(self._history) - show_last_k, len(self._history)):
             traj = self._history[kk]
@@ -130,7 +137,11 @@ class Visualizer(object):
             if fade_old:
                 alpha = 1 - (len(self._history) - kk) / show_last_k
 
+            iterations.append(ii)
             plt.plot(xs, ys, 'b', label="Iteration " + str(ii), alpha=alpha)
+
+
+        plt.title("ILQ solver solution (iterations {}-{})".format(iterations[0], iterations[-1]))
 
         # plt.legend()
 
