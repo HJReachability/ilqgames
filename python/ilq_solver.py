@@ -122,7 +122,7 @@ class ILQSolver(object):
                 self._visualizer.add_trajectory(iteration, {
                     "xs" : xs, "u1s" : u1s, "u2s" : u2s})
                 plt.clf()
-                self._visualizer.plot()
+                self._visualizer.plot(show_last_k=5, fade_old=True)
                 plt.pause(0.1)
 
             # (2) Linearize about this operating point. Make sure to

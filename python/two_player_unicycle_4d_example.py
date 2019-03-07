@@ -176,7 +176,8 @@ player2_cost.add_cost(light_cost_0, "u2", 1.0)
 player2_cost.add_cost(light_cost_1, "u2", 1.0)
 
 # Visualizer.
-visualizer = Visualizer(0, 1, obstacle_centers, obstacle_radii, goal)
+visualizer = Visualizer(
+    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 150, 0, 150])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
