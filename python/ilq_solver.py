@@ -130,7 +130,8 @@ class ILQSolver(object):
             # (3) Quadraticize costs.
             Qs = [[] for ii in range(self._num_players)]
             ls = [[] for ii in range(self._num_players)]
-            Rs = [[] for ii in range(self._num_players)]
+            Rs = [[[] for jj in range(self._num_players)]
+                  for ii in range(self._num_players)]
             for ii in range(self._num_players):
                 for k in range(self._horizon):
                     _, l, Q, R = self._player_costs[ii].quadraticize(
@@ -138,7 +139,9 @@ class ILQSolver(object):
 
                     Qs[ii].append(Q)
                     ls[ii].append(l)
-                    Rs[ii].append(R)
+
+                    for jj in range(self._num_players):
+                        Rs[ii][jj].append(R[jj])
 
             # (4) Compute feedback Nash equilibrium of the resulting LQ game.
             Ps, alphas = solve_lq_game(As, Bs, Qs, ls, Rs)
