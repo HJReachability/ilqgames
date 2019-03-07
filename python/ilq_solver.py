@@ -50,9 +50,7 @@ from visualizer import Visualizer
 from logger import Logger
 
 class ILQSolver(object):
-    def __init__(self, dynamics, player1_cost, player2_cost,
-                 x0, P1s, P2s, alpha1s, alpha2s,
-                 u1_constraint, u2_constraint,
+    def __init__(self, dynamics, player_costs, x0, Ps, alphas, u_constraints,
                  logger=None, visualizer=None):
         """
         Initialize from dynamics, player costs, current state, and initial
@@ -60,46 +58,33 @@ class ILQSolver(object):
 
         :param dynamics: two-player dynamical system
         :type dynamics: TwoPlayerDynamicalSystem
-        :param player1_cost: cost function for player 1
-        :type player1_cost: PlayerCost
-        :param player2_cost: cost function for player 2
-        :type player2_cost: PlayerCost
+        :param player_costs: list of cost functions for all players
+        :type player_costs: [PlayerCost]
         :param x0: initial state
         :type x0: np.array
-        :param P1s: list of feedback gains for player 1
-        :type P1s: [np.array]
-        :param P2s: list of feedback gains for player 2
-        :type P2s: [np.array]
-        :param alpha1s: list of constant offsets for player 1
-        :type alpha1s: [np.array]
-        :param alpha2s: list of constant offsets for player 2
-        :type alpha2s: [np.array]
-        :param u1_constraint: constraint on u1
-        :type u1_constraint: Constraint
-        :param u2_constraint: constraint on u2
-        :type u2_constraint: Constraint
+        :param Ps: list of lists of feedback gains (1 list per player)
+        :type Ps: [[np.array]]
+        :param alphas: list of lists of feedforward terms (1 list per player)
+        :type alphas: [[np.array]]
+        :param u_constraints: list of constraints on controls
+        :type u_constraints: [Constraint]
         :param logger: logging utility
         :type logger: Logger
         :param visualizer: optional visualizer
         :type visualizer: Visualizer
         """
         self._dynamics = dynamics
-        self._player1_cost = player1_cost
-        self._player2_cost = player2_cost
+        self._player_costs = player_costs
         self._x0 = x0
-        self._P1s = P1s
-        self._P2s = P2s
-        self._alpha1s = alpha1s
-        self._alpha2s = alpha2s
-        self._u1_constraint = u1_constraint
-        self._u2_constraint = u2_constraint
+        self._Ps = Ps
+        self._alphas = alphas
+        self._u_constraints = u_constraints
         self._horizon = len(P1s)
 
         # Current and previous operating points (states/controls) for use
         # in checking convergence.
         self._last_operating_point = None
         self._current_operating_point = None
-#        self._current_operating_point = self._compute_operating_point()
 
         # Fixed step size for the linesearch.
         self._alpha_scaling = 0.05
