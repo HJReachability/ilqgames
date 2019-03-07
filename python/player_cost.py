@@ -50,36 +50,24 @@ class PlayerCost(object):
         self._args = []
         self._weights = []
 
-    def __call__(self, x, u1, u2):
+    def __call__(self, x, u):
         """
         Evaluate the game cost function at the current state and controls.
-        NOTE: `x`, `u1`, and `u2` are all column vectors.
+        NOTE: `x`, each `u` are all column vectors.
 
         :param x: state of the system
         :type x: np.array or torch.Tensor
-        :param u1: control for player 1
-        :type u1: np.array or torch.Tensor
-        :param u2: control for player 2
-        :type u2: np.array or torch.Tensor
+        :param u: list of control inputs for each player
+        :type u: [np.array] or [torch.Tensor]
         :return: scalar value of cost
         :rtype: float or torch.Tensor
         """
-        if isinstance(x, np.ndarray):
-            assert isinstance(u1, np.ndarray) and isinstance(u2, np.ndarray)
-        else:
-            assert isinstance(x, torch.Tensor) and \
-                isinstance(u1, torch.Tensor) and isinstance(u2, torch.Tensor)
-
         first_time_through = True
         for cost, arg, weight in zip(self._costs, self._args, self._weights):
             if arg == "x":
                 cost_input = x
-            elif arg == "u1":
-                cost_input = u1
-            elif arg == "u2":
-                cost_input = u2
             else:
-                raise RuntimeError("Unrecognized arg name: " + arg)
+                cost_input = u[arg]
 
             current_term = weight * cost(cost_input)
             if current_term > 1e8:
@@ -98,67 +86,62 @@ class PlayerCost(object):
     def add_cost(self, cost, arg, weight=1.0):
         """
         Add a new cost to the game, and specify its argument to be either
-        "x", "u1", or "u2". Also assign a weight.
+        "x" or an integer indicating which player's control it is, e.g. 0
+        corresponds to u0. Also assign a weight.
 
         :param cost: cost function to add
         :type cost: Cost
-        :param arg: argument of cost, either "x", "u1", or "u2"
-        :type arg: string
+        :param arg: argument of cost, either "x" or a player index
+        :type arg: string or uint
         :param weight: multiplicative weight for this cost
         :type weight: float
         """
-        assert isinstance(cost, Cost)
-        assert arg == "x" or arg == "u1" or arg == "u2"
-
         self._costs.append(cost)
         self._args.append(arg)
         self._weights.append(weight)
 
-    def quadraticize(self, x, u1, u2):
+    def quadraticize(self, x, u):
         """
         Compute a quadratic approximation to the overall cost for a
-        particular choice of state `x`, and controls `u1` (player 1) and
-        `u2` (player 2).
+        particular choice of state `x`, and controls `u` for each player.
 
         Returns the gradient and Hessian of the overall cost such that:
         ```
-           cost(x + dx, u1 + du1, u2 + du2) \approx
+           cost(x + dx, [ui + dui]) \approx
                 cost(x, u1, u2) +
                 grad_x^T dx +
-                0.5 * (dx^T hess_x dx + du1^T hess_u1 du1 + du2^T hess_u2 du2)
+                0.5 * (dx^T hess_x dx + sum_i dui^T hess_ui dui)
         ```
 
-        NOTE: in the notation of `solve_lq_game.py`:
-          * `grad_x = l`
-          * `hess_x = Q`
-          * `hess_u1 = R1` (`R11` if this cost is for player 1, `R21` else)
-          * `hess_u2 = R2` (`R12` if this cost is for player 1, `R22` else)
+        NOTE that in the notation of `solve_lq_game.py`, for player i:
+          * `grad_x = li`
+          * `hess_x = Qi`
+          * `hess_uj = Rij`
 
         :param x: state
         :type x: np.array
-        :param u1: control input of player 1
-        :type u1: np.array
-        :param u2: control input of player 2
-        :type u2: np.array
-        :return: cost(x, u1, u2), grad_x, hess_x, hess_u1, hess_u2
-        :rtype: float, np.array, np.array, np.array, np.array
+        :param u: list of control inputs for each player
+        :type u: np.array
+        :return: cost(x, u), grad_x, hess_x, [hess_ui]
+        :rtype: float, np.array, np.array, [np.array]
         """
+        num_players = len(u)
+
         # Congert to torch.Tensor format.
         x_torch = torch.from_numpy(x).requires_grad_(True)
-        u1_torch = torch.from_numpy(u1).requires_grad_(True)
-        u2_torch = torch.from_numpy(u2).requires_grad_(True)
+        u_torch = [torch.from_numpy(ui).requires_grad_(True) for ui in u]
 
         # Evaluate cost here.
-        cost_torch = self.__call__(x_torch, u1_torch, u2_torch)
+        cost_torch = self.__call__(x_torch, u_torch)
         cost = cost_torch.item()
 
         # Compute gradients (and store numpy versions).
         grad_x_torch = torch.autograd.grad(
             cost_torch, x_torch, create_graph=True, allow_unused=True)[0]
-        grad_u1_torch = torch.autograd.grad(
-            cost_torch, u1_torch, create_graph=True, allow_unused=True)[0]
-        grad_u2_torch = torch.autograd.grad(
-            cost_torch, u2_torch, create_graph=True, allow_unused=True)[0]
+        grad_u_torch = [
+            torch.autograd.grad(
+                cost_torch, ui_torch, create_graph=True, allow_unused=True)[0]
+            for ui_torch in u_torch]
 
         # Compute Hessians (and store numpy versions), and be careful to
         # catch Nones (which indicate cost not depending on a particular
@@ -172,20 +155,17 @@ class PlayerCost(object):
                     grad_x_torch[ii, 0], x_torch, retain_graph=True)[0]
                 hess_x[ii, :] = hess_row.detach().numpy().copy().T
 
-        hess_u1 = np.zeros((len(u1), len(u1)))
-        if grad_u1_torch is not None:
-            grad_u1 = grad_u1_torch.detach().numpy().copy()
-            for ii in range(len(u1)):
-                hess_row = torch.autograd.grad(
-                    grad_u1_torch[ii, 0], u1_torch, retain_graph=True)[0]
-                hess_u1[ii, :] = hess_row.detach().numpy().copy().T
+        hess_u = []
+        for ii in range(num_players):
+            hess_ui = np.zeros((len(u[ii]), len(u[ii])))
+            grad_ui_torch = grad_u_torch[ii]
+            if grad_ui_torch is not None:
+                grad_ui = grad_ui_torch.detach().numpy().copy()
+                for dim in range(len(u[ii])):
+                    hess_row = torch.autograd.grad(
+                        grad_ui_torch[dim, 0], u_torch[ii], retain_graph=True)[0]
+                    hess_ui[dim, :] = hess_row.detach().numpy().copy().T
 
-        hess_u2 = np.zeros((len(u2), len(u2)))
-        if grad_u2_torch is not None:
-            grad_u2 = grad_u2_torch.detach().numpy().copy()
-            for ii in range(len(u2)):
-                hess_row = torch.autograd.grad(
-                    grad_u2_torch[ii, 0], u2_torch, retain_graph=True)[0]
-                hess_u2[ii, :] = hess_row.detach().numpy().copy().T
+            hess_u.append(hess_ui)
 
-        return cost, grad_x, hess_x, hess_u1, hess_u2
+        return cost, grad_x, hess_x, hess_u
