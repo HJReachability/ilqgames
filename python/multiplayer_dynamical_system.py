@@ -64,7 +64,7 @@ class MultiPlayerDynamicalSystem(object):
     def __call__(self, x, u):
         """
         Compute the time derivative of state for a particular state/control.
-        NOTE: `x`, and all `u[ii]` should be 2D (i.e. column vectors).
+        NOTE: `x`, and all `u` should be 2D (i.e. column vectors).
 
         :param x: current state
         :type x: torch.Tensor or np.array
