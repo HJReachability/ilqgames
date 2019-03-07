@@ -4,14 +4,15 @@ clear all;
 % initState = [0; 0; pi/4; 10];
 % initState = [10; 10; pi/4; 10];
 %initState = [10; 10; pi/4; 0];
-initState = [10; 10; pi/4; 5];
+initState = [10; 10; pi/4; 0];
 %initState = [125; 100; pi/4; 0];
 
 wMax = 1;
 aMax = 2;
 aRange = [-aMax; aMax];
 %dMax = [1.9; 1.9];
-dMax = [0; 0];
+%dMax = [0; 0];
+dMax = [0.2; 0.2];
 dynamics = Plane4D(initState, wMax, aRange, dMax);
 
 
@@ -82,7 +83,7 @@ schemeData.R_d = R_d;
 schemeData.tMode = 'backward';
 
 extraArgs.targets = target;
-%extraArgs.obstacles = obs;
+extraArgs.obstacles = obs;
 extraArgs.stopInit = dynamics.x;
 extraArgs.visualize = true;
 extraArgs.plotData.plotDims = [1 1 0 0];
