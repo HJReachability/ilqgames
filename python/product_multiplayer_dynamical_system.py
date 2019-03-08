@@ -60,7 +60,8 @@ class ProductMultiPlayerDynamicalSystem(MultiPlayerDynamicalSystem):
 
         x_dim = sum(self._x_dims)
         u_dims = [sys._u_dim for sys in subsystems]
-        super(ProductMultiPlayerDynamicalSystem, self).__init__(x_dim, u_dims, T)
+        super(ProductMultiPlayerDynamicalSystem, self).__init__(
+            x_dim, u_dims, T)
 
     def __call__(self, x, u):
         """
@@ -74,8 +75,10 @@ class ProductMultiPlayerDynamicalSystem(MultiPlayerDynamicalSystem):
         :return: current time derivative of state
         :rtype: torch.Tensor or np.array
         """
-        subsystem_xs = np.split(x, self._x_dims[:-1], axis=0)
-        x_dot_list = [sys(x0, u0) for x0, u0 in zip(subsystem_xs, u)]
+        subsystem_xs = np.split(x, np.cumsum(self._x_dims[:-1]), axis=0)
+
+        x_dot_list = [sys(x0, u0)
+                      for sys, x0, u0 in zip(self._subsystems, subsystem_xs, u)]
         return np.concatenate(x_dot_list, axis=0)
 
     def linearize(self, x0, u0):
@@ -97,15 +100,16 @@ class ProductMultiPlayerDynamicalSystem(MultiPlayerDynamicalSystem):
         :return: (A, [Bi]) matrices of linearized system
         :rtype: np.array, [np.array]
         """
-        subsystem_xs = np.split(x0, self._x_dims[:-1], axis=0)
+        subsystem_xs = np.split(x0, np.cumsum(self._x_dims[:-1]), axis=0)
         subsystem_linearizations = [
-            sys.linearize(x, u) for x, u in zip(subsystem_xs, u0)]
+            sys.linearize(x, u)
+            for sys, x, u in zip(self._subsystems, subsystem_xs, u0)]
 
         subsystem_As = [AB[0] for AB in subsystem_linearizations]
         subsystem_Bs = [AB[1] for AB in subsystem_linearizations]
 
         # A is block diagonal.
-        A = block_diag(subsystem_As)
+        A = block_diag(*subsystem_As)
 
         # Each Bi is [0; ...; 0; Bi; 0; ...; 0].
         def create_B(ii, Bi):

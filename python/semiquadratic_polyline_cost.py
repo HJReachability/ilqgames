@@ -44,7 +44,7 @@ from point import Point
 from polyline import Polyline
 
 class SemiquadraticPolylineCost(Cost):
-    def __init__(self, polyline, distance_threshold, position_indices, name="")
+    def __init__(self, polyline, distance_threshold, position_indices, name=""):
         """
         Initialize with a polyline, a threshold in distance from the polyline.
 
@@ -77,4 +77,4 @@ class SemiquadraticPolylineCost(Cost):
         if abs(signed_distance) > self._distance_threshold:
             return (abs(signed_distance) - self._distance_threshold) ** 2
 
-        return torch.zeros(1, 1, requires_grad=True)
+        return torch.zeros(1, 1, requires_grad=True).double()
