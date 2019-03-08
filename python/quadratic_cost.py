@@ -50,8 +50,7 @@ class QuadraticCost(Cost):
 
         :param dimension: dimension to add cost
         :type dimension: uint
-        :param threshold: value along the specified dimension where the cost is
-                          zero
+        :param threshold: value along the specified dim where the cost is zero
         :type threshold: float
         """
         self._dimension = dimension

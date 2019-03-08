@@ -44,52 +44,37 @@ from point import Point
 from polyline import Polyline
 
 class SemiquadraticPolylineCost(Cost):
-    def __init__(self, polyline, signed_distance_threshold, oriented_right,
-                 position_indices, name):
+    def __init__(self, polyline, distance_threshold, position_indices, name="")
         """
-        Initialize with a polyline, a threshold in signed distance from the
-        polyline, and an orientation. If `oriented_right` is `True`, that
-        indicates that the cost starts taking effect once signed distance
-        exceeds the signed distance threshold. If `False`, that indicates
-        that the cost will take effect once signed distance falls below the
-        threshold.
+        Initialize with a polyline, a threshold in distance from the polyline.
 
         :param polyline: piecewise linear path which defines signed distances
         :type polyline: Polyline
-        :param signed_distance_threshold: value above/below which to penalize
-        :type signed_distance_threshold: float
-        :param oriented_right: Boolean flag determining which side of threshold
-          to penalize
-        :type oriented_right: bool
+        :param distance_threshold: value above which to penalize
+        :type distance_threshold: float
         :param position_indices: indices of input corresponding to (x, y)
         :type position_indices: (uint, uint)
         """
         self._polyline = polyline
-        self._signed_distance_threshold = signed_distance_threshold
-        self._oriented_right = oriented_right
+        self._distance_threshold = distance_threshold
         self._x_index, self._y_index = position_indices
         super(SemiquadraticPolylineCost, self).__init__(name)
 
-    def __call__(self, xu):
+    def __call__(self, x):
         """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
-        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
-        NOTE: `xu` should be a column vector.
+        Evaluate this cost function on the given state
+        NOTE: `x` should be a PyTorch tensor with `requires_grad` set `True`.
+        NOTE: `x` should be a column vector.
 
-        :param xu: state of the system
-        :type xu: torch.Tensor
+        :param x: state of the system
+        :type x: torch.Tensor
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
         signed_distance = self._polyline.signed_distance_to(
-            Point(xu[self._x_index, 0], xu[self._y_index, 0]))
+            Point(x[self._x_index, 0], x[self._y_index, 0]))
 
-        if self._oriented_right:
-            if signed_distance > self._signed_distance_threshold:
-                return (signed_distance - self._signed_distance_threshold) ** 2
-        else:
-            if signed_distance < self._signed_distance_threshold:
-                return (self._signed_distance_threshold - signed_distance) ** 2
+        if abs(signed_distance) > self._distance_threshold:
+            return (abs(signed_distance) - self._distance_threshold) ** 2
 
-        return torch.zeros(1, 1)
+        return torch.zeros(1, 1, requires_grad=True)
