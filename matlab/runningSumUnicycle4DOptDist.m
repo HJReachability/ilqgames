@@ -53,6 +53,10 @@ function d = runningSumUnicycle4DOptDist(dynSys, deriv, R_d, dMode)
         
         d{1} = d1_opt;
         d{2} = d2_opt;
+        
+        if isnan(d{1})
+            fprintf('nan in optDist\n');
+        end
     else
         %d1_opt = 1.0 / (2 * R_d(1,1)) * deriv{1};
         mask = zeros(size(d1_opt));
