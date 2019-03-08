@@ -746,6 +746,8 @@ for i = istart:length(tau)
         end
     end
     
+    fprintf('Change in value: %f\n', change);
+    
     if stopConverge && change < convergeThreshold
         extraOuts.stoptau = tau(i);
         tau(i+1:end) = [];
