@@ -180,6 +180,7 @@ if compTraj
     
     plot(traj(1, :), traj(2, :), 'DisplayName', 'w/ dstb');
     plot(traj_no_d(1, :), traj_no_d(2, :), 'DisplayName', 'w/o dstb');
+    scatter(targetCenter(1), targetCenter(2), 'LineWidth', 3);
     xlim([0 150]);
     ylim([0 150]);
     legend();
