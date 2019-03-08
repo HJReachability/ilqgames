@@ -1,5 +1,5 @@
 function [data, tau, extraOuts] = ...
-    HJIPDE_solve(data0, tau, schemeData, compMethod, extraArgs)
+    runningSumHJIPDE_solve(data0, tau, schemeData, compMethod, extraArgs)
 % [data, tau, extraOuts] = ...
 %   HJIPDE_solve(data0, tau, schemeData, minWith, extraargs)
 %     Solves HJIPDE with initial conditions data0, at times tau, and with

@@ -1,4 +1,4 @@
-function [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
+function [traj, traj_tau] = runningSumComputeOptTraj(g, data, tau, dynSys, extraArgs)
 % [traj, traj_tau] = computeOptTraj(g, data, tau, dynSys, extraArgs)
 %   Computes the optimal trajectories given the optimal value function
 %   represented by (g, data), associated time stamps tau, dynamics given in
@@ -68,12 +68,6 @@ end
 iter = 1;
 tauLength = length(tau);
 
-%%%%% HACK %%%%%
-% tauLength = 2*length(tau);
-% tmp = tau(end) - tau(end-1);
-% tau = [tau tau(end) + tmp + tau];
-%%%%%%%%%%%%%%%%
-
 dtSmall = (tau(2) - tau(1))/subSamples;
 % maxIter = 1.25*tauLength;
 
@@ -88,15 +82,19 @@ while iter <= tauLength
   % Binary search
   upper = tauLength;
 
-  % HACK
-%   upper = length(tau)/2;
-
   lower = tEarliest;
   
-  tEarliest = find_earliest_BRS_ind(g, data, dynSys.x, upper, lower);
-   
+%   tEarliest = find_earliest_BRS_ind(g, data, dynSys.x, upper, lower);
+
   % BRS at current time
-  BRS_at_t = data(clns{:}, tEarliest);
+%   BRS_at_t = data(clns{:}, tEarliest);
+%   BRS_at_t = data(clns{:}, end);
+    BRS_at_t = data(:, :, :, :, 1);
+  
+  if isnan(eval_u(g, BRS_at_t, dynSys.x))
+      fprintf('Value function at t = %f not defined!\n', tEarliest);
+      break;
+  end
   
   % Visualize BRS corresponding to current trajectory point
   if visualize
@@ -115,11 +113,11 @@ while iter <= tauLength
     hold off
   end
   
-  if tEarliest == tauLength
-    % Trajectory has entered the target
-    fprintf('Terminating because trajectory has entered the target\n');
-    break
-  end
+%   if tEarliest == tauLength
+%     % Trajectory has entered the target
+%     fprintf('Terminating because trajectory has entered the target\n');
+%     break
+%   end
   
   % Update trajectory
   Deriv = computeGradients(g, BRS_at_t);
@@ -141,6 +139,9 @@ while iter <= tauLength
     end
     
     dynSys.updateState(u, dtSmall, dynSys.x, d);
+    if isnan(dynSys.x(1))
+        fprintf('nan!\n');
+    end
   end
   
   % Record new point on nominal trajectory

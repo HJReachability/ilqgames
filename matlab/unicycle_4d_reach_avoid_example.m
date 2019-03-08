@@ -4,17 +4,17 @@ clear all;
 % initState = [0; 0; pi/4; 10];
 % initState = [10; 10; pi/4; 10];
 %initState = [10; 10; pi/4; 0];
-%initState = [10; 10; pi/4; 0];
-initState = [0; 0; pi/4; 0];
+initState = [10; 10; pi/4; 0];
+% initState = [0; 0; pi/4; 0];
 %initState = [125; 100; pi/4; 0];
 
 wMax = 1;
 aMax = 2;
 aRange = [-aMax; aMax];
 %dMax = [1.9; 1.9];
-%dMax = [0; 0];
+dMax = [0; 0];
 %dMax = [0.2; 0.2];
-dMax = [0.1; 0.1];
+% dMax = [0.1; 0.1];
 dynamics = Plane4D(initState, wMax, aRange, dMax);
 
 
@@ -25,33 +25,18 @@ gridCells = [15; 15; 15; 15];
 %gridCells = [40; 40; 40; 40];
 periodicDim = 3;
 
-g = createGrid([0; 0; -pi; -1], [150; 150; pi; 30], gridCells, periodicDim);
+g = createGrid([0; 0; -pi; -10], [150; 150; pi; 20], gridCells, periodicDim);
 
 % Create the goal.
 goalPos = [125, 100];
 goalCost = ProximityCost([1, 2], goalPos, Inf, 0.01);
 goalCostWeight = -10;
 
-% targetRadius = 10;
-% targetCenter = [125; 100; 0; 0];
-% target = shapeCylinder(g, [3 4], targetCenter, targetRadius);
-% HACK
-%target(target<=0) = target(target<=0) * 1000;
+target = zeros(gridCells');
 
 obstacleCenters = [40, 80, 100; 85, 110, 65];
-%obstacleCenters = [40, 80, 62.5; 85, 110, 50];
 obstacleRadii = [10, 10, 10];
-
-obs1 = shapeCylinder(g, [3 4], obstacleCenters(:, 1), obstacleRadii(1));
-obs2 = shapeCylinder(g, [3 4], obstacleCenters(:, 2), obstacleRadii(2));
-obs3 = shapeCylinder(g, [3 4], obstacleCenters(:, 3), obstacleRadii(3));
-
-obs = shapeUnion(obs1, obs2);
-obs = shapeUnion(obs, obs3);
-
-% obs = shapeRectangleByCorners( ...
-%   g, [5; 5; -inf; -inf], [145; 145; inf; inf]);
-% obs = -obs;
+obstacleCostWeights = [5, 5, 5];
 
 % cost_u = 0.01;
 % cost_d = 0.01;
@@ -70,8 +55,6 @@ tau = 0:0.5:40;
 uMode = 'min';
 dMode = 'max';
 
-% uMode = 'max';
-% dMode = 'min';
 minWith = 'none';
 
 % For FRT, we set minWith to zero.
@@ -86,6 +69,12 @@ schemeData.dMode = dMode;
 % Add the state-dependent cost functions.
 schemeData.stateCosts = {goalCost};
 schemeData.stateCostWeights = {goalCostWeight};
+
+for i = 1:length(obstacleRadii)
+    schemeData.stateCosts{i+1} = ProximityCost(...
+        [1, 2], obstacleCenters(:, i)', obstacleRadii(i), 0.1);
+    schemeData.stateCostWeights{i+1} = obstacleCostWeights(i);
+end
 
 schemeData.hamFunc = @runningSumUnicycle4DHam;
 schemeData.partialFunc = @runningSumUnicycle4DPartial;
@@ -144,7 +133,8 @@ if compTraj
   
   % (HACK) Change bound for running cost
   if isfield(schemeData, 'hamFunc')
-    init_pt_upper_V = 200;
+%     init_pt_upper_V = 200;
+    init_pt_upper_V = Inf;
   else
     init_pt_upper_V = 0;
   end
@@ -177,20 +167,20 @@ if compTraj
     
     % Compute the optimal trajectory (with distrubance).
     [traj, traj_tau] = ...
-      computeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
+      runningSumComputeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
 
     % Compute the optimal trajectory (with no disturbance).
     dynamics.x = initState;
     trajExtraArgs.dMode = 'none';
     
-    [traj_no_d, traj_tau_no_d] = ...
-      runningSumComputeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
+%     [traj_no_d, traj_tau_no_d] = ...
+%       runningSumComputeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
   
     hold on;
     
     plot(traj(1, :), traj(2, :), 'DisplayName', 'w/ dstb');
-    plot(traj_no_d(1, :), traj_no_d(2, :), 'DisplayName', 'w/o dstb');
-    scatter(targetCenter(1), targetCenter(2), 'LineWidth', 3);
+%     plot(traj_no_d(1, :), traj_no_d(2, :), 'DisplayName', 'w/o dstb');
+    scatter(goalPos(1), goalPos(2), 'LineWidth', 3);
     xlim([0 150]);
     ylim([0 150]);
     legend();
