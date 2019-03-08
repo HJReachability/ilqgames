@@ -40,6 +40,12 @@ for i = 1:dynSys.nx
   hamValue = hamValue + deriv{i}.*dx{i};
 end
 
+for i = 1:length(schemeData.stateCosts)
+   weight = schemeData.stateCostWeights{i};
+   hamValue = hamValue + weight * schemeData.stateCosts{i}.getCost(t, ...
+       schemeData.grid.xs); 
+end
+
 hamValue = hamValue + R_u(1,1) * u{1}.^2 + R_u(2,2) * u{2}.^2;
 hamValue = hamValue - R_d(1,1) * d{1}.^2 - R_d(2,2) * d{2}.^2;
 hamValue = -hamValue;

@@ -25,9 +25,14 @@ periodicDim = 3;
 
 g = createGrid([0; 0; -pi; -1], [150; 150; pi; 30], gridCells, periodicDim);
 
-targetRadius = 10;
-targetCenter = [125; 100; 0; 0];
-target = shapeCylinder(g, [3 4], targetCenter, targetRadius);
+% Create the goal.
+goalPos = [125, 100];
+goalCost = ProximityCost([1, 2], goalPos, Inf, 0.01);
+goalCostWeight = -10;
+
+% targetRadius = 10;
+% targetCenter = [125; 100; 0; 0];
+% target = shapeCylinder(g, [3 4], targetCenter, targetRadius);
 % HACK
 %target(target<=0) = target(target<=0) * 1000;
 
@@ -75,6 +80,11 @@ schemeData.dynSys = dynamics;
 schemeData.grid = g;
 schemeData.uMode = uMode;
 schemeData.dMode = dMode;
+
+% Add the state-dependent cost functions.
+schemeData.stateCosts = {goalCost};
+schemeData.stateCostWeights = {goalCostWeight};
+
 schemeData.hamFunc = @runningSumUnicycle4DHam;
 schemeData.partialFunc = @runningSumUnicycle4DPartial;
 schemeData.R_u = R_u;
@@ -82,8 +92,8 @@ schemeData.R_d = R_d;
 %schemeData.tMode = 'forward';
 schemeData.tMode = 'backward';
 
-extraArgs.targets = target;
-extraArgs.obstacles = obs;
+% extraArgs.targets = target;
+% extraArgs.obstacles = obs;
 extraArgs.stopInit = dynamics.x;
 extraArgs.visualize = true;
 extraArgs.plotData.plotDims = [1 1 0 0];
