@@ -69,10 +69,10 @@ x0 = np.array([[0.0],
                [theta0],
                [v0]])
 
-P1s = [np.zeros((dynamics._u1_dim, dynamics._x_dim))] * HORIZON_STEPS
-P2s = [np.zeros((dynamics._u2_dim, dynamics._x_dim))] * HORIZON_STEPS
-alpha1s = [np.zeros((dynamics._u1_dim, 1))] * HORIZON_STEPS
-alpha2s = [np.zeros((dynamics._u2_dim, 1))] * HORIZON_STEPS
+P1s = [np.zeros((dynamics._u_dims[0], dynamics._x_dim))] * HORIZON_STEPS
+P2s = [np.zeros((dynamics._u_dims[1], dynamics._x_dim))] * HORIZON_STEPS
+alpha1s = [np.zeros((dynamics._u_dims[0], 1))] * HORIZON_STEPS
+alpha2s = [np.zeros((dynamics._u_dims[1], 1))] * HORIZON_STEPS
 
 # Create the example environment. It will have a couple of circular obstacles
 # laid out like this:
@@ -136,7 +136,6 @@ light_cost_1 = QuadraticCost(
     dimension=1, origin=0, name="light_cost_1")
 
 # Add light quadratic around original values for theta/v.
-# TODO: change all of these to QuadraticCost
 theta_light_cost = QuadraticCost(
     dimension=2, origin=theta0, name="theta_light_cost")
 v_light_cost = QuadraticCost(
@@ -151,13 +150,13 @@ for cost in obstacle_costs:
 player1_cost.add_cost(theta_light_cost, "x", 0.1)
 player1_cost.add_cost(v_light_cost, "x", 0.1)
 
-player1_cost.add_cost(w_cost_upper, "u1", 10.0)
-player1_cost.add_cost(w_cost_lower, "u1", 10.0)
-player1_cost.add_cost(a_cost_upper, "u1", 10.0)
-player1_cost.add_cost(a_cost_lower, "u1", 10.0)
+player1_cost.add_cost(w_cost_upper, 0, 10.0)
+player1_cost.add_cost(w_cost_lower, 0, 10.0)
+player1_cost.add_cost(a_cost_upper, 0, 10.0)
+player1_cost.add_cost(a_cost_lower, 0, 10.0)
 
-player1_cost.add_cost(light_cost_0, "u1", 1.0)
-player1_cost.add_cost(light_cost_1, "u1", 1.0)
+player1_cost.add_cost(light_cost_0, 0, 1.0)
+player1_cost.add_cost(light_cost_1, 0, 1.0)
 
 player2_cost = PlayerCost()
 player2_cost.add_cost(goal_cost, "x", 10.0)
@@ -167,16 +166,17 @@ for cost in obstacle_costs:
 player2_cost.add_cost(theta_light_cost, "x", 0.1)
 player2_cost.add_cost(v_light_cost, "x", 0.1)
 
-player2_cost.add_cost(dvx_cost_upper, "u2", 10.0)
-player2_cost.add_cost(dvx_cost_lower, "u2", 10.0)
-player2_cost.add_cost(dvy_cost_upper, "u2", 10.0)
-player2_cost.add_cost(dvy_cost_lower, "u2", 10.0)
+player2_cost.add_cost(dvx_cost_upper, 1, 10.0)
+player2_cost.add_cost(dvx_cost_lower, 1, 10.0)
+player2_cost.add_cost(dvy_cost_upper, 1, 10.0)
+player2_cost.add_cost(dvy_cost_lower, 1, 10.0)
 
-player2_cost.add_cost(light_cost_0, "u2", 1.0)
-player2_cost.add_cost(light_cost_1, "u2", 1.0)
+player2_cost.add_cost(light_cost_0, 1, 1.0)
+player2_cost.add_cost(light_cost_1, 1, 1.0)
 
 # Visualizer.
-visualizer = Visualizer(0, 1, obstacle_centers, obstacle_radii, goal)
+visualizer = Visualizer(
+    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 175, 0, 175])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
@@ -185,9 +185,9 @@ if not os.path.exists(LOG_DIRECTORY):
 logger = Logger(os.path.join(LOG_DIRECTORY, 'unicycle_4d_example.pkl'))
 
 # Set up ILQSolver.
-solver = ILQSolver(dynamics, player1_cost, player2_cost,
-                   x0, P1s, P2s, alpha1s, alpha2s,
-                   u1_constraint, u2_constraint,
+solver = ILQSolver(dynamics, [player1_cost, player2_cost],
+                   x0, [P1s, P2s], [alpha1s, alpha2s],
+                   [u1_constraint, u2_constraint],
                    logger, visualizer)
 
 solver.run()

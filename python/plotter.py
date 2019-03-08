@@ -40,22 +40,26 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 import dill
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.io
 
 class Plotter(object):
     """
     Plotting utility intended to be used with the Logger.
     """
 
-    def __init__(self, filename):
+    def __init__(self, py_filename, mat_filename):
         """
         Constructor.
 
-        :param filename: Where to load log.
+        :param py_filename: Where to load python log.
+        :param mat_filename: Where to load matlab log.
         :type filename: string
         """
-        fp = open(filename, "rb")
+        fp = open(py_filename, "rb")
         self._log = dill.load(fp)
         fp.close()
+
+        self._matlab_log = scipy.io.loadmat(mat_filename)
 
     def plot_scalar_fields(self, fields,
                            title="", xlabel="", ylabel=""):
@@ -79,3 +83,83 @@ class Plotter(object):
         plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
+
+    def plot_controls(self):
+        """
+        Plot the controls over time for the final optimized trajectory 
+
+        """
+        u = np.array(self._log['u1s'])
+        u = u[-1,:,:,:]
+
+        u1 = u[:,0].flatten()
+        u2 = u[:,1].flatten()
+
+        t = np.arange(1, u.shape[0]+1) * 0.1
+        
+        plt.figure()
+        fig, axs = plt.subplots(2,1)
+        axs[0].plot(t, u1)
+        axs[0].set_xlabel('time (s)')
+        axs[0].set_ylabel('u1 (rad/s)')
+
+        axs[1].plot(t, u2)
+        axs[1].set_xlabel('time (s)')
+        axs[1].set_ylabel('u2 (m/s^2)')
+
+        plt.title('Controls over time')
+        plt.savefig('control.png')
+
+    def plot_disturbances(self):
+        """
+        Plot the disturbance over time for the final optimized trajectory 
+
+        """
+        d = np.array(self._log['u2s'])
+        d = d[-1,:,:,:]
+
+        d1 = d[:,0].flatten()
+        d2 = d[:,1].flatten()
+
+        t = np.arange(1, d.shape[0]+1) * 0.1
+
+        plt.figure()
+        plt.plot(t, d1, label='d1')
+        plt.plot(t, d2, label='d2')
+
+        plt.xlabel('time (s)')
+        plt.ylabel('disturbance (m/s)')
+        plt.legend()
+        plt.title('Disturances over time')
+        plt.savefig('disturbance.png')
+
+    def plot_player_costs(self):
+        self.plot_scalar_fields(['total_cost1', 'total_cost2'], \
+                title = 'player cost over time', xlabel='time (s)', ylabel='cost')
+
+        plt.savefig('player_costs.png')
+
+
+    def plot_trajectories(self):
+
+        # Plot trajectory from iLQG
+        xs = np.array(self._log['xs'])
+        xs = xs[-1,:,:,:]
+
+        x1s = xs[:,0].flatten()
+        x2s = xs[:,1].flatten()
+
+        plt.figure()
+        plt.plot(x1s, x2s, label="iLQG")
+
+            
+        hji_xs = self._matlab_log['traj']
+        plt.plot(hji_xs[0,:], hji_xs[1,:], label='HJI')
+
+        plt.xlabel('x')
+        plt.ylabel('y')
+        plt.legend()
+        plt.title('Final trajectory')
+        plt.savefig('trajectory.png')
+    
+
