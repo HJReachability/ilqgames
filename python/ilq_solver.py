@@ -47,8 +47,8 @@ from visualizer import Visualizer
 from logger import Logger
 
 class ILQSolver(object):
-    def __init__(self, dynamics, player_costs, x0, Ps, alphas, u_constraints,
-                 logger=None, visualizer=None):
+    def __init__(self, dynamics, player_costs, x0, Ps, alphas,
+                 u_constraints=None, logger=None, visualizer=None):
         """
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
