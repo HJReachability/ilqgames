@@ -37,6 +37,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 #
 ################################################################################
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -50,16 +51,15 @@ from player_cost import PlayerCost
 from box_constraint import BoxConstraint
 from visualizer import Visualizer
 from logger import Logger
-import os
 
 # General parameters.
 TIME_HORIZON = 10.0   # s
 TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
-LOG_DIRECTORY = './logs'
+LOG_DIRECTORY = "./logs/two_player_zero_sum/"
 
 # Create dynamics.
-dynamics = TwoPlayerUnicycle4D(T=0.1)
+dynamics = TwoPlayerUnicycle4D(T=TIME_RESOLUTION)
 
 # Choose an initial state and control laws.
 theta0 = np.pi / 4.0 # 45 degree heading
@@ -135,20 +135,11 @@ light_cost_0 = QuadraticCost(
 light_cost_1 = QuadraticCost(
     dimension=1, origin=0, name="light_cost_1")
 
-# Add light quadratic around original values for theta/v.
-theta_light_cost = QuadraticCost(
-    dimension=2, origin=theta0, name="theta_light_cost")
-v_light_cost = QuadraticCost(
-    dimension=3, origin=v0, name="v_light_cost")
-
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
 player1_cost.add_cost(goal_cost, "x", -10.0)
 for cost in obstacle_costs:
     player1_cost.add_cost(cost, "x", 5.0)
-
-player1_cost.add_cost(theta_light_cost, "x", 0.1)
-player1_cost.add_cost(v_light_cost, "x", 0.1)
 
 player1_cost.add_cost(w_cost_upper, 0, 10.0)
 player1_cost.add_cost(w_cost_lower, 0, 10.0)
@@ -162,9 +153,6 @@ player2_cost = PlayerCost()
 player2_cost.add_cost(goal_cost, "x", 10.0)
 for cost in obstacle_costs:
     player2_cost.add_cost(cost, "x", -5.0)
-
-player2_cost.add_cost(theta_light_cost, "x", 0.1)
-player2_cost.add_cost(v_light_cost, "x", 0.1)
 
 player2_cost.add_cost(dvx_cost_upper, 1, 10.0)
 player2_cost.add_cost(dvx_cost_lower, 1, 10.0)
