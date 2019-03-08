@@ -30,7 +30,7 @@ g = createGrid([0; 0; -pi; -10], [150; 150; pi; 20], gridCells, periodicDim);
 % Create the goal.
 goalPos = [125, 100];
 goalCost = ProximityCost([1, 2], goalPos, Inf, 0.01);
-goalCostWeight = -10;
+goalCostWeight = -15;
 
 target = zeros(gridCells');
 
@@ -42,8 +42,12 @@ obstacleCostWeights = [5, 5, 5];
 % cost_d = 0.01;
 % cost_u = 1e-20;
 % cost_d = 1e-20;
-cost_u = 1;
-cost_d = 1;
+% cost_u = 1;
+% cost_d = 1;
+cost_u = 0.1;
+cost_d = 0.1;
+% cost_u = 0;
+% cost_d = 0;
 
 R_u = eye(2) * cost_u;
 R_d = eye(2) * cost_d;
@@ -51,6 +55,7 @@ R_d = eye(2) * cost_d;
 %% Compute reachable set
 %tau = 0:0.5:500;
 tau = 0:0.5:40;
+% tau = 0:0.5:80;
 
 uMode = 'min';
 dMode = 'max';
@@ -85,7 +90,8 @@ schemeData.tMode = 'backward';
 
 % extraArgs.targets = target;
 % extraArgs.obstacles = obs;
-extraArgs.stopInit = dynamics.x;
+extraArgs.stopConverge = true;
+% extraArgs.stopInit = dynamics.x;
 extraArgs.visualize = true;
 extraArgs.plotData.plotDims = [1 1 0 0];
 extraArgs.plotData.projpt = dynamics.x(3:4);
