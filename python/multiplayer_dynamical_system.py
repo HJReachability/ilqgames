@@ -151,7 +151,7 @@ class MultiPlayerDynamicalSystem(object):
         Compute the Jacobian linearization of the dynamics for a particular
         state `x0` and controls `u10` and `u20`. Outputs `A`, `B1`, and
         `B2` matrices and `c` offset vector of a discrete-time linear system:
-           ```x(k + 1) - x0 = A (x(k) - x0) + sum_i Bi (ui(k) - ui0) ```
+           ``` x(k + 1) - x0 = A (x(k) - x0) + sum_i Bi (ui(k) - ui0) ```
 
         :param x0: state
         :type x0: np.array
