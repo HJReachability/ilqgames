@@ -4,7 +4,8 @@ clear all;
 % initState = [0; 0; pi/4; 10];
 % initState = [10; 10; pi/4; 10];
 %initState = [10; 10; pi/4; 0];
-initState = [10; 10; pi/4; 0];
+%initState = [10; 10; pi/4; 0];
+initState = [0; 0; pi/4; 0];
 %initState = [125; 100; pi/4; 0];
 
 wMax = 1;
@@ -12,7 +13,8 @@ aMax = 2;
 aRange = [-aMax; aMax];
 %dMax = [1.9; 1.9];
 %dMax = [0; 0];
-dMax = [0.2; 0.2];
+%dMax = [0.2; 0.2];
+dMax = [0.1; 0.1];
 dynamics = Plane4D(initState, wMax, aRange, dMax);
 
 
@@ -102,7 +104,7 @@ end
 if exist(data_filename, 'file')
     load(data_filename);
 else
-    [data, tau2] = HJIPDE_solve(target, tau, schemeData, minWith, ...
+    [data, tau2] = runningSumHJIPDE_solve(target, tau, schemeData, minWith, ...
         extraArgs);
     save(data_filename, 'data', 'tau2', 'g');
 end
@@ -172,7 +174,7 @@ if compTraj
     trajExtraArgs.dMode = 'none';
     
     [traj_no_d, traj_tau_no_d] = ...
-      computeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
+      runningSumComputeOptTraj(g, dataTraj, tau2, dynamics, trajExtraArgs);
   
     hold on;
     
@@ -185,6 +187,8 @@ if compTraj
     for ii = 1:size(obstacleRadii, 2)
        plotCircle(obstacleCenters(:, ii), obstacleRadii(ii), 'obs'); 
     end
+    
+    save('unicycle_4d_example_hji.mat', 'traj');
     
   else
     error(['Initial state is not in the BRS/BRT! It have a value of ' num2str(value, 2)])
