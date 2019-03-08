@@ -40,7 +40,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import torch
 import numpy as np
-import scipy as sp
+from scipy.linalg import expm
 
 class MultiPlayerDynamicalSystem(object):
     """ Base class for all multiplayer dynamical systems. """
@@ -162,7 +162,7 @@ class MultiPlayerDynamicalSystem(object):
         """
         A_cont, B_cont = self.linearize(x0, u0)
 
-        eAT = sp.linalg.expm(A_cont * self._T)
+        eAT = expm(A_cont * self._T)
         Ainv = np.linalg.pinv(A_cont)
 
         # See https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models
