@@ -102,7 +102,7 @@ car1_v0 = 5.0             # 5 m/s initial speed
 car1_x0 = np.array([
     [6.0],
     [0.0],
-    [car1_theta0]
+    [car1_theta0],
     [car1_v0]
 ])
 
@@ -126,9 +126,9 @@ ped_x0 = np.array([
 
 stacked_x0 = np.concatenate([car1_x0, car2_x0, ped_x0], axis=0)
 
-car1_Ps = [np.zeros((car1._u_dim, car1._x_dim))] * HORIZON_STEPS
-car2_Ps = [np.zeros((car2._u_dim, car2._x_dim))] * HORIZON_STEPS
-ped_Ps = [np.zeros((ped._u_dim, ped._x_dim))] * HORIZON_STEPS
+car1_Ps = [np.zeros((car1._u_dim, dynamics._x_dim))] * HORIZON_STEPS
+car2_Ps = [np.zeros((car2._u_dim, dynamics._x_dim))] * HORIZON_STEPS
+ped_Ps = [np.zeros((ped._u_dim, dynamics._x_dim))] * HORIZON_STEPS
 
 car1_alphas = [np.zeros((car1._u_dim, 1))] * HORIZON_STEPS
 car2_alphas = [np.zeros((car2._u_dim, 1))] * HORIZON_STEPS
@@ -194,7 +194,6 @@ car2_cost.add_cost(car2_a_cost, car2_player_id, 1.0)
 
 ped_cost = PlayerCost()
 ped_cost.add_cost(ped_goal_cost, "x", -10.0)
-ped_cost.add_cost(ped_polyline_cost, "x", 10.0)
 
 ped_player_id = 2
 ped_cost.add_cost(ped_ax_cost, ped_player_id, 1.0)
@@ -202,7 +201,7 @@ ped_cost.add_cost(ped_ay_cost, ped_player_id, 1.0)
 
 # Visualizer.
 visualizer = Visualizer(
-    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 175, 0, 175])
+    0, 1, 2, [], [], ped_goal, plot_lims=[0, 175, 0, 175])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
@@ -214,7 +213,7 @@ logger = Logger(os.path.join(LOG_DIRECTORY, 'intersection_example.pkl'))
 solver = ILQSolver(dynamics,
                    [car1_cost, car2_cost, ped_cost],
                    stacked_x0,
-                   [car1_Ps, car2_P2s, ped_Ps],
+                   [car1_Ps, car2_Ps, ped_Ps],
                    [car1_alphas, car2_alphas, ped_alphas],
                    None,
                    logger,
