@@ -57,3 +57,7 @@ class Cost(object):
         :rtype: torch.Tensor
         """
         raise NotImplementedError("__call__ is not implemented.")
+
+    def render(self, ax=None):
+        """ Optional rendering on the given axes. """
+        raise NotImplementedError("render is not implemented.")
