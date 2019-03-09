@@ -47,6 +47,7 @@ class Visualizer(object):
     def __init__(self,
                  position_indices,
                  renderable_costs,
+                 player_linestyles,
                  plot_lims=None,
                  figure_number=1):
         """
@@ -56,6 +57,8 @@ class Visualizer(object):
         :type position_indices: [(uint, uint)]
         :param renderable_costs: list of cost functions that support rendering
         :type renderable_costs: [Cost]
+        :param player_linestyles: list of line styles (1 per player, e.g. ".-r")
+        :type player_colors: [string]
         :param plot_lims: plot limits [xlim_low, xlim_high, ylim_low, ylim_high]
         :type plot_lims: [float, float, float, float]
         :param figure_number: which figure number to operate on
@@ -63,6 +66,7 @@ class Visualizer(object):
         """
         self._position_indices = position_indices
         self._renderable_costs = renderable_costs
+        self._player_linestyles = player_linestyles
         self._figure_number = figure_number
         self._plot_lims = plot_lims
 
@@ -98,22 +102,11 @@ class Visualizer(object):
 
         ax.set_aspect("equal")
 
-        # Plot the obstacles.
-        for center, radius in zip(self._obs_centers, self._obs_radii):
-            circle = plt.Circle(
-                (center.x, center.y), radius, color='r', fill=True, alpha=0.75)
-            ax.add_artist(circle)
-            ax.text(center.x - 1.25, center.y - 1.25, "obs", fontsize=8)
+        # Render all costs.
+        for cost in self._renderable_costs:
+            cost.render(ax)
 
-        # Plot the goal.
-        circle = plt.Circle(
-            (self._goal_center.x, self._goal_center.y),
-            1, color='g', fill=True, alpha=0.75)
-        ax.add_artist(circle)
-        ax.text(self._goal_center.x + 1.5,
-                self._goal_center.y + 1.5, "goal", fontsize=10)
-
-        # Plot the history of trajectories.
+        # Plot the history of trajectories for each player.
         if show_last_k < 0 or show_last_k >= len(self._history):
             show_last_k = len(self._history)
 
