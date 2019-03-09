@@ -55,6 +55,7 @@ from proximity_cost import ProximityCost
 from semiquadratic_cost import SemiquadraticCost
 from quadratic_cost import QuadraticCost
 from semiquadratic_polyline_cost import SemiquadraticPolylineCost
+from quadratic_polyline_cost import QuadraticPolylineCost
 from player_cost import PlayerCost
 from box_constraint import BoxConstraint
 
@@ -135,11 +136,13 @@ car2_alphas = [np.zeros((car2._u_dim, 1))] * HORIZON_STEPS
 ped_alphas = [np.zeros((ped._u_dim, 1))] * HORIZON_STEPS
 
 # Create environment.
-# TODO(@dfk): add quadratic polyline cost too.
 car1_position_indices_in_product_state = (0, 1)
 car1_polyline = Polyline([Point(6.0, -1.0), Point(6.0, 100.0)])
-car1_polyline_cost = SemiquadraticPolylineCost(
-    car1_polyline, 1.0, car1_position_indices_in_product_state, "car1_polyline")
+car1_polyline_boundary_cost = SemiquadraticPolylineCost(
+    car1_polyline, 1.0, car1_position_indices_in_product_state,
+    "car1_polyline_boundary")
+car1_polyline_cost = QuadraticPolylineCost(
+    car1_polyline, car1_position_indices_in_product_state, "car1_polyline")
 
 car1_goal = Point(6.0, 30.0)
 car1_goal_cost = ProximityCost(
@@ -153,8 +156,11 @@ car2_polyline = Polyline([Point(2.0, 31.0),
                           Point(5.0, 12.5),
                           Point(8.0, 12.0),
                           Point(100.0, 12.0)])
-car2_polyline_cost = SemiquadraticPolylineCost(
-    car2_polyline, 1.0, car2_position_indices_in_product_state, "car2_polyline")
+car2_polyline_boundary_cost = SemiquadraticPolylineCost(
+    car2_polyline, 1.0, car2_position_indices_in_product_state,
+    "car2_polyline_boundary")
+car1_polyline_cost = QuadraticPolylineCost(
+    car2_polyline, car2_position_indices_in_product_state, "car2_polyline")
 
 car2_goal = Point(16.0, 12.0)
 car2_goal_cost = ProximityCost(
@@ -164,6 +170,26 @@ ped_position_indices_in_product_state = (8, 9)
 ped_goal = Point(-1.0, 19.0)
 ped_goal_cost = ProximityCost(
     ped_position_indices_in_product_state, ped_goal, np.inf, "ped_goal")
+
+# Penalize speed above a threshold for all players.
+car1_v_index_in_product_state = 3
+car1_maxv = 10.0 # m/s
+car1_maxv_cost = SemiquadraticCost(
+    car1_v_index_in_product_state, car1_maxv, True, "car1_maxv")
+
+car2_v_index_in_product_state = 7
+car2_maxv = 8.0 # m/s
+car2_maxv_cost = SemiquadraticCost(
+    car2_v_index_in_product_state, car2_maxv, True, "car2_maxv")
+
+ped_vx_index_in_product_state = 10
+ped_vy_index_in_product_state = 11
+ped_maxvx = 1.0 # m/s
+ped_maxvy = 1.0 # m/s
+ped_maxvx_cost = SemiquadraticCost(
+    ped_vx_index_in_product_state, ped_maxvx, True, "ped_maxvx")
+ped_maxvy_cost = SemiquadraticCost(
+    ped_vy_index_in_product_state, ped_maxvy, True, "ped_maxvy")
 
 # Control costs for all players.
 car1_w_cost = QuadraticCost(0, 0.0, "car1_w_cost")
@@ -177,23 +203,29 @@ ped_ay_cost = QuadraticCost(1, 0.0, "ped_ay_cost")
 
 # Build up total costs for both players. This is basically a zero-sum game.
 car1_cost = PlayerCost()
-car1_cost.add_cost(car1_goal_cost, "x", -10.0)
+car1_cost.add_cost(car1_goal_cost, "x", -1.0)
 car1_cost.add_cost(car1_polyline_cost, "x", 10.0)
+car1_cost.add_cost(car1_polyline_boundary_cost, "x", 100.0)
+car1_cost.add_cost(car1_maxv_cost, "x", 100.0)
 
 car1_player_id = 0
 car1_cost.add_cost(car1_w_cost, car1_player_id, 1.0)
 car1_cost.add_cost(car1_a_cost, car1_player_id, 1.0)
 
 car2_cost = PlayerCost()
-car2_cost.add_cost(car2_goal_cost, "x", -10.0)
+car2_cost.add_cost(car2_goal_cost, "x", -1.0)
 car2_cost.add_cost(car2_polyline_cost, "x", 10.0)
+car2_cost.add_cost(car2_polyline_boundary_cost, "x", 100.0)
+car2_cost.add_cost(car2_maxv_cost, "x", 100.0)
 
 car2_player_id = 1
 car2_cost.add_cost(car2_w_cost, car2_player_id, 1.0)
 car2_cost.add_cost(car2_a_cost, car2_player_id, 1.0)
 
 ped_cost = PlayerCost()
-ped_cost.add_cost(ped_goal_cost, "x", -10.0)
+ped_cost.add_cost(ped_goal_cost, "x", -1.0)
+ped_cost.add_cost(ped_maxvx_cost, "x", -100.0)
+ped_cost.add_cost(ped_maxvy_cost, "x", -100.0)
 
 ped_player_id = 2
 ped_cost.add_cost(ped_ax_cost, ped_player_id, 1.0)
