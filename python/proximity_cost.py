@@ -96,6 +96,19 @@ class ProximityCost(Cost):
         return -outside_penalty - self._max_squared_distance * torch.ones(
             1, 1, requires_grad=True).double()
 
+    def render(self, ax=None):
+        """ Render this obstacle on the given axes. """
+        if np.isinf(self._max_squared_distance):
+            radius = 1.0
+        else:
+            radius = np.sqrt(self._max_squared_distance)
+
+        circle = plt.Circle(
+            (self._point.x, self._point.y), radius,
+            color="g", fill=True, alpha=0.75)
+        ax.add_artist(circle)
+        ax.text(self._point.x + 1.25, self._point.y + 1.25, "goal", fontsize=10)
+
 class ConcatenatedStateProximityCost(Cost):
     def __init__(self, position_indices1, position_indices2,
                  max_distance, outside_weight=0.01, name=""):
