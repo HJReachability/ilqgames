@@ -20,7 +20,7 @@ classdef ObstacleCost < StateCost
             dy = x{obj.positionIndices(2)} - obj.point(2);
             relDistance = sqrt(dx.^2 + dy.^2);
             
-            cost = min(relDistance - obj.maxDistance, 0);
+            cost = min(relDistance - obj.maxDistance, 0).^2;
         end
     end
 end
