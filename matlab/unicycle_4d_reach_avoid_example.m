@@ -1,22 +1,13 @@
 clear all;
 
 %% Parameters.
-% initState = [0; 0; pi/4; 10];
-% initState = [10; 10; pi/4; 10];
-%initState = [10; 10; pi/4; 0];
-initState = [10; 10; pi/4; 0];
-% initState = [0; 0; pi/4; 0];
-%initState = [125; 100; pi/4; 0];
+initState = [10; 10; pi/2.5; 5];
 
 wMax = 1;
 aMax = 2;
 aRange = [-aMax; aMax];
-%dMax = [1.9; 1.9];
 dMax = [0; 0];
-%dMax = [0.2; 0.2];
-% dMax = [0.1; 0.1];
 dynamics = Plane4D(initState, wMax, aRange, dMax);
-
 
 %% Target and obstacles.
 % gridCells = [25; 25; 25; 25];
@@ -25,29 +16,22 @@ gridCells = [15; 15; 15; 15];
 %gridCells = [40; 40; 40; 40];
 periodicDim = 3;
 
-g = createGrid([0; 0; -pi; -10], [150; 150; pi; 20], gridCells, periodicDim);
+g = createGrid([0; 0; -pi; -10], [175; 175; pi; 20], gridCells, periodicDim);
 
 % Create the goal.
 goalPos = [125, 100];
 goalCost = ProximityCost([1, 2], goalPos, Inf, 0.01);
-goalCostWeight = -15;
+goalCostWeight = -1;
 
 target = zeros(gridCells');
 
-obstacleCenters = [40, 80, 100; 85, 110, 65];
+obstacleCenters = [100, 65, 25; 35, 65, 80];
 obstacleRadii = [10, 10, 10];
-obstacleCostWeights = [5, 5, 5];
+obstacleCostWeights = [100, 100, 100];
 
-% cost_u = 0.01;
-% cost_d = 0.01;
-% cost_u = 1e-20;
-% cost_d = 1e-20;
-% cost_u = 1;
-% cost_d = 1;
-cost_u = 0.1;
-cost_d = 0.1;
-% cost_u = 0;
-% cost_d = 0;
+% Control and disturbance quadratic cost weights. 
+cost_u = 10;
+cost_d = 10;
 
 R_u = eye(2) * cost_u;
 R_d = eye(2) * cost_d;
@@ -76,10 +60,18 @@ schemeData.stateCosts = {goalCost};
 schemeData.stateCostWeights = {goalCostWeight};
 
 for i = 1:length(obstacleRadii)
-    schemeData.stateCosts{i+1} = ProximityCost(...
-        [1, 2], obstacleCenters(:, i)', obstacleRadii(i), 0.1);
+    schemeData.stateCosts{i+1} = ObstacleCost(...
+        [1, 2], obstacleCenters(:, i)', obstacleRadii(i));
     schemeData.stateCostWeights{i+1} = obstacleCostWeights(i);
 end
+
+maxVel = 15;
+
+schemeData.stateCosts{end+1} = SemiquadraticCost(4, maxVel, true);
+schemeData.stateCostWeights{end+1} = 20;
+
+schemeData.stateCosts{end+1} = SemiquadraticCost(4, 0, false);
+schemeData.stateCostWeights{end+1} = 20;
 
 schemeData.hamFunc = @runningSumUnicycle4DHam;
 schemeData.partialFunc = @runningSumUnicycle4DPartial;

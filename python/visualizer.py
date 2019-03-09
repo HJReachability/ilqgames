@@ -130,11 +130,15 @@ class Visualizer(object):
                 alpha = 1 - (len(self._history) - kk) / show_last_k
 
             iterations.append(ii)
-            plt.plot(xs, ys, 'b', label="Iteration " + str(ii), alpha=alpha)
-
+            plt.plot(xs, ys, '.-b', label="Iteration " + str(ii), alpha=alpha, markersize=2)
+            # plt.scatter(xs, ys, marker='o', s=2)
 
         plt.title("ILQ solver solution (iterations {}-{})".format(
             iterations[0], iterations[-1]))
+
+        # TODO: Plot velocity over time (e.g. could assign a color to each point in plot based
+        #       on velocity)
+        # TODO: Plot controls and distrbances.
 
         # plt.legend()
 
