@@ -133,12 +133,18 @@ class Visualizer(object):
             xs = [x[self._x_idx, 0] for x in traj["xs"]]
             ys = [x[self._y_idx, 0] for x in traj["xs"]]
 
+            # Get the disturbance velocities.
+            dist_scale = 1.
+            dxs = [dist_scale * d[0, 0] for d in traj["u2s"]]
+            dys = [dist_scale * d[1, 0] for d in traj["u2s"]]
+
             alpha = 1
             if fade_old:
                 alpha = 1 - (len(self._history) - kk) / show_last_k
 
             iterations.append(ii)
             plt.plot(xs, ys, '.-b', label="Iteration " + str(ii), alpha=alpha, markersize=2)
+            # plt.quiver(xs, ys, dxs, dys)
             # plt.scatter(xs, ys, marker='o', s=2)
 
         plt.title("ILQ solver solution (iterations {}-{})".format(iterations[0], iterations[-1]))

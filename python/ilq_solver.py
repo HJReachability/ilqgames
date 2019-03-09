@@ -94,6 +94,11 @@ class ILQSolver(object):
         self._visualizer = visualizer
         self._logger = logger
 
+        # Log some of the paramters. 
+        if self._logger is not None:
+            self._logger.log("alpha_scaling", self._alpha_scaling)
+            self._logger.log("horizon", self._horizon)
+
     def run(self):
         """ Run the algorithm for the specified parameters. """
         iteration = 0
@@ -107,7 +112,7 @@ class ILQSolver(object):
             if self._visualizer is not None:
                 traj = {"xs" : xs}
                 for ii in range(self._num_players):
-                    traj["u%ds" % ii] = us[ii]
+                    traj["u%ds" % (ii + 1)] = us[ii]
 
                 self._visualizer.add_trajectory(iteration, traj)
                 plt.clf()
