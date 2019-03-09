@@ -44,35 +44,26 @@ from matplotlib import animation
 
 
 class Visualizer(object):
-    def __init__(self, x_idx, y_idx, th_idx, obs_centers, obs_radii, goal_center,
-                 plot_lims=None, figure_number=1):
+    def __init__(self,
+                 position_indices,
+                 renderable_costs,
+                 plot_lims=None,
+                 figure_number=1):
         """
-        Construct from indices of x/y coordinates in state vector.
+        Construct from list of position indices and renderable cost functions.
 
-        :param x_idx: index of x-coordinate of state
-        :type x_idx: uint
-        :param y_idx: index of y-coordinate of state
-        :type y_idx: uint
-        :param th_idx: index of theta coordinate of state
-        :type th_idx: uint
-        :param obs_centers: list of obstacle center points
-        :type obs_centers: [Point]
-        :param obs_radii: list of obstacle radii
-        :type obs_radii: [float]
-        :param goal_center: position of the goal
-        :type goal_center: Point
+        :param position_indices: list of tuples of position indices (1/player)
+        :type position_indices: [(uint, uint)]
+        :param renderable_costs: list of cost functions that support rendering
+        :type renderable_costs: [Cost]
         :param plot_lims: plot limits [xlim_low, xlim_high, ylim_low, ylim_high]
         :type plot_lims: [float, float, float, float]
         :param figure_number: which figure number to operate on
         :type figure_number: uint
         """
-        self._x_idx = x_idx
-        self._y_idx = y_idx
-        self._th_idx = th_idx
+        self._position_indices = position_indices
+        self._renderable_costs = renderable_costs
         self._figure_number = figure_number
-        self._obs_centers = obs_centers
-        self._obs_radii = obs_radii
-        self._goal_center = goal_center
         self._plot_lims = plot_lims
 
         # Store history as list of trajectories.
@@ -119,7 +110,8 @@ class Visualizer(object):
             (self._goal_center.x, self._goal_center.y),
             1, color='g', fill=True, alpha=0.75)
         ax.add_artist(circle)
-        ax.text(self._goal_center.x + 1.5, self._goal_center.y + 1.5, "goal", fontsize=10)
+        ax.text(self._goal_center.x + 1.5,
+                self._goal_center.y + 1.5, "goal", fontsize=10)
 
         # Plot the history of trajectories.
         if show_last_k < 0 or show_last_k >= len(self._history):
@@ -141,7 +133,8 @@ class Visualizer(object):
             plt.plot(xs, ys, 'b', label="Iteration " + str(ii), alpha=alpha)
 
 
-        plt.title("ILQ solver solution (iterations {}-{})".format(iterations[0], iterations[-1]))
+        plt.title("ILQ solver solution (iterations {}-{})".format(
+            iterations[0], iterations[-1]))
 
         # plt.legend()
 
