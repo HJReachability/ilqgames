@@ -47,8 +47,16 @@ from visualizer import Visualizer
 from logger import Logger
 
 class ILQSolver(object):
-    def __init__(self, dynamics, player_costs, x0, Ps, alphas,
-                 u_constraints=None, logger=None, visualizer=None):
+    def __init__(self,
+                 dynamics,
+                 player_costs,
+                 x0,
+                 Ps,
+                 alphas,
+                 alpha_scaling=0.05,
+                 logger=None,
+                 visualizer=None,
+                 u_constraints=None):
         """
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
@@ -63,12 +71,14 @@ class ILQSolver(object):
         :type Ps: [[np.array]]
         :param alphas: list of lists of feedforward terms (1 list per player)
         :type alphas: [[np.array]]
-        :param u_constraints: list of constraints on controls
-        :type u_constraints: [Constraint]
+        :param alpha_scaling: step size on the alpha
+        :type alpha_scaling: float
         :param logger: logging utility
         :type logger: Logger
         :param visualizer: optional visualizer
         :type visualizer: Visualizer
+        :param u_constraints: list of constraints on controls
+        :type u_constraints: [Constraint]
         """
         self._dynamics = dynamics
         self._player_costs = player_costs
@@ -85,7 +95,7 @@ class ILQSolver(object):
         self._current_operating_point = None
 
         # Fixed step size for the linesearch.
-        self._alpha_scaling = 0.05
+        self._alpha_scaling = alpha_scaling
 
         # Set up visualizer.
         self._visualizer = visualizer
