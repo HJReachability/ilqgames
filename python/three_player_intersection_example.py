@@ -99,7 +99,7 @@ dynamics = ProductMultiPlayerDynamicalSystem(
 # We shall assume that lanes are 4 m wide and set the origin to be in the
 # bottom left along the road boundary.
 car1_theta0 = np.pi / 2.0 # 90 degree heading
-car1_v0 = 5.0             # 5 m/s initial speed
+car1_v0 = 2.0             # 5 m/s initial speed
 car1_x0 = np.array([
     [6.0],
     [0.0],
@@ -108,7 +108,7 @@ car1_x0 = np.array([
 ])
 
 car2_theta0 = -np.pi / 2.0 # -90 degree heading
-car2_v0 = 2.0              # 2 m/s initial speed
+car2_v0 = 1.0              # 2 m/s initial speed
 car2_x0 = np.array([
     [2.0],
     [30.0],
@@ -159,7 +159,7 @@ car2_polyline = Polyline([Point(2.0, 31.0),
 car2_polyline_boundary_cost = SemiquadraticPolylineCost(
     car2_polyline, 1.0, car2_position_indices_in_product_state,
     "car2_polyline_boundary")
-car1_polyline_cost = QuadraticPolylineCost(
+car2_polyline_cost = QuadraticPolylineCost(
     car2_polyline, car2_position_indices_in_product_state, "car2_polyline")
 
 car2_goal = Point(16.0, 12.0)
@@ -233,7 +233,16 @@ ped_cost.add_cost(ped_ay_cost, ped_player_id, 1.0)
 
 # Visualizer.
 visualizer = Visualizer(
-    0, 1, 2, [], [], ped_goal, plot_lims=[0, 175, 0, 175])
+    [car1_position_indices_in_product_state,
+     car2_position_indices_in_product_state,
+     ped_position_indices_in_product_state],
+    [car1_polyline_boundary_cost,
+     car1_goal_cost,
+     car2_polyline_boundary_cost,
+     car2_goal_cost,
+     ped_goal_cost],
+    [".-r", ".-g", ".-b"],
+    plot_lims=[-10, 30, -10, 40])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
@@ -247,8 +256,9 @@ solver = ILQSolver(dynamics,
                    stacked_x0,
                    [car1_Ps, car2_Ps, ped_Ps],
                    [car1_alphas, car2_alphas, ped_alphas],
-                   None,
+                   0.1,
                    logger,
-                   visualizer)
+                   visualizer,
+                   None)
 
 solver.run()
