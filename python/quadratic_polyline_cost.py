@@ -57,7 +57,7 @@ class QuadraticPolylineCost(Cost):
         self._x_index, self._y_index = position_indices
         super(QuadraticPolylineCost, self).__init__(name)
 
-    def __call__(self, x):
+    def __call__(self, x, k=0):
         """
         Evaluate this cost function on the given state
         NOTE: `x` should be a PyTorch tensor with `requires_grad` set `True`.

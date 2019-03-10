@@ -60,7 +60,7 @@ class ProductStateProximityCost(Cost):
         self._num_players = len(position_indices)
         super(ProductStateProximityCost, self).__init__(name)
 
-    def __call__(self, x):
+    def __call__(self, x, k=0):
         """
         Evaluate this cost function on the given state.
         NOTE: `x` should be a PyTorch tensor with `requires_grad` set `True`.
