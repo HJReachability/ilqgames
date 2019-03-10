@@ -33,50 +33,42 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# 4D unicycle model with disturbance. Dynamics are as follows:
-#                          \dot x     = v cos theta + u21
-#                          \dot y     = v sin theta + u22
-#                          \dot theta = u11
-#                          \dot v     = u12
+# Quadratic cost that penalizes distance from a polyline.
 #
 ################################################################################
 
 import torch
-import numpy as np
 
-from multiplayer_dynamical_system import MultiPlayerDynamicalSystem
+from cost import Cost
+from point import Point
+from polyline import Polyline
 
-class TwoPlayerUnicycle4D(MultiPlayerDynamicalSystem):
-    """ 4D unicycle model with disturbances. """
-
-    def __init__(self, T=0.1):
-        super(TwoPlayerUnicycle4D, self).__init__(4, [2, 2], T)
-
-    def __call__(self, x, u):
+class QuadraticPolylineCost(Cost):
+    def __init__(self, polyline, position_indices, name=""):
         """
-        Compute the time derivative of state for a particular state/control.
-        NOTE: `x`, and all `u` should be 2D (i.e. column vectors).
+        Initialize with a polyline.
 
-        :param x: current state
-        :type x: torch.Tensor or np.array
-        :param u: list of current control inputs for all each player
-        :type u: [torch.Tensor] or [np.array]
-        :return: current time derivative of state
-        :rtype: torch.Tensor or np.array
+        :param polyline: piecewise linear path which defines signed distances
+        :type polyline: Polyline
+        :param position_indices: indices of input corresponding to (x, y)
+        :type position_indices: (uint, uint)
         """
-        assert len(u) == self._num_players
+        self._polyline = polyline
+        self._x_index, self._y_index = position_indices
+        super(QuadraticPolylineCost, self).__init__(name)
 
-        if isinstance(x, np.ndarray):
-            x_dot = np.zeros((self._x_dim, 1))
-            cos = np.cos
-            sin = np.sin
-        else:
-            x_dot = torch.zeros((self._x_dim, 1))
-            cos = torch.cos
-            sin = torch.sin
+    def __call__(self, x):
+        """
+        Evaluate this cost function on the given state
+        NOTE: `x` should be a PyTorch tensor with `requires_grad` set `True`.
+        NOTE: `x` should be a column vector.
 
-        x_dot[0, 0] = x[3, 0] * cos(x[2, 0]) + u[1][0, 0]
-        x_dot[1, 0] = x[3, 0] * sin(x[2, 0]) + u[1][1, 0]
-        x_dot[2, 0] = u[0][0, 0]
-        x_dot[3, 0] = u[0][1, 0]
-        return x_dot
+        :param x: state of the system
+        :type x: torch.Tensor
+        :return: scalar value of cost
+        :rtype: torch.Tensor
+        """
+        signed_distance = self._polyline.signed_distance_to(
+            Point(x[self._x_index, 0], x[self._y_index, 0]))
+
+        return signed_distance**2

@@ -33,55 +33,60 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Semiquadratic cost that takes effect a fixed distance away from a Polyline.
+# Proximity cost for state spaces that are Cartesian products of individual
+# systems' state spaces. Penalizes
+#      ``` sum_{i \ne j} min(distance(i, j) - max_distance, 0)^2 ```
+# for all players i, j.
 #
 ################################################################################
 
 import torch
-import matplotlib.pyplot as plt
 
 from cost import Cost
-from point import Point
-from polyline import Polyline
 
-class SemiquadraticPolylineCost(Cost):
-    def __init__(self, polyline, distance_threshold, position_indices, name=""):
+class ProductStateProximityCost(Cost):
+    def __init__(self, position_indices, max_distance, name=""):
         """
-        Initialize with a polyline, a threshold in distance from the polyline.
+        Initialize with dimension to add cost to and threshold BELOW which
+        to impose quadratic cost.
 
-        :param polyline: piecewise linear path which defines signed distances
-        :type polyline: Polyline
-        :param distance_threshold: value above which to penalize
-        :type distance_threshold: float
-        :param position_indices: indices of input corresponding to (x, y)
-        :type position_indices: (uint, uint)
+        :param position_indices: list of index tuples corresponding to (x, y)
+        :type position_indices: [(uint, uint)]
+        :param max_distance: maximum value of distance to penalize
+        :type max_distance: float
         """
-        self._polyline = polyline
-        self._distance_threshold = distance_threshold
-        self._x_index, self._y_index = position_indices
-        super(SemiquadraticPolylineCost, self).__init__(name)
+        self._position_indices = position_indices
+        self._max_distance = max_distance
+        self._num_players = len(position_indices)
+        super(ProductStateProximityCost, self).__init__(name)
 
-    def __call__(self, x, k=0):
+    def __call__(self, x):
         """
-        Evaluate this cost function on the given state and time.
+        Evaluate this cost function on the given state.
         NOTE: `x` should be a PyTorch tensor with `requires_grad` set `True`.
         NOTE: `x` should be a column vector.
 
-        :param x: state of the system
+        :param x: concatenated state vector of all systems
         :type x: torch.Tensor
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
-        signed_distance = self._polyline.signed_distance_to(
-            Point(x[self._x_index, 0], x[self._y_index, 0]))
+        total_cost = torch.zeros(1, 1, requires_grad=True).double()
 
-        if abs(signed_distance) > self._distance_threshold:
-            return (abs(signed_distance) - self._distance_threshold) ** 2
+        for ii in range(self._num_players):
+            xi_idx, yi_idx = self._position_indices[ii]
 
-        return torch.zeros(1, 1, requires_grad=True).double()
+            for jj in range(self._num_players):
+                if ii == jj:
+                    continue
 
-    def render(self, ax=None):
-        """ Render this cost on the given axes. """
-        xs = [pt.x for pt in self._polyline.points]
-        ys = [pt.y for pt in self._polyline.points]
-        ax.plot(xs, ys, "k", alpha=0.25)
+                # Compute relative distance.
+                xj_idx, yj_idx = self._position_indices[jj]
+                dx = x[xi_idx, 0] - x[xj_idx, 0]
+                dy = x[yi_idx, 0] - x[yj_idx, 0]
+                relative_distance = torch.sqrt(dx*dx + dy*dy)
+
+                total_cost += min(
+                    relative_distance - self._max_distance, 0.0)**2
+
+        return total_cost

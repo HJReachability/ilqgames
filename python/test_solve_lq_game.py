@@ -43,7 +43,7 @@ import unittest
 
 from solve_lq_game import solve_lq_game
 from lyap_iters_eric import coupled_DARE_solve
-from evaluate_lq_game_cost import evaluate_lq_game_cost
+from evaluate_2_player_lq_game_cost import evaluate_2_player_lq_game_cost
 
 DT = 0.1
 HORIZON = 10.0
@@ -57,7 +57,6 @@ A = np.array([[1.0, DT], [0.0, 1.0]]); As = [A] * NUM_TIMESTEPS
 B1 = np.array([[0.5 * DT * DT], [DT]]); B1s = [B1] * NUM_TIMESTEPS
 #B2 = np.array([[0.5 * DT * DT], [DT]]); B2s = [B2] * NUM_TIMESTEPS
 B2 = np.array([[0.32 * DT * DT], [0.11 * DT]]); B2s = [B2] * NUM_TIMESTEPS
-c = np.array([[0.0], [0.0]]); cs = [c] * NUM_TIMESTEPS
 
 # State costs.
 Q1 = np.array([[1.0, 0.0], [0.0, 1.0]]); Q1s = [Q1] * NUM_TIMESTEPS
@@ -84,12 +83,9 @@ class TestSolveLQGame(unittest.TestCase):
         [P1_lyap, P2_lyap], _, test = coupled_DARE_solve(
             A, B1, B2, Q1, Q2, R11, R12, R21, R22, N=1000)
 
-        P1s, P2s, alpha1s, alpha2s = solve_lq_game(
-            As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
-
-#        print("Lyapunov iterations: ", P1_lyap, " / ", P2_lyap, " test ", test)
-#        print("Time varying Ps: ", P1s[0], " / ", P2s[0])
-#        print("Time varying alphas: ", alpha1s[0], " / ", alpha2s[0])
+        [P1s, P2s], [alpha1s, alpha2s] = solve_lq_game(
+            As, [B1s, B2s],
+            [Q1s, Q2s], [l1s, l2s], [[R11s, R12s], [R21s, R22s]])
 
         np.testing.assert_array_almost_equal(P1_lyap, P1s[0], decimal=3)
         np.testing.assert_array_almost_equal(P2_lyap, P2s[0], decimal=3)
@@ -99,13 +95,14 @@ class TestSolveLQGame(unittest.TestCase):
     def testNashEquilibrium(self):
         """ Check that we find a Nash equilibrium. """
         # Compute Nash solution.
-        P1s, P2s, alpha1s, alpha2s = solve_lq_game(
-            As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s)
+        [P1s, P2s], [alpha1s, alpha2s] = solve_lq_game(
+            As, [B1s, B2s],
+            [Q1s, Q2s], [l1s, l2s], [[R11s, R12s], [R21s, R22s]])
 
         # Compute optimal costs.
         x0 = np.array([[1.0], [1.0]])
-        optimal_cost1, optimal_cost2 = evaluate_lq_game_cost(
-            As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
+        optimal_cost1, optimal_cost2 = evaluate_2_player_lq_game_cost(
+            As, B1s, B2s, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
             P1s, P2s, alpha1s, alpha2s, x0)
 
         # Check that random perturbations of each players' strategies (holding
@@ -125,8 +122,8 @@ class TestSolveLQGame(unittest.TestCase):
                 alpha1s_copy[k] += PERTURBATION_STD * np.random.randn(1, 1)
 
             # Compare cost for player 1.
-            cost1, _ = evaluate_lq_game_cost(
-                As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
+            cost1, _ = evaluate_2_player_lq_game_cost(
+                As, B1s, B2s, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
                 P1s_copy, P2s, alpha1s_copy, alpha2s, x0)
             self.assertGreaterEqual(cost1, optimal_cost1)
 
@@ -136,8 +133,8 @@ class TestSolveLQGame(unittest.TestCase):
                 alpha2s_copy[k] += PERTURBATION_STD * np.random.randn(1, 1)
 
             # Compare cost for player 2.
-            _, cost2 = evaluate_lq_game_cost(
-                As, B1s, B2s, cs, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
+            _, cost2 = evaluate_2_player_lq_game_cost(
+                As, B1s, B2s, Q1s, Q2s, l1s, l2s, R11s, R12s, R21s, R22s,
                 P1s, P2s_copy, alpha1s, alpha2s_copy, x0)
             self.assertGreaterEqual(cost2, optimal_cost2)
 
