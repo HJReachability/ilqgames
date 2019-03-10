@@ -33,50 +33,77 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# 4D unicycle model with disturbance. Dynamics are as follows:
-#                          \dot x     = v cos theta + u21
-#                          \dot y     = v sin theta + u22
-#                          \dot theta = u11
-#                          \dot v     = u12
+# 4D (kinematic) bicycle model. Dynamics are as follows:
+#                          \dot x     = v cos(phi + beta)
+#                          \dot y     = v sin(phi + beta)
+#                          \dot psi   = (v / l_r) sin(beta)
+#                          \dot v     = u1
+#                 where beta = arctan((l_r / (l_f + l_r)) tan(u2))
+#
+# Dynamics were taken from:
+# https://borrelli.me.berkeley.edu/pdfpub/IV_KinematicMPC_jason.pdf
+#
+# `psi` is the inertial heading.
+# `beta` is the angle of the current velocity of the center of mass with respect
+#     to the longitudinal axis of the car
+# `u1` is the acceleration of the center of mass in the same direction as the
+#     velocity.
+# `u2` is the front steering angle.
 #
 ################################################################################
 
 import torch
 import numpy as np
 
-from multiplayer_dynamical_system import MultiPlayerDynamicalSystem
+from dynamical_system import DynamicalSystem
 
-class TwoPlayerUnicycle4D(MultiPlayerDynamicalSystem):
-    """ 4D unicycle model with disturbances. """
+class Bicycle4D(DynamicalSystem):
+    """ 4D unicycle model. """
 
-    def __init__(self, T=0.1):
-        super(TwoPlayerUnicycle4D, self).__init__(4, [2, 2], T)
+    def __init__(self, l_f, l_r, T=0.1):
+        """
+        Initialize with front and rear lengths.
+
+        :param l_f: distance (m) between center of mass and front axle
+        :type l_f: float
+        :param l_r: distance (m) between center of mass and rear axle
+        :type l_r: float
+        """
+        self._l_f = l_f
+        self._l_r = l_r
+        super(Bicycle4D, self).__init__(4, 2, T)
 
     def __call__(self, x, u):
         """
         Compute the time derivative of state for a particular state/control.
-        NOTE: `x`, and all `u` should be 2D (i.e. column vectors).
+        NOTE: `x` and `u` should be 2D (i.e. column vectors).
 
         :param x: current state
         :type x: torch.Tensor or np.array
-        :param u: list of current control inputs for all each player
-        :type u: [torch.Tensor] or [np.array]
+        :param u: current control input
+        :type u: torch.Tensor or np.array
         :return: current time derivative of state
         :rtype: torch.Tensor or np.array
         """
-        assert len(u) == self._num_players
-
         if isinstance(x, np.ndarray):
+            assert isinstance(u, np.ndarray)
             x_dot = np.zeros((self._x_dim, 1))
             cos = np.cos
             sin = np.sin
+            tan = np.tan
+            atan = np.arctan
         else:
+            assert isinstance(u, torch.Tensor)
             x_dot = torch.zeros((self._x_dim, 1))
             cos = torch.cos
             sin = torch.sin
+            tan = torch.tan
+            atan = torch.atan
 
-        x_dot[0, 0] = x[3, 0] * cos(x[2, 0]) + u[1][0, 0]
-        x_dot[1, 0] = x[3, 0] * sin(x[2, 0]) + u[1][1, 0]
-        x_dot[2, 0] = u[0][0, 0]
-        x_dot[3, 0] = u[0][1, 0]
+        beta = atan((self._l_r / (self._l_f + self._l_r)) * tan(u[1, 0]))
+
+        x_dot[0, 0] = x[3, 0] * cos(x[2, 0] + beta)
+        x_dot[1, 0] = x[3, 0] * sin(x[2, 0] + beta)
+        x_dot[2, 0] = (x[3, 0] / self._l_r) * sin(beta)
+        x_dot[3, 0] = u[0, 0]
         return x_dot

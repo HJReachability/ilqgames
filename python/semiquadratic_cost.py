@@ -44,7 +44,7 @@ import torch
 from cost import Cost
 
 class SemiquadraticCost(Cost):
-    def __init__(self, dimension, threshold, oriented_right):
+    def __init__(self, dimension, threshold, oriented_right, name=""):
         """
         Initialize with dimension to add cost to and threshold above which
         to impose quadratic cost.
@@ -60,7 +60,7 @@ class SemiquadraticCost(Cost):
         self._dimension = dimension
         self._threshold = threshold
         self._oriented_right = oriented_right
-        super(SemiquadraticCost, self).__init__()
+        super(SemiquadraticCost, self).__init__(name)
 
     def __call__(self, xu, k=0):
         """

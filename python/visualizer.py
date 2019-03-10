@@ -39,31 +39,37 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+from matplotlib import animation
+
 
 class Visualizer(object):
-    def __init__(self, x_idx, y_idx, obs_centers, obs_radii, goal_center, figure_number=1):
+    def __init__(self,
+                 position_indices,
+                 renderable_costs,
+                 player_linestyles,
+                 plot_lims=None,
+                 figure_number=1):
         """
-        Construct from indices of x/y coordinates in state vector.
+        Construct from list of position indices and renderable cost functions.
 
-        :param x_idx: index of x-coordinate of state
-        :type x_idx: uint
-        :param y_idx: index of y-coordinate of state
-        :type y_idx: uint
-        :param obs_centers: list of obstacle center points
-        :type obs_centers: [Point]
-        :param obs_radii: list of obstacle radii
-        :type obs_radii: [float]
-        :param goal_center: position of the goal
-        :type goal_center: Point
+        :param position_indices: list of tuples of position indices (1/player)
+        :type position_indices: [(uint, uint)]
+        :param renderable_costs: list of cost functions that support rendering
+        :type renderable_costs: [Cost]
+        :param player_linestyles: list of line styles (1 per player, e.g. ".-r")
+        :type player_colors: [string]
+        :param plot_lims: plot limits [xlim_low, xlim_high, ylim_low, ylim_high]
+        :type plot_lims: [float, float, float, float]
         :param figure_number: which figure number to operate on
         :type figure_number: uint
         """
-        self._x_idx = x_idx
-        self._y_idx = y_idx
+        self._position_indices = position_indices
+        self._renderable_costs = renderable_costs
+        self._player_linestyles = player_linestyles
         self._figure_number = figure_number
-        self._obs_centers = obs_centers
-        self._obs_radii = obs_radii
-        self._goal_center = goal_center
+        self._plot_lims = plot_lims
+        self._num_players = len(position_indices)
 
         # Store history as list of trajectories.
         # Each trajectory is a dictionary of lists of states and controls.
@@ -82,28 +88,48 @@ class Visualizer(object):
         self._iterations.append(iteration)
         self._history.append(traj)
 
-    def plot(self):
+    def plot(self, show_last_k=-1, fade_old=True):
         """ Plot everything. """
         plt.figure(self._figure_number)
+        plt.rc("text", usetex=True)
 
-        # Plot the obstacles.
         ax = plt.gca()
-        for center, radius in zip(self._obs_centers, self._obs_radii):
-            circle = plt.Circle(
-                (center.x, center.y), radius, color='r', fill=False)
-            ax.add_artist(circle)
+        ax.set_xlabel("$x(t)$")
+        ax.set_ylabel("$y(t)$")
 
-        # Plot the goal.
-        circle = plt.Circle(
-            (self._goal_center.x, self._goal_center.y),
-            0.5, color='b', fill=True)
-        ax.add_artist(circle)
+        if self._plot_lims is not None:
+            ax.set_xlim(self._plot_lims[0], self._plot_lims[1])
+            ax.set_ylim(self._plot_lims[2], self._plot_lims[3])
 
-        # Plot the history of trajectories.
-        for ii, traj in zip(self._iterations, self._history):
-            xs = [x[self._x_idx, 0] for x in traj["xs"]]
-            ys = [x[self._y_idx, 0] for x in traj["xs"]]
-            plt.plot(xs, ys, label="Iteration " + str(ii))
+        ax.set_aspect("equal")
 
-        plt.legend()
+        # Render all costs.
+        for cost in self._renderable_costs:
+            cost.render(ax)
 
+        # Plot the history of trajectories for each player.
+        if show_last_k < 0 or show_last_k >= len(self._history):
+            show_last_k = len(self._history)
+
+        plotted_iterations = []
+        for kk in range(len(self._history) - show_last_k, len(self._history)):
+            traj = self._history[kk]
+            iteration = self._iterations[kk]
+            plotted_iterations.append(iteration)
+
+            alpha = 1.0
+            if fade_old:
+                alpha = 1.0 - float(len(self._history) - kk) / show_last_k
+
+            for ii in range(self._num_players):
+                x_idx, y_idx = self._position_indices[ii]
+                xs = [x[x_idx, 0] for x in traj["xs"]]
+                ys = [x[y_idx, 0] for x in traj["xs"]]
+                plt.plot(xs, ys,
+                         self._player_linestyles[ii],
+                         label="Player {}, iteration {}".format(ii, iteration),
+                         alpha=alpha,
+                         markersize=2)
+
+        plt.title("ILQ solver solution (iterations {}-{})".format(
+            plotted_iterations[0], plotted_iterations[-1]))

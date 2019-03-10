@@ -29,54 +29,44 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
+Author(s): Ellis Ratner         ( eratner@eecs.berkeley.edu )
+           David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# 4D unicycle model with disturbance. Dynamics are as follows:
-#                          \dot x     = v cos theta + u21
-#                          \dot y     = v sin theta + u22
-#                          \dot theta = u11
-#                          \dot v     = u12
+# Quadratic cost, derived from Cost base class.
 #
 ################################################################################
 
 import torch
-import numpy as np
 
-from multiplayer_dynamical_system import MultiPlayerDynamicalSystem
+from cost import Cost
 
-class TwoPlayerUnicycle4D(MultiPlayerDynamicalSystem):
-    """ 4D unicycle model with disturbances. """
-
-    def __init__(self, T=0.1):
-        super(TwoPlayerUnicycle4D, self).__init__(4, [2, 2], T)
-
-    def __call__(self, x, u):
+class QuadraticCost(Cost):
+    def __init__(self, dimension, origin, name=""):
         """
-        Compute the time derivative of state for a particular state/control.
-        NOTE: `x`, and all `u` should be 2D (i.e. column vectors).
+        Initialize with dimension to add cost to and origin to center the
+        quadratic cost about.
 
-        :param x: current state
-        :type x: torch.Tensor or np.array
-        :param u: list of current control inputs for all each player
-        :type u: [torch.Tensor] or [np.array]
-        :return: current time derivative of state
-        :rtype: torch.Tensor or np.array
+        :param dimension: dimension to add cost
+        :type dimension: uint
+        :param threshold: value along the specified dim where the cost is zero
+        :type threshold: float
         """
-        assert len(u) == self._num_players
+        self._dimension = dimension
+        self._origin = origin
+        super(QuadraticCost, self).__init__(name)
 
-        if isinstance(x, np.ndarray):
-            x_dot = np.zeros((self._x_dim, 1))
-            cos = np.cos
-            sin = np.sin
-        else:
-            x_dot = torch.zeros((self._x_dim, 1))
-            cos = torch.cos
-            sin = torch.sin
+    def __call__(self, xu):
+        """
+        Evaluate this cost function on the given input, which might either be
+        a state `x` or a control `u`. Hence the input is named `xu`.
+        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
+        NOTE: `xu` should be a column vector.
 
-        x_dot[0, 0] = x[3, 0] * cos(x[2, 0]) + u[1][0, 0]
-        x_dot[1, 0] = x[3, 0] * sin(x[2, 0]) + u[1][1, 0]
-        x_dot[2, 0] = u[0][0, 0]
-        x_dot[3, 0] = u[0][1, 0]
-        return x_dot
+        :param xu: state of the system
+        :type xu: torch.Tensor
+        :return: scalar value of cost
+        :rtype: torch.Tensor
+        """
+        return (xu[self._dimension, 0] - self._origin) ** 2

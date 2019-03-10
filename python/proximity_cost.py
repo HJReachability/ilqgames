@@ -40,13 +40,14 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 from cost import Cost
 from point import Point
 
 class ProximityCost(Cost):
     def __init__(self, position_indices, point,
-                 max_distance, outside_weight=0.01):
+                 max_distance, outside_weight=0.1, name=""):
         """
         Initialize with dimension to add cost to and threshold BELOW which
         to impose quadratic cost. Above the threshold, we use a very light
@@ -65,7 +66,7 @@ class ProximityCost(Cost):
         self._point = point
         self._max_squared_distance = max_distance**2
         self._outside_weight = outside_weight
-        super(ProximityCost, self).__init__()
+        super(ProximityCost, self).__init__(name)
 
     def __call__(self, x, k=0):
         """
@@ -98,60 +99,15 @@ class ProximityCost(Cost):
         return -outside_penalty - self._max_squared_distance * torch.ones(
             1, 1, requires_grad=True).double()
 
-class ConcatenatedStateProximityCost(Cost):
-    def __init__(self, position_indices1, position_indices2,
-                 max_distance, outside_weight=0.01):
-        """
-        Initialize with dimension to add cost to and threshold BELOW which
-        to impose quadratic cost. Above the threshold, we use a very light
-        quadratic cost. The overall cost is continuous.
+    def render(self, ax=None):
+        """ Render this obstacle on the given axes. """
+        if np.isinf(self._max_squared_distance):
+            radius = 1.0
+        else:
+            radius = np.sqrt(self._max_squared_distance)
 
-        :param position_indices1: indices of input corresponding to (x, y) for
-          vehicle 1
-        :type position_indices1: (uint, uint)
-        :param position_indices2: indices of input corresponding to (x, y) for
-          vehicle 2
-        :type position_indices2: (uint, uint)
-        :param max_distance: maximum value of distance to penalize
-        :type threshold: float
-        :param outside_weight: weight of quadratic cost outside threshold
-        :type outside_weight: float
-        """
-        self._x_index1, self._y_index1 = position_indices1
-        self._x_index2, self._y_index2 = position_indices2
-        self._max_squared_distance = max_distance**2
-        self._outside_weight = outside_weight
-        super(ConcatenatedStateProximityCost, self).__init__()
-
-    def __call__(self, x, k=0):
-        """
-        Evaluate this cost function on the given state and time.
-        NOTE: `x` should be a column vector.
-
-        Here, `x` is just the concatenated state of the two systems.
-
-        :param x: concatenated state of the two systems
-        :type x: torch.Tensor
-        :param k: time step, if cost is time-varying
-        :type k: uint
-        :return: scalar value of cost
-        :rtype: torch.Tensor
-        """
-        # Compute relative distance.
-        dx = x[self._x_index1, 0] - x[self._x_index2, 0]
-        dy = x[self._y_index1, 0] - x[self._y_index2, 0]
-        relative_squared_distance = dx*dx + dy*dy
-
-        if relative_squared_distance < self._max_squared_distance:
-            return -relative_squared_distance * torch.ones(
-                1, 1, requires_grad=True).double()
-
-        # Outside penalty is:
-        #   ``` outside_weight * (relative_distance - max_distance)**2 ```
-        # which can be computed from what we have already with only one sqrt.
-        outside_penalty = self._outside_weight * (
-            relative_squared_distance + self._max_squared_distance -
-            2.0 * torch.sqrt(
-                relative_squared_distance * self._max_squared_distance))
-        return -outside_penalty - self._max_squared_distance * torch.ones(
-            1, 1, requires_grad=True).double()
+        circle = plt.Circle(
+            (self._point.x, self._point.y), radius,
+            color="g", fill=True, alpha=0.75)
+        ax.add_artist(circle)
+        ax.text(self._point.x + 1.25, self._point.y + 1.25, "goal", fontsize=10)

@@ -38,6 +38,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 ################################################################################
 
 import numpy as np
+import torch
 
 class Point(object):
     def __init__(self, x=0.0, y=0.0):
@@ -71,4 +72,7 @@ class Point(object):
         return self.x**2 + self.y**2
 
     def norm(self):
+        if isinstance(self.x, torch.Tensor):
+            return torch.sqrt(self.norm_squared())
+
         return np.sqrt(self.norm_squared())
