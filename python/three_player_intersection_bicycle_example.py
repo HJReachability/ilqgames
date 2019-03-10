@@ -64,7 +64,7 @@ from visualizer import Visualizer
 from logger import Logger
 
 # General parameters.
-TIME_HORIZON = 10.0   # s
+TIME_HORIZON = 5.0   # s
 TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
 LOG_DIRECTORY = "./logs/three_player/"
@@ -168,7 +168,7 @@ car2_goal_cost = ProximityCost(
     car2_position_indices_in_product_state, car2_goal, np.inf, "car2_goal")
 
 bike_position_indices_in_product_state = (8, 9)
-bike_goal = Point(10.0, 19.0)
+bike_goal = Point(10.0, 21.0)
 bike_goal_cost = ProximityCost(
     bike_position_indices_in_product_state, bike_goal, np.inf, "bike_goal")
 
@@ -189,7 +189,7 @@ car2_maxv_cost = SemiquadraticCost(
 
 bike_psi_index_in_product_state = 10
 bike_v_index_in_product_state = 11
-bike_maxv = 1.0 # m/s
+bike_maxv = 2.0 # m/s
 bike_minv_cost = SemiquadraticCost(
     bike_v_index_in_product_state, 0.0, False, "bike_minv")
 bike_maxv_cost = SemiquadraticCost(
@@ -260,7 +260,7 @@ visualizer = Visualizer(
      car2_goal_cost,
      bike_goal_cost],
     [".-r", ".-g", ".-b"],
-    plot_lims=[-10, 30, -10, 70])
+    plot_lims=[-5, 25, -5, 70])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
