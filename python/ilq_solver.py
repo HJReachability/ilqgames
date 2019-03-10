@@ -146,7 +146,7 @@ class ILQSolver(object):
 
                 self._visualizer.add_trajectory(iteration, traj)
                 plt.clf()
-                self._visualizer.plot(show_last_k=5, fade_old=True)
+                self._visualizer.plot(show_last_k=1, fade_old=False)
                 plt.pause(0.1)
 
             # (2) Linearize about this operating point. Make sure to
