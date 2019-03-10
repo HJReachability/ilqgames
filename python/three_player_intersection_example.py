@@ -103,16 +103,16 @@ car1_theta0 = np.pi / 2.0 # 90 degree heading
 car1_v0 = 0.1             # 5 m/s initial speed
 car1_x0 = np.array([
     [6.5],
-    [0.0],
+    [-5.0],
     [car1_theta0],
     [car1_v0]
 ])
 
 car2_theta0 = -np.pi / 2.0 # -90 degree heading
-car2_v0 = 2.0              # 2 m/s initial speed
+car2_v0 = 5.0              # 2 m/s initial speed
 car2_x0 = np.array([
     [1.5],
-    [40.0],
+    [65.0],
     [car2_theta0],
     [car2_v0]
 ])
@@ -120,7 +120,7 @@ car2_x0 = np.array([
 ped_vx0 = 0.25 # moving right at 0.25 m/s
 ped_vy0 = 0.0   # moving normal to traffic flow
 ped_x0 = np.array([
-    [-3.0],
+    [-4.0],
     [19.0],
     [ped_vx0],
     [ped_vy0]
@@ -220,7 +220,7 @@ car1_cost.add_cost(car1_maxv_cost, "x", 100.0)
 car1_cost.add_cost(proximity_cost, "x", 10.0)
 
 car1_player_id = 0
-car1_cost.add_cost(car1_w_cost, car1_player_id, 1.0)
+car1_cost.add_cost(car1_w_cost, car1_player_id, 10.0)
 car1_cost.add_cost(car1_a_cost, car1_player_id, 1.0)
 
 car2_cost = PlayerCost()
@@ -231,18 +231,18 @@ car2_cost.add_cost(car2_maxv_cost, "x", 100.0)
 car2_cost.add_cost(proximity_cost, "x", 10.0)
 
 car2_player_id = 1
-car2_cost.add_cost(car2_w_cost, car2_player_id, 1.0)
+car2_cost.add_cost(car2_w_cost, car2_player_id, 10.0)
 car2_cost.add_cost(car2_a_cost, car2_player_id, 1.0)
 
 ped_cost = PlayerCost()
 ped_cost.add_cost(ped_goal_cost, "x", -1.0)
 ped_cost.add_cost(ped_maxvx_cost, "x", -100.0)
 ped_cost.add_cost(ped_maxvy_cost, "x", -100.0)
-ped_cost.add_cost(proximity_cost, "x", 10.0)
+ped_cost.add_cost(proximity_cost, "x", 2.0)
 
 ped_player_id = 2
-ped_cost.add_cost(ped_ax_cost, ped_player_id, 1.0)
-ped_cost.add_cost(ped_ay_cost, ped_player_id, 1.0)
+ped_cost.add_cost(ped_ax_cost, ped_player_id, 0.001)
+ped_cost.add_cost(ped_ay_cost, ped_player_id, 0.001)
 
 # Visualizer.
 visualizer = Visualizer(
@@ -255,7 +255,7 @@ visualizer = Visualizer(
      car2_goal_cost,
      ped_goal_cost],
     [".-r", ".-g", ".-b"],
-    plot_lims=[-10, 30, -10, 40])
+    plot_lims=[-10, 30, -10, 70])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
@@ -269,7 +269,7 @@ solver = ILQSolver(dynamics,
                    stacked_x0,
                    [car1_Ps, car2_Ps, ped_Ps],
                    [car1_alphas, car2_alphas, ped_alphas],
-                   0.1,
+                   0.02,
                    logger,
                    visualizer,
                    None)
