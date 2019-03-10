@@ -120,7 +120,7 @@ car2_x0 = np.array([
 ped_vx0 = 0.25 # moving right at 0.25 m/s
 ped_vy0 = 0.0   # moving normal to traffic flow
 ped_x0 = np.array([
-    [-2.0],
+    [-3.0],
     [19.0],
     [ped_vx0],
     [ped_vy0]
@@ -138,7 +138,7 @@ ped_alphas = [np.zeros((ped._u_dim, 1))] * HORIZON_STEPS
 
 # Create environment.
 car1_position_indices_in_product_state = (0, 1)
-car1_polyline = Polyline([Point(6.0, -1.0), Point(6.0, 100.0)])
+car1_polyline = Polyline([Point(6.0, -100.0), Point(6.0, 100.0)])
 car1_polyline_boundary_cost = SemiquadraticPolylineCost(
     car1_polyline, 1.0, car1_position_indices_in_product_state,
     "car1_polyline_boundary")
@@ -150,7 +150,7 @@ car1_goal_cost = ProximityCost(
     car1_position_indices_in_product_state, car1_goal, np.inf, "car1_goal")
 
 car2_position_indices_in_product_state = (4, 5)
-car2_polyline = Polyline([Point(2.0, 31.0),
+car2_polyline = Polyline([Point(2.0, 100.0),
                           Point(2.0, 18.0),
                           Point(2.5, 15.0),
                           Point(3.0, 14.0),
@@ -179,14 +179,14 @@ car1_maxv_cost = SemiquadraticCost(
     car1_v_index_in_product_state, car1_maxv, True, "car1_maxv")
 
 car2_v_index_in_product_state = 7
-car2_maxv = 8.0 # m/s
+car2_maxv = 10.0 # m/s
 car2_maxv_cost = SemiquadraticCost(
     car2_v_index_in_product_state, car2_maxv, True, "car2_maxv")
 
 ped_vx_index_in_product_state = 10
 ped_vy_index_in_product_state = 11
-ped_maxvx = 1.0 # m/s
-ped_maxvy = 1.0 # m/s
+ped_maxvx = 0.5 # m/s
+ped_maxvy = 0.5 # m/s
 ped_maxvx_cost = SemiquadraticCost(
     ped_vx_index_in_product_state, ped_maxvx, True, "ped_maxvx")
 ped_maxvy_cost = SemiquadraticCost(
@@ -203,7 +203,7 @@ ped_ax_cost = QuadraticCost(0, 0.0, "ped_ax_cost")
 ped_ay_cost = QuadraticCost(1, 0.0, "ped_ay_cost")
 
 # Proximity cost.
-PROXIMITY_THRESHOLD = 2.0
+PROXIMITY_THRESHOLD = 1.0
 proximity_cost = ProductStateProximityCost(
     [car1_position_indices_in_product_state,
      car2_position_indices_in_product_state,
@@ -217,7 +217,7 @@ car1_cost.add_cost(car1_goal_cost, "x", -1.0)
 car1_cost.add_cost(car1_polyline_cost, "x", 10.0)
 car1_cost.add_cost(car1_polyline_boundary_cost, "x", 100.0)
 car1_cost.add_cost(car1_maxv_cost, "x", 100.0)
-car1_cost.add_cost(proximity_cost, "x", 100.0)
+car1_cost.add_cost(proximity_cost, "x", 10.0)
 
 car1_player_id = 0
 car1_cost.add_cost(car1_w_cost, car1_player_id, 1.0)
@@ -228,7 +228,7 @@ car2_cost.add_cost(car2_goal_cost, "x", -1.0)
 car2_cost.add_cost(car2_polyline_cost, "x", 10.0)
 car2_cost.add_cost(car2_polyline_boundary_cost, "x", 100.0)
 car2_cost.add_cost(car2_maxv_cost, "x", 100.0)
-car2_cost.add_cost(proximity_cost, "x", 100.0)
+car2_cost.add_cost(proximity_cost, "x", 10.0)
 
 car2_player_id = 1
 car2_cost.add_cost(car2_w_cost, car2_player_id, 1.0)
@@ -238,7 +238,7 @@ ped_cost = PlayerCost()
 ped_cost.add_cost(ped_goal_cost, "x", -1.0)
 ped_cost.add_cost(ped_maxvx_cost, "x", -100.0)
 ped_cost.add_cost(ped_maxvy_cost, "x", -100.0)
-ped_cost.add_cost(proximity_cost, "x", 100.0)
+ped_cost.add_cost(proximity_cost, "x", 10.0)
 
 ped_player_id = 2
 ped_cost.add_cost(ped_ax_cost, ped_player_id, 1.0)
