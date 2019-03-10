@@ -40,6 +40,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 from cost import Cost
 from point import Point
