@@ -69,6 +69,7 @@ class Visualizer(object):
         self._player_linestyles = player_linestyles
         self._figure_number = figure_number
         self._plot_lims = plot_lims
+        self._num_players = len(position_indices)
 
         # Store history as list of trajectories.
         # Each trajectory is a dictionary of lists of states and controls.
@@ -110,39 +111,25 @@ class Visualizer(object):
         if show_last_k < 0 or show_last_k >= len(self._history):
             show_last_k = len(self._history)
 
-        iterations = []
-
+        plotted_iterations = []
         for kk in range(len(self._history) - show_last_k, len(self._history)):
             traj = self._history[kk]
-            ii = self._iterations[kk]
-            xs = [x[self._x_idx, 0] for x in traj["xs"]]
-            ys = [x[self._y_idx, 0] for x in traj["xs"]]
+            iteration = self._iterations[kk]
+            plotted_iterations.append(iteration)
 
-            alpha = 1
+            alpha = 1.0
             if fade_old:
-                alpha = 1 - (len(self._history) - kk) / show_last_k
+                alpha = 1.0 - float(len(self._history) - kk) / show_last_k
 
-            iterations.append(ii)
-            plt.plot(xs, ys, '.-b', label="Iteration " + str(ii), alpha=alpha, markersize=2)
-            # plt.scatter(xs, ys, marker='o', s=2)
+            for ii in range(self._num_players):
+                x_idx, y_idx = self._position_indices[ii]
+                xs = [x[x_idx, 0] for x in traj["xs"]]
+                ys = [x[y_idx, 0] for x in traj["xs"]]
+                plt.plot(xs, ys,
+                         self._player_linestyles[ii],
+                         label="Player {}, iteration {}".format(ii, iteration),
+                         alpha=alpha,
+                         markersize=2)
 
         plt.title("ILQ solver solution (iterations {}-{})".format(
-            iterations[0], iterations[-1]))
-
-        # TODO: Plot velocity over time (e.g. could assign a color to each point in plot based
-        #       on velocity)
-        # TODO: Plot controls and distrbances.
-
-        # plt.legend()
-
-#        plt.figure(self._figure_number + 1)
-#        for ii, traj in zip(self._iterations, self._history):
-#            plt.plot([np.linalg.norm(u1) for u1 in traj["u1s"]], label=str(ii) + ": u1")
-
-#        plt.legend()
-
-#        plt.figure(self._figure_number + 2)
-#        for ii, traj in zip(self._iterations, self._history):
-#            plt.plot([np.linalg.norm(u2) for u2 in traj["u2s"]], label=str(ii) + ": u2")
-
-#        plt.legend()
+            plotted_iterations[0], plotted_iterations[-1]))

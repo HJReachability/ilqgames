@@ -138,8 +138,8 @@ player2_cost.add_cost(dvx_cost, 1, 10.0)
 player2_cost.add_cost(dvy_cost, 1, 10.0)
 
 # Visualizer.
-visualizer = Visualizer(
-    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 175, 0, 175])
+visualizer = Visualizer([(0, 1)], [goal_cost] + obstacle_costs, [".-b"],
+                        plot_lims=[0, 175, 0, 175])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
