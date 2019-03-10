@@ -236,8 +236,8 @@ car2_cost.add_cost(car2_a_cost, car2_player_id, 1.0)
 
 ped_cost = PlayerCost()
 ped_cost.add_cost(ped_goal_cost, "x", -1.0)
-ped_cost.add_cost(ped_maxvx_cost, "x", -100.0)
-ped_cost.add_cost(ped_maxvy_cost, "x", -100.0)
+ped_cost.add_cost(ped_maxvx_cost, "x", 100.0)
+ped_cost.add_cost(ped_maxvy_cost, "x", 100.0)
 ped_cost.add_cost(proximity_cost, "x", 2.0)
 
 ped_player_id = 2
