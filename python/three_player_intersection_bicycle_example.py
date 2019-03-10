@@ -145,7 +145,7 @@ car1_polyline_boundary_cost = SemiquadraticPolylineCost(
 car1_polyline_cost = QuadraticPolylineCost(
     car1_polyline, car1_position_indices_in_product_state, "car1_polyline")
 
-car1_goal = Point(6.0, 30.0)
+car1_goal = Point(6.0, 60.0)
 car1_goal_cost = ProximityCost(
     car1_position_indices_in_product_state, car1_goal, np.inf, "car1_goal")
 
@@ -189,7 +189,7 @@ car2_maxv_cost = SemiquadraticCost(
 
 bike_psi_index_in_product_state = 10
 bike_v_index_in_product_state = 11
-bike_maxv = 2.0 # m/s
+bike_maxv = 3.0 # m/s
 bike_minv_cost = SemiquadraticCost(
     bike_v_index_in_product_state, 0.0, False, "bike_minv")
 bike_maxv_cost = SemiquadraticCost(
@@ -274,8 +274,8 @@ solver = ILQSolver(dynamics,
                    stacked_x0,
                    [car1_Ps, car2_Ps, bike_Ps],
                    [car1_alphas, car2_alphas, bike_alphas],
-                   0.02,
-                   0.1,
+                   0.25,
+                   5.0,
                    logger,
                    visualizer,
                    None)
