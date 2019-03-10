@@ -98,6 +98,7 @@ class ILQSolver(object):
         if self._logger is not None:
             self._logger.log("alpha_scaling", self._alpha_scaling)
             self._logger.log("horizon", self._horizon)
+            self._logger.log("x0", self._x0)
 
     def run(self):
         """ Run the algorithm for the specified parameters. """
