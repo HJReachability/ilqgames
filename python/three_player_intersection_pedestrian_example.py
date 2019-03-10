@@ -270,6 +270,7 @@ solver = ILQSolver(dynamics,
                    [car1_Ps, car2_Ps, ped_Ps],
                    [car1_alphas, car2_alphas, ped_alphas],
                    0.02,
+                   0.1,
                    logger,
                    visualizer,
                    None)

@@ -71,7 +71,7 @@ class PlayerCost(object):
             else:
                 cost_input = u[arg]
 
-            current_term = weight * cost(cost_input)
+            current_term = weight * cost(cost_input, k)
             if current_term > 1e8:
                 print("Warning: cost %s is %f" % (cost._name, current_term))
                 print("Input is: ", cost_input)

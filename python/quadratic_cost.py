@@ -57,7 +57,7 @@ class QuadraticCost(Cost):
         self._origin = origin
         super(QuadraticCost, self).__init__(name)
 
-    def __call__(self, xu):
+    def __call__(self, xu, k=0):
         """
         Evaluate this cost function on the given input, which might either be
         a state `x` or a control `u`. Hence the input is named `xu`.

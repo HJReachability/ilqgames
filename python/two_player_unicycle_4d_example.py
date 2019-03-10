@@ -148,8 +148,14 @@ if not os.path.exists(LOG_DIRECTORY):
 logger = Logger(os.path.join(LOG_DIRECTORY, 'unicycle_4d_example.pkl'))
 
 # Set up ILQSolver.
-solver = ILQSolver(dynamics, [player1_cost, player2_cost],
-                   x0, [P1s, P2s], [alpha1s, alpha2s],
-                   0.025, logger, visualizer)
+solver = ILQSolver(dynamics,
+                   [player1_cost, player2_cost],
+                   x0,
+                   [P1s, P2s],
+                   [alpha1s, alpha2s],
+                   0.025,
+                   None,
+                   logger,
+                   visualizer)
 
 solver.run()

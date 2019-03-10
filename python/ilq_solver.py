@@ -55,6 +55,7 @@ class ILQSolver(object):
                  Ps,
                  alphas,
                  alpha_scaling=0.05,
+                 reference_deviation_weight=None,
                  logger=None,
                  visualizer=None,
                  u_constraints=None):
@@ -74,6 +75,8 @@ class ILQSolver(object):
         :type alphas: [[np.array]]
         :param alpha_scaling: step size on the alpha
         :type alpha_scaling: float
+        :param reference_deviation_weight: weight on reference deviation cost
+        :type reference_deviation_weight: None or float
         :param logger: logging utility
         :type logger: Logger
         :param visualizer: optional visualizer
@@ -98,6 +101,9 @@ class ILQSolver(object):
         # Fixed step size for the linesearch.
         self._alpha_scaling = alpha_scaling
 
+        # Reference deviation cost weight.
+        self._reference_deviation_weight = reference_deviation_weight
+
         # Set up visualizer.
         self._visualizer = visualizer
         self._logger = logger
@@ -114,27 +120,23 @@ class ILQSolver(object):
 
             # If this is the first time through, then set up reference deviation
             # costs and add to player costs. Otherwise, just update those costs.
-            if iteration == 0:
+            if self._reference_deviation_weight is not None and iteration == 0:
                 self._x_reference_cost = ReferenceDeviationCost(xs)
-                self._u1_reference_cost = ReferenceDeviationCost(u1s)
-                self._u2_reference_cost = ReferenceDeviationCost(u2s)
+                self._u_reference_costs = [
+                    ReferenceDeviationCost(ui) for ui in us]
 
-                REFERENCE_DEVIATION_WEIGHT = 1e-4
-                self._player1_cost.add_cost(
-                    self._x_reference_cost, "x", REFERENCE_DEVIATION_WEIGHT)
-                self._player1_cost.add_cost(
-                    self._u1_reference_cost, "u1", REFERENCE_DEVIATION_WEIGHT)
-                self._player2_cost.add_cost(
-                    self._x_reference_cost, "x", REFERENCE_DEVIATION_WEIGHT)
-                self._player2_cost.add_cost(
-                    self._u2_reference_cost, "u2", REFERENCE_DEVIATION_WEIGHT)
-            else:
-                self._x_reference_cost.reference = \
-                    self._last_operating_point[0]
-                self._u1_reference_cost.reference = \
-                    self._last_operating_point[1]
-                self._u2_reference_cost.reference = \
-                    self._last_operating_point[2]
+                for ii in range(self._num_players):
+                    self._player_costs[ii].add_cost(
+                        self._x_reference_cost, "x",
+                        self._reference_deviation_weight)
+                    self._player_costs[ii].add_cost(
+                        self._u_reference_costs[ii], ii,
+                        self._reference_deviation_weight)
+            elif self._reference_deviation_weight is not None:
+                self._x_reference_cost.reference = self._last_operating_point[0]
+                for ii in range(self._num_players):
+                    self._u_reference_costs[ii].reference = \
+                        self._last_operating_point[1][ii]
 
             # Visualization.
             if self._visualizer is not None:
@@ -236,7 +238,8 @@ class ILQSolver(object):
                 us[ii].append(u[ii])
                 costs[ii].append(self._player_costs[ii](
                     torch.as_tensor(xs[k].copy()),
-                    [torch.as_tensor(ui) for ui in u]))
+                    [torch.as_tensor(ui) for ui in u],
+                    k))
 
             if k == self._horizon - 1:
                 break
