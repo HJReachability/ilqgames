@@ -38,6 +38,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 ################################################################################
 
 import torch
+import matplotlib.pyplot as plt
 
 from cost import Cost
 from point import Point
@@ -78,3 +79,9 @@ class SemiquadraticPolylineCost(Cost):
             return (abs(signed_distance) - self._distance_threshold) ** 2
 
         return torch.zeros(1, 1, requires_grad=True).double()
+
+    def render(self, ax=None):
+        """ Render this cost on the given axes. """
+        xs = [pt.x for pt in self._polyline.points]
+        ys = [pt.y for pt in self._polyline.points]
+        ax.plot(xs, ys, "k", alpha=0.25)
