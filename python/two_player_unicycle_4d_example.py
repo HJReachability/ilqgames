@@ -52,6 +52,7 @@ from box_constraint import BoxConstraint
 from visualizer import Visualizer
 from logger import Logger
 import os
+import sys
 
 # General parameters.
 TIME_HORIZON = 10.0   # s
@@ -64,8 +65,12 @@ MAX_V = 15.0 # m/s
 dynamics = TwoPlayerUnicycle4D(T=TIME_RESOLUTION)
 
 # Choose an initial state and control laws.
-theta0 = np.pi / 2.5 # 60 degree heading
-v0 = 5.0             # 5 m/s initial speed
+#theta0 = np.pi / 2.5 # 60 degree heading
+#v0 = 5.0             # 5 m/s initial speed
+
+theta0 = np.pi / 10
+v0 = 10.0
+
 x0 = np.array([[0.0],
                [0.0],
                [theta0],
@@ -85,7 +90,8 @@ alpha2s = [np.zeros((dynamics._u_dims[1], 1))] * HORIZON_STEPS
 #                            ()
 #
 #          x start
-goal = Point(100.0, 100.0)
+# goal = Point(100.0, 100.0)  # TODO: Try (75, 100)
+goal = Point(75.0, 100.0)
 obstacle_centers = [Point(100.0, 35.0),
                     Point(65.0, 65.0), Point(25.0, 80.0)]
 obstacle_radii = [10.0, 10.0, 10.0]
@@ -145,7 +151,12 @@ visualizer = Visualizer(
 if not os.path.exists(LOG_DIRECTORY):
     os.makedirs(LOG_DIRECTORY)
 
-logger = Logger(os.path.join(LOG_DIRECTORY, 'unicycle_4d_example.pkl'))
+path_to_logfile = os.path.join(LOG_DIRECTORY, "unicycle_4d_example.pkl")
+if len(sys.argv) > 1:
+    path_to_logfile = os.path.join(LOG_DIRECTORY, sys.argv[1])
+
+print("Saving log file to {}...".format(sys.argv[1]))
+logger = Logger(path_to_logfile)
 
 # Set up ILQSolver.
 solver = ILQSolver(dynamics, [player1_cost, player2_cost],
@@ -153,3 +164,4 @@ solver = ILQSolver(dynamics, [player1_cost, player2_cost],
                    0.025, logger, visualizer)
 
 solver.run()
+
