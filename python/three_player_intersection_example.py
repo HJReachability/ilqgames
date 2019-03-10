@@ -52,6 +52,7 @@ from polyline import Polyline
 
 from ilq_solver import ILQSolver
 from proximity_cost import ProximityCost
+from product_state_proximity_cost import ProductStateProximityCost
 from semiquadratic_cost import SemiquadraticCost
 from quadratic_cost import QuadraticCost
 from semiquadratic_polyline_cost import SemiquadraticPolylineCost
@@ -99,27 +100,27 @@ dynamics = ProductMultiPlayerDynamicalSystem(
 # We shall assume that lanes are 4 m wide and set the origin to be in the
 # bottom left along the road boundary.
 car1_theta0 = np.pi / 2.0 # 90 degree heading
-car1_v0 = 2.0             # 5 m/s initial speed
+car1_v0 = 0.1             # 5 m/s initial speed
 car1_x0 = np.array([
-    [6.0],
+    [6.5],
     [0.0],
     [car1_theta0],
     [car1_v0]
 ])
 
 car2_theta0 = -np.pi / 2.0 # -90 degree heading
-car2_v0 = 1.0              # 2 m/s initial speed
+car2_v0 = 2.0              # 2 m/s initial speed
 car2_x0 = np.array([
-    [2.0],
-    [30.0],
+    [1.5],
+    [40.0],
     [car2_theta0],
     [car2_v0]
 ])
 
-ped_vx0 = -0.5 # moving left at 0.5 m/s
-ped_vy0 = 0.0  # moving normal to traffic flow
+ped_vx0 = 0.25 # moving right at 0.25 m/s
+ped_vy0 = 0.0   # moving normal to traffic flow
 ped_x0 = np.array([
-    [9.0],
+    [-2.0],
     [19.0],
     [ped_vx0],
     [ped_vy0]
@@ -167,7 +168,7 @@ car2_goal_cost = ProximityCost(
     car2_position_indices_in_product_state, car2_goal, np.inf, "car2_goal")
 
 ped_position_indices_in_product_state = (8, 9)
-ped_goal = Point(-1.0, 19.0)
+ped_goal = Point(10.0, 19.0)
 ped_goal_cost = ProximityCost(
     ped_position_indices_in_product_state, ped_goal, np.inf, "ped_goal")
 
@@ -201,12 +202,22 @@ car2_a_cost = QuadraticCost(1, 0.0, "car2_a_cost")
 ped_ax_cost = QuadraticCost(0, 0.0, "ped_ax_cost")
 ped_ay_cost = QuadraticCost(1, 0.0, "ped_ay_cost")
 
+# Proximity cost.
+PROXIMITY_THRESHOLD = 2.0
+proximity_cost = ProductStateProximityCost(
+    [car1_position_indices_in_product_state,
+     car2_position_indices_in_product_state,
+     ped_position_indices_in_product_state],
+    PROXIMITY_THRESHOLD,
+    "proximity")
+
 # Build up total costs for both players. This is basically a zero-sum game.
 car1_cost = PlayerCost()
 car1_cost.add_cost(car1_goal_cost, "x", -1.0)
 car1_cost.add_cost(car1_polyline_cost, "x", 10.0)
 car1_cost.add_cost(car1_polyline_boundary_cost, "x", 100.0)
 car1_cost.add_cost(car1_maxv_cost, "x", 100.0)
+car1_cost.add_cost(proximity_cost, "x", 100.0)
 
 car1_player_id = 0
 car1_cost.add_cost(car1_w_cost, car1_player_id, 1.0)
@@ -217,6 +228,7 @@ car2_cost.add_cost(car2_goal_cost, "x", -1.0)
 car2_cost.add_cost(car2_polyline_cost, "x", 10.0)
 car2_cost.add_cost(car2_polyline_boundary_cost, "x", 100.0)
 car2_cost.add_cost(car2_maxv_cost, "x", 100.0)
+car2_cost.add_cost(proximity_cost, "x", 100.0)
 
 car2_player_id = 1
 car2_cost.add_cost(car2_w_cost, car2_player_id, 1.0)
@@ -226,6 +238,7 @@ ped_cost = PlayerCost()
 ped_cost.add_cost(ped_goal_cost, "x", -1.0)
 ped_cost.add_cost(ped_maxvx_cost, "x", -100.0)
 ped_cost.add_cost(ped_maxvy_cost, "x", -100.0)
+ped_cost.add_cost(proximity_cost, "x", 100.0)
 
 ped_player_id = 2
 ped_cost.add_cost(ped_ax_cost, ped_player_id, 1.0)
