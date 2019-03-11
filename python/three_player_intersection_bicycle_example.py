@@ -118,7 +118,7 @@ car2_x0 = np.array([
 ])
 
 bike_psi0 = 0.0 # moving right
-bike_v0 = 0.1   # 0.1 m/s initial speed
+bike_v0 = 0.5   # 0.1 m/s initial speed
 bike_x0 = np.array([
     [-1.0],
     [25.0],
@@ -276,8 +276,8 @@ solver = ILQSolver(dynamics,
                    stacked_x0,
                    [car1_Ps, car2_Ps, bike_Ps],
                    [car1_alphas, car2_alphas, bike_alphas],
-                   0.25,
-                   5.0,
+                   0.1,
+                   1.0,
                    logger,
                    visualizer,
                    None)
