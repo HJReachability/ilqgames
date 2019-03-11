@@ -48,6 +48,8 @@ class Visualizer(object):
                  position_indices,
                  renderable_costs,
                  player_linestyles,
+                 show_last_k=1,
+                 fade_old=False,
                  plot_lims=None,
                  figure_number=1):
         """
@@ -59,6 +61,10 @@ class Visualizer(object):
         :type renderable_costs: [Cost]
         :param player_linestyles: list of line styles (1 per player, e.g. ".-r")
         :type player_colors: [string]
+        :param show_last_k: how many of last trajectories to plot (-1 shows all)
+        :type show_last_k: int
+        :param fade_old: flag for fading older trajectories
+        :type fade_old: bool
         :param plot_lims: plot limits [xlim_low, xlim_high, ylim_low, ylim_high]
         :type plot_lims: [float, float, float, float]
         :param figure_number: which figure number to operate on
@@ -67,6 +73,8 @@ class Visualizer(object):
         self._position_indices = position_indices
         self._renderable_costs = renderable_costs
         self._player_linestyles = player_linestyles
+        self._show_last_k = show_last_k
+        self._fade_old = fade_old
         self._figure_number = figure_number
         self._plot_lims = plot_lims
         self._num_players = len(position_indices)
@@ -88,7 +96,7 @@ class Visualizer(object):
         self._iterations.append(iteration)
         self._history.append(traj)
 
-    def plot(self, show_last_k=-1, fade_old=True):
+    def plot(self):
         """ Plot everything. """
         plt.figure(self._figure_number)
         plt.rc("text", usetex=True)
@@ -108,8 +116,10 @@ class Visualizer(object):
             cost.render(ax)
 
         # Plot the history of trajectories for each player.
-        if show_last_k < 0 or show_last_k >= len(self._history):
+        if self._show_last_k < 0 or self._show_last_k >= len(self._history):
             show_last_k = len(self._history)
+        else:
+            show_last_k = self._show_last_k
 
         plotted_iterations = []
         for kk in range(len(self._history) - show_last_k, len(self._history)):
@@ -118,7 +128,7 @@ class Visualizer(object):
             plotted_iterations.append(iteration)
 
             alpha = 1.0
-            if fade_old:
+            if self._fade_old:
                 alpha = 1.0 - float(len(self._history) - kk) / show_last_k
 
             for ii in range(self._num_players):
