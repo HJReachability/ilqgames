@@ -260,6 +260,8 @@ visualizer = Visualizer(
      car2_goal_cost,
      bike_goal_cost],
     [".-r", ".-g", ".-b"],
+    1,
+    False,
     plot_lims=[-5, 25, -5, 70])
 
 # Logger.

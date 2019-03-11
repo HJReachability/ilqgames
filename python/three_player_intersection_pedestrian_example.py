@@ -255,6 +255,8 @@ visualizer = Visualizer(
      car2_goal_cost,
      ped_goal_cost],
     [".-r", ".-g", ".-b"],
+    1,
+    False,
     plot_lims=[-10, 30, -10, 70])
 
 # Logger.
