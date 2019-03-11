@@ -120,8 +120,8 @@ car2_x0 = np.array([
 bike_psi0 = 0.0 # moving right
 bike_v0 = 0.1   # 0.1 m/s initial speed
 bike_x0 = np.array([
-    [-4.0],
-    [19.0],
+    [-1.0],
+    [25.0],
     [bike_psi0],
     [bike_v0]
 ])
@@ -174,7 +174,7 @@ bike_goal_cost = ProximityCost(
 
 # Penalize speed above a threshold for all players.
 car1_v_index_in_product_state = 3
-car1_maxv = 10.0 # m/s
+car1_maxv = 5.0 # m/s
 car1_minv_cost = SemiquadraticCost(
     car1_v_index_in_product_state, 0.0, False, "car1_minv")
 car1_maxv_cost = SemiquadraticCost(
