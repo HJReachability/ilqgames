@@ -72,7 +72,7 @@ LOG_DIRECTORY = "./logs/three_player/"
 # Create dynamics.
 car1 = Unicycle4D()
 car2 = Unicycle4D()
-bike = Unicycle4D() #Bicycle4D(0.5, 0.5)
+bike = Bicycle4D(0.5, 0.5)
 dynamics = ProductMultiPlayerDynamicalSystem(
     [car1, car2, bike], T=TIME_RESOLUTION)
 
@@ -259,7 +259,7 @@ bike_cost.add_cost(bike_minv_cost, "x", 100.0)
 #bike_cost.add_cost(bike_proximity_cost, "x", 1.0)
 
 bike_player_id = 2
-bike_cost.add_cost(bike_deltaf_cost, bike_player_id, 1.0)
+bike_cost.add_cost(bike_deltaf_cost, bike_player_id, 100.0)
 bike_cost.add_cost(bike_a_cost, bike_player_id, 1.0)
 
 # Visualizer.
