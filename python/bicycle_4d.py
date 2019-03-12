@@ -34,8 +34,8 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 ################################################################################
 #
 # 4D (kinematic) bicycle model. Dynamics are as follows:
-#                          \dot x     = v cos(phi + beta)
-#                          \dot y     = v sin(phi + beta)
+#                          \dot x     = v cos(psi + beta)
+#                          \dot y     = v sin(psi + beta)
 #                          \dot psi   = (v / l_r) sin(beta)
 #                          \dot v     = u1
 #                 where beta = arctan((l_r / (l_f + l_r)) tan(u2))
