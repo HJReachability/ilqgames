@@ -144,20 +144,18 @@ class DynamicalSystem(object):
     def linearize_discrete(self, x0, u0):
         """
         Compute the Jacobian linearization of the dynamics for a particular
-        state `x0` and control `u0`. Outputs `A` and `B` matrices and `c`
-        offset vector of a discrete-time linear system:
-                   ```x(k + 1) - x0 = A (x(k) - x0) + B (u(k) - u0) + c```
+        state `x0` and control `u0`. Outputs `A` and `B` matrices of a
+        discrete-time linear system:
+              ``` x(k + 1) - x0 = A (x(k) - x0) + B (u(k) - u0) ```
 
         :param x0: state
         :type x0: np.array
         :param u0: control input
         :type u0: np.array
-        :return: (A, B, c) matrices and offset vector of the disctete-time
-                 linearized system
-        :rtype: np.array, np.array, np.array
+        :return: (A, B) matrices of the disctete-time linearized system
+        :rtype: np.array, np.array
         """
         A_cont, B_cont = self.linearize(x0, u0)
-        c_cont = self.__call__(x0, u0)
 
         eAT = expm(A_cont * self._T)
         Ainv = np.linalg.pinv(A_cont)
@@ -166,6 +164,5 @@ class DynamicalSystem(object):
         # for derivation of discrete-time from continuous time linear system.
         A_disc = eAT
         B_disc = Ainv @ (eAT - np.eye(self._x_dim)) @ B_cont
-        c_disc = Ainv @ (eAT - np.eye(self._x_dim)) @ c_cont
 
-        return A_disc, B_disc, c_disc
+        return A_disc, B_disc

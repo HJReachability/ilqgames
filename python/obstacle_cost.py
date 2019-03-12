@@ -34,12 +34,13 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 ################################################################################
 #
 # Obstacle cost, derived from Cost base class. Implements a cost function that
-# depends only on state and penalizes (dist - max_distance)^2.
+# depends only on state and penalizes min(0, dist - max_distance)^2.
 #
 ################################################################################
 
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 from cost import Cost
 from point import Point
@@ -77,6 +78,13 @@ class ObstacleCost(Cost):
         dy = x[self._y_index, 0] - self._point.y
         relative_distance = torch.sqrt(dx*dx + dy*dy)
 
-        return (min(relative_distance - self._max_distance, torch.zeros(
-            1, 1, requires_grad=True).double()))**2
+        return min(relative_distance - self._max_distance, torch.zeros(
+            1, 1, requires_grad=True).double())**2
 
+    def render(self, ax=None):
+        """ Render this obstacle on the given axes. """
+        circle = plt.Circle(
+            (self._point.x, self._point.y), self._max_distance,
+            color="r", fill=True, alpha=0.75)
+        ax.add_artist(circle)
+        ax.text(self._point.x - 1.25, self._point.y - 1.25, "obs", fontsize=8)

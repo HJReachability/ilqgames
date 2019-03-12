@@ -29,44 +29,46 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Author(s): Ellis Ratner         ( eratner@eecs.berkeley.edu )
-           David Fridovich-Keil ( dfk@eecs.berkeley.edu )
+Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Quadratic cost, derived from Cost base class.
+# Quadratic cost that penalizes distance from a polyline.
 #
 ################################################################################
 
 import torch
 
 from cost import Cost
+from point import Point
+from polyline import Polyline
 
-class QuadraticCost(Cost):
-    def __init__(self, dimension, origin, name=""):
+class QuadraticPolylineCost(Cost):
+    def __init__(self, polyline, position_indices, name=""):
         """
-        Initialize with dimension to add cost to and origin to center the
-        quadratic cost about.
+        Initialize with a polyline.
 
-        :param dimension: dimension to add cost
-        :type dimension: uint
-        :param threshold: value along the specified dim where the cost is zero
-        :type threshold: float
+        :param polyline: piecewise linear path which defines signed distances
+        :type polyline: Polyline
+        :param position_indices: indices of input corresponding to (x, y)
+        :type position_indices: (uint, uint)
         """
-        self._dimension = dimension
-        self._origin = origin
-        super(QuadraticCost, self).__init__(name)
+        self._polyline = polyline
+        self._x_index, self._y_index = position_indices
+        super(QuadraticPolylineCost, self).__init__(name)
 
-    def __call__(self, xu, k=0):
+    def __call__(self, x, k=0):
         """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
-        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
-        NOTE: `xu` should be a column vector.
+        Evaluate this cost function on the given state
+        NOTE: `x` should be a PyTorch tensor with `requires_grad` set `True`.
+        NOTE: `x` should be a column vector.
 
-        :param xu: state of the system
-        :type xu: torch.Tensor
+        :param x: state of the system
+        :type x: torch.Tensor
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
-        return (xu[self._dimension, 0] - self._origin) ** 2
+        signed_distance = self._polyline.signed_distance_to(
+            Point(x[self._x_index, 0], x[self._y_index, 0]))
+
+        return signed_distance**2
