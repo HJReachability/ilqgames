@@ -191,7 +191,7 @@ bike_psi_index_in_product_state = 10
 bike_v_index_in_product_state = 11
 bike_maxv = 2.5 # m/s
 bike_minv_cost = SemiquadraticCost(
-    bike_v_index_in_product_state, 0.0, False, "bike_minv")
+    bike_v_index_in_product_state, 1.0, False, "bike_minv")
 bike_maxv_cost = SemiquadraticCost(
     bike_v_index_in_product_state, bike_maxv, True, "bike_maxv")
 
@@ -203,6 +203,10 @@ car2_w_cost = QuadraticCost(0, 0.0, "car2_w_cost")
 car2_a_cost = QuadraticCost(1, 0.0, "car2_a_cost")
 
 bike_deltaf_cost = QuadraticCost(0, 0.0, "bike_deltaf_cost")
+bike_deltaf_barrier_upper = SemiquadraticCost(
+    0, np.pi / 4.0, True, "bike_deltaf_upper")
+bike_deltaf_barrier_lower = SemiquadraticCost(
+    0, -np.pi / 4.0, False, "bike_deltaf_lower")
 bike_a_cost = QuadraticCost(1, 0.0, "bike_a_cost")
 
 # Proximity cost.
@@ -234,7 +238,7 @@ car1_cost.add_cost(car1_polyline_cost, "x", 50.0)
 car1_cost.add_cost(car1_polyline_boundary_cost, "x", 50.0)
 car1_cost.add_cost(car1_maxv_cost, "x", 100.0)
 car1_cost.add_cost(car1_minv_cost, "x", 100.0)
-#car1_cost.add_cost(car1_proximity_cost, "x", 100.0)
+car1_cost.add_cost(car1_proximity_cost, "x", 100.0)
 
 car1_player_id = 0
 car1_cost.add_cost(car1_w_cost, car1_player_id, 25.0)
@@ -246,7 +250,7 @@ car2_cost.add_cost(car2_polyline_cost, "x", 50.0)
 car2_cost.add_cost(car2_polyline_boundary_cost, "x", 50.0)
 car2_cost.add_cost(car2_maxv_cost, "x", 100.0)
 car2_cost.add_cost(car2_minv_cost, "x", 100.0)
-#car2_cost.add_cost(car2_proximity_cost, "x", 100.0)
+car2_cost.add_cost(car2_proximity_cost, "x", 100.0)
 
 car2_player_id = 1
 car2_cost.add_cost(car2_w_cost, car2_player_id, 25.0)
@@ -256,10 +260,12 @@ bike_cost = PlayerCost()
 bike_cost.add_cost(bike_goal_cost, "x", -1.0)
 bike_cost.add_cost(bike_maxv_cost, "x", 100.0)
 bike_cost.add_cost(bike_minv_cost, "x", 100.0)
-#bike_cost.add_cost(bike_proximity_cost, "x", 1.0)
+bike_cost.add_cost(bike_proximity_cost, "x", 1.0)
 
 bike_player_id = 2
-bike_cost.add_cost(bike_deltaf_cost, bike_player_id, 100.0)
+bike_cost.add_cost(bike_deltaf_cost, bike_player_id, 1.0)
+#bike_cost.add_cost(bike_deltaf_barrier_lower, bike_player_id, 100.0)
+#bike_cost.add_cost(bike_deltaf_barrier_upper, bike_player_id, 100.0)
 bike_cost.add_cost(bike_a_cost, bike_player_id, 1.0)
 
 # Visualizer.
