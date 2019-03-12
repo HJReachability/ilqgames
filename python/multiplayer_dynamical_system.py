@@ -40,7 +40,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 
 import torch
 import numpy as np
-import scipy as sp
+from scipy.linalg import expm
 
 class MultiPlayerDynamicalSystem(object):
     """ Base class for all multiplayer dynamical systems. """
@@ -151,7 +151,7 @@ class MultiPlayerDynamicalSystem(object):
         Compute the Jacobian linearization of the dynamics for a particular
         state `x0` and controls `u10` and `u20`. Outputs `A`, `B1`, and
         `B2` matrices and `c` offset vector of a discrete-time linear system:
-           ```x(k + 1) - x0 = A (x(k) - x0) + sum_i Bi (ui(k) - ui0) ```
+           ``` x(k + 1) - x0 = A (x(k) - x0) + sum_i Bi (ui(k) - ui0) ```
 
         :param x0: state
         :type x0: np.array
@@ -162,7 +162,7 @@ class MultiPlayerDynamicalSystem(object):
         """
         A_cont, B_cont = self.linearize(x0, u0)
 
-        eAT = sp.linalg.expm(A_cont * self._T)
+        eAT = expm(A_cont * self._T)
         Ainv = np.linalg.pinv(A_cont)
 
         # See https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models

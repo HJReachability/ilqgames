@@ -37,6 +37,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 #
 ################################################################################
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -58,7 +59,7 @@ import sys
 TIME_HORIZON = 10.0   # s
 TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
-LOG_DIRECTORY = './logs/two_player_zero_sum/'
+LOG_DIRECTORY = "./logs/two_player_zero_sum/"
 MAX_V = 15.0 # m/s
 
 # Create dynamics.
@@ -145,7 +146,12 @@ player2_cost.add_cost(dvy_cost, 1, 10.0)
 
 # Visualizer.
 visualizer = Visualizer(
-    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 175, 0, 175])
+    [(0, 1)],
+    [goal_cost] + obstacle_costs,
+    [".-b"],
+    1,
+    False,
+    plot_lims=[0, 175, 0, 175])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
@@ -159,9 +165,15 @@ print("Saving log file to {}...".format(sys.argv[1]))
 logger = Logger(path_to_logfile)
 
 # Set up ILQSolver.
-solver = ILQSolver(dynamics, [player1_cost, player2_cost],
-                   x0, [P1s, P2s], [alpha1s, alpha2s],
-                   0.025, logger, visualizer)
+solver = ILQSolver(dynamics,
+                   [player1_cost, player2_cost],
+                   x0,
+                   [P1s, P2s],
+                   [alpha1s, alpha2s],
+                   0.025,
+                   None,
+                   logger,
+                   visualizer)
 
 solver.run()
 
