@@ -143,3 +143,12 @@ class Visualizer(object):
 
         plt.title("ILQ solver solution (iterations {}-{})".format(
             plotted_iterations[0], plotted_iterations[-1]))
+
+    def plot_controls(self, player_number):
+        """ Plot control for both players. """
+        plt.figure(self._figure_number + player_number)
+        uis = "u%ds" % player_number
+        plt.plot([ui[0, 0] for ui in self._history[-1][uis]], "*:r", label="u1")
+        plt.plot([ui[1, 0] for ui in self._history[-1][uis]], "*:b", label="u2")
+        plt.legend()
+        plt.title("Controls for Player %d" % player_number)

@@ -162,12 +162,16 @@ class MultiPlayerDynamicalSystem(object):
         """
         A_cont, B_cont = self.linearize(x0, u0)
 
-        eAT = expm(A_cont * self._T)
-        Ainv = np.linalg.pinv(A_cont)
+#        eAT = expm(A_cont * self._T)
+#        Ainv = np.linalg.pinv(A_cont)
 
         # See https://en.wikipedia.org/wiki/Discretization#Discretization_of_linear_state_space_models
         # for derivation of discrete-time from continuous time linear system.
-        A_disc = eAT
-        B_disc = [Ainv @ (eAT - np.eye(self._x_dim)) @ B for B in B_cont]
+#        A_disc = eAT
+#        B_disc = [Ainv @ (eAT - np.eye(self._x_dim)) @ B for B in B_cont]
 
+#        print("eAT", eAT)
+#        print("Ainv", Ainv)
+        A_disc = self._T * A_cont + np.eye(self._x_dim)
+        B_disc = [self._T * B for B in B_cont]
         return A_disc, B_disc
