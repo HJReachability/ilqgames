@@ -33,22 +33,13 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# 4D (kinematic) bicycle model. Dynamics are as follows:
-#                          \dot x     = v cos(psi + beta)
-#                          \dot y     = v sin(psi + beta)
-#                          \dot psi   = (v / l_r) sin(beta)
-#                          \dot v     = u1
-#                 where beta = arctan((l_r / (l_f + l_r)) tan(u2))
-#
-# Dynamics were taken from:
-# https://borrelli.me.berkeley.edu/pdfpub/IV_KinematicMPC_jason.pdf
-#
-# `psi` is the inertial heading.
-# `beta` is the angle of the current velocity of the center of mass with respect
-#     to the longitudinal axis of the car
-# `u1` is the acceleration of the center of mass in the same direction as the
-#     velocity.
-# `u2` is the front steering angle.
+# 5D car model. Dynamics are as follows, adapted from
+# https://ac.els-cdn.com/S2405896316301215/1-s2.0-S2405896316301215-main.pdf?_tid=ad143a13-6571-4733-a984-1b5a41960e78&acdnat=1552430727_12aedd0da2ca11eb07eef49d27b5ab12
+#                          \dot x     = v cos theta
+#                          \dot y     = v sin theta
+#                          \dot theta = v * tan(phi) / l
+#                          \dot phi   = u1
+#                          \dot v     = u2
 #
 ################################################################################
 
@@ -57,21 +48,12 @@ import numpy as np
 
 from dynamical_system import DynamicalSystem
 
-class Bicycle4D(DynamicalSystem):
-    """ 4D unicycle model. """
+class Car5D(DynamicalSystem):
+    """ 5D car model. """
 
-    def __init__(self, l_f, l_r, T=0.1):
-        """
-        Initialize with front and rear lengths.
-
-        :param l_f: distance (m) between center of mass and front axle
-        :type l_f: float
-        :param l_r: distance (m) between center of mass and rear axle
-        :type l_r: float
-        """
-        self._l_f = l_f
-        self._l_r = l_r
-        super(Bicycle4D, self).__init__(4, 2, T)
+    def __init__(self, l=3.0, T=0.1):
+        self._l = l # inter-axle length (m)
+        super(Car5D, self).__init__(5, 2, T)
 
     def __call__(self, x, u):
         """
@@ -91,19 +73,16 @@ class Bicycle4D(DynamicalSystem):
             cos = np.cos
             sin = np.sin
             tan = np.tan
-            atan = np.arctan
         else:
             assert isinstance(u, torch.Tensor)
             x_dot = torch.zeros((self._x_dim, 1))
             cos = torch.cos
             sin = torch.sin
             tan = torch.tan
-            atan = torch.atan
 
-        beta = atan((self._l_r / (self._l_f + self._l_r)) * tan(u[1, 0]))
-
-        x_dot[0, 0] = x[3, 0] * cos(x[2, 0] + beta)
-        x_dot[1, 0] = x[3, 0] * sin(x[2, 0] + beta)
-        x_dot[2, 0] = (x[3, 0] / self._l_r) * sin(beta)
+        x_dot[0, 0] = x[4, 0] * cos(x[2, 0])
+        x_dot[1, 0] = x[4, 0] * sin(x[2, 0])
+        x_dot[2, 0] = x[4, 0] * tan(x[3, 0]) / self._l
         x_dot[3, 0] = u[0, 0]
+        x_dot[4, 0] = u[1, 0]
         return x_dot

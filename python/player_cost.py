@@ -76,6 +76,9 @@ class PlayerCost(object):
                 print("Warning: cost %s is %f" % (cost._name, current_term))
                 print("Input is: ", cost_input)
 
+#            if cost._name[:4] == "bike":
+#                print(cost._name, ": ", current_term)
+
             if first_time_through:
                 total_cost = current_term
             else:
