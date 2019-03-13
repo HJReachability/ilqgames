@@ -65,7 +65,7 @@ from visualizer import Visualizer
 from logger import Logger
 
 # General parameters.
-TIME_HORIZON = 5.0   # s
+TIME_HORIZON = 5.0    # s
 TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
 LOG_DIRECTORY = "./logs/three_player/"
@@ -101,7 +101,7 @@ dynamics = ProductMultiPlayerDynamicalSystem(
 # We shall assume that lanes are 4 m wide and set the origin to be in the
 # bottom left along the road boundary.
 car1_theta0 = np.pi / 2.0 # 90 degree heading
-car1_v0 = 1.0             # 5 m/s initial speed
+car1_v0 = 0.1             # 5 m/s initial speed
 car1_x0 = np.array([
     [6.5],
     [0.0],
@@ -111,10 +111,10 @@ car1_x0 = np.array([
 ])
 
 car2_theta0 = -np.pi / 2.0 # -90 degree heading
-car2_v0 = 0.1              # 2 m/s initial speed
+car2_v0 = 10.0              # 2 m/s initial speed
 car2_x0 = np.array([
     [1.5],
-    [40.0],
+    [30.0],
     [car2_theta0],
     [0.0],
     [car2_v0]
@@ -124,7 +124,7 @@ unicycle_theta0 = 0.0 # moving right
 unicycle_v0 = 2.0   # 0.1 m/s initial speed
 unicycle_x0 = np.array([
     [0.0],
-    [22.0],
+    [17.0],
     [unicycle_theta0],
     [unicycle_v0]
 ])
@@ -148,7 +148,7 @@ car1_polyline_boundary_cost = SemiquadraticPolylineCost(
 car1_polyline_cost = QuadraticPolylineCost(
     car1_polyline, car1_position_indices_in_product_state, "car1_polyline")
 
-car1_goal = Point(6.0, 35.0)
+car1_goal = Point(6.0, 30.0)
 car1_goal_cost = ProximityCost(
     car1_position_indices_in_product_state, car1_goal, np.inf, "car1_goal")
 
@@ -166,12 +166,12 @@ car2_polyline_boundary_cost = SemiquadraticPolylineCost(
 car2_polyline_cost = QuadraticPolylineCost(
     car2_polyline, car2_position_indices_in_product_state, "car2_polyline")
 
-car2_goal = Point(12.0, 12.0)
+car2_goal = Point(20.0, 12.0)
 car2_goal_cost = ProximityCost(
     car2_position_indices_in_product_state, car2_goal, np.inf, "car2_goal")
 
 unicycle_position_indices_in_product_state = (10, 11)
-unicycle_goal = Point(15.0, 21.0)
+unicycle_goal = Point(15.0, 18.0)
 unicycle_goal_cost = ProximityCost(
     unicycle_position_indices_in_product_state, unicycle_goal, np.inf, "unicycle_goal")
 
@@ -191,7 +191,7 @@ car2_maxv_cost = SemiquadraticCost(
     car2_v_index_in_product_state, car2_maxv, True, "car2_maxv")
 
 unicycle_v_index_in_product_state = 13
-unicycle_maxv = 3.0 # m/s
+unicycle_maxv = 4.0 # m/s
 unicycle_minv_cost = SemiquadraticCost(
     unicycle_v_index_in_product_state, 0.0, False, "unicycle_minv")
 unicycle_maxv_cost = SemiquadraticCost(
@@ -208,7 +208,7 @@ unicycle_steering_cost = QuadraticCost(0, 0.0, "unicycle_steering")
 unicycle_a_cost = QuadraticCost(1, 0.0, "unicycle_a")
 
 # Proximity cost.
-CAR_PROXIMITY_THRESHOLD = 2.0
+CAR_PROXIMITY_THRESHOLD = 3.0
 UNICYCLE_PROXIMITY_THRESHOLD = 1.0
 car1_proximity_cost = ProductStateProximityCost(
     [car1_position_indices_in_product_state,
@@ -233,25 +233,25 @@ unicycle_proximity_cost = ProductStateProximityCost(
 car1_cost = PlayerCost()
 car1_cost.add_cost(car1_goal_cost, "x", -1.0)
 car1_cost.add_cost(car1_polyline_cost, "x", 50.0)
-car1_cost.add_cost(car1_polyline_boundary_cost, "x", 50.0)
+car1_cost.add_cost(car1_polyline_boundary_cost, "x", 200.0)
 car1_cost.add_cost(car1_maxv_cost, "x", 100.0)
 car1_cost.add_cost(car1_minv_cost, "x", 100.0)
 car1_cost.add_cost(car1_proximity_cost, "x", 100.0)
 
 car1_player_id = 0
-car1_cost.add_cost(car1_steering_cost, car1_player_id, 25.0)
+car1_cost.add_cost(car1_steering_cost, car1_player_id, 5.0)
 car1_cost.add_cost(car1_a_cost, car1_player_id, 1.0)
 
 car2_cost = PlayerCost()
 car2_cost.add_cost(car2_goal_cost, "x", -1.0)
 car2_cost.add_cost(car2_polyline_cost, "x", 50.0)
-car2_cost.add_cost(car2_polyline_boundary_cost, "x", 50.0)
+car2_cost.add_cost(car2_polyline_boundary_cost, "x", 200.0)
 car2_cost.add_cost(car2_maxv_cost, "x", 100.0)
 car2_cost.add_cost(car2_minv_cost, "x", 100.0)
 car2_cost.add_cost(car2_proximity_cost, "x", 100.0)
 
 car2_player_id = 1
-car2_cost.add_cost(car2_steering_cost, car2_player_id, 25.0)
+car2_cost.add_cost(car2_steering_cost, car2_player_id, 5.0)
 car2_cost.add_cost(car2_a_cost, car2_player_id, 1.0)
 
 unicycle_cost = PlayerCost()
@@ -261,7 +261,7 @@ unicycle_cost.add_cost(unicycle_minv_cost, "x", 100.0)
 unicycle_cost.add_cost(unicycle_proximity_cost, "x", 5.0)
 
 unicycle_player_id = 2
-unicycle_cost.add_cost(unicycle_steering_cost, unicycle_player_id, 1.0)
+unicycle_cost.add_cost(unicycle_steering_cost, unicycle_player_id, 5.0)
 unicycle_cost.add_cost(unicycle_a_cost, unicycle_player_id, 1.0)
 
 # Visualizer.
@@ -277,13 +277,13 @@ visualizer = Visualizer(
     [".-r", ".-g", ".-b"],
     1,
     False,
-    plot_lims=[-5, 25, -5, 45])
+    plot_lims=[-5, 25, -5, 35])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
     os.makedirs(LOG_DIRECTORY)
 
-logger = Logger(os.path.join(LOG_DIRECTORY, 'intersection_bicycle_example.pkl'))
+logger = Logger(os.path.join(LOG_DIRECTORY, 'intersection_car_example.pkl'))
 
 # Set up ILQSolver.
 solver = ILQSolver(dynamics,
