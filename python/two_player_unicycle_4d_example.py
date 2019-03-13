@@ -70,7 +70,7 @@ dynamics = TwoPlayerUnicycle4D(T=TIME_RESOLUTION)
 #v0 = 5.0             # 5 m/s initial speed
 
 theta0 = np.pi / 10
-v0 = 10.0
+v0 = 5.0
 
 x0 = np.array([[0.0],
                [0.0],
@@ -121,7 +121,7 @@ v_cost_lower = SemiquadraticCost(
     dimension=3, threshold=0, oriented_right=False, name="v_cost_lower")
 
 OBSTACLE_WEIGHT = 100.0
-GOAL_WEIGHT = 1.0
+GOAL_WEIGHT = 2.0
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
@@ -129,18 +129,18 @@ player1_cost.add_cost(goal_cost, "x", -GOAL_WEIGHT)
 for cost in obstacle_costs:
     player1_cost.add_cost(cost, "x", OBSTACLE_WEIGHT)
 
-player1_cost.add_cost(v_cost_upper, "x", 20.0)
-player1_cost.add_cost(v_cost_lower, "x", 20.0)
-player1_cost.add_cost(w_cost, 0, 10.0)
-player1_cost.add_cost(a_cost, 0, 10.0)
+player1_cost.add_cost(v_cost_upper, "x", 100.0)
+player1_cost.add_cost(v_cost_lower, "x", 100.0)
+player1_cost.add_cost(w_cost, 0, 1.0)
+player1_cost.add_cost(a_cost, 0, 1.0)
 
 player2_cost = PlayerCost()
 player2_cost.add_cost(goal_cost, "x", GOAL_WEIGHT)
 for cost in obstacle_costs:
     player2_cost.add_cost(cost, "x", -OBSTACLE_WEIGHT)
 
-player2_cost.add_cost(v_cost_upper, "x", -20.0)
-player2_cost.add_cost(v_cost_lower, "x", -20.0)
+player2_cost.add_cost(v_cost_upper, "x", -100.0)
+player2_cost.add_cost(v_cost_lower, "x", -100.0)
 player2_cost.add_cost(dvx_cost, 1, 10.0)
 player2_cost.add_cost(dvy_cost, 1, 10.0)
 
@@ -170,10 +170,9 @@ solver = ILQSolver(dynamics,
                    x0,
                    [P1s, P2s],
                    [alpha1s, alpha2s],
-                   0.025,
+                   0.02,
                    None,
                    logger,
                    visualizer)
 
 solver.run()
-
