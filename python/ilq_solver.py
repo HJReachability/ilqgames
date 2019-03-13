@@ -151,13 +151,13 @@ class ILQSolver(object):
                     traj["u%ds" % (ii + 1)] = us[ii]
 
                 self._visualizer.add_trajectory(iteration, traj)
+#                self._visualizer.plot_controls(1)
+#                plt.pause(0.01)
+#                plt.clf()
+#                self._visualizer.plot_controls(2)
+#                plt.pause(0.01)
+#                plt.clf()
                 self._visualizer.plot()
-                plt.pause(0.01)
-                plt.clf()
-                self._visualizer.plot_controls(1)
-                plt.pause(0.01)
-                plt.clf()
-                self._visualizer.plot_controls(2)
                 plt.pause(0.01)
                 plt.clf()
 
