@@ -63,7 +63,7 @@ class ObstacleCost(Cost):
         self._max_distance = max_distance
         super(ObstacleCost, self).__init__(name)
 
-    def __call__(self, x):
+    def __call__(self, x, k=0):
         """
         Evaluate this cost function on the given input state.
         NOTE: `x` should be a column vector.
