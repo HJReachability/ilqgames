@@ -108,7 +108,7 @@ class ILQSolver(object):
         self._visualizer = visualizer
         self._logger = logger
 
-        # Log some of the paramters. 
+        # Log some of the paramters.
         if self._logger is not None:
             self._logger.log("alpha_scaling", self._alpha_scaling)
             self._logger.log("horizon", self._horizon)
@@ -151,9 +151,15 @@ class ILQSolver(object):
                     traj["u%ds" % (ii + 1)] = us[ii]
 
                 self._visualizer.add_trajectory(iteration, traj)
-                plt.clf()
+#                self._visualizer.plot_controls(1)
+#                plt.pause(0.01)
+#                plt.clf()
+#                self._visualizer.plot_controls(2)
+#                plt.pause(0.01)
+#                plt.clf()
                 self._visualizer.plot()
-                plt.pause(0.1)
+                plt.pause(0.01)
+                plt.clf()
 
             # (2) Linearize about this operating point. Make sure to
             # stack appropriately since we will concatenate state vectors
