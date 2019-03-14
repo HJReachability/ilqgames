@@ -37,6 +37,7 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 #
 ################################################################################
 
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -52,20 +53,25 @@ from box_constraint import BoxConstraint
 from visualizer import Visualizer
 from logger import Logger
 import os
+import sys
 
 # General parameters.
 TIME_HORIZON = 10.0   # s
 TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
-LOG_DIRECTORY = './logs/two_player_zero_sum/'
+LOG_DIRECTORY = "./logs/two_player_zero_sum/"
 MAX_V = 15.0 # m/s
 
 # Create dynamics.
 dynamics = TwoPlayerUnicycle4D(T=TIME_RESOLUTION)
 
 # Choose an initial state and control laws.
-theta0 = np.pi / 2.5 # 60 degree heading
-v0 = 5.0             # 5 m/s initial speed
+#theta0 = np.pi / 2.5 # 60 degree heading
+#v0 = 5.0             # 5 m/s initial speed
+
+theta0 = np.pi / 10
+v0 = 5.0
+
 x0 = np.array([[0.0],
                [0.0],
                [theta0],
@@ -85,7 +91,8 @@ alpha2s = [np.zeros((dynamics._u_dims[1], 1))] * HORIZON_STEPS
 #                            ()
 #
 #          x start
-goal = Point(100.0, 100.0)
+# goal = Point(100.0, 100.0)  # TODO: Try (75, 100)
+goal = Point(75.0, 100.0)
 obstacle_centers = [Point(100.0, 35.0),
                     Point(65.0, 65.0), Point(25.0, 80.0)]
 obstacle_radii = [10.0, 10.0, 10.0]
@@ -114,7 +121,7 @@ v_cost_lower = SemiquadraticCost(
     dimension=3, threshold=0, oriented_right=False, name="v_cost_lower")
 
 OBSTACLE_WEIGHT = 100.0
-GOAL_WEIGHT = 1.0
+GOAL_WEIGHT = 2.0
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
@@ -122,34 +129,50 @@ player1_cost.add_cost(goal_cost, "x", -GOAL_WEIGHT)
 for cost in obstacle_costs:
     player1_cost.add_cost(cost, "x", OBSTACLE_WEIGHT)
 
-player1_cost.add_cost(v_cost_upper, "x", 20.0)
-player1_cost.add_cost(v_cost_lower, "x", 20.0)
-player1_cost.add_cost(w_cost, 0, 10.0)
-player1_cost.add_cost(a_cost, 0, 10.0)
+player1_cost.add_cost(v_cost_upper, "x", 100.0)
+player1_cost.add_cost(v_cost_lower, "x", 100.0)
+player1_cost.add_cost(w_cost, 0, 1.0)
+player1_cost.add_cost(a_cost, 0, 1.0)
 
 player2_cost = PlayerCost()
 player2_cost.add_cost(goal_cost, "x", GOAL_WEIGHT)
 for cost in obstacle_costs:
     player2_cost.add_cost(cost, "x", -OBSTACLE_WEIGHT)
 
-player2_cost.add_cost(v_cost_upper, "x", -20.0)
-player2_cost.add_cost(v_cost_lower, "x", -20.0)
+player2_cost.add_cost(v_cost_upper, "x", -100.0)
+player2_cost.add_cost(v_cost_lower, "x", -100.0)
 player2_cost.add_cost(dvx_cost, 1, 10.0)
 player2_cost.add_cost(dvy_cost, 1, 10.0)
 
 # Visualizer.
 visualizer = Visualizer(
-    0, 1, 2, obstacle_centers, obstacle_radii, goal, plot_lims=[0, 175, 0, 175])
+    [(0, 1)],
+    [goal_cost] + obstacle_costs,
+    [".-b"],
+    1,
+    False,
+    plot_lims=[0, 175, 0, 175])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
     os.makedirs(LOG_DIRECTORY)
 
-logger = Logger(os.path.join(LOG_DIRECTORY, 'unicycle_4d_example.pkl'))
+path_to_logfile = os.path.join(LOG_DIRECTORY, "unicycle_4d_example.pkl")
+if len(sys.argv) > 1:
+    path_to_logfile = os.path.join(LOG_DIRECTORY, sys.argv[1])
+
+print("Saving log file to {}...".format(sys.argv[1]))
+logger = Logger(path_to_logfile)
 
 # Set up ILQSolver.
-solver = ILQSolver(dynamics, [player1_cost, player2_cost],
-                   x0, [P1s, P2s], [alpha1s, alpha2s],
-                   0.025, logger, visualizer)
+solver = ILQSolver(dynamics,
+                   [player1_cost, player2_cost],
+                   x0,
+                   [P1s, P2s],
+                   [alpha1s, alpha2s],
+                   0.02,
+                   None,
+                   logger,
+                   visualizer)
 
 solver.run()

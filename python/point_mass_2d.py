@@ -29,44 +29,48 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Author(s): Ellis Ratner         ( eratner@eecs.berkeley.edu )
-           David Fridovich-Keil ( dfk@eecs.berkeley.edu )
+Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Quadratic cost, derived from Cost base class.
+# 2D unicycle model (which actually has 4D state). Dynamics are as follows:
+#                          \dot x  = vx
+#                          \dot y  = vy
+#                          \dot vx = u1
+#                          \dot vy = u2
 #
 ################################################################################
 
 import torch
+import numpy as np
 
-from cost import Cost
+from dynamical_system import DynamicalSystem
 
-class QuadraticCost(Cost):
-    def __init__(self, dimension, origin, name=""):
+class PointMass2D(DynamicalSystem):
+    def __init__(self, T=0.1):
+        super(PointMass2D, self).__init__(4, 2, T)
+
+    def __call__(self, x, u):
         """
-        Initialize with dimension to add cost to and origin to center the
-        quadratic cost about.
+        Compute the time derivative of state for a particular state/control.
+        NOTE: `x` and `u` should be 2D (i.e. column vectors).
 
-        :param dimension: dimension to add cost
-        :type dimension: uint
-        :param threshold: value along the specified dim where the cost is zero
-        :type threshold: float
+        :param x: current state
+        :type x: torch.Tensor or np.array
+        :param u: current control input
+        :type u: torch.Tensor or np.array
+        :return: current time derivative of state
+        :rtype: torch.Tensor or np.array
         """
-        self._dimension = dimension
-        self._origin = origin
-        super(QuadraticCost, self).__init__(name)
+        if isinstance(x, np.ndarray):
+            assert isinstance(u, np.ndarray)
+            x_dot = np.zeros((self._x_dim, 1))
+        else:
+            assert isinstance(u, torch.Tensor)
+            x_dot = torch.zeros((self._x_dim, 1))
 
-    def __call__(self, xu, k=0):
-        """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
-        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
-        NOTE: `xu` should be a column vector.
-
-        :param xu: state of the system
-        :type xu: torch.Tensor
-        :return: scalar value of cost
-        :rtype: torch.Tensor
-        """
-        return (xu[self._dimension, 0] - self._origin) ** 2
+        x_dot[0, 0] = x[2, 0]
+        x_dot[1, 0] = x[3, 0]
+        x_dot[2, 0] = u[0, 0]
+        x_dot[3, 0] = u[1, 0]
+        return x_dot

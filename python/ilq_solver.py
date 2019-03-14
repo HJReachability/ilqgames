@@ -38,18 +38,27 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 ################################################################################
 
 import numpy as np
-from scipy.linalg import block_diag
 import torch
 import matplotlib.pyplot as plt
 
 from player_cost import PlayerCost
+from reference_deviation_cost import ReferenceDeviationCost
 from solve_lq_game import solve_lq_game
 from visualizer import Visualizer
 from logger import Logger
 
 class ILQSolver(object):
-    def __init__(self, dynamics, player_costs, x0, Ps, alphas, alpha_scaling=0.05,
-                 logger=None, visualizer=None, u_constraints = None):
+    def __init__(self,
+                 dynamics,
+                 player_costs,
+                 x0,
+                 Ps,
+                 alphas,
+                 alpha_scaling=0.05,
+                 reference_deviation_weight=None,
+                 logger=None,
+                 visualizer=None,
+                 u_constraints=None):
         """
         Initialize from dynamics, player costs, current state, and initial
         guesses for control strategies for both players.
@@ -66,6 +75,8 @@ class ILQSolver(object):
         :type alphas: [[np.array]]
         :param alpha_scaling: step size on the alpha
         :type alpha_scaling: float
+        :param reference_deviation_weight: weight on reference deviation cost
+        :type reference_deviation_weight: None or float
         :param logger: logging utility
         :type logger: Logger
         :param visualizer: optional visualizer
@@ -90,14 +101,18 @@ class ILQSolver(object):
         # Fixed step size for the linesearch.
         self._alpha_scaling = alpha_scaling
 
+        # Reference deviation cost weight.
+        self._reference_deviation_weight = reference_deviation_weight
+
         # Set up visualizer.
         self._visualizer = visualizer
         self._logger = logger
 
-        # Log some of the paramters. 
+        # Log some of the paramters.
         if self._logger is not None:
             self._logger.log("alpha_scaling", self._alpha_scaling)
             self._logger.log("horizon", self._horizon)
+            self._logger.log("x0", self._x0)
 
     def run(self):
         """ Run the algorithm for the specified parameters. """
@@ -109,15 +124,42 @@ class ILQSolver(object):
             self._last_operating_point = self._current_operating_point
             self._current_operating_point = (xs, us, costs)
 
+            # If this is the first time through, then set up reference deviation
+            # costs and add to player costs. Otherwise, just update those costs.
+            if self._reference_deviation_weight is not None and iteration == 0:
+                self._x_reference_cost = ReferenceDeviationCost(xs)
+                self._u_reference_costs = [
+                    ReferenceDeviationCost(ui) for ui in us]
+
+                for ii in range(self._num_players):
+                    self._player_costs[ii].add_cost(
+                        self._x_reference_cost, "x",
+                        self._reference_deviation_weight)
+                    self._player_costs[ii].add_cost(
+                        self._u_reference_costs[ii], ii,
+                        self._reference_deviation_weight)
+            elif self._reference_deviation_weight is not None:
+                self._x_reference_cost.reference = self._last_operating_point[0]
+                for ii in range(self._num_players):
+                    self._u_reference_costs[ii].reference = \
+                        self._last_operating_point[1][ii]
+
+            # Visualization.
             if self._visualizer is not None:
                 traj = {"xs" : xs}
                 for ii in range(self._num_players):
                     traj["u%ds" % (ii + 1)] = us[ii]
 
                 self._visualizer.add_trajectory(iteration, traj)
+#                self._visualizer.plot_controls(1)
+#                plt.pause(0.01)
+#                plt.clf()
+#                self._visualizer.plot_controls(2)
+#                plt.pause(0.01)
+#                plt.clf()
+                self._visualizer.plot()
+                plt.pause(0.01)
                 plt.clf()
-                self._visualizer.plot(show_last_k=5, fade_old=True)
-                plt.pause(0.1)
 
             # (2) Linearize about this operating point. Make sure to
             # stack appropriately since we will concatenate state vectors
@@ -142,7 +184,7 @@ class ILQSolver(object):
             for ii in range(self._num_players):
                 for k in range(self._horizon):
                     _, l, Q, R = self._player_costs[ii].quadraticize(
-                        xs[k], [uis[k] for uis in us])
+                        xs[k], [uis[k] for uis in us], k)
 
                     Qs[ii].append(Q)
                     ls[ii].append(l)
@@ -208,7 +250,8 @@ class ILQSolver(object):
                 us[ii].append(u[ii])
                 costs[ii].append(self._player_costs[ii](
                     torch.as_tensor(xs[k].copy()),
-                    [torch.as_tensor(ui) for ui in u]))
+                    [torch.as_tensor(ui) for ui in u],
+                    k))
 
             if k == self._horizon - 1:
                 break

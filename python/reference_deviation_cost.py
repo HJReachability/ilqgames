@@ -29,12 +29,12 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Author(s): Ellis Ratner         ( eratner@eecs.berkeley.edu )
-           David Fridovich-Keil ( dfk@eecs.berkeley.edu )
+Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Quadratic cost, derived from Cost base class.
+# Reference trajectory following cost. Penalizes sum of squared deviations from
+# a reference trajectory (of a given quantity, e.g. x or u1 or u2).
 #
 ################################################################################
 
@@ -42,31 +42,28 @@ import torch
 
 from cost import Cost
 
-class QuadraticCost(Cost):
-    def __init__(self, dimension, origin, name=""):
+class ReferenceDeviationCost(Cost):
+    def __init__(self, reference):
         """
-        Initialize with dimension to add cost to and origin to center the
-        quadratic cost about.
+        Initialize with a reference trajectory, stored as a list of np.arrays.
+        NOTE: This list will be updated externally as the reference
+              trajectory evolves with each iteration.
 
-        :param dimension: dimension to add cost
-        :type dimension: uint
-        :param threshold: value along the specified dim where the cost is zero
-        :type threshold: float
+        :param reference: list of either states or controls
+        :type reference: [np.array]
         """
-        self._dimension = dimension
-        self._origin = origin
-        super(QuadraticCost, self).__init__(name)
+        self.reference = reference
+        super(ReferenceDeviationCost, self).__init__()
 
-    def __call__(self, xu, k=0):
+    def __call__(self, xu, k):
         """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
+        Evaluate this cost function on the given vector and time.
         NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
         NOTE: `xu` should be a column vector.
 
-        :param xu: state of the system
+        :param xu: state/control of the system
         :type xu: torch.Tensor
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
-        return (xu[self._dimension, 0] - self._origin) ** 2
+        return torch.norm(xu - torch.as_tensor(self.reference[k]))**2

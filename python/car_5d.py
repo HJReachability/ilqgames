@@ -33,52 +33,56 @@ Author(s): David Fridovich-Keil ( dfk@eecs.berkeley.edu )
 """
 ################################################################################
 #
-# Semiquadratic cost, derived from Cost base class. Implements a
-# cost function that is flat below a threshold and quadratic above, in the
-# given dimension.
+# 5D car model. Dynamics are as follows, adapted from
+# https://ac.els-cdn.com/S2405896316301215/1-s2.0-S2405896316301215-main.pdf?_tid=ad143a13-6571-4733-a984-1b5a41960e78&acdnat=1552430727_12aedd0da2ca11eb07eef49d27b5ab12
+#                          \dot x     = v cos theta
+#                          \dot y     = v sin theta
+#                          \dot theta = v * tan(phi) / l
+#                          \dot phi   = u1
+#                          \dot v     = u2
 #
 ################################################################################
 
 import torch
+import numpy as np
 
-from cost import Cost
+from dynamical_system import DynamicalSystem
 
-class SemiquadraticCost(Cost):
-    def __init__(self, dimension, threshold, oriented_right, name=""):
+class Car5D(DynamicalSystem):
+    """ 5D car model. """
+
+    def __init__(self, l=3.0, T=0.1):
+        self._l = l # inter-axle length (m)
+        super(Car5D, self).__init__(5, 2, T)
+
+    def __call__(self, x, u):
         """
-        Initialize with dimension to add cost to and threshold above which
-        to impose quadratic cost.
+        Compute the time derivative of state for a particular state/control.
+        NOTE: `x` and `u` should be 2D (i.e. column vectors).
 
-        :param dimension: dimension to add cost
-        :type dimension: uint
-        :param threshold: value above which to impose quadratic cost
-        :type threshold: float
-        :param oriented_right: Boolean flag determining which side of threshold
-          to penalize
-        :type oriented_right: bool
+        :param x: current state
+        :type x: torch.Tensor or np.array
+        :param u: current control input
+        :type u: torch.Tensor or np.array
+        :return: current time derivative of state
+        :rtype: torch.Tensor or np.array
         """
-        self._dimension = dimension
-        self._threshold = threshold
-        self._oriented_right = oriented_right
-        super(SemiquadraticCost, self).__init__(name)
-
-    def __call__(self, xu, k=0):
-        """
-        Evaluate this cost function on the given input and itme, which might
-        either be a state `x` or a control `u`. Hence the input is named `xu`.
-        NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
-        NOTE: `xu` should be a column vector.
-
-        :param xu: state of the system
-        :type xu: torch.Tensor
-        :return: scalar value of cost
-        :rtype: torch.Tensor
-        """
-        if self._oriented_right:
-            if xu[self._dimension, 0] > self._threshold:
-                return (xu[self._dimension, 0] - self._threshold) ** 2
+        if isinstance(x, np.ndarray):
+            assert isinstance(u, np.ndarray)
+            x_dot = np.zeros((self._x_dim, 1))
+            cos = np.cos
+            sin = np.sin
+            tan = np.tan
         else:
-            if xu[self._dimension, 0] < self._threshold:
-                return (xu[self._dimension, 0] - self._threshold) ** 2
+            assert isinstance(u, torch.Tensor)
+            x_dot = torch.zeros((self._x_dim, 1))
+            cos = torch.cos
+            sin = torch.sin
+            tan = torch.tan
 
-        return torch.zeros(1, 1, requires_grad=True).double()
+        x_dot[0, 0] = x[4, 0] * cos(x[2, 0])
+        x_dot[1, 0] = x[4, 0] * sin(x[2, 0])
+        x_dot[2, 0] = x[4, 0] * tan(x[3, 0]) / self._l
+        x_dot[3, 0] = u[0, 0]
+        x_dot[4, 0] = u[1, 0]
+        return x_dot
