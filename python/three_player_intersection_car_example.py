@@ -120,7 +120,7 @@ car2_x0 = np.array([
     [car2_v0]
 ])
 
-unicycle_theta0 = 0.0 # moving right
+unicycle_theta0 = 1.0 # moving right
 unicycle_v0 = 2.0   # 0.1 m/s initial speed
 unicycle_x0 = np.array([
     [0.0],
@@ -239,7 +239,7 @@ car1_cost.add_cost(car1_minv_cost, "x", 100.0)
 car1_cost.add_cost(car1_proximity_cost, "x", 100.0)
 
 car1_player_id = 0
-car1_cost.add_cost(car1_steering_cost, car1_player_id, 5.0)
+car1_cost.add_cost(car1_steering_cost, car1_player_id, 50.0)
 car1_cost.add_cost(car1_a_cost, car1_player_id, 1.0)
 
 car2_cost = PlayerCost()
@@ -251,7 +251,7 @@ car2_cost.add_cost(car2_minv_cost, "x", 100.0)
 car2_cost.add_cost(car2_proximity_cost, "x", 100.0)
 
 car2_player_id = 1
-car2_cost.add_cost(car2_steering_cost, car2_player_id, 5.0)
+car2_cost.add_cost(car2_steering_cost, car2_player_id, 50.0)
 car2_cost.add_cost(car2_a_cost, car2_player_id, 1.0)
 
 unicycle_cost = PlayerCost()
@@ -261,7 +261,7 @@ unicycle_cost.add_cost(unicycle_minv_cost, "x", 100.0)
 unicycle_cost.add_cost(unicycle_proximity_cost, "x", 5.0)
 
 unicycle_player_id = 2
-unicycle_cost.add_cost(unicycle_steering_cost, unicycle_player_id, 5.0)
+unicycle_cost.add_cost(unicycle_steering_cost, unicycle_player_id, 50.0)
 unicycle_cost.add_cost(unicycle_a_cost, unicycle_player_id, 1.0)
 
 # Visualizer.
