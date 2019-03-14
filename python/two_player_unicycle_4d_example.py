@@ -97,10 +97,9 @@ alpha2s = [np.zeros((dynamics._u_dims[1], 1))] * HORIZON_STEPS
 #                            ()
 #
 #          x start
-# goal = Point(100.0, 100.0)  # TODO: Try (75, 100)
-goal = Point(75.0, 100.0)
-obstacle_centers = [Point(100.0, 35.0),
-                    Point(65.0, 65.0), Point(25.0, 80.0)]
+goal = Point(75.0, 90.0)
+obstacle_centers = [Point(100.0, 25.0),
+                    Point(65.0, 55.0), Point(25.0, 70.0)]
 obstacle_radii = [10.0, 10.0, 10.0]
 
 goal_cost = ProximityCost(
@@ -127,7 +126,7 @@ v_cost_lower = SemiquadraticCost(
     dimension=3, threshold=0, oriented_right=False, name="v_cost_lower")
 
 OBSTACLE_WEIGHT = 100.0
-GOAL_WEIGHT = 10.0
+GOAL_WEIGHT = 25.0
 D_WEIGHT = 1000.0
 U_WEIGHT = 1.0
 
