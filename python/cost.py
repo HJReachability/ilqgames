@@ -42,18 +42,23 @@ class Cost(object):
     """ Base class for all cost functions. """
     def __init__(self, name=""):
         self._name = name
-        pass
 
-    def __call__(self, xu):
+    def __call__(self, xu, k):
         """
-        Evaluate this cost function on the given input, which might either be
-        a state `x` or a control `u`. Hence the input is named `xu`.
+        Evaluate this cost function on the given input/time, which might either
+        be a state `x` or a control `u`. Hence the input is named `xu`.
         NOTE: `xu` should be a PyTorch tensor with `requires_grad` set `True`.
         NOTE: `xu` should be a column vector.
 
         :param xu: state of the system or control input
         :type xu: torch.Tensor
+        :param k: time step, if cost is time-varying
+        :type k: uint
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
         raise NotImplementedError("__call__ is not implemented.")
+
+    def render(self, ax=None):
+        """ Optional rendering on the given axes. """
+        raise NotImplementedError("render is not implemented.")
