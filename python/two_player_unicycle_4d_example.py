@@ -52,8 +52,8 @@ from player_cost import PlayerCost
 from box_constraint import BoxConstraint
 from visualizer import Visualizer
 from logger import Logger
-import os
 import sys
+import signal
 
 # General parameters.
 TIME_HORIZON = 10.0   # s
@@ -66,10 +66,13 @@ MAX_V = 15.0 # m/s
 dynamics = TwoPlayerUnicycle4D(T=TIME_RESOLUTION)
 
 # Choose an initial state and control laws.
-#theta0 = np.pi / 2.5 # 60 degree heading
-#v0 = 5.0             # 5 m/s initial speed
+# theta0 = np.pi / 2.5 # 60 degree heading
+# v0 = 5.0             # 5 m/s initial speed
 
-theta0 = np.pi / 10
+# theta0 = np.pi / 10
+# v0 = 5.0
+
+theta0 = np.pi / 6
 v0 = 5.0
 
 x0 = np.array([[0.0],
@@ -78,6 +81,9 @@ x0 = np.array([[0.0],
                [v0]])
 
 P1s = [np.zeros((dynamics._u_dims[0], dynamics._x_dim))] * HORIZON_STEPS
+mult = 0.0
+P1s =  [mult * np.array([[0, 0, 0, 0],
+                         [0, 0, 1, 0]])] * HORIZON_STEPS
 P2s = [np.zeros((dynamics._u_dims[1], dynamics._x_dim))] * HORIZON_STEPS
 alpha1s = [np.zeros((dynamics._u_dims[0], 1))] * HORIZON_STEPS
 alpha2s = [np.zeros((dynamics._u_dims[1], 1))] * HORIZON_STEPS
@@ -121,7 +127,11 @@ v_cost_lower = SemiquadraticCost(
     dimension=3, threshold=0, oriented_right=False, name="v_cost_lower")
 
 OBSTACLE_WEIGHT = 100.0
-GOAL_WEIGHT = 2.0
+GOAL_WEIGHT = 10.0
+D_WEIGHT = 1000.0
+U_WEIGHT = 1.0
+
+V_WEIGHT = 100.0
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
@@ -129,20 +139,20 @@ player1_cost.add_cost(goal_cost, "x", -GOAL_WEIGHT)
 for cost in obstacle_costs:
     player1_cost.add_cost(cost, "x", OBSTACLE_WEIGHT)
 
-player1_cost.add_cost(v_cost_upper, "x", 100.0)
-player1_cost.add_cost(v_cost_lower, "x", 100.0)
-player1_cost.add_cost(w_cost, 0, 1.0)
-player1_cost.add_cost(a_cost, 0, 1.0)
+player1_cost.add_cost(v_cost_upper, "x", V_WEIGHT)
+player1_cost.add_cost(v_cost_lower, "x", V_WEIGHT)
+player1_cost.add_cost(w_cost, 0, U_WEIGHT)
+player1_cost.add_cost(a_cost, 0, U_WEIGHT)
 
 player2_cost = PlayerCost()
 player2_cost.add_cost(goal_cost, "x", GOAL_WEIGHT)
 for cost in obstacle_costs:
     player2_cost.add_cost(cost, "x", -OBSTACLE_WEIGHT)
 
-player2_cost.add_cost(v_cost_upper, "x", -100.0)
-player2_cost.add_cost(v_cost_lower, "x", -100.0)
-player2_cost.add_cost(dvx_cost, 1, 10.0)
-player2_cost.add_cost(dvy_cost, 1, 10.0)
+player2_cost.add_cost(v_cost_upper, "x", -V_WEIGHT)
+player2_cost.add_cost(v_cost_lower, "x", -V_WEIGHT)
+player2_cost.add_cost(dvx_cost, 1, D_WEIGHT)
+player2_cost.add_cost(dvy_cost, 1, D_WEIGHT)
 
 # Visualizer.
 visualizer = Visualizer(
@@ -170,9 +180,17 @@ solver = ILQSolver(dynamics,
                    x0,
                    [P1s, P2s],
                    [alpha1s, alpha2s],
-                   0.02,
+                   0.01,
                    None,
                    logger,
                    visualizer)
+
+def handle_sigint(sig, frame):
+    print("SIGINT caught! Saving log data...")
+    logger.dump()
+    print("...done, exiting!")
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, handle_sigint)
 
 solver.run()
