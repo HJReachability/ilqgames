@@ -80,6 +80,12 @@ class ProximityCost(Cost):
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
+        if k < 99:
+            return torch.zeros(
+                1, 1, requires_grad=True).double()
+        else:
+            print("at last time step")
+
         # Compute relative distance.
         dx = x[self._x_index, 0] - self._point.x
         dy = x[self._y_index, 0] - self._point.y

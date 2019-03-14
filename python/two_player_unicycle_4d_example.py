@@ -61,6 +61,7 @@ TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
 LOG_DIRECTORY = "./logs/two_player_zero_sum/"
 MAX_V = 15.0 # m/s
+# MAX_V = 30.0 # m/s
 
 # Create dynamics.
 dynamics = TwoPlayerUnicycle4D(T=TIME_RESOLUTION)
@@ -97,10 +98,10 @@ alpha2s = [np.zeros((dynamics._u_dims[1], 1))] * HORIZON_STEPS
 #                            ()
 #
 #          x start
-goal = Point(75.0, 90.0)
-obstacle_centers = [Point(100.0, 25.0),
-                    Point(65.0, 55.0), Point(25.0, 70.0)]
-obstacle_radii = [10.0, 10.0, 10.0]
+goal = Point(55.0, 70.0)
+obstacle_centers = [Point(80.0, 15.0),
+                    Point(45.0, 45.0), Point(15.0, 60.0)]
+obstacle_radii = [8.0, 8.0, 8.0]
 
 goal_cost = ProximityCost(
     position_indices=(0, 1), point=goal, max_distance=np.inf, name="goal")
@@ -108,10 +109,6 @@ obstacle_costs = [ObstacleCost(
     position_indices=(0, 1), point=p, max_distance=r,
     name="obstacle_%f_%f" % (p.x, p.y))
                   for p, r in zip(obstacle_centers, obstacle_radii)]
-
-# Control costs for both players to keep control in a box.
-max_w = 1.0 # rad/s
-max_a = 2.0 # m/s/s
 
 w_cost = QuadraticCost(dimension=0, origin=0, name="w_cost")
 a_cost = QuadraticCost(dimension=1, origin=0, name="a_cost")
@@ -126,11 +123,12 @@ v_cost_lower = SemiquadraticCost(
     dimension=3, threshold=0, oriented_right=False, name="v_cost_lower")
 
 OBSTACLE_WEIGHT = 100.0
-GOAL_WEIGHT = 25.0
+GOAL_WEIGHT = 50.0
 D_WEIGHT = 1000.0
 U_WEIGHT = 1.0
 
-V_WEIGHT = 100.0
+# V_WEIGHT = 100.0
+V_WEIGHT = 1.0
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
@@ -170,7 +168,7 @@ path_to_logfile = os.path.join(LOG_DIRECTORY, "unicycle_4d_example.pkl")
 if len(sys.argv) > 1:
     path_to_logfile = os.path.join(LOG_DIRECTORY, sys.argv[1])
 
-print("Saving log file to {}...".format(sys.argv[1]))
+print("Saving log file to {}...".format(path_to_logfile))
 logger = Logger(path_to_logfile)
 
 # Set up ILQSolver.
