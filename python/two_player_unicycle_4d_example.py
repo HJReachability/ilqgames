@@ -61,20 +61,19 @@ TIME_RESOLUTION = 0.1 # s
 HORIZON_STEPS = int(TIME_HORIZON / TIME_RESOLUTION)
 LOG_DIRECTORY = "./logs/two_player_zero_sum/"
 MAX_V = 15.0 # m/s
-# MAX_V = 30.0 # m/s
 
 # Create dynamics.
 dynamics = TwoPlayerUnicycle4D(T=TIME_RESOLUTION)
 
 # Choose an initial state and control laws.
-# theta0 = np.pi / 2.5 # 60 degree heading
-# v0 = 5.0             # 5 m/s initial speed
+theta0 = np.pi / 3 # 60 degree heading
+v0 = 5.0             # 5 m/s initial speed
 
 # theta0 = np.pi / 10
 # v0 = 5.0
 
-theta0 = np.pi / 6
-v0 = 5.0
+# theta0 = np.pi / 6
+# v0 = 5.0
 
 x0 = np.array([[0.0],
                [0.0],
@@ -103,8 +102,11 @@ obstacle_centers = [Point(80.0, 15.0),
                     Point(45.0, 45.0), Point(15.0, 60.0)]
 obstacle_radii = [8.0, 8.0, 8.0]
 
-goal_cost = ProximityCost(
-    position_indices=(0, 1), point=goal, max_distance=np.inf, name="goal")
+goal_cost = ProximityCost(position_indices=(0, 1),
+                          point=goal,
+                          max_distance=np.inf,
+                          apply_after_time=HORIZON_STEPS - 1,
+                          name="goal")
 obstacle_costs = [ObstacleCost(
     position_indices=(0, 1), point=p, max_distance=r,
     name="obstacle_%f_%f" % (p.x, p.y))
@@ -122,13 +124,13 @@ v_cost_upper = SemiquadraticCost(
 v_cost_lower = SemiquadraticCost(
     dimension=3, threshold=0, oriented_right=False, name="v_cost_lower")
 
-OBSTACLE_WEIGHT = 100.0
-GOAL_WEIGHT = 50.0
-D_WEIGHT = 1000.0
-U_WEIGHT = 1.0
+OBSTACLE_WEIGHT = 100.0 # HJI: 100
+GOAL_WEIGHT = 100.0 # HJI: 400
+D_WEIGHT = 1000.0 # HJI: 1000
+U_WEIGHT = 1.0 # HJI: 100
 
 # V_WEIGHT = 100.0
-V_WEIGHT = 1.0
+V_WEIGHT = 1.0 # HJI: 50
 
 # Build up total costs for both players. This is basically a zero-sum game.
 player1_cost = PlayerCost()
@@ -158,7 +160,7 @@ visualizer = Visualizer(
     [".-b"],
     1,
     False,
-    plot_lims=[0, 175, 0, 175])
+    plot_lims=[0, 100, 0, 100])
 
 # Logger.
 if not os.path.exists(LOG_DIRECTORY):
