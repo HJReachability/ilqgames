@@ -47,7 +47,8 @@ from point import Point
 
 class ProximityCost(Cost):
     def __init__(self, position_indices, point,
-                 max_distance, outside_weight=0.1, name=""):
+                 max_distance, outside_weight=0.1, apply_after_time=-1,
+                 name=""):
         """
         Initialize with dimension to add cost to and threshold BELOW which
         to impose quadratic cost. Above the threshold, we use a very light
@@ -61,11 +62,14 @@ class ProximityCost(Cost):
         :type threshold: float
         :param outside_weight: weight of quadratic cost outside threshold
         :type outside_weight: float
+        :param apply_after_time: only apply proximity time after this time step
+        :type apply_after_time: int
         """
         self._x_index, self._y_index = position_indices
         self._point = point
         self._max_squared_distance = max_distance**2
         self._outside_weight = outside_weight
+        self._apply_after_time = apply_after_time
         super(ProximityCost, self).__init__(name)
 
     def __call__(self, x, k=0):
@@ -80,6 +84,10 @@ class ProximityCost(Cost):
         :return: scalar value of cost
         :rtype: torch.Tensor
         """
+        if k < self._apply_after_time:
+            return torch.zeros(
+                1, 1, requires_grad=True).double()
+
         # Compute relative distance.
         dx = x[self._x_index, 0] - self._point.x
         dy = x[self._y_index, 0] - self._point.y
