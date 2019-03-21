@@ -1,2 +1,2 @@
-# distraction
-A new take on robust motion planning.
+# ilqgames
+Iterative Linear Quadratic Games - a new approximate solver for N-player differential games.
