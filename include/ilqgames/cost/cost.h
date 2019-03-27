@@ -36,60 +36,40 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Custom types.
+// Base class for all cost functions. All costs must support evaluation and
+// quadraticization.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_TYPES_H
-#define ILQGAMES_UTILS_TYPES_H
+#ifndef ILQGAMES_COST_COST_H
+#define ILQGAMES_COST_COST_H
 
-// ------------------------------- INCLUDES -------------------------------- //
-
-#include <math.h>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
-#include <algorithm>
-#include <iostream>
-#include <limits>
-#include <memory>
-#include <random>
-#include <string>
-#include <vector>
-
-// ------------------------------- CONSTANTS -------------------------------- //
+#include <ilqgames/cost/quadratic_approximation.h>
+#include <ilqgames/utils/types.h>
 
 namespace ilqgames {
-namespace constants {
-// Acceleration due to gravity (m/s/s).
-static constexpr float kGravity = 9.81;
 
-// Small number for use in approximate equality checking.
-static constexpr float kSmallNumber = 1e-4;
+class Cost {
+ public:
+  // Evaluate this cost at the current time and input.
+  float Evaluate(Time t, const VectorXf& input) const = 0;
 
-// Float precision infinity.
-static constexpr float kInfinity = std::numeric_limits<float>::infinity();
-}  // namespace constants
+  // Quadraticize this cost at the given time and input, and add to the running
+  // set of quadraticizations.
+  void Quadraticize(Time t, const VectorXf& input,
+                    QuadraticApproximation* quad) const = 0;
 
-// --------------------------------- TYPES ---------------------------------- //
+ protected:
+  Cost(PlayerIndex idx, float weight) {}
+  virtual ~Cost() {}
 
-using PlayerIndex = unsigned short;
-using Dimension = unsigned int;
-using Time = float;
+  // Which player is this cost associated to?
+  PlayerIndex idx_;
 
-// Empty struct for setting unused/unimplemented template args.
-struct Empty {};
+  // Multiplicative weight associated to this cost.
+  float weight_;
+};  //\class Cost
+
 }  // namespace ilqgames
-
-// ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
-
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
-// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
-
-using Eigen::MatrixXf;
-using Eigen::VectorXf;
 
 #endif

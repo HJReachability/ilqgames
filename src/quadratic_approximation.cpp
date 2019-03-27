@@ -36,60 +36,22 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Custom types.
+// Container to store a quadratic approximation of a single player's cost at a
+// particular moment in time. That is, each player should have a time-indexed
+// set of these QuadraticApproximations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_TYPES_H
-#define ILQGAMES_UTILS_TYPES_H
-
-// ------------------------------- INCLUDES -------------------------------- //
-
-#include <math.h>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
-#include <algorithm>
-#include <iostream>
-#include <limits>
-#include <memory>
-#include <random>
-#include <string>
-#include <vector>
-
-// ------------------------------- CONSTANTS -------------------------------- //
+#include <ilqgames/cost/quadratic_approximation.h>
+#include <ilqgames/utils/types.h>
 
 namespace ilqgames {
-namespace constants {
-// Acceleration due to gravity (m/s/s).
-static constexpr float kGravity = 9.81;
 
-// Small number for use in approximate equality checking.
-static constexpr float kSmallNumber = 1e-4;
-
-// Float precision infinity.
-static constexpr float kInfinity = std::numeric_limits<float>::infinity();
-}  // namespace constants
-
-// --------------------------------- TYPES ---------------------------------- //
-
-using PlayerIndex = unsigned short;
-using Dimension = unsigned int;
-using Time = float;
-
-// Empty struct for setting unused/unimplemented template args.
-struct Empty {};
-}  // namespace ilqgames
-
-// ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
-
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+// Construct from state/control dimensions.
+QuadraticApproximation::QuadraticApproximation(
+    Dimension xdim, const std::vector<Dimension>& udims)
+    : Q(xdim, xdim) {
+  for (Dimension udim : udims) Rs.push_back(MatrixXf(udim, udim));
 }
 
-// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
-
-using Eigen::MatrixXf;
-using Eigen::VectorXf;
-
-#endif
+}  // namespace ilqgames
