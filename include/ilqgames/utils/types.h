@@ -75,10 +75,10 @@ static constexpr float kInfinity = std::numeric_limits<float>::infinity();
 using PlayerIndex = unsigned short;
 using Dimension = int;
 using Time = float;
+using Point2 = Eigen::Vector2f;
 
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
-}  // namespace ilqgames
 
 // ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
 
@@ -86,6 +86,23 @@ template <typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args &&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+template <typename T> inline constexpr
+T sgn(T x, std::false_type is_signed) {
+  return T(0) < x;
+}
+
+template <typename T> inline constexpr
+T sgn(T x, std::true_type is_signed) {
+  return (T(0) < x) - (x < T(0));
+}
+
+template <typename T> inline constexpr
+T sgn(T x) {
+  return sgn(x, std::is_signed<T>());
+}
+
+}  // namespace ilqgames
 
 // ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
 
