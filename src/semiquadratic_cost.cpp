@@ -40,7 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -48,43 +48,37 @@
 namespace ilqgames {
 
 // Evaluate this cost at the current input.
-float QuadraticCost::Evaluate(const VectorXf& input) const {
+float SemiquadraticCost::Evaluate(const VectorXf& input) const {
   CHECK_LT(dimension_, input.size());
 
-  // If dimension non-negative, then just square the desired dimension.
-  if (dimension_ >= 0)
-    return 0.5 * weight_ * input(dimension_) * input(dimension_);
+  const float diff = input(dimension_) - threshold_;
+  if ((diff > 0.0 && oriented_right_) || (diff < 0.0 && !oriented_right_))
+    return 0.5 * weight_ * diff * diff;
 
-  // Otherwise, cost is squared 2-norm of entire input.
-  return 0.5 * weight_ * input.squaredNorm();
+  return 0.0;
 }
 
 // Quadraticize this cost at the given input, and add to the running
 // sum of gradients and Hessians (if non-null).
-void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
+void SemiquadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
+                                     VectorXf* grad) const {
   CHECK_LT(dimension_, input.size());
-  CHECK_NOTNULL(hess);
+
+  // Handle no cost case first.
+  const float diff = input(dimension_) - threshold_;
+  if ((diff < 0.0 && oriented_right_) || (diff > 0.0 && !oriented_right_))
+    return;
 
   // Check dimensions.
+  CHECK_NOTNULL(hess);
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
 
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  hess->coeffRef(dimension_, dimension_) += weight_;
 
-  // Handle single dimension case first.
-  if (dimension_ >= 0) {
-    hess->coeffRef(dimension_, dimension_) += weight_;
-
-    if (grad) grad->coeffRef(dimension_) += weight_ * input(dimension_);
-  }
-
-  // Handle dimension < 0 case.
-  else {
-    hess->diagonal() =
-        hess->diagonal() + VectorXf::Constant(input.size(), weight_);
-
-    if (grad) *grad += weight_ * input;
+  if (grad) {
+    CHECK_EQ(input.size(), grad->size());
+    grad->coeffRef(dimension_) += weight_ * diff;
   }
 }
 

@@ -36,56 +36,51 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost in a particular (or all) dimension(s).
+// Semiquadratic cost in a particular dimension, starting above or below a given
+// threshold.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/quadratic_cost.h>
+#ifndef ILQGAMES_COST_SEMIQUADRATIC_COST_H
+#define ILQGAMES_COST_SEMIQUADRATIC_COST_H
+
+#include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 
 namespace ilqgames {
 
-// Evaluate this cost at the current input.
-float QuadraticCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dimension_, input.size());
-
-  // If dimension non-negative, then just square the desired dimension.
-  if (dimension_ >= 0)
-    return 0.5 * weight_ * input(dimension_) * input(dimension_);
-
-  // Otherwise, cost is squared 2-norm of entire input.
-  return 0.5 * weight_ * input.squaredNorm();
-}
-
-// Quadraticize this cost at the given input, and add to the running
-// sum of gradients and Hessians (if non-null).
-void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
-  CHECK_LT(dimension_, input.size());
-  CHECK_NOTNULL(hess);
-
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Handle single dimension case first.
-  if (dimension_ >= 0) {
-    hess->coeffRef(dimension_, dimension_) += weight_;
-
-    if (grad) grad->coeffRef(dimension_) += weight_ * input(dimension_);
+class SemiquadraticCost : public TimeInvariantCost {
+ public:
+  // Construct from a multiplicative weight, the dimension in which to apply
+  // the semiquadratic cost, a threshold, and a flag for which side to apply it.
+  SemiquadraticCost(float weight, Dimension dim, float threshold,
+                    bool oriented_right)
+      : TimeInvariantCost(weight),
+        dimension_(dim),
+        threshold_(threshold),
+        oriented_right_(oriented_right) {
+    CHECK_GE(dimension_, 0);
   }
 
-  // Handle dimension < 0 case.
-  else {
-    hess->diagonal() =
-        hess->diagonal() + VectorXf::Constant(input.size(), weight_);
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
 
-    if (grad) *grad += weight_ * input;
-  }
-}
+  // Quadraticize this cost at the given input, and add to the running
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
+
+ private:
+  // Dimension in which to apply the quadratic cost.
+  const Dimension dimension_;
+
+  // Threshold and which side to apply it to.
+  const float threshold_;
+  const bool oriented_right_;
+};  //\class SemiquadraticCost
 
 }  // namespace ilqgames
+
+#endif
