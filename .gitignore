@@ -2,6 +2,7 @@
 .DS_Store
 *~
 cscope*
+.clang_complete
 
 # Logs.
 sandbox/data
