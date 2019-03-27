@@ -44,7 +44,6 @@
 #define ILQGAMES_COST_TIME_INVARIANT_COST_H
 
 #include <ilqgames/cost/cost.h>
-#include <ilqgames/cost/quadratic_approximation.h>
 #include <ilqgames/utils/types.h>
 
 namespace ilqgames {
@@ -55,8 +54,9 @@ class TimeInvariantCost : public Cost {
   virtual float Evaluate(const VectorXf& input) const = 0;
 
   // Quadraticize this cost at the given input, and add to the running set of
-  // quadraticizations.
-  virtual void Quadraticize(const VectorXf& input, QuadraticApproximation* q) const = 0;
+  // sum of gradients and Hessians (if non-null).
+  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad = nullptr) const = 0;
 
  protected:
   TimeInvariantCost(float weight) : Cost(weight) {}
