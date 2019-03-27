@@ -73,7 +73,7 @@ static constexpr float kInfinity = std::numeric_limits<float>::infinity();
 // --------------------------------- TYPES ---------------------------------- //
 
 using PlayerIndex = unsigned short;
-using Dimension = unsigned int;
+using Dimension = int;
 using Time = float;
 
 // Empty struct for setting unused/unimplemented template args.

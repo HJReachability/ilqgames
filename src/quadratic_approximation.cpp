@@ -50,7 +50,7 @@ namespace ilqgames {
 // Construct from state/control dimensions.
 QuadraticApproximation::QuadraticApproximation(
     Dimension xdim, const std::vector<Dimension>& udims)
-    : Q(xdim, xdim) {
+    : Q(xdim, xdim), l(xdim) {
   for (Dimension udim : udims) Rs.push_back(MatrixXf(udim, udim));
 }
 

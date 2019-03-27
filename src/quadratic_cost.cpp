@@ -36,33 +36,54 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a quadratic approximation of a single player's cost at a
-// particular moment in time. That is, each player should have a time-indexed
-// set of these QuadraticApproximations.
-//
-// Notation is taken from Basar and Olsder, Corollary 6.1.
-// -- Q is the Hessian with respect to state
-// -- l is the gradient with respect to state
-// -- Rs[ii] is the Hessian with respect to the control input of player ii
+// Quadratic cost in a particular (or all) dimension(s).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
-#define ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
-
+#include <ilqgames/cost/quadratic_approximation.h>
+#include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/utils/types.h>
+
+#include <glog/logging.h>
 
 namespace ilqgames {
 
-struct QuadraticApproximation {
-  MatrixXf Q;
-  VectorXf l;
-  std::vector<MatrixXf> Rs;
+// Evaluate this cost at the current input.
+float QuadraticCost::Evaluate(const VectorXf& input) const {
+  CHECK_LT(dimension_, input.size());
 
-  // Construct from state/control dimensions.
-  QuadraticApproximation(Dimension xdim, const std::vector<Dimension>& udims);
-};  // struct QuadraticApproximation
+  // If dimension non-negative, then just square the desired dimension.
+  if (dimension_ >= 0)
+    return 0.5 * weight_ * input(dimension_) * input(dimension_);
+
+  // Otherwise, cost is squared 2-norm of entire input.
+  return 0.5 * weight_ * input.squaredNorm();
+}
+
+// Quadraticize this cost at the given input, and add to the running
+// set of quadraticizations.
+void QuadraticCost::Quadraticize(const VectorXf& input,
+                                 QuadraticApproximation* q) const {
+  CHECK_LT(dimension_, input.size());
+  CHECK_NOTNULL(q);
+
+  // Check dimensions.
+  CHECK_EQ(input.size(), q->Q.rows());
+  CHECK_EQ(input.size(), q->Q.cols());
+  CHECK_EQ(input.size(), q->l.size());
+
+  // Handle single dimension case first.
+  if (dimension_ >= 0) {
+    q->l(dimension_) += weight_ * input(dimension_);
+    q->Q(dimension_, dimension_) += weight_;
+  }
+
+  // Handle dimension < 0 case.
+  else {
+    q->l += weight_ * input;
+    q->Q.diagonal() =
+        q->Q.diagonal() + VectorXf::Constant(input.size(), weight_);
+  }
+}
 
 }  // namespace ilqgames
-
-#endif
