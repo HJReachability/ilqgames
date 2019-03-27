@@ -36,32 +36,32 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a quadratic approximation of a single player's cost at a
-// particular moment in time. That is, each player should have a time-indexed
-// set of these QuadraticApproximations.
-//
-// Notation is taken from Basar and Olsder, Corollary 6.1.
-// -- Q is the Hessian with respect to state
-// -- l is the gradient with respect to state
-// -- Rs[ii] is the Hessian with respect to the control input of player ii
+// Base class for all time-invariant cost functions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
-#define ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
+#ifndef ILQGAMES_COST_TIME_INVARIANT_COST_H
+#define ILQGAMES_COST_TIME_INVARIANT_COST_H
 
+#include <ilqgames/cost/cost.h>
+#include <ilqgames/cost/quadratic_approximation.h>
 #include <ilqgames/utils/types.h>
 
 namespace ilqgames {
 
-struct QuadraticApproximation {
-  MatrixXf Q;
-  VectorXf l;
-  std::vector<MatrixXf> Rs;
+class TimeInvariantCost : public Cost {
+ public:
+  // Evaluate this cost at the given input.
+  virtual float Evaluate(const VectorXf& input) const = 0;
 
-  // Construct from state/control dimensions.
-  QuadraticApproximation(Dimension xdim, const std::vector<Dimension>& udims);
-};  // struct QuadraticApproximation
+  // Quadraticize this cost at the given input, and add to the running set of
+  // quadraticizations.
+  virtual void Quadraticize(const VectorXf& input, QuadraticApproximation* q) const = 0;
+
+ protected:
+  TimeInvariantCost(float weight) : Cost(weight) {}
+  virtual ~TimeInvariantCost() {}
+};  //\class TimeInvariantCost
 
 }  // namespace ilqgames
 

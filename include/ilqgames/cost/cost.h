@@ -52,22 +52,19 @@ namespace ilqgames {
 class Cost {
  public:
   // Evaluate this cost at the current time and input.
-  float Evaluate(Time t, const VectorXf& input) const = 0;
+  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
 
   // Quadraticize this cost at the given time and input, and add to the running
   // set of quadraticizations.
-  void Quadraticize(Time t, const VectorXf& input,
-                    QuadraticApproximation* quad) const = 0;
+  virtual void Quadraticize(Time t, const VectorXf& input,
+                            QuadraticApproximation* q) const = 0;
 
  protected:
-  Cost(PlayerIndex idx, float weight) {}
+  Cost(float weight) : weight_(weight) {}
   virtual ~Cost() {}
 
-  // Which player is this cost associated to?
-  PlayerIndex idx_;
-
   // Multiplicative weight associated to this cost.
-  float weight_;
+  const float weight_;
 };  //\class Cost
 
 }  // namespace ilqgames
