@@ -47,6 +47,7 @@
 #include <ilqgames/utils/types.h>
 
 #include <unordered_map>
+#include <glog/logging.h>
 
 namespace ilqgames {
 
@@ -63,16 +64,48 @@ void PlayerCost::AddControlCost(PlayerIndex idx,
 // Evaluate this cost at the current time, state, and controls.
 float PlayerCost::Evaluate(Time t, const VectorXf& x,
                            const std::vector<VectorXf>& us) const {
-  // TODO!
-  return 0.0;
+  float total_cost = 0.0;
+  for (const auto& cost : state_costs_) total_cost += cost->Evaluate(t, x);
+
+  for (const auto& pair : control_costs_) {
+    const PlayerIndex& player = pair.first;
+    const auto& cost = pair.second;
+    total_cost += cost->Evaluate(t, us[player]);
+  }
+
+  return total_cost;
 }
 
 // Quadraticize this cost at the given time, state, and controls.
 QuadraticApproximation PlayerCost::Quadraticize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
-  QuadraticApproximation q(x, us);
+  QuadraticApproximation q(x.size());
 
-  // TODO!
+  // Accumulate state costs.
+  for (const auto& cost : state_costs_) cost->Quadraticize(t, x, &q.Q, &q.l);
+
+  // Accumulate control costs.
+  for (const auto& pair : control_costs_) {
+    const PlayerIndex& player = pair.first;
+    const auto& cost = pair.second;
+
+    // If we haven't seen this player yet, initialize R to zero.
+    auto iter = q.Rs.find(player);
+    if (iter == q.Rs.end()) {
+      auto pair = q.Rs.emplace(
+          player, MatrixXf::Zero(us[player].size(), us[player].size()));
+
+      // Second element should be true because we definitely won't have any
+      // key collisions.
+      CHECK(pair.second);
+
+      // Update iter to point to where the new R was inserted.
+      iter = pair.first;
+    }
+
+    cost->Quadraticize(t, us[player], &(iter->second), nullptr);
+  }
+
   return q;
 }
 
