@@ -36,27 +36,44 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a quadratic approximation of a single player's cost at a
-// particular moment in time. That is, each player should have a time-indexed
-// set of these QuadraticApproximations.
+// Container to store all the cost functions for a single player, and keep track
+// of which variables (x, u1, u2, ..., uN) they correspond to.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/cost/cost.h>
+#include <ilqgames/cost/player_cost.h>
 #include <ilqgames/cost/quadratic_approximation.h>
 #include <ilqgames/utils/types.h>
 
+#include <unordered_map>
+
 namespace ilqgames {
 
-// Construct from state/control dimensions or vectors.
-QuadraticApproximation::QuadraticApproximation(
-    Dimension xdim, const std::vector<Dimension>& udims)
-    : Q(xdim, xdim), l(xdim) {
-  for (Dimension udim : udims) Rs.emplace_back(MatrixXf(udim, udim));
+// Add new state and control costs for this player.
+void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
+  state_costs_.emplace_back(cost);
 }
 
-QuadraticApproximation::QuadraticApproximation(const VectorXf& x,
-                                               const std::vector<VectorXf>& us)
-    : Q(x.size(), x.size()), l(x.size()) {
-  for (const VectorXf& u : us) Rs.emplace_back(MatrixXf(u.size(), u.size()));
+void PlayerCost::AddControlCost(PlayerIndex idx,
+                                const std::shared_ptr<Cost>& cost) {
+  control_costs_.emplace(idx, cost);
 }
+
+// Evaluate this cost at the current time, state, and controls.
+float PlayerCost::Evaluate(Time t, const VectorXf& x,
+                           const std::vector<VectorXf>& us) const {
+  // TODO!
+  return 0.0;
+}
+
+// Quadraticize this cost at the given time, state, and controls.
+QuadraticApproximation PlayerCost::Quadraticize(
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
+  QuadraticApproximation q(x, us);
+
+  // TODO!
+  return q;
+}
+
 }  // namespace ilqgames

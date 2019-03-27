@@ -59,8 +59,9 @@ struct QuadraticApproximation {
   VectorXf l;
   std::vector<MatrixXf> Rs;
 
-  // Construct from state/control dimensions.
+  // Construct from state/control dimensions (or vectors).
   QuadraticApproximation(Dimension xdim, const std::vector<Dimension>& udims);
+  QuadraticApproximation(const VectorXf& x, const std::vector<VectorXf>& us);
 };  // struct QuadraticApproximation
 
 }  // namespace ilqgames

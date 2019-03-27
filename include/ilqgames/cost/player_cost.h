@@ -36,27 +36,45 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a quadratic approximation of a single player's cost at a
-// particular moment in time. That is, each player should have a time-indexed
-// set of these QuadraticApproximations.
+// Container to store all the cost functions for a single player, and keep track
+// of which variables (x, u1, u2, ..., uN) they correspond to.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef ILQGAMES_COST_PLAYER_COST_H
+#define ILQGAMES_COST_PLAYER_COST_H
+
+#include <ilqgames/cost/cost.h>
 #include <ilqgames/cost/quadratic_approximation.h>
 #include <ilqgames/utils/types.h>
 
+#include <unordered_map>
+
 namespace ilqgames {
 
-// Construct from state/control dimensions or vectors.
-QuadraticApproximation::QuadraticApproximation(
-    Dimension xdim, const std::vector<Dimension>& udims)
-    : Q(xdim, xdim), l(xdim) {
-  for (Dimension udim : udims) Rs.emplace_back(MatrixXf(udim, udim));
-}
+class PlayerCost {
+ public:
+  PlayerCost() {}
+  ~PlayerCost() {}
 
-QuadraticApproximation::QuadraticApproximation(const VectorXf& x,
-                                               const std::vector<VectorXf>& us)
-    : Q(x.size(), x.size()), l(x.size()) {
-  for (const VectorXf& u : us) Rs.emplace_back(MatrixXf(u.size(), u.size()));
-}
+  // Add new state and control costs for this player.
+  void AddStateCost(const std::shared_ptr<Cost>& cost);
+  void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
+
+  // Evaluate this cost at the current time, state, and controls.
+  float Evaluate(Time t, const VectorXf& x,
+                 const std::vector<VectorXf>& us) const;
+
+  // Quadraticize this cost at the given time, state, and controls.
+  QuadraticApproximation Quadraticize(Time t, const VectorXf& x,
+                                      const std::vector<VectorXf>& us) const;
+
+ private:
+  // State costs and control costs.
+  std::vector<std::shared_ptr<Cost>> state_costs_;
+  std::unordered_multimap<PlayerIndex, std::shared_ptr<Cost>> control_costs_;
+};  //\class PlayerCost
+
 }  // namespace ilqgames
+
+#endif
