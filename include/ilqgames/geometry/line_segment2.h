@@ -36,36 +36,47 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a quadratic approximation of a single player's cost at a
-// particular moment in time. That is, each player should have a time-indexed
-// set of these QuadraticApproximations.
-//
-// Notation is taken from Basar and Olsder, Corollary 6.1.
-// -- Q is the Hessian with respect to state
-// -- l is the gradient with respect to state
-// -- Rs[ii] is the Hessian with respect to the control input of player ii
+// Line segment in 2D.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
-#define ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
+#ifndef ILQGAMES_GEOMETRY_LINE_SEGMENT2_H
+#define ILQGAMES_GEOMETRY_LINE_SEGMENT2_H
 
 #include <ilqgames/utils/types.h>
 
-#include <unordered_map>
+#include <glog/logging.h>
+#include <math.h>
 
 namespace ilqgames {
 
-struct QuadraticApproximation {
-  MatrixXf Q;
-  VectorXf l;
-  std::unordered_map<PlayerIndex, MatrixXf> Rs;
+class LineSegment2 {
+ public:
+  ~LineSegment2() {}
+  LineSegment2(const Point2& point1, const Point2& point2)
+      : p1_(point1),
+        p2_(point2),
+        length_((point1 - point2).norm()),
+        unit_direction_((point2 - point1) / length_) {
+    CHECK_GT(length_, constants::kSmallNumber);
+  }
 
-  // Construct from state dimension.
-  QuadraticApproximation(Dimension xdim);
+  // Compute length.
+  float Length() const { return length_; }
+
+  // Find closest point on this line segment to a given point (and optionally
+  // the signed squared distance, where right is positive).
+  Point2 ClosestPoint(const Point2& query,
+                      float* signed_squared_distance) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct QuadraticApproximation
+
+ private:
+  const Point2 p1_;
+  const Point2 p2_;
+  const float length_;
+  const Point2 unit_direction_;
+};  // struct LineSegment2
 
 }  // namespace ilqgames
 

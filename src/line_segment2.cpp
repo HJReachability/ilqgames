@@ -36,37 +36,54 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a quadratic approximation of a single player's cost at a
-// particular moment in time. That is, each player should have a time-indexed
-// set of these QuadraticApproximations.
-//
-// Notation is taken from Basar and Olsder, Corollary 6.1.
-// -- Q is the Hessian with respect to state
-// -- l is the gradient with respect to state
-// -- Rs[ii] is the Hessian with respect to the control input of player ii
+// Line segment in 2D.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
-#define ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
-
+#include <ilqgames/geometry/line_segment2.h>
 #include <ilqgames/utils/types.h>
-
-#include <unordered_map>
 
 namespace ilqgames {
 
-struct QuadraticApproximation {
-  MatrixXf Q;
-  VectorXf l;
-  std::unordered_map<PlayerIndex, MatrixXf> Rs;
+// Find closest point on this line segment to a given point (and optionally
+// the signed squared distance, where right is positive).
+Point2 LineSegment2::ClosestPoint(const Point2& query,
+                                  float* signed_squared_distance) const {
+  // Find query relative to p1.
+  const Point2 relative_query = query - p1_;
 
-  // Construct from state dimension.
-  QuadraticApproximation(Dimension xdim);
+  // Find dot product and signed length of cross product.
+  const float dot_product = relative_query.dot(unit_direction_);
+  const float cross_product = relative_query.x() * unit_direction_.y() -
+                              unit_direction_.x() * relative_query.y();
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct QuadraticApproximation
+  const float cross_product_sign = sgn(cross_product);
+
+  // Determine closest point. This will either be an endpoint or the interior of
+  // the segment.
+  if (dot_product < 0.0) {
+    // Query lies behind this line segment, so closest point is p1.
+    if (signed_squared_distance) {
+      *signed_squared_distance =
+          cross_product_sign * relative_query.squaredNorm();
+    }
+
+    return p1_;
+  } else if (dot_product > length_) {
+    // Closest point is p2.
+    if (signed_squared_distance) {
+      *signed_squared_distance =
+          cross_product_sign * (query - p2_).squaredNorm();
+    }
+
+    return p2_;
+  }
+
+  // Closest point is in the interior of the line segment.
+  if (signed_squared_distance)
+    *signed_squared_distance = cross_product * cross_product;
+
+  return p1_ + dot_product * unit_direction_;
+}
 
 }  // namespace ilqgames
-
-#endif
