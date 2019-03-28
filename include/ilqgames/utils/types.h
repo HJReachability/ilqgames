@@ -46,8 +46,6 @@
 // ------------------------------- INCLUDES -------------------------------- //
 
 #include <math.h>
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
 #include <algorithm>
 #include <iostream>
 #include <limits>
@@ -55,6 +53,10 @@
 #include <random>
 #include <string>
 #include <vector>
+
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <Eigen/StdVector>
 
 // ------------------------------- CONSTANTS -------------------------------- //
 
@@ -76,6 +78,7 @@ using PlayerIndex = unsigned short;
 using Dimension = int;
 using Time = float;
 using Point2 = Eigen::Vector2f;
+using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
 
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
@@ -87,18 +90,18 @@ std::unique_ptr<T> make_unique(Args &&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-template <typename T> inline constexpr
-T sgn(T x, std::false_type is_signed) {
+template <typename T>
+inline constexpr T sgn(T x, std::false_type is_signed) {
   return T(0) < x;
 }
 
-template <typename T> inline constexpr
-T sgn(T x, std::true_type is_signed) {
+template <typename T>
+inline constexpr T sgn(T x, std::true_type is_signed) {
   return (T(0) < x) - (x < T(0));
 }
 
-template <typename T> inline constexpr
-T sgn(T x) {
+template <typename T>
+inline constexpr T sgn(T x) {
   return sgn(x, std::is_signed<T>());
 }
 
