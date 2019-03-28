@@ -36,47 +36,35 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Line segment in 2D.
+// Polyline2 class for piecewise linear paths in 2D.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GEOMETRY_LINE_SEGMENT2_H
-#define ILQGAMES_GEOMETRY_LINE_SEGMENT2_H
-
+#include <ilqgames/geometry/line_segment2.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 
 namespace ilqgames {
 
-class LineSegment2 {
- public:
-  ~LineSegment2() {}
-  LineSegment2(const Point2& point1, const Point2& point2)
-      : p1_(point1),
-        p2_(point2),
-        length_((point1 - point2).norm()),
-        unit_direction_((point2 - point1) / length_) {
-    CHECK_GT(length_, constants::kSmallNumber);
-  }
+Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
+  CHECK_GT(points.size(), 1);
 
-  // Compute length.
-  float Length() const { return length_; }
+  // Parse into list of line segents.
+  for (size_t ii = 1; ii < points.size(); ii++)
+    segments_.emplace_back(LineSegment2(points[ii - 1], points[ii]));
+}
 
-  // Find closest point on this line segment to a given point (and optionally
-  // the signed squared distance, where right is positive).
-  Point2 ClosestPoint(const Point2& query,
-                      float* signed_squared_distance) const;
+// Add a new point to the end of the polyline.
+void Polyline2::AddPoint(const Point2& point);
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+// Compute length.
+float Polyline2::Length() const { return length_; }
 
- private:
-  const Point2 p1_;
-  const Point2 p2_;
-  const float length_;
-  const Point2 unit_direction_;
-};  // struct LineSegment2
+// Find closest point on this line segment to a given point (and optionally
+// the signed squared distance, where right is positive).
+Point2 Polyline2::ClosestPoint(const Point2& query,
+                               float* signed_squared_distance) const;
 
 }  // namespace ilqgames
-
-#endif

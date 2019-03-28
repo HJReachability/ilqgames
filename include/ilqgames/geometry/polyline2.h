@@ -36,29 +36,29 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Line segment in 2D.
+// Polyline2 class for piecewise linear paths in 2D.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GEOMETRY_LINE_SEGMENT2_H
-#define ILQGAMES_GEOMETRY_LINE_SEGMENT2_H
+#ifndef ILQGAMES_GEOMETRY_POLYLINE2_H
+#define ILQGAMES_GEOMETRY_POLYLINE2_H
 
+#include <ilqgames/geometry/line_segment2.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <math.h>
 
 namespace ilqgames {
 
-class LineSegment2 {
+class Polyline2 {
  public:
-  ~LineSegment2() {}
-  LineSegment2(const Point2& point1, const Point2& point2)
-      : p1_(point1),
-        p2_(point2),
-        length_((point1 - point2).norm()),
-        unit_direction_((point2 - point1) / length_) {
-    CHECK_GT(length_, constants::kSmallNumber);
-  }
+  ~Polyline2() {}
+  Polyline2() : length_(0.0) {}
+  Polyline2(const PointList2& points);
+
+  // Add a new point to the end of the polyline.
+  void AddPoint(const Point2& point);
 
   // Compute length.
   float Length() const { return length_; }
@@ -71,11 +71,9 @@ class LineSegment2 {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
-  const Point2 p1_;
-  const Point2 p2_;
-  const float length_;
-  const Point2 unit_direction_;
-};  // struct LineSegment2
+  std::vector<LineSegment2> segments_;
+  float length_;
+};  // struct Polyline2
 
 }  // namespace ilqgames
 
