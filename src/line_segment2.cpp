@@ -81,7 +81,8 @@ Point2 LineSegment2::ClosestPoint(const Point2& query,
 
   // Closest point is in the interior of the line segment.
   if (signed_squared_distance)
-    *signed_squared_distance = cross_product * cross_product;
+    *signed_squared_distance =
+        cross_product_sign * cross_product * cross_product;
 
   return p1_ + dot_product * unit_direction_;
 }

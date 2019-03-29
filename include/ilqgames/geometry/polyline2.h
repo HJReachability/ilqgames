@@ -53,9 +53,9 @@ namespace ilqgames {
 
 class Polyline2 {
  public:
-  ~Polyline2() {}
-  Polyline2() : length_(0.0) {}
+  // Construct from a list of points. This list must contain at least 2 points!
   Polyline2(const PointList2& points);
+  ~Polyline2() {}
 
   // Add a new point to the end of the polyline.
   void AddPoint(const Point2& point);

@@ -60,8 +60,11 @@ class LineSegment2 {
     CHECK_GT(length_, constants::kSmallNumber);
   }
 
-  // Compute length.
+  // Accessors.
   float Length() const { return length_; }
+  const Point2& FirstPoint() const { return p1_; }
+  const Point2& SecondPoint() const { return p2_; }
+  const Point2& UnitDirection() const { return unit_direction_; }
 
   // Find closest point on this line segment to a given point (and optionally
   // the signed squared distance, where right is positive).
