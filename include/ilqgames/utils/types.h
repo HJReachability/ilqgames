@@ -70,6 +70,9 @@ static constexpr float kSmallNumber = 1e-4;
 
 // Float precision infinity.
 static constexpr float kInfinity = std::numeric_limits<float>::infinity();
+
+// Constant for invalid values.
+static constexpr float kInvalidValue = std::numeric_limits<float>::quiet_NaN();
 }  // namespace constants
 
 // --------------------------------- TYPES ---------------------------------- //
@@ -105,11 +108,11 @@ inline constexpr T sgn(T x) {
   return sgn(x, std::is_signed<T>());
 }
 
-}  // namespace ilqgames
-
 // ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
 
 using Eigen::MatrixXf;
 using Eigen::VectorXf;
+
+}  // namespace ilqgames
 
 #endif

@@ -36,60 +36,59 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Polyline2 class for piecewise linear paths in 2D.
+// Tests for LineSegment2.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/geometry/line_segment2.h>
-#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <math.h>
 
-namespace ilqgames {
+using namespace ilqgames;
 
-// Construct from a list of points. This list must contain at least 2  points!
-Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
-  CHECK_GT(points.size(), 1);
-
-  // Parse into list of line segents.
-  for (size_t ii = 1; ii < points.size(); ii++) {
-    segments_.emplace_back(LineSegment2(points[ii - 1], points[ii]));
-    length_ += segments_.back().Length();
-  }
+// Check that we error out on construction if the line segment is degenerate.
+TEST(LineSegment2, TestDegenerate) {
+  ASSERT_DEATH(LineSegment2(Point2::Zero(), Point2::Zero()), "Check failed");
 }
 
-// Add a new point to the end of the polyline.
-void Polyline2::AddPoint(const Point2& point) {
-  segments_.emplace_back(LineSegment2(segments_.back().SecondPoint(), point));
-  length_ += segments_.back().Length();
+// Check that we find the correct closest point.
+TEST(LineSegment2, TestClosestPoint) {
+  const Point2 lower = Point2(0.0, -1.0);
+  const Point2 upper = Point2(0.0, 1.0);
+  const LineSegment2 segment(lower, upper);
+  float signed_squared_distance;
+
+  // Pick points in the right half plane and check closest points/distances.
+  Point2 query(1.0, -2.0);
+  Point2 closest = segment.ClosestPoint(query, &signed_squared_distance);
+  EXPECT_TRUE(closest.isApprox(lower));
+  EXPECT_NEAR(signed_squared_distance, 2.0, constants::kSmallNumber);
+
+  query << 1.0, 0.0;
+  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  EXPECT_LT(closest.squaredNorm(), constants::kSmallNumber);
+  EXPECT_NEAR(signed_squared_distance, 1.0, constants::kSmallNumber);
+
+  query << 1.0, 2.0;
+  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  EXPECT_TRUE(closest.isApprox(upper));
+  EXPECT_NEAR(signed_squared_distance, 2.0, constants::kSmallNumber);
+
+  // Pick points in the left half plane and check closest points/distances.
+  query << -1.0, -2.0;
+  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  EXPECT_TRUE(closest.isApprox(lower));
+  EXPECT_NEAR(signed_squared_distance, -2.0, constants::kSmallNumber);
+
+  query << -1.0, 0.0;
+  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  EXPECT_LT(closest.squaredNorm(), constants::kSmallNumber);
+  EXPECT_NEAR(signed_squared_distance, -1.0, constants::kSmallNumber);
+
+  query << -1.0, 2.0;
+  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  EXPECT_TRUE(closest.isApprox(upper));
+  EXPECT_NEAR(signed_squared_distance, -2.0, constants::kSmallNumber);
 }
-
-// Find closest point on this line segment to a given point (and optionally
-// the signed squared distance, where right is positive).
-Point2 Polyline2::ClosestPoint(const Point2& query,
-                               float* signed_squared_distance) const {
-  // Walk along each line segment and remember which was closest.
-  float closest_signed_squared_distance = constants::kInfinity;
-  Point2 closest_point;
-
-  float current_signed_squared_distance;
-  for (const auto& segment : segments_) {
-    const Point2 current_point =
-        segment.ClosestPoint(query, &current_signed_squared_distance);
-
-    if (std::abs(current_signed_squared_distance) <
-        closest_signed_squared_distance) {
-      closest_signed_squared_distance = current_signed_squared_distance;
-      closest_point = current_point;
-    }
-  }
-
-  // Maybe set signed_squared_distance.
-  if (signed_squared_distance)
-    *signed_squared_distance = closest_signed_squared_distance;
-
-  return closest_point;
-}
-
-}  // namespace ilqgames
