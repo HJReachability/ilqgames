@@ -36,42 +36,48 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Polyline2 class for piecewise linear paths in 2D.
+// Quadratic penalty on distance from a given Polyline2.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GEOMETRY_POLYLINE2_H
-#define ILQGAMES_GEOMETRY_POLYLINE2_H
+#ifndef ILQGAMES_COST_QUADRATIC_POLYLINE2_COST_H
+#define ILQGAMES_COST_QUADRATIC_POLYLINE2_COST_H
 
-#include <ilqgames/geometry/line_segment2.h>
+#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
-#include <math.h>
+#include <tuple>
 
 namespace ilqgames {
 
-class Polyline2 {
+class QuadraticPolyline2Cost : public TimeInvariantCost {
  public:
-  // Construct from a list of points. This list must contain at least 2 points!
-  Polyline2(const PointList2& points);
-  ~Polyline2() {}
+  // Construct from a multiplicative weight and the input dimensions
+  // corresponding to (x, y)-position.
+  QuadraticPolyline2Cost(float weight, const Polyline2& polyline,
+                         const std::pair<Dimension, Dimension>& position_idxs)
+      : TimeInvariantCost(weight),
+        polyline_(polyline),
+        xidx_(position_idxs.first),
+        yidx_(position_idxs.second) {}
 
-  // Add a new point to the end of the polyline.
-  void AddPoint(const Point2& point);
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
 
-  // Compute length.
-  float Length() const { return length_; }
-
-  // Find closest point on this line segment to a given point (and optionally
-  // the signed squared distance, where right is positive).
-  Point2 ClosestPoint(const Point2& query,
-                      float* signed_squared_distance) const;
+  // Quadraticize this cost at the given input, and add to the running=
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
 
  private:
-  std::vector<LineSegment2> segments_;
-  float length_;
-};  // struct Polyline2
+  // Polyline to compute distances from.
+  const Polyline2 polyline_;
+
+  // Dimensions of input corresponding to (x, y)-position.
+  const Dimension xidx_;
+  const Dimension yidx_;
+};  //\class QuadraticPolyline2Cost
 
 }  // namespace ilqgames
 

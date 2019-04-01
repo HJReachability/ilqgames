@@ -36,43 +36,60 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Polyline2 class for piecewise linear paths in 2D.
+// Quadratic penalty on distance from a given Polyline2.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GEOMETRY_POLYLINE2_H
-#define ILQGAMES_GEOMETRY_POLYLINE2_H
-
-#include <ilqgames/geometry/line_segment2.h>
+#include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
-#include <math.h>
+#include <tuple>
 
 namespace ilqgames {
 
-class Polyline2 {
- public:
-  // Construct from a list of points. This list must contain at least 2 points!
-  Polyline2(const PointList2& points);
-  ~Polyline2() {}
+// Evaluate this cost at the current input.
+float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
+  CHECK_LT(xidx_, input.size());
+  CHECK_LT(yidx_, input.size());
 
-  // Add a new point to the end of the polyline.
-  void AddPoint(const Point2& point);
+  // Compute signed squared distance by finding closest point.
+  float signed_squared_distance;
+  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)),
+                         &signed_squared_distance);
 
-  // Compute length.
-  float Length() const { return length_; }
+  return 0.5 * weight_ * std::abs(signed_squared_distance);
+}
 
-  // Find closest point on this line segment to a given point (and optionally
-  // the signed squared distance, where right is positive).
-  Point2 ClosestPoint(const Point2& query,
-                      float* signed_squared_distance) const;
+// Quadraticize this cost at the given input, and add to the running=
+// sum of gradients and Hessians (if non-null).
+void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
+                                          VectorXf* grad) const {
+  CHECK_LT(xidx_, input.size());
+  CHECK_LT(yidx_, input.size());
 
- private:
-  std::vector<LineSegment2> segments_;
-  float length_;
-};  // struct Polyline2
+  CHECK_NOTNULL(hess);
+  CHECK_EQ(input.size(), hess->rows());
+  CHECK_EQ(input.size(), hess->cols());
+
+  // Handle Hessian first.
+  hess->coeffRef(xidx_, xidx_) += weight_;
+  hess->coeffRef(yidx_, yidx_) += weight_;
+
+  // Maybe handle gradient.
+  if (grad) {
+    CHECK_EQ(input.size(), grad->size());
+
+    // Unpack current position and find closest point.
+    const Point2 current_position(input(xidx_), input(yidx_));
+    const Point2 closest_point =
+        polyline_.ClosestPoint(current_position, nullptr);
+
+    const Point2 relative = current_position - closest_point;
+    grad->coeffRef(xidx_) += weight_ * relative.x();
+    grad->coeffRef(yidx_) += weight_ * relative.y();
+  }
+}
 
 }  // namespace ilqgames
-
-#endif
