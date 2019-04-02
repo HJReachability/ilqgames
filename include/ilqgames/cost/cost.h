@@ -59,7 +59,7 @@ class Cost {
                             VectorXf* grad=nullptr) const = 0;
 
  protected:
-  Cost(float weight) : weight_(weight) {}
+  explicit Cost(float weight) : weight_(weight) {}
   virtual ~Cost() {}
 
   // Multiplicative weight associated to this cost.
