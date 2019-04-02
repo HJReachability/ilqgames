@@ -66,7 +66,7 @@ class TimeInvariantCost : public Cost {
   }
 
  protected:
-  TimeInvariantCost(float weight) : Cost(weight) {}
+  explicit TimeInvariantCost(float weight) : Cost(weight) {}
   virtual ~TimeInvariantCost() {}
 };  //\class TimeInvariantCost
 
