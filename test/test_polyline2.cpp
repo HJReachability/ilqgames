@@ -49,7 +49,7 @@
 using namespace ilqgames;
 
 // Check that we find the correct closest point.
-TEST(Polyline2, TestClosestPoint) {
+TEST(Polyline2Test, ClosestPointWorks) {
   const Point2 p1(0.0, -1.0);
   const Point2 p2(0.0, 1.0);
   const Point2 p3(2.0, 1.0);

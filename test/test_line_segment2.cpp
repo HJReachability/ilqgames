@@ -49,12 +49,12 @@
 using namespace ilqgames;
 
 // Check that we error out on construction if the line segment is degenerate.
-TEST(LineSegment2, TestDegenerate) {
+TEST(LineSegment2Test, DiesIfDegenerate) {
   ASSERT_DEATH(LineSegment2(Point2::Zero(), Point2::Zero()), "Check failed");
 }
 
 // Check that we find the correct closest point.
-TEST(LineSegment2, TestClosestPoint) {
+TEST(LineSegment2Test, ClosestPointWorks) {
   const Point2 lower = Point2(0.0, -1.0);
   const Point2 upper = Point2(0.0, 1.0);
   const LineSegment2 segment(lower, upper);
