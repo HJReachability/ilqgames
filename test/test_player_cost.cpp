@@ -79,7 +79,7 @@ class PlayerCostTest : public ::testing::Test {
 };  // class PlayerCostTest
 
 // Test that we evaluate correctly.
-TEST_F(PlayerCostTest, TestEvaluate) {
+TEST_F(PlayerCostTest, EvaluateWorks) {
   const float value = player_cost_.Evaluate(0.0, x_, us_);
   const float expected =
       0.5 * (x_.squaredNorm() +
@@ -91,7 +91,7 @@ TEST_F(PlayerCostTest, TestEvaluate) {
 }
 
 // Check that we quadraticize correctly when dimension >= 0.
-TEST_F(PlayerCostTest, TestQuadraticize) {
+TEST_F(PlayerCostTest, QuadraticizeWorks) {
   const QuadraticApproximation quad = player_cost_.Quadraticize(0.0, x_, us_);
 
   // Check state Hessian is just kCostWeight on the diagonal.

@@ -50,7 +50,7 @@
 using namespace ilqgames;
 
 // Check that the semiquadratic applies in the correct dimension.
-TEST(SemiquadraticCost, TestEvaluateInCorrectDimension) {
+TEST(SemiquadraticCostTest, EvaluatesInCorrectDimension) {
   constexpr float kCostWeight = 5.0;
   constexpr Dimension kDimension = 3;
   constexpr float kThreshold = 1.0;

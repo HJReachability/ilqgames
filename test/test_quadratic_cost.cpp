@@ -49,7 +49,7 @@
 using namespace ilqgames;
 
 // Check that the quadratic applies in the correct dimension.
-TEST(QuadraticCost, TestEvaluateInCorrectDimension) {
+TEST(QuadraticCostTest, EvaluatesInCorrectDimension) {
   constexpr float kCostWeight = 5.0;
   constexpr Dimension kDimension = 3;
   const QuadraticCost cost(kCostWeight, kDimension);
@@ -70,7 +70,7 @@ TEST(QuadraticCost, TestEvaluateInCorrectDimension) {
 
 // Check that the quadratic applies in all dimensions when constructed with
 // dimension < 0.
-TEST(QuadraticCost, TestEvaluateInAllDimensions) {
+TEST(QuadraticCostTest, EvaluatesInAllDimensions) {
   constexpr float kCostWeight = 5.0;
   constexpr Dimension kDimension = -1;
   const QuadraticCost cost(kCostWeight, kDimension);
@@ -86,7 +86,7 @@ TEST(QuadraticCost, TestEvaluateInAllDimensions) {
 }
 
 // Check that we quadraticize correctly when dimension >= 0.
-TEST(QuadraticCost, TestQuadraticizeSingleDimension) {
+TEST(QuadraticCostTest, QuadraticizeInSingleDimension) {
   constexpr float kCostWeight = 5.0;
   constexpr Dimension kCostDimension = 3;
   constexpr Dimension kVectorDimension = 5;

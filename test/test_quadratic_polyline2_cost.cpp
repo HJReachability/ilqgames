@@ -49,7 +49,7 @@
 
 using namespace ilqgames;
 
-TEST(QuadraticPolyline2Cost, TestRandomPoints) {
+TEST(QuadraticPolyline2CostTest, QuadraticizeRandomPoints) {
   constexpr float kCostWeight = 5.0;
   constexpr Dimension kXIdx = 0;
   constexpr Dimension kYIdx = 1;
