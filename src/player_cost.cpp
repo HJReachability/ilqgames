@@ -43,7 +43,7 @@
 
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/cost/quadratic_approximation.h>
+#include <ilqgames/utils/quadratic_approximation.h>
 #include <ilqgames/utils/types.h>
 
 #include <unordered_map>

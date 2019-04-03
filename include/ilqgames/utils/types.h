@@ -83,6 +83,10 @@ using Time = float;
 using Point2 = Eigen::Vector2f;
 using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
 
+class PlayerCost;
+using PlayerCostList = std::vector<std::shared_ptr<PlayerCost>>;
+using PlayerCostConstList = std::vector<std::shared_ptr<const PlayerCost>>;
+
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
 

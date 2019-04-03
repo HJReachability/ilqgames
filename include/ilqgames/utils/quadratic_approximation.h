@@ -47,8 +47,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
-#define ILQGAMES_COST_QUADRATIC_APPROXIMATION_H
+#ifndef ILQGAMES_UTILS_QUADRATIC_APPROXIMATION_H
+#define ILQGAMES_UTILS_QUADRATIC_APPROXIMATION_H
 
 #include <ilqgames/utils/types.h>
 

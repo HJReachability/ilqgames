@@ -41,8 +41,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/cost/quadratic_approximation.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/utils/quadratic_approximation.h>
 #include <ilqgames/utils/types.h>
 
 #include <gtest/gtest.h>

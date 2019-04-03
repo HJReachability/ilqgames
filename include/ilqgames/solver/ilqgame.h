@@ -36,44 +36,34 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store all the cost functions for a single player, and keep track
-// of which variables (x, u1, u2, ..., uN) they correspond to.
+// Base class for all iterative LQ game solvers.
+// Structured so that derived classes may only modify the `ModifyLQStrategies`
+// virtual function, and strategies are modified in-place.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_PLAYER_COST_H
-#define ILQGAMES_COST_PLAYER_COST_H
+#ifndef ILQGAMES_SOLVER_ILQGAME_H
+#define ILQGAMES_SOLVER_ILQGAME_H
 
-#include <ilqgames/cost/cost.h>
-#include <ilqgames/utils/quadratic_approximation.h>
+#include <ilqgames/cost/player_cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <unordered_map>
+#include <memory>
 
 namespace ilqgames {
 
-class PlayerCost {
+class ILQGame {
  public:
-  PlayerCost() {}
-  ~PlayerCost() {}
-
-  // Add new state and control costs for this player.
-  void AddStateCost(const std::shared_ptr<Cost>& cost);
-  void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
-
-  // Evaluate this cost at the current time, state, and controls.
-  float Evaluate(Time t, const VectorXf& x,
-                 const std::vector<VectorXf>& us) const;
-
-  // Quadraticize this cost at the given time, state, and controls.
-  QuadraticApproximation Quadraticize(Time t, const VectorXf& x,
-                                      const std::vector<VectorXf>& us) const;
+  virtual ~ILQGame() {}
+  ILQGame(const PlayerCostConstList& player_costs,
+          StrategyList& initial_strategies);
 
  private:
-  // State costs and control costs.
-  std::vector<std::shared_ptr<Cost>> state_costs_;
-  std::unordered_multimap<PlayerIndex, std::shared_ptr<Cost>> control_costs_;
-};  //\class PlayerCost
+  // Player costs. These will not change during operation of this solver.
+  const PlayerCostConstList player_costs_;
+
+  //
+};  //\class ILQGame
 
 }  // namespace ilqgames
 
