@@ -42,7 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/quadratic_approximation.h>
+#include <ilqgames/utils/quadratic_approximation.h>
 #include <ilqgames/utils/types.h>
 
 namespace ilqgames {
