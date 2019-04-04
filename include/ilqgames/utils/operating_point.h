@@ -36,36 +36,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a quadratic approximation of a single player's cost at a
-// particular moment in time. That is, each player should have a time-indexed
-// set of these QuadraticApproximations.
-//
-// Notation is taken from Basar and Olsder, Corollary 6.1.
-// -- Q is the Hessian with respect to state
-// -- l is the gradient with respect to state
-// -- Rs[ii] is the Hessian with respect to the control input of player ii
+// Container to store an operating point, i.e. states and controls for each
+// player.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_QUADRATIC_APPROXIMATION_H
-#define ILQGAMES_UTILS_QUADRATIC_APPROXIMATION_H
+#ifndef ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
+#define ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
 
 #include <ilqgames/utils/types.h>
 
-#include <unordered_map>
+#include <vector>
 
 namespace ilqgames {
 
-struct QuadraticApproximation {
-  MatrixXf Q;
-  VectorXf l;
-  std::unordered_map<PlayerIndex, MatrixXf> Rs;
+struct OperatingPoint {
+  // Time-indexed list of states.
+  std::vector<VectorXf> xs;
 
-  // Construct from state dimension.
-  QuadraticApproximation(Dimension xdim);
+  // Time-indexed list of controls for all players, i.e. us[ii] is the list of
+  // controls for all players at time index ii.
+  std::vector<std::vector<VectorXf>> us;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct QuadraticApproximation
+};  // struct QuadraticCostApproximation
 
 }  // namespace ilqgames
 

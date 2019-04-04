@@ -42,7 +42,7 @@
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
-#include <ilqgames/utils/quadratic_approximation.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
 
 #include <gtest/gtest.h>
@@ -92,7 +92,7 @@ TEST_F(PlayerCostTest, EvaluateWorks) {
 
 // Check that we quadraticize correctly when dimension >= 0.
 TEST_F(PlayerCostTest, QuadraticizeWorks) {
-  const QuadraticApproximation quad = player_cost_.Quadraticize(0.0, x_, us_);
+  const QuadraticCostApproximation quad = player_cost_.Quadraticize(0.0, x_, us_);
 
   // Check state Hessian is just kCostWeight on the diagonal.
   EXPECT_TRUE(quad.Q.diagonal().isApprox(

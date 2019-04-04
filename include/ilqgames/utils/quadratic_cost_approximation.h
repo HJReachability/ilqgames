@@ -40,17 +40,33 @@
 // particular moment in time. That is, each player should have a time-indexed
 // set of these QuadraticApproximations.
 //
+// Notation is taken from Basar and Olsder, Corollary 6.1.
+// -- Q is the Hessian with respect to state
+// -- l is the gradient with respect to state
+// -- Rs[ii] is the Hessian with respect to the control input of player ii
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/utils/quadratic_approximation.h>
+#ifndef ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
+#define ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
+
 #include <ilqgames/utils/types.h>
+
+#include <unordered_map>
 
 namespace ilqgames {
 
-// Construct from state/control dimensions or vectors.
-QuadraticApproximation::QuadraticApproximation(Dimension xdim) {
-  Q = MatrixXf::Zero(xdim, xdim);
-  l = VectorXf::Zero(xdim);
-}
+struct QuadraticCostApproximation {
+  MatrixXf Q;
+  VectorXf l;
+  std::unordered_map<PlayerIndex, MatrixXf> Rs;
+
+  // Construct from state dimension.
+  QuadraticCostApproximation(Dimension xdim);
+
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+};  // struct QuadraticCostApproximation
 
 }  // namespace ilqgames
+
+#endif
