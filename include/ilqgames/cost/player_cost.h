@@ -45,7 +45,7 @@
 #define ILQGAMES_COST_PLAYER_COST_H
 
 #include <ilqgames/cost/cost.h>
-#include <ilqgames/utils/quadratic_approximation.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
 
 #include <unordered_map>
@@ -66,8 +66,8 @@ class PlayerCost {
                  const std::vector<VectorXf>& us) const;
 
   // Quadraticize this cost at the given time, state, and controls.
-  QuadraticApproximation Quadraticize(Time t, const VectorXf& x,
-                                      const std::vector<VectorXf>& us) const;
+  QuadraticCostApproximation Quadraticize(
+      Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
  private:
   // State costs and control costs.

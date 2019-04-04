@@ -36,83 +36,21 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Custom types.
+// Container to store a quadratic approximation of a single player's cost at a
+// particular moment in time. That is, each player should have a time-indexed
+// set of these QuadraticApproximations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_TYPES_H
-#define ILQGAMES_UTILS_TYPES_H
-
-// ------------------------------- INCLUDES -------------------------------- //
-
-#include <math.h>
-#include <algorithm>
-#include <iostream>
-#include <limits>
-#include <memory>
-#include <random>
-#include <string>
-#include <vector>
-
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
-#include <Eigen/StdVector>
-
-// ------------------------------- CONSTANTS -------------------------------- //
+#include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/utils/types.h>
 
 namespace ilqgames {
-namespace constants {
-// Acceleration due to gravity (m/s/s).
-static constexpr float kGravity = 9.81;
 
-// Small number for use in approximate equality checking.
-static constexpr float kSmallNumber = 1e-4;
-
-// Float precision infinity.
-static constexpr float kInfinity = std::numeric_limits<float>::infinity();
-
-// Constant for invalid values.
-static constexpr float kInvalidValue = std::numeric_limits<float>::quiet_NaN();
-}  // namespace constants
-
-// --------------------------------- TYPES ---------------------------------- //
-
-using PlayerIndex = unsigned short;
-using Dimension = int;
-using Time = float;
-using Point2 = Eigen::Vector2f;
-using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
-
-// Empty struct for setting unused/unimplemented template args.
-struct Empty {};
-
-// ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
-
-template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
-  return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
+// Construct from state/control dimensions or vectors.
+QuadraticCostApproximation::QuadraticCostApproximation(Dimension xdim) {
+  Q = MatrixXf::Zero(xdim, xdim);
+  l = VectorXf::Zero(xdim);
 }
-
-template <typename T>
-inline constexpr T sgn(T x, std::false_type is_signed) {
-  return T(0) < x;
-}
-
-template <typename T>
-inline constexpr T sgn(T x, std::true_type is_signed) {
-  return (T(0) < x) - (x < T(0));
-}
-
-template <typename T>
-inline constexpr T sgn(T x) {
-  return sgn(x, std::is_signed<T>());
-}
-
-// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
-
-using Eigen::MatrixXf;
-using Eigen::VectorXf;
 
 }  // namespace ilqgames
-
-#endif

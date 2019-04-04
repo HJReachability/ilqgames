@@ -43,11 +43,11 @@
 
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/utils/quadratic_approximation.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
 
-#include <unordered_map>
 #include <glog/logging.h>
+#include <unordered_map>
 
 namespace ilqgames {
 
@@ -77,9 +77,9 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
 }
 
 // Quadraticize this cost at the given time, state, and controls.
-QuadraticApproximation PlayerCost::Quadraticize(
+QuadraticCostApproximation PlayerCost::Quadraticize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
-  QuadraticApproximation q(x.size());
+  QuadraticCostApproximation q(x.size());
 
   // Accumulate state costs.
   for (const auto& cost : state_costs_) cost->Quadraticize(t, x, &q.Q, &q.l);
