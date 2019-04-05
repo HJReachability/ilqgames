@@ -51,8 +51,7 @@
 namespace ilqgames {
 
 struct OperatingPoint {
-  // Time-indexed list of states. This will have one more state than 'us', since
-  // we care about state at the final time but NOT control.
+  // Time-indexed list of states.
   std::vector<VectorXf> xs;
 
   // Time-indexed list of controls for all players, i.e. us[ii] is the list of

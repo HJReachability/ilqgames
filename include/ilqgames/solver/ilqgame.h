@@ -61,13 +61,6 @@ template <typename DynamicsType>
 class ILQGame {
  public:
   virtual ~ILQGame() {}
-
-  // Solve this game. Returns true if converged.
-  bool Solve(const VectorXf& x0,
-             const std::vector<Strategy>& initial_strategies,
-             std::vector<Strategy>* final_strategies);
-
- protected:
   explicit ILQGame(const DynamicsType& dynamics,
                    const std::vector<PlayerCost>& player_costs,
                    Time time_horizon, Time time_step)
@@ -78,24 +71,29 @@ class ILQGame {
     CHECK_EQ(player_costs_.size(), dynamics_.NumPlayers());
   }
 
+  // Solve this game. Returns true if converged.
+  bool Solve(const VectorXf& x0,
+             const std::vector<Strategy>& initial_strategies,
+             std::vector<Strategy>* final_strategies);
+
+ protected:
+  // Modify LQ strategies to improve convergence properties.
+  // This function replaces an Armijo linesearch that would take place in ILQR.
+  // Returns true if successful.
+  virtual bool ModifyLQStrategies(
+      std::vector<Strategy>* current_strategies) const;
+
+  // Check convergence. Returns true if converged.
+  virtual bool HasConverged(
+      size_t iteration, const OperatingPoint& last_operating_point,
+      const OperatingPoint& current_operating_point) const;
+
   // Compute the current operating point based on the current set of strategies
   // and the last operating point.
   void CurrentOperatingPoint(const VectorXf& x0,
                              const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
                              OperatingPoint* current_operating_point) const;
-
-  // Modify LQ strategies to improve convergence properties.
-  // This function replaces an Armijo linesearch that would take place in ILQR.
-  // Returns true if successful.
-  virtual bool ModifyLQStrategies(
-      const std::vector<Strategy>& current_strategies,
-      std::vector<Strategy>* next_strategies) const = 0;
-
-  // Check convergence. Returns true if converged.
-  virtual bool HasConverged(
-      size_t iteration, const OperatingPoint& last_operating_point,
-      const OperatingPoint& current_operating_point) const = 0;
 
   // Helper function to compute time stamp from time index.
   Time ComputeTimeStamp(size_t time_index) const {
@@ -180,7 +178,7 @@ bool ILQGame<DynamicsType>::Solve(
     next_strategies = SolveLQGame(linearization, quadraticization);
 
     // Modify this LQ solution.
-    ModifyLQStrategies(next_operating_point, &next_strategies);
+    ModifyLQStrategies(current_operating_point, &next_strategies);
   }
 }
 
@@ -196,7 +194,9 @@ void ILQGame<DynamicsType>::CurrentOperatingPoint(
   for (size_t ii = 0; ii < num_time_steps_; ii++) {
     Time t = ComputeTimeStamp(ii);
 
-    // Unpack.
+    // Unpack. Handle first iteration separately since 'last_operating_point'
+    // will not yet be properly initialized.
+    // TODO!
     const VectorXf delta_x = x - last_operating_point.xs[ii];
     const auto& last_us = last_operating_point.us[ii];
     auto& current_us = current_operating_point->us[ii];
@@ -213,6 +213,49 @@ void ILQGame<DynamicsType>::CurrentOperatingPoint(
     // Integrate dynamics for one time step.
     if (ii < num_time_steps_ - 1)
       x = dynamics_.Integrate(t, time_step_, x, current_us);
+  }
+}
+
+template <typename DynamicsType>
+bool ILQGame<DynamicsType>::HasConverged(
+    size_t iteration, const OperatingPoint& last_operating_point,
+    const OperatingPoint& current_operating_point) const {
+  // As a simple starting point, we'll say that we've converged if it's been
+  // at least 50 iterations or the current operating_point and last operating
+  // point are within 0.1 in every dimension at every time.
+  constexpr size_t kMaxIterations = 50;
+  constexpr float kMaxElementwiseDifference = 0.1;
+
+  // Check iterations.
+  if (iteration >= kMaxIterations) return true;
+
+  // Check operating points.
+  for (size_t ii = 0; ii < num_time_steps_; ii++) {
+    VectorXf delta =
+        current_operating_point.xs[ii] - last_operating_point.xs[ii];
+    if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
+
+    const auto& current_us = current_operating_point.us[ii];
+    const auto& last_us = last_operating_point.us[ii];
+    for (PlayerIndex jj = 0; jj < dynamics_.NumPlayers(); jj++) {
+      delta = current_us[jj] - last_us[jj];
+      if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
+    }
+  }
+
+  return true;
+}
+
+template <typename DynamicsType>
+bool ILQGame<DynamicsType>::ModifyLQStrategies(
+    std::vector<Strategy>* current_strategies) const {
+  CHECK_NOTNULL(current_strategies);
+
+  // As a simple starting point, just scale all the 'alphas' in the strategy to
+  // 0.05 of their original value.
+  constexpr float kAlphaScalingFactor = 0.05;
+  for (auto& strategy : *current_strategies) {
+    for (auto& alpha : strategy.alphas) alpha *= kAlphaScalingFactor;
   }
 }
 
