@@ -36,13 +36,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store an operating point, i.e. states and controls for each
-// player.
+// Container to store a linear approximation of the dynamics at a particular
+// time.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
-#define ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
+#ifndef ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
+#define ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
 
 #include <ilqgames/utils/types.h>
 
@@ -50,23 +50,12 @@
 
 namespace ilqgames {
 
-struct OperatingPoint {
-  // Time-indexed list of states. This will have one more state than 'us', since
-  // we care about state at the final time but NOT control.
-  std::vector<VectorXf> xs;
-
-  // Time-indexed list of controls for all players, i.e. us[ii] is the list of
-  // controls for all players at time index ii.
-  std::vector<std::vector<VectorXf>> us;
-
-  // Construct with empty vectors of the right size.
-  OperatingPoint(size_t num_time_steps, size_t num_players);
-
-  // Custom swap function.
-  void swap(OperatingPoint& other);
+struct LinearDynamicsApproximation {
+  MatrixXf A;
+  std::vector<MatrixXf> Bs;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct OperatingPoint
+};  // struct LinearDynamicsApproximation
 
 }  // namespace ilqgames
 
