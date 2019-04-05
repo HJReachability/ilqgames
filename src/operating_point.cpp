@@ -41,33 +41,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
-#define ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
-
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
 #include <vector>
 
 namespace ilqgames {
 
-struct OperatingPoint {
-  // Time-indexed list of states. This will have one more state than 'us', since
-  // we care about state at the final time but NOT control.
-  std::vector<VectorXf> xs;
+// Construct with empty vectors of the right size.
+OperatingPoint::OperatingPoint(size_t num_time_steps, size_t num_players)
+    : xs(num_time_steps + 1), us(num_time_steps) {
+  for (auto& entry : us) entry.reserve(num_players);
+}
 
-  // Time-indexed list of controls for all players, i.e. us[ii] is the list of
-  // controls for all players at time index ii.
-  std::vector<std::vector<VectorXf>> us;
-
-  // Construct with empty vectors of the right size.
-  OperatingPoint(size_t num_time_steps, size_t num_players);
-
-  // Custom swap function.
-  void swap(OperatingPoint& other);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct OperatingPoint
+// Custom swap function.
+void OperatingPoint::swap(OperatingPoint& other) {
+  xs.swap(other.xs);
+  us.swap(other.us);
+}
 
 }  // namespace ilqgames
-
-#endif

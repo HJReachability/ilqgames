@@ -36,13 +36,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store an operating point, i.e. states and controls for each
-// player.
+// Container to store a single player's time-indexed strategy.
+//
+// Notation is taken from Basar and Olsder, Corollary 6.1.
+// -- alphas are the feedforward terms
+// -- Ps are the feedback gains
+// i.e. delta u[ii] = -P[ii] delta x - alphas[ii]
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
-#define ILQGAMES_UTILS_QUADRATIC_COST_APPROXIMATION_H
+#ifndef ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
+#define ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
 
 #include <ilqgames/utils/types.h>
 
@@ -50,23 +54,18 @@
 
 namespace ilqgames {
 
-struct OperatingPoint {
-  // Time-indexed list of states. This will have one more state than 'us', since
-  // we care about state at the final time but NOT control.
-  std::vector<VectorXf> xs;
+struct Strategy {
+  std::vector<MatrixXf> Ps;
+  std::vector<VectorXf> alphas;
 
-  // Time-indexed list of controls for all players, i.e. us[ii] is the list of
-  // controls for all players at time index ii.
-  std::vector<std::vector<VectorXf>> us;
-
-  // Construct with empty vectors of the right size.
-  OperatingPoint(size_t num_time_steps, size_t num_players);
-
-  // Custom swap function.
-  void swap(OperatingPoint& other);
+  // Operator for computing control given time index and delta x.
+  VectorXf operator()(size_t time_index, const VectorXf& delta_x,
+                      const VectorXf& last_u) const {
+    return last_u - Ps[time_index] * delta_x - alphas[time_index]);
+  }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct OperatingPoint
+};  // struct Strategy
 
 }  // namespace ilqgames
 
