@@ -50,7 +50,7 @@ namespace ilqgames {
 
 // Construct with empty vectors of the right size.
 OperatingPoint::OperatingPoint(size_t num_time_steps, size_t num_players)
-    : xs(num_time_steps + 1), us(num_time_steps) {
+    : xs(num_time_steps), us(num_time_steps) {
   for (auto& entry : us) entry.reserve(num_players);
 }
 
