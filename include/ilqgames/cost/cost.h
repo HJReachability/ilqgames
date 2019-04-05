@@ -50,6 +50,8 @@ namespace ilqgames {
 
 class Cost {
  public:
+  virtual ~Cost() {}
+
   // Evaluate this cost at the current time and input.
   virtual float Evaluate(Time t, const VectorXf& input) const = 0;
 
@@ -60,7 +62,6 @@ class Cost {
 
  protected:
   explicit Cost(float weight) : weight_(weight) {}
-  virtual ~Cost() {}
 
   // Multiplicative weight associated to this cost.
   const float weight_;
