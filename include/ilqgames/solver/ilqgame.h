@@ -127,10 +127,18 @@ bool ILQGame<DynamicsType>::Solve(
                                  strategy.alphas.size() == num_time_steps_;
       }));
 
-  // Last and current operating points.
+  // Last and current operating points. Set current operating point to zeros
+  // so that 'CurrentOperatingPoint' computes correctly the first iteration.
   OperatingPoint last_operating_point(num_time_steps_, dynamics_.NumPlayers());
   OperatingPoint current_operating_point(num_time_steps_,
                                          dynamics_.NumPlayers());
+  for (size_t ii = 0; ii < num_time_steps_; ii++) {
+    current_operating_point.xs[ii] =
+        MatrixXf::Zero(dynamics_.XDim(), dynamics_.XDim());
+
+    for (PlayerIndex jj = 0; jj < dynamics_.NumPlayers(); jj++)
+      current_operating_point.us[ii][jj] = VectorXf::Zero(dynamics_.UDim(jj));
+  }
 
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
@@ -194,9 +202,7 @@ void ILQGame<DynamicsType>::CurrentOperatingPoint(
   for (size_t ii = 0; ii < num_time_steps_; ii++) {
     Time t = ComputeTimeStamp(ii);
 
-    // Unpack. Handle first iteration separately since 'last_operating_point'
-    // will not yet be properly initialized.
-    // TODO!
+    // Unpack.
     const VectorXf delta_x = x - last_operating_point.xs[ii];
     const auto& last_us = last_operating_point.us[ii];
     auto& current_us = current_operating_point->us[ii];
