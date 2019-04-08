@@ -36,36 +36,62 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a linear approximation of the dynamics at a particular
-// time.
+// Single player dynamics modeling a car. 5 states and 2 control inputs.
+// State is [x, y, theta, phi, v], control is [omega, a], and dynamics are:
+//                     \dot px    = v cos theta
+//                     \dot py    = v sin theta
+//                     \dot theta = (v / L) * tan phi
+//                     \dot phi   = omega
+//                     \dot v     = a
+// Please refer to
+// https://www.sciencedirect.com/science/article/pii/S2405896316301215
+// for further details.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
-#define ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
+#ifndef ILQGAMES_DYNAMICS_SINGLE_PLAYER_CAR_5D_H
+#define ILQGAMES_DYNAMICS_SINGLE_PLAYER_CAR_5D_H
 
+#include <ilqgames/dynamics/single_player_dynamical_system.h>
 #include <ilqgames/utils/types.h>
-
-#include <vector>
 
 namespace ilqgames {
 
-struct LinearDynamicsApproximation {
-  MatrixXf A;
-  std::vector<MatrixXf> Bs;
+namespace {
+// Constexprs for number of states and controls.
+static constexpr Dimension kNumXDims = 5;
+static constexpr Dimension kNumUDims = 2;
+}  // anonymous namespace
 
-  // Construct from a MultiPlayerDynamicalSystem. Templated to avoid include
-  // cycle.
-  template <typename MultiPlayerSystemType>
-  explicit LinearDynamicsApproximation(const MultiPlayerSystemType& system)
-      : A(MatrixXf::Zero(system.XDim(), system.XDim())),
-        Bs(system.NumPlayers()) {
-    for (size_t ii = 0; ii < system.NumPlayers(); ii++)
-      Bs[ii] = MatrixXf::Zero(system.XDim(), system.UDim(ii));
-  }
+class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
+ public:
+  ~SinglePlayerCar5D() {}
+  SinglePlayerCar5D(float inter_axle_distance)
+      : SinglePlayerDynamicalSystem(kNumXDims, kNumUDims),
+        inter_axle_distance_(inter_axle_distance) {}
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct LinearDynamicsApproximation
+  // Compute time derivative of state.
+  VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
+
+  // Compute a discrete-time Jacobian linearization.
+  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
+                 Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
+
+  // Constexprs for state indices.
+  static constexpr Dimension kPxIdx = 0;
+  static constexpr Dimension kPyIdx = 1;
+  static constexpr Dimension kThetaIdx = 2;
+  static constexpr Dimension kPhiIdx = 3;
+  static constexpr Dimension kVIdx = 4;
+
+  // Constexprs for control indices.
+  static constexpr Dimension kOmegaIdx = 0;
+  static constexpr Dimension kAIdx = 1;
+
+ private:
+  // Inter-axle distance. Determines turning radius.
+  const float inter_axle_distance_;
+};  //\class SinglePlayerCar5D
 
 }  // namespace ilqgames
 
