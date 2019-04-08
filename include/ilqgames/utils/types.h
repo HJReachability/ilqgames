@@ -83,6 +83,9 @@ using Time = float;
 using Point2 = Eigen::Vector2f;
 using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
 
+class SinglePlayerDynamicalSystem;
+using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
+
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
 

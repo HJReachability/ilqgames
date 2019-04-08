@@ -36,37 +36,50 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a linear approximation of the dynamics at a particular
-// time.
+// Single player dynamics modeling a unicycle. 4 states and 2 control inputs.
+// State is [x, y, theta, v], control is [omega, a], and dynamics are:
+//                     \dot px    = v cos theta
+//                     \dot py    = v sin theta
+//                     \dot theta = omega
+//                     \dot v     = a
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
-#define ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
-
+#include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/utils/types.h>
 
-#include <vector>
+#include <glog/logging.h>
 
 namespace ilqgames {
 
-struct LinearDynamicsApproximation {
-  MatrixXf A;
-  std::vector<MatrixXf> Bs;
+// Compute time derivative of state.
+inline VectorXf SinglePlayerUnicycle4D::Evaluate(Time t, const VectorXf& x,
+                                                 const VectorXf& u) const {
+  VectorXf xdot(xdim_);
+  xdot(kPxIdx) = x(kVIdx) * std::cos(x(kThetaIdx));
+  xdot(kPyIdx) = x(kVIdx) * std::sin(x(kThetaIdx));
+  xdot(kThetaIdx) = u(kOmegaIdx);
+  xdot(kVIdx) = u(kAIdx);
 
-  // Construct from a MultiPlayerDynamicalSystem. Templated to avoid include
-  // cycle.
-  template <typename MultiPlayerSystemType>
-  explicit LinearDynamicsApproximation(const MultiPlayerSystemType& system)
-      : A(MatrixXf::Zero(system.XDim(), system.XDim())),
-        Bs(system.NumPlayers()) {
-    for (size_t ii = 0; ii < system.NumPlayers(); ii++)
-      Bs[ii] = MatrixXf::Zero(system.XDim(), system.UDim(ii));
-  }
+  return xdot;
+}
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct LinearDynamicsApproximation
+// Compute a discrete-time Jacobian linearization.
+void SinglePlayerUnicycle4D::Linearize(Time t, const VectorXf& x,
+                                       const VectorXf& u,
+                                       Eigen::Ref<MatrixXf> A,
+                                       Eigen::Ref<MatrixXf> B) const {
+  const float ctheta = std::cos(x(kThetaIdx));
+  const float stheta = std::sin(x(kThetaIdx));
+
+  A(kPxIdx, kThetaIdx) = -x(kVIdx) * stheta;
+  A(kPxIdx, kVIdx) = ctheta;
+
+  A(kPyIdx, kThetaIdx) = x(kVIdx) * ctheta;
+  A(kPyIdx, kVIdx) = stheta;
+
+  B(kThetaIdx, kOmegaIdx) = 1.0;
+  B(kVIdx, kAIdx) = 1.0;
+}
 
 }  // namespace ilqgames
-
-#endif

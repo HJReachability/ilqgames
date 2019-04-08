@@ -36,36 +36,44 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a linear approximation of the dynamics at a particular
-// time.
+// Multi-player dynamical system comprised of several single player subsystems.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
-#define ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
+#ifndef ILQGAMES_DYNAMICS_CONCATENATED_DYNAMICAL_SYSTEM_H
+#define ILQGAMES_DYNAMICS_CONCATENATED_DYNAMICAL_SYSTEM_H
 
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/single_player_dynamical_system.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/types.h>
-
-#include <vector>
 
 namespace ilqgames {
 
-struct LinearDynamicsApproximation {
-  MatrixXf A;
-  std::vector<MatrixXf> Bs;
+class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
+ public:
+  ~ConcatenatedDynamicalSystem() {}
+  ConcatenatedDynamicalSystem(const SubsystemList& subsystems);
 
-  // Construct from a MultiPlayerDynamicalSystem. Templated to avoid include
-  // cycle.
-  template <typename MultiPlayerSystemType>
-  explicit LinearDynamicsApproximation(const MultiPlayerSystemType& system)
-      : A(MatrixXf::Zero(system.XDim(), system.XDim())),
-        Bs(system.NumPlayers()) {
-    for (size_t ii = 0; ii < system.NumPlayers(); ii++)
-      Bs[ii] = MatrixXf::Zero(system.XDim(), system.UDim(ii));
+  // Compute time derivative of state.
+  VectorXf Evaluate(Time t, const VectorXf& x,
+                    const std::vector<VectorXf>& us) const;
+
+  // Compute a discrete-time Jacobian linearization.
+  LinearDynamicsApproximation Linearize(Time t, const VectorXf& x,
+                                        const std::vector<VectorXf>& us) const;
+
+  // Getters.
+  Dimension UDim(PlayerIndex player_idx) const {
+    return subsystems_[player_idx]->UDim();
   }
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct LinearDynamicsApproximation
+  PlayerIndex NumPlayers() const { return subsystems_.size(); }
+
+ private:
+  // List of subsystems, each of which controls the affects of a single player.
+  const SubsystemList subsystems_;
+};  // namespace ilqgames
 
 }  // namespace ilqgames
 

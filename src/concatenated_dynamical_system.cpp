@@ -36,37 +36,68 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a linear approximation of the dynamics at a particular
-// time.
+// Multi-player dynamical system comprised of several single player subsystems.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
-#define ILQGAMES_UTILS_LINEAR_DYNAMICS_APPROXIMATION_H
-
+#include <ilqgames/dynamics/concatenated_dynamical_system.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/types.h>
 
-#include <vector>
+#include <glog/logging.h>
 
 namespace ilqgames {
 
-struct LinearDynamicsApproximation {
-  MatrixXf A;
-  std::vector<MatrixXf> Bs;
+ConcatenatedDynamicalSystem::ConcatenatedDynamicalSystem(
+    const SubsystemList& subsystems)
+    : MultiPlayerDynamicalSystem(std::accumulate(
+          subsystems.begin(), subsystems.end(), 0,
+          [](Dimension total,
+             const std::shared_ptr<SinglePlayerDynamicalSystem>& subsystem) {
+            CHECK_NOTNULL(subsystem.get());
+            return total + subsystem->XDim();
+          })),
+      subsystems_(subsystems) {}
 
-  // Construct from a MultiPlayerDynamicalSystem. Templated to avoid include
-  // cycle.
-  template <typename MultiPlayerSystemType>
-  explicit LinearDynamicsApproximation(const MultiPlayerSystemType& system)
-      : A(MatrixXf::Zero(system.XDim(), system.XDim())),
-        Bs(system.NumPlayers()) {
-    for (size_t ii = 0; ii < system.NumPlayers(); ii++)
-      Bs[ii] = MatrixXf::Zero(system.XDim(), system.UDim(ii));
+// Compute time derivative of state.
+VectorXf ConcatenatedDynamicalSystem::Evaluate(
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
+  CHECK_EQ(us.size(), NumPlayers());
+
+  // Populate 'xdot' one subsystem at a time.
+  VectorXf xdot(xdim_);
+  Dimension dims_so_far = 0;
+  for (size_t ii = 0; ii < NumPlayers(); ii++) {
+    const auto& subsystem = subsystems_[ii];
+    xdot.segment(dims_so_far, subsystem->XDim()) = subsystem->Evaluate(
+        t, x.segment(dims_so_far, subsystem->XDim()), us[ii]);
+    dims_so_far += subsystem->XDim();
   }
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct LinearDynamicsApproximation
+  return xdot;
+}
+
+// Compute a discrete-time Jacobian linearization.
+LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
+  CHECK_EQ(us.size(), NumPlayers());
+
+  // Populate a block-diagonal A, as well as Bs.
+  LinearDynamicsApproximation linearization(*this);
+
+  Dimension dims_so_far = 0;
+  for (size_t ii = 0; ii < NumPlayers(); ii++) {
+    const auto& subsystem = subsystems_[ii];
+    const Dimension xdim = subsystem->XDim();
+    subsystem->Linearize(
+        t, x.segment(dims_so_far, xdim), us[ii],
+        linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
+        linearization.Bs[ii]);
+
+    dims_so_far += subsystem->XDim();
+  }
+
+  return linearization;
+}
 
 }  // namespace ilqgames
-
-#endif
