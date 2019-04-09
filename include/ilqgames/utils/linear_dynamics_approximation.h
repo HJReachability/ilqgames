@@ -54,6 +54,9 @@ struct LinearDynamicsApproximation {
   MatrixXf A;
   std::vector<MatrixXf> Bs;
 
+  // Default constructor.
+  LinearDynamicsApproximation() {}
+
   // Construct from a MultiPlayerDynamicalSystem. Templated to avoid include
   // cycle.
   template <typename MultiPlayerSystemType>
