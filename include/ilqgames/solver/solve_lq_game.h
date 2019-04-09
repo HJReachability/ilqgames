@@ -36,36 +36,25 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store a single player's time-indexed strategy.
-//
-// Notation is taken from Basar and Olsder, Corollary 6.1.
-// -- alphas are the feedforward terms
-// -- Ps are the feedback gains
-// i.e. delta u[ii] = -P[ii] delta x - alphas[ii]
+// Core LQ game solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_STRATEGY_H
-#define ILQGAMES_UTILS_STRATEGY_H
+#ifndef ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
+#define ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
 
-#include <ilqgames/utils/types.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/utils/strategy.h>
 
 #include <vector>
 
 namespace ilqgames {
 
-struct Strategy {
-  std::vector<MatrixXf> Ps;
-  std::vector<VectorXf> alphas;
-
-  // Operator for computing control given time index and delta x.
-  VectorXf operator()(size_t time_index, const VectorXf& delta_x,
-                      const VectorXf& last_u) const {
-    return last_u - Ps[time_index] * delta_x - alphas[time_index];
-  }
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct Strategy
+std::vector<Strategy> SolveLQGame(
+    const std::vector<LinearDynamicsApproximation>& linearization,
+    const std::vector<std::vector<QuadraticCostApproximation>>&
+        quadraticization);
 
 }  // namespace ilqgames
 
