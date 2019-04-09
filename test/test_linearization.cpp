@@ -194,7 +194,7 @@ TEST(SinglePlayerCar5DTest, LinearizesCorrectly) {
   CheckLinearization(system);
 }
 
-TEST(ConcatenatedDynamicalSystemaTest, LinearizesCorrectly) {
+TEST(ConcatenatedDynamicalSystemTest, LinearizesCorrectly) {
   constexpr float kInterAxleLength = 5.0;  // m
 
   const SubsystemList subsystems = {
