@@ -53,12 +53,6 @@
 
 namespace ilqgames {
 
-namespace {
-// Constexprs for number of states and controls.
-static constexpr Dimension kNumXDims = 4;
-static constexpr Dimension kNumUDims = 2;
-}  // anonymous namespace
-
 class SinglePlayerUnicycle4D : public SinglePlayerDynamicalSystem {
  public:
   ~SinglePlayerUnicycle4D() {}
@@ -73,15 +67,49 @@ class SinglePlayerUnicycle4D : public SinglePlayerDynamicalSystem {
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Constexprs for state indices.
+  static constexpr Dimension kNumXDims = 4;
   static constexpr Dimension kPxIdx = 0;
   static constexpr Dimension kPyIdx = 1;
   static constexpr Dimension kThetaIdx = 2;
   static constexpr Dimension kVIdx = 3;
 
   // Constexprs for control indices.
+  static constexpr Dimension kNumUDims = 2;
   static constexpr Dimension kOmegaIdx = 0;
   static constexpr Dimension kAIdx = 1;
 };  //\class SinglePlayerUnicycle4D
+
+// ----------------------------- IMPLEMENTATION ----------------------------- //
+
+// Compute time derivative of state.
+inline VectorXf SinglePlayerUnicycle4D::Evaluate(Time t, const VectorXf& x,
+                                                 const VectorXf& u) const {
+  VectorXf xdot(xdim_);
+  xdot(kPxIdx) = x(kVIdx) * std::cos(x(kThetaIdx));
+  xdot(kPyIdx) = x(kVIdx) * std::sin(x(kThetaIdx));
+  xdot(kThetaIdx) = u(kOmegaIdx);
+  xdot(kVIdx) = u(kAIdx);
+
+  return xdot;
+}
+
+// Compute a discrete-time Jacobian linearization.
+inline void SinglePlayerUnicycle4D::Linearize(Time t, const VectorXf& x,
+                                              const VectorXf& u,
+                                              Eigen::Ref<MatrixXf> A,
+                                              Eigen::Ref<MatrixXf> B) const {
+  const float ctheta = std::cos(x(kThetaIdx));
+  const float stheta = std::sin(x(kThetaIdx));
+
+  A(kPxIdx, kThetaIdx) = -x(kVIdx) * stheta;
+  A(kPxIdx, kVIdx) = ctheta;
+
+  A(kPyIdx, kThetaIdx) = x(kVIdx) * ctheta;
+  A(kPyIdx, kVIdx) = stheta;
+
+  B(kThetaIdx, kOmegaIdx) = 1.0;
+  B(kVIdx, kAIdx) = 1.0;
+}
 
 }  // namespace ilqgames
 

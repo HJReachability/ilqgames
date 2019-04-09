@@ -57,12 +57,6 @@
 
 namespace ilqgames {
 
-namespace {
-// Constexprs for number of states and controls.
-static constexpr Dimension kNumXDims = 5;
-static constexpr Dimension kNumUDims = 2;
-}  // anonymous namespace
-
 class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
  public:
   ~SinglePlayerCar5D() {}
@@ -78,6 +72,7 @@ class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Constexprs for state indices.
+  static constexpr Dimension kNumXDims = 5;
   static constexpr Dimension kPxIdx = 0;
   static constexpr Dimension kPyIdx = 1;
   static constexpr Dimension kThetaIdx = 2;
@@ -85,6 +80,7 @@ class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
   static constexpr Dimension kVIdx = 4;
 
   // Constexprs for control indices.
+  static constexpr Dimension kNumUDims = 2;
   static constexpr Dimension kOmegaIdx = 0;
   static constexpr Dimension kAIdx = 1;
 
@@ -92,6 +88,44 @@ class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
   // Inter-axle distance. Determines turning radius.
   const float inter_axle_distance_;
 };  //\class SinglePlayerCar5D
+
+// ----------------------------- IMPLEMENTATION ----------------------------- //
+
+// Compute time derivative of state.
+inline VectorXf SinglePlayerCar5D::Evaluate(Time t, const VectorXf& x,
+                                            const VectorXf& u) const {
+  VectorXf xdot(xdim_);
+  xdot(kPxIdx) = x(kVIdx) * std::cos(x(kThetaIdx));
+  xdot(kPyIdx) = x(kVIdx) * std::sin(x(kThetaIdx));
+  xdot(kThetaIdx) = (x(kVIdx) / inter_axle_distance_) * std::tan(x(kPhiIdx));
+  xdot(kPhiIdx) = u(kOmegaIdx);
+  xdot(kVIdx) = u(kAIdx);
+
+  return xdot;
+}
+
+// Compute a discrete-time Jacobian linearization.
+inline void SinglePlayerCar5D::Linearize(Time t, const VectorXf& x,
+                                         const VectorXf& u,
+                                         Eigen::Ref<MatrixXf> A,
+                                         Eigen::Ref<MatrixXf> B) const {
+  const float ctheta = std::cos(x(kThetaIdx));
+  const float stheta = std::sin(x(kThetaIdx));
+  const float cphi = std::cos(x(kPhiIdx));
+  const float tphi = std::tan(x(kPhiIdx));
+
+  A(kPxIdx, kThetaIdx) = -x(kVIdx) * stheta;
+  A(kPxIdx, kVIdx) = ctheta;
+
+  A(kPyIdx, kThetaIdx) = x(kVIdx) * ctheta;
+  A(kPyIdx, kVIdx) = stheta;
+
+  A(kThetaIdx, kPhiIdx) = x(kVIdx) / (inter_axle_distance_ * cphi * cphi);
+  A(kThetaIdx, kVIdx) = tphi / inter_axle_distance_;
+
+  B(kPhiIdx, kOmegaIdx) = 1.0;
+  B(kVIdx, kAIdx) = 1.0;
+}
 
 }  // namespace ilqgames
 

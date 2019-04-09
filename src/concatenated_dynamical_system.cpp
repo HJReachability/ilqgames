@@ -89,10 +89,11 @@ LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem = subsystems_[ii];
     const Dimension xdim = subsystem->XDim();
+    const Dimension udim = subsystem->UDim();
     subsystem->Linearize(
         t, x.segment(dims_so_far, xdim), us[ii],
         linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
-        linearization.Bs[ii]);
+        linearization.Bs[ii].block(dims_so_far, 0, xdim, udim));
 
     dims_so_far += subsystem->XDim();
   }
