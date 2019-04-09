@@ -43,6 +43,7 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
+#include <ilqgames/dynamics/two_player_unicycle_4d.h>
 #include <ilqgames/utils/types.h>
 
 #include <gtest/gtest.h>
@@ -53,8 +54,8 @@ using namespace ilqgames;
 
 namespace {
 // Step size for forward differences.
-static constexpr float kForwardStep = 1e-4;
-static constexpr float kNumericalPrecision = 1e-3;
+static constexpr float kForwardStep = 1e-3;
+static constexpr float kNumericalPrecision = 1e-2;
 
 // Functions to compute numerical Jacobians.
 void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
@@ -194,13 +195,15 @@ TEST(SinglePlayerCar5DTest, LinearizesCorrectly) {
   CheckLinearization(system);
 }
 
+TEST(TwoPlayerUnicycle4DTest, LinearizesCorrectly) {
+  const TwoPlayerUnicycle4D system;
+  CheckLinearization(system);
+}
+
 TEST(ConcatenatedDynamicalSystemTest, LinearizesCorrectly) {
   constexpr float kInterAxleLength = 5.0;  // m
-
-  const SubsystemList subsystems = {
-      std::make_shared<SinglePlayerUnicycle4D>(),
-      std::make_shared<SinglePlayerCar5D>(kInterAxleLength)};
-  const ConcatenatedDynamicalSystem system(subsystems);
-
+  const ConcatenatedDynamicalSystem system(
+      {std::make_shared<SinglePlayerUnicycle4D>(),
+       std::make_shared<SinglePlayerCar5D>(kInterAxleLength)});
   CheckLinearization(system);
 }
