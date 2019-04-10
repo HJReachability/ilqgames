@@ -125,7 +125,8 @@ bool ILQGame::Solve(const VectorXf& x0,
     }
 
     // Solve LQ game.
-    current_strategies = SolveLQGame(linearization, quadraticization);
+    current_strategies =
+        SolveLQGame(*dynamics_, linearization, quadraticization);
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))

@@ -36,13 +36,32 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Core LQ game solver.
+// Core LQ game solver from Basar and Olsder, "Preliminary Notation for
+// Corollary 6.1" (pp. 279). All notation matches the text, though we
+// shall assume that `c` (additive drift in dynamics) is always `0`, which
+// holds because these dynamics are for delta x, delta us.
+//
+// Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
+// feedback strategies for both players).
+//
+// Assumes that dynamics are given by
+//           ``` dx_{k+1} = A_k dx_k + \sum_i Bs[i]_k du[i]_k ```
+//
+// NOTE: Bs, Qs, ls, R1s, R2s are all lists of lists of matrices.
+// NOTE: all indices of inner lists correspond to the "current time" k except
+// for those of the Qs, which correspond to the "next time" k+1. That is,
+// the kth entry of Qs[i] is the state cost corresponding to time step k+1. This
+// makes sense because there is no point assigning any state cost to the
+// initial state x_0.
+//
+// Returns strategies Ps, alphas.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
 #define ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
 
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -52,6 +71,7 @@
 namespace ilqgames {
 
 std::vector<Strategy> SolveLQGame(
+    const MultiPlayerDynamicalSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization);
