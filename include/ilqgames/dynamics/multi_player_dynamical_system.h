@@ -68,6 +68,12 @@ class MultiPlayerDynamicalSystem {
 
   // Getters.
   Dimension XDim() const { return xdim_; }
+  Dimension TotalUDim() const {
+    Dimension total = 0;
+    for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) total += UDim(ii);
+    return total;
+  }
+
   virtual Dimension UDim(PlayerIndex player_idx) const = 0;
   virtual PlayerIndex NumPlayers() const = 0;
 
