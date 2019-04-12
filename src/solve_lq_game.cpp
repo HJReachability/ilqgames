@@ -146,14 +146,11 @@ std::vector<Strategy> SolveLQGame(
 
         if (ii == jj) {
           // Does player ii's cost depend upon player jj's control?
-          auto Rij_iter = quad[ii].Rs.find(jj);
+          const auto Rij_iter = quad[ii].Rs.find(jj);
           const bool ii_depends_on_jj = Rij_iter == quad[ii].Rs.end();
 
           S_block = BiZi * lin.Bs[ii];
           if (ii_depends_on_jj) S_block += Rij_iter->second;
-          //          S_block =
-          //              (ii_depends_on_jj) ? BiZi * lin.Bs[ii] + Rij : BiZi *
-          //              lin.Bs[ii];
         } else {
           S_block = BiZi * lin.Bs[jj];
         }
@@ -172,7 +169,32 @@ std::vector<Strategy> SolveLQGame(
       cumulative_udim_row += dynamics.UDim(ii);
     }
 
-    // Solve linear matrix equality S X = Y;
+    // Solve linear matrix equality S X = Y.
+    // NOTE: not 100% sure that this avoids dynamic memory allocation.
+    X = S.householderQr().solve(Y);
+
+    // Compute F and beta.
+    F = lin.A;
+    beta = VectorXf::Zero(dynamics.XDim());
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      F -= lin.Bs[ii] * Ps[ii];
+      beta -= lin.Bs[ii] * alphas[ii];
+    }
+
+    // Update Zs and zetas.
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      zetas[ii] =
+          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].l).eval();
+      Zs[ii] = (F.transpose() * Zs[ii] * F + quad[ii].Q).eval();
+
+      // Add terms for nonzero Rijs.
+      for (const auto& Rij_iter : quad[ii].Rs) {
+        const PlayerIndex jj = Rij_iter.first;
+        const MatrixXf& Rij = Rij_iter.second;
+        zetas[ii] += Ps[jj].transpose() * Rij * alphas[jj];
+        Zs[ii] += Ps[jj].transpose() * Rij * Ps[jj];
+      }
+    }
   }
 
   return strategies;
