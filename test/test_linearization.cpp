@@ -59,7 +59,7 @@ static constexpr float kNumericalPrecision = 1e-2;
 
 // Functions to compute numerical Jacobians.
 void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
-                       const VectorXf& x, const VectorXf& u,
+                       Time time_step, const VectorXf& x, const VectorXf& u,
                        Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) {
   // Check dimensions.
   EXPECT_EQ(system.XDim(), x.size());
@@ -75,7 +75,8 @@ void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
     VectorXf x_forward(x);
     x_forward(ii) += kForwardStep;
 
-    A.col(ii) = (system.Evaluate(t, x_forward, u) - xdot) / kForwardStep;
+    A.col(ii) +=
+        (system.Evaluate(t, x_forward, u) - xdot) * time_step / kForwardStep;
   }
 
   // Compute each column of B by forward differences.
@@ -83,13 +84,14 @@ void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
     VectorXf u_forward(u);
     u_forward(ii) += kForwardStep;
 
-    B.col(ii) = (system.Evaluate(t, x, u_forward) - xdot) / kForwardStep;
+    B.col(ii) =
+        (system.Evaluate(t, x, u_forward) - xdot) * time_step / kForwardStep;
   }
 }
 
 LinearDynamicsApproximation NumericalJacobian(
-    const MultiPlayerDynamicalSystem& system, Time t, const VectorXf& x,
-    const std::vector<VectorXf>& us) {
+    const MultiPlayerDynamicalSystem& system, Time t, Time time_step,
+    const VectorXf& x, const std::vector<VectorXf>& us) {
   // Check dimensions.
   EXPECT_EQ(system.XDim(), x.size());
   EXPECT_EQ(system.NumPlayers(), us.size());
@@ -105,8 +107,8 @@ LinearDynamicsApproximation NumericalJacobian(
     VectorXf x_forward(x);
     x_forward(ii) += kForwardStep;
 
-    linearization.A.col(ii) =
-        (system.Evaluate(t, x_forward, us) - xdot) / kForwardStep;
+    linearization.A.col(ii) +=
+        (system.Evaluate(t, x_forward, us) - xdot) * time_step / kForwardStep;
   }
 
   // Compute each column of A by forward differences.
@@ -117,7 +119,8 @@ LinearDynamicsApproximation NumericalJacobian(
 
     for (Dimension jj = 0; jj < system.UDim(ii); jj++) {
       u_forward(jj) += kForwardStep;
-      B.col(jj) = (system.Evaluate(t, x, us_forward) - xdot) / kForwardStep;
+      B.col(jj) =
+          (system.Evaluate(t, x, us_forward) - xdot) * time_step / kForwardStep;
       u_forward(jj) -= kForwardStep;
     }
   }
@@ -127,6 +130,8 @@ LinearDynamicsApproximation NumericalJacobian(
 
 // Test that each system's linearization matches a numerical approximation.
 void CheckLinearization(const SinglePlayerDynamicalSystem& system) {
+  constexpr Time kTimeStep = 0.1;
+
   // Random number generator to make random timestamps.
   std::random_device rd;
   std::default_random_engine rng(rd());
@@ -139,13 +144,13 @@ void CheckLinearization(const SinglePlayerDynamicalSystem& system) {
     const VectorXf u(VectorXf::Random(system.UDim()));
     const Time t = time_distribution(rng);
 
-    MatrixXf A_analytic(MatrixXf::Zero(system.XDim(), system.XDim()));
+    MatrixXf A_analytic(MatrixXf::Identity(system.XDim(), system.XDim()));
     MatrixXf B_analytic(MatrixXf::Zero(system.XDim(), system.UDim()));
-    system.Linearize(t, x, u, A_analytic, B_analytic);
+    system.Linearize(t, kTimeStep, x, u, A_analytic, B_analytic);
 
-    MatrixXf A_numerical(MatrixXf::Zero(system.XDim(), system.XDim()));
+    MatrixXf A_numerical(MatrixXf::Identity(system.XDim(), system.XDim()));
     MatrixXf B_numerical(MatrixXf::Zero(system.XDim(), system.UDim()));
-    NumericalJacobian(system, t, x, u, A_numerical, B_numerical);
+    NumericalJacobian(system, t, kTimeStep, x, u, A_numerical, B_numerical);
 
     EXPECT_NEAR((A_analytic - A_numerical).cwiseAbs().maxCoeff(), 0.0,
                 kNumericalPrecision);
@@ -155,6 +160,8 @@ void CheckLinearization(const SinglePlayerDynamicalSystem& system) {
 }
 
 void CheckLinearization(const MultiPlayerDynamicalSystem& system) {
+  constexpr Time kTimeStep = 0.1;
+
   // Random number generator to make random timestamps.
   std::random_device rd;
   std::default_random_engine rng(rd());
@@ -170,9 +177,10 @@ void CheckLinearization(const MultiPlayerDynamicalSystem& system) {
     for (size_t jj = 0; jj < system.NumPlayers(); jj++)
       us[jj] = VectorXf::Random(system.UDim(jj));
 
-    const LinearDynamicsApproximation analytic = system.Linearize(t, x, us);
+    const LinearDynamicsApproximation analytic =
+        system.Linearize(t, kTimeStep, x, us);
     const LinearDynamicsApproximation numerical =
-        NumericalJacobian(system, t, x, us);
+        NumericalJacobian(system, t, kTimeStep, x, us);
 
     EXPECT_NEAR((analytic.A - numerical.A).cwiseAbs().maxCoeff(), 0.0,
                 kNumericalPrecision);

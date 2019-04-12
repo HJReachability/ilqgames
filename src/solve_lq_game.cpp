@@ -112,8 +112,8 @@ std::vector<Strategy> SolveLQGame(
   }
 
   // Initialize Zs and zetas at the final time.
-  std::vector<MatrixXf> Zs;
-  std::vector<VectorXf> zetas;
+  std::vector<MatrixXf> Zs(dynamics.NumPlayers());
+  std::vector<VectorXf> zetas(dynamics.NumPlayers());
   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
     Zs[ii] = quadraticization.back()[ii].Q;
     zetas[ii] = quadraticization.back()[ii].l;
@@ -171,29 +171,55 @@ std::vector<Strategy> SolveLQGame(
 
     // Solve linear matrix equality S X = Y.
     // NOTE: not 100% sure that this avoids dynamic memory allocation.
+    std::cout << "Y: \n" << Y << std::endl;
+    std::cout << "S: \n" << S << std::endl;
+
     X = S.householderQr().solve(Y);
+    std::cout << "X: \n" << X << std::endl;
+
+    std::cout << "P1: \n" << Ps[0] << std::endl;
+    std::cout << "P2: \n" << Ps[1] << std::endl;
+    std::cout << "------------------" << std::endl;
+
+    // Set strategy at current time step.
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      strategies[ii].Ps[kk] = Ps[ii];
+      strategies[ii].alphas[kk] = alphas[ii];
+    }
 
     // Compute F and beta.
     F = lin.A;
     beta = VectorXf::Zero(dynamics.XDim());
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      std::cout << "F: \n" << F << std::endl;
+      std::cout << "Bii: \n" << lin.Bs[ii] << std::endl;
+      std::cout << "Bii * Pii: \n" << lin.Bs[ii] * Ps[ii] << std::endl;
       F -= lin.Bs[ii] * Ps[ii];
       beta -= lin.Bs[ii] * alphas[ii];
     }
 
+    std::cout << "F: \n" << F << std::endl;
+
     // Update Zs and zetas.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      zetas[ii] =
-          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].l).eval();
-      Zs[ii] = (F.transpose() * Zs[ii] * F + quad[ii].Q).eval();
+      std::cout << "ii = " << ii << ", Zs[ii] = \n" << Zs[ii] << std::endl;
+
+      const VectorXf newzeta =
+          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].l);
+      zetas[ii] = newzeta;
+
+      const MatrixXf newZ = (F.transpose() * Zs[ii] * F + quad[ii].Q);
+      Zs[ii] = newZ;
 
       // Add terms for nonzero Rijs.
-      for (const auto& Rij_iter : quad[ii].Rs) {
-        const PlayerIndex jj = Rij_iter.first;
-        const MatrixXf& Rij = Rij_iter.second;
+      for (const auto& Rij_entry : quad[ii].Rs) {
+        const PlayerIndex jj = Rij_entry.first;
+        const MatrixXf& Rij = Rij_entry.second;
         zetas[ii] += Ps[jj].transpose() * Rij * alphas[jj];
         Zs[ii] += Ps[jj].transpose() * Rij * Ps[jj];
       }
+
+      std::cout << "Zs[ii] = \n" << Zs[ii] << std::endl;
     }
   }
 

@@ -46,7 +46,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/solver/solve_lq_game.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <gtest/gtest.h>
@@ -63,8 +67,6 @@ void SolveLyapunovIterations(const MatrixXf& A, const MatrixXf& B1,
                              const MatrixXf& R12, const MatrixXf& R21,
                              const MatrixXf& R22, Eigen::Ref<MatrixXf> P1,
                              Eigen::Ref<MatrixXf> P2) {
-  ASSERT_TRUE(P1.get() && P2.get());
-
   // Number of iterations.
   constexpr size_t kNumIterations = 100;
 
@@ -97,14 +99,111 @@ void SolveLyapunovIterations(const MatrixXf& A, const MatrixXf& B1,
          P1.transpose() * R21 * P1 + P2.transpose() * R22 * P2 + Q2;
   }
 }
+
+// Utility class for time-invariant linear system.
+class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
+ public:
+  ~TwoPlayerPointMass1D() {}
+  TwoPlayerPointMass1D()
+      : MultiPlayerDynamicalSystem(2), A_(2, 2), B1_(2), B2_(2) {
+    A_ = MatrixXf::Zero(2, 2);
+    A_(0, 1) = 1.0;
+
+    B1_(0) = 0.05;
+    B1_(1) = 1.0;
+
+    B2_(0) = 0.032;
+    B2_(1) = 0.11;
+  }
+
+  // Getters.
+  Dimension UDim(PlayerIndex player_index) const { return 1; }
+  PlayerIndex NumPlayers() const { return 2; }
+
+  // Time derivative of state.
+  VectorXf Evaluate(Time t, const VectorXf& x,
+                    const std::vector<VectorXf>& us) const {
+    return A_ * x + B1_ * us[0] + B2_ * us[1];
+  }
+
+  // Discrete-time Jacobian linearization.
+  LinearDynamicsApproximation Linearize(Time t, Time time_step,
+                                        const VectorXf& x,
+                                        const std::vector<VectorXf>& us) const {
+    LinearDynamicsApproximation linearization(*this);
+
+    linearization.A += A_ * time_step;
+    linearization.Bs[0] = B1_ * time_step;
+    linearization.Bs[1] = B2_ * time_step;
+    return linearization;
+  }
+
+ private:
+  // Continuous-time dynamics.
+  MatrixXf A_;
+  VectorXf B1_, B2_;
+};  // class TwoPlayerPointMass1D
+
 }  // anonymous namespace
 
 TEST(SolveLQGameTest, MatchesLyapunovIterations) {
-  // Construct a 2-player time-invariant LQ game.
+  // Construct a 2-player time-invariant LQ game. For simplicity, we'll just use
+  // a 1D point mass in discrete time with different B matrices.
+  constexpr Time kTimeStep = 0.1;
+  constexpr Time kTimeHorizon = 10.0;
+  constexpr size_t kNumTimeSteps =
+      static_cast<size_t>(kTimeHorizon / kTimeStep);
+
+  const TwoPlayerPointMass1D dynamics;
+  const LinearDynamicsApproximation linearization =
+      dynamics.Linearize(0.0, kTimeStep, VectorXf::Zero(2),
+                         {VectorXf::Zero(1), VectorXf::Zero(1)});
+
+  const MatrixXf& A = linearization.A;
+  const MatrixXf& B1 = linearization.Bs[0];
+  const MatrixXf& B2 = linearization.Bs[1];
+
+  const MatrixXf Q1 = MatrixXf::Identity(2, 2);
+  const MatrixXf Q2 = -Q1;
+  const VectorXf l1 = VectorXf::Zero(2);
+  const VectorXf l2 = -l1;
+
+  const MatrixXf R11 = MatrixXf::Identity(1, 1);
+  const MatrixXf R12 = MatrixXf::Zero(1, 1);
+  const MatrixXf R21 = MatrixXf::Zero(1, 1);
+  const MatrixXf R22 = MatrixXf::Identity(1, 1);
+
+  std::vector<QuadraticCostApproximation> quadraticizations(
+      2, QuadraticCostApproximation(2));
+  quadraticizations[0].Q = Q1;
+  quadraticizations[0].l = l1;
+  quadraticizations[0].Rs.emplace(0, R11);
+  quadraticizations[0].Rs.emplace(1, R12);
+  quadraticizations[1].Q = Q2;
+  quadraticizations[1].l = l2;
+  quadraticizations[1].Rs.emplace(0, R21);
+  quadraticizations[1].Rs.emplace(1, R22);
 
   // Solve with Lyapunov iterations.
+  MatrixXf P1(1, 2);
+  MatrixXf P2(1, 2);
+  SolveLyapunovIterations(A, B1, B2, Q1, Q2, R11, R12, R21, R22, P1, P2);
 
   // Solve with the general (time-varying, finite-horizon) solver.
+  const std::vector<Strategy> solution = SolveLQGame(
+      dynamics,
+      std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization),
+      std::vector<std::vector<QuadraticCostApproximation>>(kNumTimeSteps,
+                                                           quadraticizations));
+
+  std::cout << "Lyapunov P1: \n" << P1 << std::endl;
+  std::cout << "Our P1: \n" << solution[0].Ps[0] << std::endl;
+  std::cout << "Lyapunov P2: \n" << P2 << std::endl;
+  std::cout << "Our P2: \n" << solution[1].Ps[0] << std::endl;
 
   // Check that the answers are close.
+  EXPECT_LT((P1 - solution[0].Ps[0]).cwiseAbs().maxCoeff(),
+            constants::kSmallNumber);
+  EXPECT_LT((P2 - solution[1].Ps[0]).cwiseAbs().maxCoeff(),
+            constants::kSmallNumber);
 }

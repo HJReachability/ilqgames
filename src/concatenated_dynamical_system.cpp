@@ -59,7 +59,6 @@ ConcatenatedDynamicalSystem::ConcatenatedDynamicalSystem(
           })),
       subsystems_(subsystems) {}
 
-// Compute time derivative of state.
 VectorXf ConcatenatedDynamicalSystem::Evaluate(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   CHECK_EQ(us.size(), NumPlayers());
@@ -77,9 +76,9 @@ VectorXf ConcatenatedDynamicalSystem::Evaluate(
   return xdot;
 }
 
-// Compute a discrete-time Jacobian linearization.
 LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
-    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
+    Time t, Time time_step, const VectorXf& x,
+    const std::vector<VectorXf>& us) const {
   CHECK_EQ(us.size(), NumPlayers());
 
   // Populate a block-diagonal A, as well as Bs.
@@ -91,7 +90,7 @@ LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
     subsystem->Linearize(
-        t, x.segment(dims_so_far, xdim), us[ii],
+        t, time_step, x.segment(dims_so_far, xdim), us[ii],
         linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
         linearization.Bs[ii].block(dims_so_far, 0, xdim, udim));
 

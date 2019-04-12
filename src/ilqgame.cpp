@@ -114,7 +114,7 @@ bool ILQGame::Solve(const VectorXf& x0,
       const auto& us = current_operating_point.us[ii];
 
       // Linearize dynamics.
-      linearization[ii] = dynamics_->Linearize(t, x, us);
+      linearization[ii] = dynamics_->Linearize(t, time_step_, x, us);
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),

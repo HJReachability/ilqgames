@@ -63,7 +63,7 @@ class SinglePlayerUnicycle4D : public SinglePlayerDynamicalSystem {
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
 
   // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Constexprs for state indices.
@@ -81,7 +81,6 @@ class SinglePlayerUnicycle4D : public SinglePlayerDynamicalSystem {
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //
 
-// Compute time derivative of state.
 inline VectorXf SinglePlayerUnicycle4D::Evaluate(Time t, const VectorXf& x,
                                                  const VectorXf& u) const {
   VectorXf xdot(xdim_);
@@ -93,22 +92,22 @@ inline VectorXf SinglePlayerUnicycle4D::Evaluate(Time t, const VectorXf& x,
   return xdot;
 }
 
-// Compute a discrete-time Jacobian linearization.
-inline void SinglePlayerUnicycle4D::Linearize(Time t, const VectorXf& x,
+inline void SinglePlayerUnicycle4D::Linearize(Time t, Time time_step,
+                                              const VectorXf& x,
                                               const VectorXf& u,
                                               Eigen::Ref<MatrixXf> A,
                                               Eigen::Ref<MatrixXf> B) const {
-  const float ctheta = std::cos(x(kThetaIdx));
-  const float stheta = std::sin(x(kThetaIdx));
+  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
+  const float stheta = std::sin(x(kThetaIdx)) * time_step;
 
-  A(kPxIdx, kThetaIdx) = -x(kVIdx) * stheta;
-  A(kPxIdx, kVIdx) = ctheta;
+  A(kPxIdx, kThetaIdx) += -x(kVIdx) * stheta;
+  A(kPxIdx, kVIdx) += ctheta;
 
-  A(kPyIdx, kThetaIdx) = x(kVIdx) * ctheta;
-  A(kPyIdx, kVIdx) = stheta;
+  A(kPyIdx, kThetaIdx) += x(kVIdx) * ctheta;
+  A(kPyIdx, kVIdx) += stheta;
 
-  B(kThetaIdx, kOmegaIdx) = 1.0;
-  B(kVIdx, kAIdx) = 1.0;
+  B(kThetaIdx, kOmegaIdx) = time_step;
+  B(kVIdx, kAIdx) = time_step;
 }
 
 }  // namespace ilqgames

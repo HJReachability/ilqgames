@@ -60,7 +60,8 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
                     const std::vector<VectorXf>& us) const;
 
   // Compute a discrete-time Jacobian linearization.
-  LinearDynamicsApproximation Linearize(Time t, const VectorXf& x,
+  LinearDynamicsApproximation Linearize(Time t, Time time_step,
+                                        const VectorXf& x,
                                         const std::vector<VectorXf>& us) const;
 
   // Getters.

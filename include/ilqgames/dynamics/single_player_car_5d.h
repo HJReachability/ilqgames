@@ -68,7 +68,7 @@ class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
 
   // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Constexprs for state indices.
@@ -91,7 +91,6 @@ class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //
 
-// Compute time derivative of state.
 inline VectorXf SinglePlayerCar5D::Evaluate(Time t, const VectorXf& x,
                                             const VectorXf& u) const {
   VectorXf xdot(xdim_);
@@ -104,27 +103,27 @@ inline VectorXf SinglePlayerCar5D::Evaluate(Time t, const VectorXf& x,
   return xdot;
 }
 
-// Compute a discrete-time Jacobian linearization.
-inline void SinglePlayerCar5D::Linearize(Time t, const VectorXf& x,
-                                         const VectorXf& u,
+inline void SinglePlayerCar5D::Linearize(Time t, Time time_step,
+                                         const VectorXf& x, const VectorXf& u,
                                          Eigen::Ref<MatrixXf> A,
                                          Eigen::Ref<MatrixXf> B) const {
-  const float ctheta = std::cos(x(kThetaIdx));
-  const float stheta = std::sin(x(kThetaIdx));
+  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
+  const float stheta = std::sin(x(kThetaIdx)) * time_step;
   const float cphi = std::cos(x(kPhiIdx));
   const float tphi = std::tan(x(kPhiIdx));
 
-  A(kPxIdx, kThetaIdx) = -x(kVIdx) * stheta;
-  A(kPxIdx, kVIdx) = ctheta;
+  A(kPxIdx, kThetaIdx) += -x(kVIdx) * stheta;
+  A(kPxIdx, kVIdx) += ctheta;
 
-  A(kPyIdx, kThetaIdx) = x(kVIdx) * ctheta;
-  A(kPyIdx, kVIdx) = stheta;
+  A(kPyIdx, kThetaIdx) += x(kVIdx) * ctheta;
+  A(kPyIdx, kVIdx) += stheta;
 
-  A(kThetaIdx, kPhiIdx) = x(kVIdx) / (inter_axle_distance_ * cphi * cphi);
-  A(kThetaIdx, kVIdx) = tphi / inter_axle_distance_;
+  A(kThetaIdx, kPhiIdx) +=
+      x(kVIdx) * time_step / (inter_axle_distance_ * cphi * cphi);
+  A(kThetaIdx, kVIdx) += tphi * time_step / inter_axle_distance_;
 
-  B(kPhiIdx, kOmegaIdx) = 1.0;
-  B(kVIdx, kAIdx) = 1.0;
+  B(kPhiIdx, kOmegaIdx) = time_step;
+  B(kVIdx, kAIdx) = time_step;
 }
 
 }  // namespace ilqgames
