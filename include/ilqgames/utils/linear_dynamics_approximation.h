@@ -58,10 +58,11 @@ struct LinearDynamicsApproximation {
   LinearDynamicsApproximation() {}
 
   // Construct from a MultiPlayerDynamicalSystem. Templated to avoid include
-  // cycle.
+  // cycle. Initialize A to identity and Bs to zero (since this is for a
+  // discrete-time linearization).
   template <typename MultiPlayerSystemType>
   explicit LinearDynamicsApproximation(const MultiPlayerSystemType& system)
-      : A(MatrixXf::Zero(system.XDim(), system.XDim())),
+      : A(MatrixXf::Identity(system.XDim(), system.XDim())),
         Bs(system.NumPlayers()) {
     for (size_t ii = 0; ii < system.NumPlayers(); ii++)
       Bs[ii] = MatrixXf::Zero(system.XDim(), system.UDim(ii));

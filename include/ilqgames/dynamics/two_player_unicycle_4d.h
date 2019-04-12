@@ -65,7 +65,8 @@ class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
                     const std::vector<VectorXf>& us) const;
 
   // Compute a discrete-time Jacobian linearization.
-  LinearDynamicsApproximation Linearize(Time t, const VectorXf& x,
+  LinearDynamicsApproximation Linearize(Time t, Time time_step,
+                                        const VectorXf& x,
                                         const std::vector<VectorXf>& us) const;
 
   // Getters.
@@ -96,7 +97,6 @@ class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //
 
-// Compute time derivative of state.
 inline VectorXf TwoPlayerUnicycle4D::Evaluate(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   CHECK_EQ(us.size(), NumPlayers());
@@ -111,25 +111,25 @@ inline VectorXf TwoPlayerUnicycle4D::Evaluate(
   return xdot;
 }
 
-// Compute a discrete-time Jacobian linearization.
 inline LinearDynamicsApproximation TwoPlayerUnicycle4D::Linearize(
-    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
+    Time t, Time time_step, const VectorXf& x,
+    const std::vector<VectorXf>& us) const {
   LinearDynamicsApproximation linearization(*this);
 
-  const float ctheta = std::cos(x(kThetaIdx));
-  const float stheta = std::sin(x(kThetaIdx));
+  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
+  const float stheta = std::sin(x(kThetaIdx)) * time_step;
 
-  linearization.A(kPxIdx, kThetaIdx) = -x(kVIdx) * stheta;
-  linearization.A(kPxIdx, kVIdx) = ctheta;
+  linearization.A(kPxIdx, kThetaIdx) += -x(kVIdx) * stheta;
+  linearization.A(kPxIdx, kVIdx) += ctheta;
 
-  linearization.A(kPyIdx, kThetaIdx) = x(kVIdx) * ctheta;
-  linearization.A(kPyIdx, kVIdx) = stheta;
+  linearization.A(kPyIdx, kThetaIdx) += x(kVIdx) * ctheta;
+  linearization.A(kPyIdx, kVIdx) += stheta;
 
-  linearization.Bs[0](kThetaIdx, kOmegaIdx) = 1.0;
-  linearization.Bs[0](kVIdx, kAIdx) = 1.0;
+  linearization.Bs[0](kThetaIdx, kOmegaIdx) = time_step;
+  linearization.Bs[0](kVIdx, kAIdx) = time_step;
 
-  linearization.Bs[1](kPxIdx, kDxIdx) = 1.0;
-  linearization.Bs[1](kPyIdx, kDyIdx) = 1.0;
+  linearization.Bs[1](kPxIdx, kDxIdx) = time_step;
+  linearization.Bs[1](kPyIdx, kDyIdx) = time_step;
 
   return linearization;
 }

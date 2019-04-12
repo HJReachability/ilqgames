@@ -59,7 +59,8 @@ class MultiPlayerDynamicalSystem {
 
   // Compute a discrete-time Jacobian linearization.
   virtual LinearDynamicsApproximation Linearize(
-      Time t, const VectorXf& x, const std::vector<VectorXf>& us) const = 0;
+      Time t, Time time_step, const VectorXf& x,
+      const std::vector<VectorXf>& us) const = 0;
 
   // Integrate these dynamics forward in time using Runge-Kutta 4th order
   // numerical integration.

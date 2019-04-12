@@ -57,12 +57,12 @@ class SinglePlayerDynamicalSystem {
                             const VectorXf& u) const = 0;
 
   // Compute a discrete-time Jacobian linearization.
-  // NOTE: assumes A, B already initialized to zero for speed.
+  // NOTE: assumes A, B already initialized (to I, 0 respectively) for speed.
   // NOTE: this function signature violates Google style guide return by
   // pointer convention intentionally, in order to comply with Eigen standard:
   // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-  virtual void Linearize(Time t, const VectorXf& x, const VectorXf& u,
-                         Eigen::Ref<MatrixXf> A,
+  virtual void Linearize(Time t, Time time_step, const VectorXf& x,
+                         const VectorXf& u, Eigen::Ref<MatrixXf> A,
                          Eigen::Ref<MatrixXf> B) const = 0;
 
   // Getters.
