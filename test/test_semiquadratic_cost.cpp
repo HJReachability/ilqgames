@@ -79,7 +79,7 @@ TEST(SemiquadraticCostTest, EvaluatesInCorrectDimension) {
 }
 
 // Check that we quadraticize correctly when dimension >= 0.
-TEST(SemiquadraticCost, TestQuadraticizeSingleDimension) {
+TEST(SemiquadraticCostTest, QuadraticizeSingleDimension) {
   constexpr float kCostWeight = 5.0;
   constexpr Dimension kCostDimension = 3;
   constexpr Dimension kVectorDimension = 5;
