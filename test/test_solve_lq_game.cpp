@@ -196,11 +196,6 @@ TEST(SolveLQGameTest, MatchesLyapunovIterations) {
       std::vector<std::vector<QuadraticCostApproximation>>(kNumTimeSteps,
                                                            quadraticizations));
 
-  std::cout << "Lyapunov P1: \n" << P1 << std::endl;
-  std::cout << "Our P1: \n" << solution[0].Ps[0] << std::endl;
-  std::cout << "Lyapunov P2: \n" << P2 << std::endl;
-  std::cout << "Our P2: \n" << solution[1].Ps[0] << std::endl;
-
   // Check that the answers are close.
   EXPECT_LT((P1 - solution[0].Ps[0]).cwiseAbs().maxCoeff(),
             constants::kSmallNumber);
