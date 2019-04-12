@@ -29,38 +29,38 @@ def coupled_DARE_solve(A, B1, B2, Q1, Q2,
 	# Check that the
 	if np.linalg.matrix_rank(test_mat1)>=n or np.linalg.matrix_rank(test_mat2)>=n:
 		test=True
-		P1 = Q1
-		P2 = Q2
+		Z1 = Q1
+		Z2 = Q2
 		inv = np.linalg.inv
 		norm = np.linalg.norm
-		K1 = inv(R11 + B1.T @ P1 @ B1) @ (B1.T @ P1 @ A)
-		K2 = inv(R22 + B2.T @ P2 @ B2) @ (B2.T @ P2 @ A)
+		P1 = inv(R11 + B1.T @ Z1 @ B1) @ (B1.T @ Z1 @ A)
+		P2 = inv(R22 + B2.T @ Z2 @ B2) @ (B2.T @ Z2 @ A)
 		norms = []
 
 		for _ in range(N):
-			_K1 = K1
-			_K2 = K2
+			_P1 = P1
+			_P2 = P2
 
-			K1 = inv(R11 + B1.T @ P1 @ B1) @ (B1.T @ P1 @ (A - B2 @ _K2))
-			K2 = inv(R22 + B2.T @ P2 @ B2) @ (B2.T @ P2 @ (A - B1 @ _K1))
+			P1 = inv(R11 + B1.T @ Z1 @ B1) @ (B1.T @ Z1 @ (A - B2 @ _P2))
+			P2 = inv(R22 + B2.T @ Z2 @ B2) @ (B2.T @ Z2 @ (A - B1 @ _P1))
 
 			if True:
-				P1 = (A - B1 @ K1 - B2 @ K2).T @ P1 @ (A - B1 @ K1 - B2 @ K2) + \
-					 K1.T @ R11 @ K1 + K2.T @ R12 @ K2 + Q1
-				P2 = (A - B1 @ K1 - B2 @ K2).T @ P2 @ (A - B1 @ K1 - B2 @ K2) + \
-					 K1.T @ R21 @ K1 + K2.T @ R22 @ K2 + Q2
+				Z1 = (A - B1 @ P1 - B2 @ P2).T @ Z1 @ (A - B1 @ P1 - B2 @ P2) + \
+					 P1.T @ R11 @ P1 + P2.T @ R12 @ P2 + Q1
+				Z2 = (A - B1 @ P1 - B2 @ P2).T @ Z2 @ (A - B1 @ P1 - B2 @ P2) + \
+					 P1.T @ R21 @ P1 + P2.T @ R22 @ P2 + Q2
 
 			else:
-				P1 = (A - B2 @ K2).T @ P1 @ (A - B2 @ K2) - ((A - B2 @ K2).T @ P1 @ B1) @ \
-					 inv(R11 + B1.T @ P1 @ B1) @ (B1.T @ P1 @ (A-B2 @ K2)) + Q1
-				P2 = (A - B1 @ K1).T @ P2 @ (A - B1 @ K1) - ((A - B1 @ K1).T @ P2 @ B2) @ \
-					 inv(R22 + B2.T @ P2 @ B2) @ (B2.T @ P2 @ (A-B1 @ K1)) + Q2
+				Z1 = (A - B2 @ P2).T @ Z1 @ (A - B2 @ P2) - ((A - B2 @ P2).T @ Z1 @ B1) @ \
+					 inv(R11 + B1.T @ Z1 @ B1) @ (B1.T @ Z1 @ (A-B2 @ P2)) + Q1
+				Z2 = (A - B1 @ P1).T @ Z2 @ (A - B1 @ P1) - ((A - B1 @ P1).T @ Z2 @ B2) @ \
+					 inv(R22 + B2.T @ Z2 @ B2) @ (B2.T @ Z2 @ (A-B1 @ P1)) + Q2
 
 
-			norms.append([norm(P1), norm(P2)])
+			norms.append([norm(Z1), norm(Z2)])
 	else:
 		test=False
-		K1=0
-		K2=0
+		P1=0
+		P2=0
 		norms=0
-	return [K1,K2], norms ,test
+	return [P1,P2], norms ,test
