@@ -147,7 +147,7 @@ std::vector<Strategy> SolveLQGame(
         if (ii == jj) {
           // Does player ii's cost depend upon player jj's control?
           const auto Rij_iter = quad[ii].Rs.find(jj);
-          const bool ii_depends_on_jj = Rij_iter == quad[ii].Rs.end();
+          const bool ii_depends_on_jj = Rij_iter != quad[ii].Rs.end();
 
           S_block = BiZi * lin.Bs[ii];
           if (ii_depends_on_jj) S_block += Rij_iter->second;
@@ -171,15 +171,7 @@ std::vector<Strategy> SolveLQGame(
 
     // Solve linear matrix equality S X = Y.
     // NOTE: not 100% sure that this avoids dynamic memory allocation.
-    std::cout << "Y: \n" << Y << std::endl;
-    std::cout << "S: \n" << S << std::endl;
-
     X = S.householderQr().solve(Y);
-    std::cout << "X: \n" << X << std::endl;
-
-    std::cout << "P1: \n" << Ps[0] << std::endl;
-    std::cout << "P2: \n" << Ps[1] << std::endl;
-    std::cout << "------------------" << std::endl;
 
     // Set strategy at current time step.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
@@ -191,25 +183,15 @@ std::vector<Strategy> SolveLQGame(
     F = lin.A;
     beta = VectorXf::Zero(dynamics.XDim());
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      std::cout << "F: \n" << F << std::endl;
-      std::cout << "Bii: \n" << lin.Bs[ii] << std::endl;
-      std::cout << "Bii * Pii: \n" << lin.Bs[ii] * Ps[ii] << std::endl;
       F -= lin.Bs[ii] * Ps[ii];
       beta -= lin.Bs[ii] * alphas[ii];
     }
 
-    std::cout << "F: \n" << F << std::endl;
-
     // Update Zs and zetas.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      std::cout << "ii = " << ii << ", Zs[ii] = \n" << Zs[ii] << std::endl;
-
-      const VectorXf newzeta =
-          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].l);
-      zetas[ii] = newzeta;
-
-      const MatrixXf newZ = (F.transpose() * Zs[ii] * F + quad[ii].Q);
-      Zs[ii] = newZ;
+      zetas[ii] =
+          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].l).eval();
+      Zs[ii] = (F.transpose() * Zs[ii] * F + quad[ii].Q).eval();
 
       // Add terms for nonzero Rijs.
       for (const auto& Rij_entry : quad[ii].Rs) {
@@ -218,8 +200,6 @@ std::vector<Strategy> SolveLQGame(
         zetas[ii] += Ps[jj].transpose() * Rij * alphas[jj];
         Zs[ii] += Ps[jj].transpose() * Rij * Ps[jj];
       }
-
-      std::cout << "Zs[ii] = \n" << Zs[ii] << std::endl;
     }
   }
 
