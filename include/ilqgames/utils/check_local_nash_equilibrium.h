@@ -36,36 +36,36 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store an operating point, i.e. states and controls for each
-// player.
+// Check whether or not a particular set of strategies is a local Nash
+// equilibrium. Since we do not have easy access to gradients and Hessians of
+// each players' total cost with respect to Ps and alphas (though we do have
+// such information at each time step), we shall resort to random sampling.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_OPERATING_POINT_H
-#define ILQGAMES_UTILS_OPERATING_POINT_H
+#ifndef ILQGAMES_UTILS_CHECK_LOCAL_NASH_EQUILIBRIUM_H
+#define ILQGAMES_UTILS_CHECK_LOCAL_NASH_EQUILIBRIUM_H
 
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <vector>
 
 namespace ilqgames {
 
-struct OperatingPoint {
-  // Time-indexed list of states.
-  std::vector<VectorXf> xs;
-
-  // Time-indexed list of controls for all players, i.e. us[kk] is the list of
-  // controls for all players at time index kk.
-  std::vector<std::vector<VectorXf>> us;
-
-  // Construct with empty vectors of the right size.
-  OperatingPoint(size_t num_time_steps, size_t num_players);
-
-  // Custom swap function.
-  void swap(OperatingPoint& other);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct OperatingPoint
+// Check if this set of strategies is a local Nash equilibrium by randomly
+// changing each player's strategy with a number of small Gaussian
+// perturbations.
+bool CheckLocalNashEquilibrium(const std::vector<PlayerCost>& player_costs,
+                               const std::vector<Strategy>& strategies,
+                               const OperatingPoint& operating_point,
+                               const MultiPlayerDynamicalSystem& dynamics,
+                               const VectorXd& x0, float time_step,
+                               float gaussian_perturbation_stddev,
+                               size_t num_perturbations_per_player);
 
 }  // namespace ilqgames
 
