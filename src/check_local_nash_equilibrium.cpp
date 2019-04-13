@@ -63,9 +63,6 @@ std::vector<float> ComputeStrategyCosts(
     const OperatingPoint& operating_point,
     const MultiPlayerDynamicalSystem& dynamics, const VectorXf& x0,
     float time_step) {
-  const size_t num_time_steps = strategies[0].Ps.size();
-  CHECK_EQ(num_time_steps, strategies[0].alphas.size());
-
   // Start at the initial state.
   VectorXf x(x0);
   Time t = 0.0;
@@ -73,6 +70,7 @@ std::vector<float> ComputeStrategyCosts(
   // Walk forward along the trajectory and accumulate total cost.
   std::vector<VectorXf> us(dynamics.NumPlayers());
   std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
+  const size_t num_time_steps = strategies[0].Ps.size();
   for (size_t kk = 0; kk < num_time_steps; kk++) {
     // Update controls.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
@@ -99,16 +97,14 @@ bool CheckLocalNashEquilibrium(const std::vector<PlayerCost>& player_costs,
                                const OperatingPoint& operating_point,
                                const MultiPlayerDynamicalSystem& dynamics,
                                const VectorXf& x0, float time_step,
-                               float gaussian_perturbation_stddev,
+                               float max_perturbation,
                                size_t num_perturbations_per_player) {
   CHECK_EQ(strategies.size(), player_costs.size());
   CHECK_EQ(strategies.size(), dynamics.NumPlayers());
   CHECK_EQ(x0.size(), dynamics.XDim());
 
-  // Set up random number generator.
-  std::random_device rd;
-  std::default_random_engine rng(rd());
-  std::normal_distribution<float> gaussian(0.0, gaussian_perturbation_stddev);
+  const size_t num_time_steps = strategies[0].Ps.size();
+  CHECK_EQ(num_time_steps, strategies[0].alphas.size());
 
   // Compute nominal equilibrium cost.
   const std::vector<float> nominal_costs = ComputeStrategyCosts(
@@ -116,7 +112,29 @@ bool CheckLocalNashEquilibrium(const std::vector<PlayerCost>& player_costs,
 
   // For each player, perturb strategies with Gaussian noise a bunch of times
   // and if cost decreases then return false.
-  // TODO!
+  std::vector<Strategy> perturbed_strategies(strategies);
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    for (size_t jj = 0; jj < num_perturbations_per_player; jj++) {
+      // Perturb strategy for player ii.
+      for (size_t kk = 0; kk < num_time_steps; kk++) {
+        MatrixXf& Pk = perturbed_strategies[ii].Ps[kk];
+        Pk += max_perturbation * MatrixXf::Random(Pk.rows(), Pk.cols());
+
+        VectorXf& alphak = perturbed_strategies[ii].alphas[kk];
+        alphak += max_perturbation * VectorXf::Random(alphak.size());
+      }
+
+      // Compute new costs.
+      const std::vector<float> perturbed_costs =
+          ComputeStrategyCosts(player_costs, perturbed_strategies,
+                               operating_point, dynamics, x0, time_step);
+
+      if (perturbed_costs[ii] < nominal_costs[ii]) return false;
+
+      // Reset player ii's strategy.
+      perturbed_strategies[ii] = strategies[ii];
+    }
+  }
 
   return true;
 }

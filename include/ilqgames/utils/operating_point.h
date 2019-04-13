@@ -59,7 +59,7 @@ struct OperatingPoint {
   std::vector<std::vector<VectorXf>> us;
 
   // Construct with empty vectors of the right size.
-  OperatingPoint(size_t num_time_steps, size_t num_players);
+  OperatingPoint(size_t num_time_steps, PlayerIndex num_players);
 
   // Custom swap function.
   void swap(OperatingPoint& other);
