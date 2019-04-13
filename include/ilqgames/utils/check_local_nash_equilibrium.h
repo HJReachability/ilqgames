@@ -63,8 +63,8 @@ bool CheckLocalNashEquilibrium(const std::vector<PlayerCost>& player_costs,
                                const std::vector<Strategy>& strategies,
                                const OperatingPoint& operating_point,
                                const MultiPlayerDynamicalSystem& dynamics,
-                               const VectorXd& x0, float time_step,
-                               float gaussian_perturbation_stddev,
+                               const VectorXf& x0, float time_step,
+                               float max_perturbation,
                                size_t num_perturbations_per_player);
 
 }  // namespace ilqgames

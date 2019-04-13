@@ -95,7 +95,9 @@ bool ILQGame::Solve(const VectorXf& x0,
   std::vector<LinearDynamicsApproximation> linearization(num_time_steps_);
   std::vector<std::vector<QuadraticCostApproximation>> quadraticization(
       num_time_steps_);
-  for (auto& quads : quadraticization) quads.reserve(dynamics_->NumPlayers());
+  for (auto& quads : quadraticization)
+    quads.resize(dynamics_->NumPlayers(),
+                 QuadraticCostApproximation(dynamics_->XDim()));
 
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;

@@ -46,8 +46,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/solver/solve_lq_game.h>
+#include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -146,59 +149,118 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
 
 }  // anonymous namespace
 
-TEST(SolveLQGameTest, MatchesLyapunovIterations) {
-  // Construct a 2-player time-invariant LQ game. For simplicity, we'll just use
-  // a 1D point mass in discrete time with different B matrices.
-  constexpr Time kTimeStep = 0.1;
-  constexpr Time kTimeHorizon = 10.0;
-  constexpr size_t kNumTimeSteps =
+class SolveLQGameTest : public ::testing::Test {
+ protected:
+  void SetUp() {
+    // Set linearization and quadraticizations.
+    linearization_ =
+        dynamics_.Linearize(0.0, kTimeStep, VectorXf::Zero(2),
+                            {VectorXf::Zero(1), VectorXf::Zero(1)});
+
+    const MatrixXf Q1 = MatrixXf::Identity(2, 2);
+    const MatrixXf Q2 = -Q1;
+    const VectorXf l1 = VectorXf::Zero(2);
+    const VectorXf l2 = -l1;
+
+    const MatrixXf R11 = MatrixXf::Identity(1, 1);
+    const MatrixXf R12 = MatrixXf::Zero(1, 1);
+    const MatrixXf R21 = MatrixXf::Zero(1, 1);
+    const MatrixXf R22 = MatrixXf::Identity(1, 1);
+
+    quadraticizations_ = std::vector<QuadraticCostApproximation>(
+        2, QuadraticCostApproximation(2));
+    quadraticizations_[0].Q = Q1;
+    quadraticizations_[0].l = l1;
+    quadraticizations_[0].Rs.emplace(0, R11);
+    quadraticizations_[0].Rs.emplace(1, R12);
+    quadraticizations_[1].Q = Q2;
+    quadraticizations_[1].l = l2;
+    quadraticizations_[1].Rs.emplace(0, R21);
+    quadraticizations_[1].Rs.emplace(1, R22);
+
+    // Set up corresponding player costs.
+    PlayerCost player1_cost;
+    player1_cost.AddStateCost(std::make_shared<QuadraticCost>(1.0, -1));
+    player1_cost.AddControlCost(0, std::make_shared<QuadraticCost>(1.0, -1));
+    player1_cost.AddControlCost(1, std::make_shared<QuadraticCost>(0.0, -1));
+    player_costs_.push_back(player1_cost);
+
+    PlayerCost player2_cost;
+    player2_cost.AddStateCost(std::make_shared<QuadraticCost>(-1.0, -1));
+    player2_cost.AddControlCost(0, std::make_shared<QuadraticCost>(0.0, -1));
+    player2_cost.AddControlCost(1, std::make_shared<QuadraticCost>(1.0, -1));
+    player_costs_.push_back(player2_cost);
+
+    // Solve LQ game.
+    lq_solution_ = SolveLQGame(
+        dynamics_,
+        std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),
+        std::vector<std::vector<QuadraticCostApproximation>>(
+            kNumTimeSteps, quadraticizations_));
+  }
+
+  // Time parameters.
+  static constexpr Time kTimeStep = 0.1;
+  static constexpr Time kTimeHorizon = 10.0;
+  static constexpr size_t kNumTimeSteps =
       static_cast<size_t>(kTimeHorizon / kTimeStep);
 
-  const TwoPlayerPointMass1D dynamics;
-  const LinearDynamicsApproximation linearization =
-      dynamics.Linearize(0.0, kTimeStep, VectorXf::Zero(2),
-                         {VectorXf::Zero(1), VectorXf::Zero(1)});
+  // Dynamics.
+  const TwoPlayerPointMass1D dynamics_;
 
-  const MatrixXf& A = linearization.A;
-  const MatrixXf& B1 = linearization.Bs[0];
-  const MatrixXf& B2 = linearization.Bs[1];
+  // Player costs.
+  std::vector<PlayerCost> player_costs_;
 
-  const MatrixXf Q1 = MatrixXf::Identity(2, 2);
-  const MatrixXf Q2 = -Q1;
-  const VectorXf l1 = VectorXf::Zero(2);
-  const VectorXf l2 = -l1;
+  // Linearization and quadraticization.
+  LinearDynamicsApproximation linearization_;
+  std::vector<QuadraticCostApproximation> quadraticizations_;
 
-  const MatrixXf R11 = MatrixXf::Identity(1, 1);
-  const MatrixXf R12 = MatrixXf::Zero(1, 1);
-  const MatrixXf R21 = MatrixXf::Zero(1, 1);
-  const MatrixXf R22 = MatrixXf::Identity(1, 1);
+  // Solution to LQ game.
+  std::vector<Strategy> lq_solution_;
+};  // class SolveLQGameTest
 
-  std::vector<QuadraticCostApproximation> quadraticizations(
-      2, QuadraticCostApproximation(2));
-  quadraticizations[0].Q = Q1;
-  quadraticizations[0].l = l1;
-  quadraticizations[0].Rs.emplace(0, R11);
-  quadraticizations[0].Rs.emplace(1, R12);
-  quadraticizations[1].Q = Q2;
-  quadraticizations[1].l = l2;
-  quadraticizations[1].Rs.emplace(0, R21);
-  quadraticizations[1].Rs.emplace(1, R22);
+TEST_F(SolveLQGameTest, MatchesLyapunovIterations) {
+  const MatrixXf& A = linearization_.A;
+  const MatrixXf& B1 = linearization_.Bs[0];
+  const MatrixXf& B2 = linearization_.Bs[1];
+
+  const MatrixXf& Q1 = quadraticizations_[0].Q;
+  const MatrixXf& Q2 = quadraticizations_[1].Q;
+  const VectorXf& l1 = quadraticizations_[0].l;
+  const VectorXf& l2 = quadraticizations_[1].l;
+
+  const MatrixXf& R11 = quadraticizations_[0].Rs[0];
+  const MatrixXf& R12 = quadraticizations_[0].Rs[1];
+  const MatrixXf& R21 = quadraticizations_[1].Rs[0];
+  const MatrixXf& R22 = quadraticizations_[1].Rs[1];
 
   // Solve with Lyapunov iterations.
   MatrixXf P1(1, 2);
   MatrixXf P2(1, 2);
   SolveLyapunovIterations(A, B1, B2, Q1, Q2, R11, R12, R21, R22, P1, P2);
 
-  // Solve with the general (time-varying, finite-horizon) solver.
-  const std::vector<Strategy> solution = SolveLQGame(
-      dynamics,
-      std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization),
-      std::vector<std::vector<QuadraticCostApproximation>>(kNumTimeSteps,
-                                                           quadraticizations));
-
   // Check that the answers are close.
-  EXPECT_LT((P1 - solution[0].Ps[0]).cwiseAbs().maxCoeff(),
+  EXPECT_LT((P1 - lq_solution_[0].Ps[0]).cwiseAbs().maxCoeff(),
             constants::kSmallNumber);
-  EXPECT_LT((P2 - solution[1].Ps[0]).cwiseAbs().maxCoeff(),
+  EXPECT_LT((P2 - lq_solution_[1].Ps[0]).cwiseAbs().maxCoeff(),
             constants::kSmallNumber);
+}
+
+TEST_F(SolveLQGameTest, LocalNashEquilibrium) {
+  // Set a zero operating point.
+  OperatingPoint operating_point(kNumTimeSteps, dynamics_.NumPlayers());
+  for (size_t kk = 0; kk < kNumTimeSteps; kk++) {
+    operating_point.xs[kk] = MatrixXf::Zero(dynamics_.XDim(), dynamics_.XDim());
+    for (PlayerIndex ii = 0; ii < dynamics_.NumPlayers(); ii++)
+      operating_point.us[kk][ii] = VectorXf::Zero(dynamics_.UDim(ii));
+  }
+
+  // Initial state.
+  const VectorXf x0 = VectorXf::Ones(dynamics_.XDim());
+
+  constexpr float kMaxPerturbation = 0.1;
+  constexpr size_t kNumPerturbationsPerPlayer = 100;
+  EXPECT_TRUE(CheckLocalNashEquilibrium(
+      player_costs_, lq_solution_, operating_point, dynamics_, x0, kTimeStep,
+      kMaxPerturbation, kNumPerturbationsPerPlayer));
 }
