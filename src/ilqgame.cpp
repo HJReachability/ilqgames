@@ -58,7 +58,11 @@ namespace ilqgames {
 
 bool ILQGame::Solve(const VectorXf& x0,
                     const std::vector<Strategy>& initial_strategies,
-                    std::vector<Strategy>* final_strategies) {
+                    std::vector<Strategy>* final_strategies,
+                    OperatingPoint* final_operating_point) {
+  CHECK_NOTNULL(final_strategies);
+  CHECK_NOTNULL(final_operating_point);
+
   // Make sure we have enough strategies for each time step.
   DCHECK_EQ(dynamics_->NumPlayers(), initial_strategies.size());
   DCHECK(std::accumulate(
@@ -132,6 +136,10 @@ bool ILQGame::Solve(const VectorXf& x0,
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))
       return false;
   }
+
+  // Set final strategies and operating point.
+  final_strategies->swap(current_strategies);
+  final_operating_point->swap(current_operating_point);
 
   return true;
 }

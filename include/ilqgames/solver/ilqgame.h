@@ -77,7 +77,8 @@ class ILQGame {
   // Solve this game. Returns true if converged.
   bool Solve(const VectorXf& x0,
              const std::vector<Strategy>& initial_strategies,
-             std::vector<Strategy>* final_strategies);
+             std::vector<Strategy>* final_strategies,
+             OperatingPoint* final_operating_point);
 
  protected:
   // Modify LQ strategies to improve convergence properties.
