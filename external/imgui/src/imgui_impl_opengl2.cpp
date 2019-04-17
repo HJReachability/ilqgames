@@ -28,8 +28,8 @@
 //  2016-09-10: OpenGL: Uploading font texture as RGBA32 to increase compatibility with users shaders (not ideal).
 //  2016-09-05: OpenGL: Fixed save and restore of current scissor rectangle.
 
-#include "imgui.h"
-#include "imgui_impl_opengl2.h"
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_opengl2.h>
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
 #include <stddef.h>     // intptr_t
 #else
@@ -103,9 +103,9 @@ void ImGui_ImplOpenGL2_RenderDrawData(ImDrawData* draw_data)
     glEnable(GL_TEXTURE_2D);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    // If you are using this code with non-legacy OpenGL header/contexts (which you should not, prefer using imgui_impl_opengl3.cpp!!), 
+    // If you are using this code with non-legacy OpenGL header/contexts (which you should not, prefer using imgui_impl_opengl3.cpp!!),
     // you may need to backup/reset/restore current shader using the lines below. DO NOT MODIFY THIS FILE! Add the code in your calling function:
-    //  GLint last_program; 
+    //  GLint last_program;
     //  glGetIntegerv(GL_CURRENT_PROGRAM, &last_program);
     //  glUseProgram(0);
     //  ImGui_ImplOpenGL2_RenderDrawData(...);

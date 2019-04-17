@@ -14,8 +14,8 @@
 //  2018-11-30: Misc: Setting up io.BackendPlatformName so it can be displayed in the About Window.
 //  2018-03-22: Added FreeGLUT Platform binding.
 
-#include "imgui.h"
-#include "imgui_impl_freeglut.h"
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_freeglut.h>
 #include <GL/freeglut.h>
 
 #ifdef _MSC_VER
