@@ -28,14 +28,14 @@ endif(NOT CMAKE_BUILD_TYPE)
 add_subdirectory(external)
 
 # Add the source directories to the search path so cmake can find our headers.
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include ${imgui_SOURCE_DIR}/include)
 
 # Collect source files and build the ilqgames object.
 file(GLOB_RECURSE ilqgames_srcs ${CMAKE_SOURCE_DIR}/src/*.cpp)
 add_library(ilqgames ${ilqgames_srcs})
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/cpp/ DESTINATION include/ilqgames)
-install(TARGETS ilqgames DESTINATION lib)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include DESTINATION /usr/local/include/ilqgames)
+install(TARGETS ilqgames DESTINATION /usr/local/lib)
 
 # Set up output directory for executables.
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/)
