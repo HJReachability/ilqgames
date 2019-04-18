@@ -4,11 +4,12 @@
 cscope*
 .clang_complete
 
+# Binaries.
+bin/
+
 # Logs.
-sandbox/data
-examples/logs
-logs
-python/logs
+logs/
+python/logs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
