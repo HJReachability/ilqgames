@@ -4,7 +4,7 @@ foreach(executable ${executables})
   message("Including binary \"${BoldMagenta}${executable}${ColorReset}\".")
   file(GLOB_RECURSE local_src ${CMAKE_SOURCE_DIR}/exec/${executable}/*.cpp)
   add_executable(${executable} ${local_src})
-  target_link_libraries(${executable} ilqgames ${ilqgames_LIBRARIES})
+  target_link_libraries(${executable} ilqgames ${ilqgames_LIBRARIES} imgui glfw)
   ilqgames_set_runtime_directory(${executable} ${EXECUTABLE_OUTPUT_PATH})
 endforeach()
 
