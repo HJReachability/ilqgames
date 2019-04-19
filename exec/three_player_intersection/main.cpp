@@ -143,6 +143,13 @@ int main(int, char**) {
     // Top down view.
     {
       ImGui::Begin("Top-Down View");
+
+      const ImVec2 cursor = ImGui::GetMousePos();
+
+      ImDrawList* draw_list = ImGui::GetWindowDrawList();
+      draw_list->AddCircleFilled(ImVec2(cursor.x, cursor.y), 50.0,
+                                 ImColor(ImVec4(1.0, 0.0, 0.5, 1.0)), 20);
+
       ImGui::End();
     }
 
