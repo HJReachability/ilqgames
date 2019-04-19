@@ -66,16 +66,54 @@ class Log : private Uncopyable {
   }
 
   // Accessors.
+  Time TimeStep() const { return time_step_; }
+  Time FinalTime() const {
+    return (NumIterates() > 0) ? IndexToTime(operating_points_[0].xs.size() - 1)
+                               : 0.0;
+  }
+  size_t NumIterates const { return operating_points_.size(); }
+  size_t NumTimeSteps const {
+    return static_cast<size_t>(FinalTime() / time_step_);
+  }
+
   VectorXf InterpolateState(size_t iterate, Time t) const;
   float InterpolateState(size_t iterate, Time t, Dimension dim) const;
   VectorXf InterpolateControl(size_t iterate, Time t, PlayerIndex player) const;
   float InterpolateControl(size_t iterate, Time t, PlayerIndex player,
                            Dimension dim) const;
 
-  std::vector<MatrixXf> Ps(size_t iterate, Time t) const;
-  std::vector<VectorXf> alphas(size_t iterate, Time t) const;
-  MatrixXf P(size_t iterate, Time t, PlayerIndex player) const;
-  VectorXf alpha(size_t iterate, Time t, PlayerIndex player) const;
+  std::vector<MatrixXf> Ps(size_t iterate, size_t time_index) const;
+  std::vector<VectorXf> alphas(size_t iterate, size_t time_index) const;
+  MatrixXf P(size_t iterate, size_t time_index, PlayerIndex player) const;
+  VectorXf alpha(size_t iterate, size_t time_index, PlayerIndex player) const;
+
+  VectorXf State(size_t iterate, size_t time_index) const {
+    return operating_points_[iterate].xs[time_index];
+  }
+  float State(size_t iterate, size_t time_index, Dimension dim) const {
+    return operating_points_[iterate].xs[time_index](dim);
+  }
+  VectorXf Control(size_t iterate, size_t time_index,
+                   PlayerIndex player) const {
+    return operating_points_[iterate].us[time_index][player];
+  }
+  float Control(size_t iterate, size_t time_index, PlayerIndex player,
+                Dimension dim) const {
+    return operating_points_[iterate].us[time_index][player](dim);
+  }
+
+  std::vector<MatrixXf> Ps(size_t iterate, Time t) const {
+    return Ps(iterate, TimeToIndex(t));
+  }
+  std::vector<VectorXf> alphas(size_t iterate, Time t) const {
+    return alphas(iterate, TimeToIndex(t));
+  }
+  MatrixXf P(size_t iterate, Time t, PlayerIndex player) const {
+    return P(iterate, TimeToIndex(t), player);
+  }
+  VectorXf alpha(size_t iterate, Time t, PlayerIndex player) const {
+    return alpha(iterate, TimeToIndex(t), player);
+  }
 
  private:
   // Get index corresponding to the time step immediately before the given time.

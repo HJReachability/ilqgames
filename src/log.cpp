@@ -101,25 +101,29 @@ float Log::InterpolateControl(size_t iterate, Time t, PlayerIndex player,
   return (1.0 - frac) * op.us[lo][player](dim) + frac * op.us[hi][player](dim);
 }
 
-inline std::vector<MatrixXf> Log::Ps(size_t iterate, Time t) const {
+inline std::vector<MatrixXf> Log::Ps(size_t iterate, size_t time_index) const {
   std::vector<MatrixXf> Ps(strategies_[iterate].size());
-  for (PlayerIndex ii = 0; ii < Ps.size(); ii++) Ps[ii] = P(iterate, t, ii);
+  for (PlayerIndex ii = 0; ii < Ps.size(); ii++)
+    Ps[ii] = P(iterate, time_index, ii);
   return Ps;
 }
 
-inline std::vector<VectorXf> Log::alphas(size_t iterate, Time t) const {
+inline std::vector<VectorXf> Log::alphas(size_t iterate,
+                                         size_t time_index) const {
   std::vector<VectorXf> alphas(strategies_[iterate].size());
   for (PlayerIndex ii = 0; ii < alphas.size(); ii++)
-    alphas[ii] = alpha(iterate, t, ii);
+    alphas[ii] = alpha(iterate, time_index, ii);
   return alphas;
 }
 
-inline MatrixXf Log::P(size_t iterate, Time t, PlayerIndex player) const {
-  return strategies_[iterate][player].Ps[TimeToIndex(t)];
+inline MatrixXf Log::P(size_t iterate, size_t time_index,
+                       PlayerIndex player) const {
+  return strategies_[iterate][player].Ps[time_index];
 }
 
-inline VectorXf Log::alpha(size_t iterate, Time t, PlayerIndex player) const {
-  return strategies_[iterate][player].alphas[TimeToIndex(t)];
+inline VectorXf Log::alpha(size_t iterate, size_t time_index,
+                           PlayerIndex player) const {
+  return strategies_[iterate][player].alphas[time_index];
 }
 
 }  // namespace ilqgames
