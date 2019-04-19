@@ -36,35 +36,67 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store an operating point, i.e. states and controls for each
-// player.
+// Container to store solver logs.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_UTILS_LOG_H
+#define ILQGAMES_UTILS_LOG_H
 
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/strategy.h>
+#include <ilqgames/utils/types.h>
+#include <ilqgames/utils/uncopyable.h>
+
+#include <math.h>
 #include <vector>
 
 namespace ilqgames {
 
-OperatingPoint::OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
-                               const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics)
-    : xs(num_time_steps), us(num_time_steps) {
-  for (auto& entry : us) entry.resize(num_players);
+class Log : private Uncopyable {
+ public:
+  ~Log() {}
+  explicit Log(Time time_step) : time_step_(time_step) {}
 
-  if (dynamics.get()) {
-    for (size_t kk = 0; kk < num_time_steps; kk++) {
-      xs[kk] = VectorXf::Zero(dynamics->XDim());
-      for (PlayerIndex ii = 0; ii < num_players; ii++)
-        us[kk][ii] = VectorXf::Zero(dynamics->UDim(ii));
-    }
+  // Add a new solver iterate.
+  void AddSolverIterate(const OperatingPoint& operating_point,
+                        const std::vector<Strategy>& strategies) {
+    operating_points_.push_back(operating_point);
+    strategies_.push_back(strategies);
   }
-}
 
-void OperatingPoint::swap(OperatingPoint& other) {
-  xs.swap(other.xs);
-  us.swap(other.us);
-}
+  // Accessors.
+  VectorXf InterpolateState(size_t iterate, Time t) const;
+  float InterpolateState(size_t iterate, Time t, Dimension dim) const;
+  VectorXf InterpolateControl(size_t iterate, Time t, PlayerIndex player) const;
+  float InterpolateControl(size_t iterate, Time t, PlayerIndex player,
+                           Dimension dim) const;
+
+  std::vector<MatrixXf> Ps(size_t iterate, Time t) const;
+  std::vector<VectorXf> alphas(size_t iterate, Time t) const;
+  MatrixXf P(size_t iterate, Time t, PlayerIndex player) const;
+  VectorXf alpha(size_t iterate, Time t, PlayerIndex player) const;
+
+ private:
+  // Get index corresponding to the time step immediately before the given time.
+  size_t TimeToIndex(Time t) const {
+    return static_cast<size_t>(std::max(constants::kSmallNumber, t) /
+                               time_step_);
+  }
+
+  // Get time stamp corresponding to a particular index.
+  Time IndexToTime(size_t idx) const {
+    return time_step_ * static_cast<Time>(idx);
+  }
+
+  // Time discretization.
+  const Time time_step_;
+
+  // Operating points and stratgies, indexed by solver iterate.
+  std::vector<OperatingPoint> operating_points_;
+  std::vector<std::vector<Strategy>> strategies_;
+};  // class Log
 
 }  // namespace ilqgames
+
+#endif

@@ -44,8 +44,10 @@
 #ifndef ILQGAMES_UTILS_OPERATING_POINT_H
 #define ILQGAMES_UTILS_OPERATING_POINT_H
 
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/types.h>
 
+#include <memory>
 #include <vector>
 
 namespace ilqgames {
@@ -58,8 +60,11 @@ struct OperatingPoint {
   // controls for all players at time index kk.
   std::vector<std::vector<VectorXf>> us;
 
-  // Construct with empty vectors of the right size.
-  OperatingPoint(size_t num_time_steps, PlayerIndex num_players);
+  // Construct with empty vectors of the right size, and optionally zero out if
+  // dynamics is non-null.
+  OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
+                 const std::shared_ptr<const MultiPlayerDynamicalSystem>&
+                     dynamics = nullptr);
 
   // Custom swap function.
   void swap(OperatingPoint& other);

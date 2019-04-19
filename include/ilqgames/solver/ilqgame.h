@@ -48,6 +48,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -64,28 +65,29 @@ class ILQGame {
   virtual ~ILQGame() {}
   ILQGame(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
           const std::vector<PlayerCost>& player_costs, Time time_horizon,
-          Time time_step)
+          Time time_step, const std::shared_ptr<Log>& log = nullptr)
       : dynamics_(dynamics),
         player_costs_(player_costs),
         time_horizon_(time_horizon),
         time_step_(time_step),
-        num_time_steps_(static_cast<size_t>(time_horizon / time_step)) {
+        num_time_steps_(static_cast<size_t>(time_horizon / time_step)),
+        log_(log) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
     CHECK_NOTNULL(dynamics_.get());
   }
 
   // Solve this game. Returns true if converged.
-  bool Solve(const VectorXf& x0,
+  bool Solve(const VectorXf& x0, const OperatingPoint& initial_operating_point,
              const std::vector<Strategy>& initial_strategies,
-             std::vector<Strategy>* final_strategies,
-             OperatingPoint* final_operating_point);
+             OperatingPoint* final_operating_point,
+             std::vector<Strategy>* final_strategies);
 
  protected:
   // Modify LQ strategies to improve convergence properties.
   // This function replaces an Armijo linesearch that would take place in ILQR.
   // Returns true if successful.
   virtual bool ModifyLQStrategies(const OperatingPoint& current_operating_point,
-      std::vector<Strategy>* strategies) const;
+                                  std::vector<Strategy>* strategies) const;
 
   // Check convergence. Returns true if converged.
   virtual bool HasConverged(
@@ -114,6 +116,10 @@ class ILQGame {
   const Time time_horizon_;
   const Time time_step_;
   const size_t num_time_steps_;
+
+  // Log in which to store each solver iterate.
+  std::shared_ptr<Log> log_;
+
 };  //\class ILQGame
 
 }  // namespace ilqgames
