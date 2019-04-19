@@ -36,36 +36,52 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store an operating point, i.e. states and controls for each
-// player.
+// Core renderer for 2D top-down trajectories. Integrates with DearImGui.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
+#ifndef ILQGAMES_GUI_TOP_DOWN_RENDERER_H
+#define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
 
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <imgui/imgui.h>
 #include <vector>
 
 namespace ilqgames {
 
-OperatingPoint::OperatingPoint(
-    size_t num_time_steps, PlayerIndex num_players,
-    const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics)
-    : xs(num_time_steps), us(num_time_steps) {
-  for (auto& entry : us) entry.resize(num_players);
-
-  if (dynamics.get()) {
-    for (size_t kk = 0; kk < num_time_steps; kk++) {
-      xs[kk] = VectorXf::Zero(dynamics->XDim());
-      for (PlayerIndex ii = 0; ii < num_players; ii++)
-        us[kk][ii] = VectorXf::Zero(dynamics->UDim(ii));
-    }
+class TopDownRenderer {
+ public:
+  ~TopDownRenderer() {}
+  TopDownRenderer(float meter_to_pixel_ratio, const std::shared_ptr<Log>& log)
+      : meter_to_pixel_ratio_(meter_to_pixel_ratio), log_(log) {
+    CHECK_NOTNULL(log_.get());
   }
-}
 
-void OperatingPoint::swap(OperatingPoint& other) {
-  xs.swap(other.xs);
-  us.swap(other.us);
-}
+  // Render the log in a top-down view.
+  // Takes in lists of x/y/heading indices in the state vector.
+  void Render(const std::vector<Dimension>& x_idxs,
+              const std::vector<Dimension>& y_idxs,
+              const std::vector<Dimension>& heading_idxs) const;
+
+ private:
+  // Convert between positions/headings in Cartesian coordinates and window
+  // coordinates.
+  ImVec2 PositionToWindowCoordinates(float x, float y) const;
+
+  // Static variables for what time to show the state and which iterate to use.
+  static float time_;
+  static int iterate_;
+
+  // Conversion between meters and pixels.
+  const float meter_to_pixel_ratio;
+
+  // Log to render.
+  const std::shared_ptr<Log>& log_;
+};  // class TopDownRenderer
 
 }  // namespace ilqgames
+
+#endif
