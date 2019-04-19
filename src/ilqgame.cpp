@@ -57,9 +57,10 @@
 namespace ilqgames {
 
 bool ILQGame::Solve(const VectorXf& x0,
+                    const OperatingPoint& initial_operating_point,
                     const std::vector<Strategy>& initial_strategies,
-                    std::vector<Strategy>* final_strategies,
-                    OperatingPoint* final_operating_point) {
+                    OperatingPoint* final_operating_point,
+                    std::vector<Strategy>* final_strategies) {
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
@@ -73,18 +74,10 @@ bool ILQGame::Solve(const VectorXf& x0,
                strategy.alphas.size() == this->num_time_steps_;
       }));
 
-  // Last and current operating points. Set current operating point to zeros
-  // so that 'CurrentOperatingPoint' computes correctly the first iteration.
-  OperatingPoint last_operating_point(num_time_steps_, dynamics_->NumPlayers());
+  // Last and current operating points.
+  OperatingPoint last_operating_point(initial_operating_point);
   OperatingPoint current_operating_point(num_time_steps_,
                                          dynamics_->NumPlayers());
-  for (size_t ii = 0; ii < num_time_steps_; ii++) {
-    current_operating_point.xs[ii] =
-        MatrixXf::Zero(dynamics_->XDim(), dynamics_->XDim());
-
-    for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++)
-      current_operating_point.us[ii][jj] = VectorXf::Zero(dynamics_->UDim(jj));
-  }
 
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
@@ -101,6 +94,10 @@ bool ILQGame::Solve(const VectorXf& x0,
 
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;
+
+  // Log initial iterate.
+  if (log_.get())
+    log_->AddSolverIterate(initial_operating_point, initial_strategies);
 
   // Keep iterating until convergence.
   while (!HasConverged(num_iterations, last_operating_point,
@@ -137,6 +134,10 @@ bool ILQGame::Solve(const VectorXf& x0,
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))
       return false;
+
+    // Log current iterate.
+    if (log_.get())
+      log_->AddSolverIterate(current_operating_point, current_strategies);
   }
 
   // Set final strategies and operating point.
