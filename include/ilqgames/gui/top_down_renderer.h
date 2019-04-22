@@ -43,6 +43,7 @@
 #ifndef ILQGAMES_GUI_TOP_DOWN_RENDERER_H
 #define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
 
+#include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
@@ -55,31 +56,45 @@ namespace ilqgames {
 class TopDownRenderer {
  public:
   ~TopDownRenderer() {}
-  TopDownRenderer(float meter_to_pixel_ratio, const std::shared_ptr<Log>& log)
-      : meter_to_pixel_ratio_(meter_to_pixel_ratio), log_(log) {
+
+  // Takes in a log and lists of x/y/heading indices in
+  // the state vector.
+  TopDownRenderer(const std::shared_ptr<Log>& log,
+                  const std::vector<Dimension>& x_idxs,
+                  const std::vector<Dimension>& y_idxs,
+                  const std::vector<Dimension>& heading_idxs)
+      : log_(log),
+        x_idxs_(x_idxs),
+        y_idxs_(y_idxs),
+        heading_idxs_(heading_idxs) {
     CHECK_NOTNULL(log_.get());
+    CHECK_EQ(x_idxs_.size(), y_idxs_.size());
+    CHECK_EQ(x_idxs_.size(), heading_idxs_.size());
   }
 
   // Render the log in a top-down view.
-  // Takes in lists of x/y/heading indices in the state vector.
-  void Render(const std::vector<Dimension>& x_idxs,
-              const std::vector<Dimension>& y_idxs,
-              const std::vector<Dimension>& heading_idxs) const;
+  void Render() const;
 
  private:
   // Convert between positions/headings in Cartesian coordinates and window
   // coordinates.
+  float LengthToPixels(float l) const { return l * pixel_to_meter_ratio_; }
+  float HeadingToWindowCoordinates(float heading) const { return -heading; }
   ImVec2 PositionToWindowCoordinates(float x, float y) const;
 
-  // Static variables for what time to show the state and which iterate to use.
+  // Static variables for what time to show the state and which iterate to use,
+  // and also the pixel-to-meter ratio (i.e., zoom).
   static float time_;
   static int iterate_;
-
-  // Conversion between meters and pixels.
-  const float meter_to_pixel_ratio;
+  static float pixel_to_meter_ratio_;
 
   // Log to render.
-  const std::shared_ptr<Log>& log_;
+  const std::shared_ptr<Log> log_;
+
+  // Lists of x/y/heading indices in the state vector.
+  const std::vector<Dimension> x_idxs_;
+  const std::vector<Dimension> y_idxs_;
+  const std::vector<Dimension> heading_idxs_;
 };  // class TopDownRenderer
 
 }  // namespace ilqgames
