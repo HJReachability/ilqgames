@@ -40,6 +40,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/utils/log.h>
+
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <stdio.h>
@@ -47,6 +50,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+#include <iostream>
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -71,6 +75,13 @@ static void glfw_error_callback(int error, const char* description) {
 }
 
 int main(int, char**) {
+  // Solve the game.
+  // TODO!
+
+  // Create a top-down renderer.
+  ilqgames::TopDownRenderer top_down_renderer(log, x_idxs, y_idxs,
+                                              heading_idxs);
+
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) return 1;
@@ -143,13 +154,7 @@ int main(int, char**) {
     // Top down view.
     {
       ImGui::Begin("Top-Down View");
-
-      const ImVec2 cursor = ImGui::GetMousePos();
-
-      ImDrawList* draw_list = ImGui::GetWindowDrawList();
-      draw_list->AddCircleFilled(ImVec2(cursor.x, cursor.y), 50.0,
-                                 ImColor(ImVec4(1.0, 0.0, 0.5, 1.0)), 20);
-
+      top_down_renderer.Render();
       ImGui::End();
     }
 

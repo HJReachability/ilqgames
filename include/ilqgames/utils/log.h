@@ -71,8 +71,8 @@ class Log : private Uncopyable {
     return (NumIterates() > 0) ? IndexToTime(operating_points_[0].xs.size() - 1)
                                : 0.0;
   }
-  size_t NumIterates const { return operating_points_.size(); }
-  size_t NumTimeSteps const {
+  size_t NumIterates() const { return operating_points_.size(); }
+  size_t NumTimeSteps() const {
     return static_cast<size_t>(FinalTime() / time_step_);
   }
 
