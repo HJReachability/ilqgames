@@ -36,66 +36,33 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Core renderer for 2D top-down trajectories. Integrates with DearImGui.
+// Three player intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GUI_TOP_DOWN_RENDERER_H
-#define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
+#ifndef ILQGAMES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#define ILQGAMES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
-#include <ilqgames/utils/log.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/types.h>
-
-#include <glog/logging.h>
-#include <imgui/imgui.h>
-#include <vector>
+#include <ilqgames/solver/problem.h>
 
 namespace ilqgames {
 
-class TopDownRenderer {
+class ThreePlayerIntersectionExample : public Problem {
  public:
-  ~TopDownRenderer() {}
+  ~ThreePlayerIntersectionExample() {}
+  ThreePlayerIntersectionExample();
 
-  // Takes in a log and lists of x/y/heading indices in
-  // the state vector.
-  TopDownRenderer(const std::shared_ptr<const Log>& log,
-                  const std::vector<Dimension>& x_idxs,
-                  const std::vector<Dimension>& y_idxs,
-                  const std::vector<Dimension>& heading_idxs)
-      : log_(log),
-        x_idxs_(x_idxs),
-        y_idxs_(y_idxs),
-        heading_idxs_(heading_idxs) {
-    CHECK_NOTNULL(log_.get());
-    CHECK_EQ(x_idxs_.size(), y_idxs_.size());
-    CHECK_EQ(x_idxs_.size(), heading_idxs_.size());
-  }
-
-  // Render the log in a top-down view.
-  void Render() const;
+  // Accessors.
+  const std::vector<Dimension>& XIdxs() const { return x_idxs_; }
+  const std::vector<Dimension>& YIdxs() const { return y_idxs_; }
+  const std::vector<Dimension>& HeadingIdxs() const { return heading_idxs_; }
 
  private:
-  // Convert between positions/headings in Cartesian coordinates and window
-  // coordinates.
-  float LengthToPixels(float l) const { return l * pixel_to_meter_ratio_; }
-  float HeadingToWindowCoordinates(float heading) const { return -heading; }
-  ImVec2 PositionToWindowCoordinates(float x, float y) const;
-
-  // Static variables for what time to show the state and which iterate to use,
-  // and also the pixel-to-meter ratio (i.e., zoom).
-  static float time_;
-  static int iterate_;
-  static float pixel_to_meter_ratio_;
-
-  // Log to render.
-  const std::shared_ptr<const Log> log_;
-
-  // Lists of x/y/heading indices in the state vector.
+  // Indices for x/y/heading.
   const std::vector<Dimension> x_idxs_;
   const std::vector<Dimension> y_idxs_;
   const std::vector<Dimension> heading_idxs_;
-};  // class TopDownRenderer
+};  // class ThreePlayerIntersectionExample
 
 }  // namespace ilqgames
 

@@ -41,16 +41,19 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/log.h>
+#include "three_player_intersection_example.h"
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <stdio.h>
+#include <iostream>
+#include <memory>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
-#include <iostream>
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -75,12 +78,15 @@ static void glfw_error_callback(int error, const char* description) {
 }
 
 int main(int, char**) {
+  // Set up the game.
+  ilqgames::ThreePlayerIntersectionExample problem;
+
   // Solve the game.
-  // TODO!
+  std::shared_ptr<ilqgames::Log> log = problem.Solve();
 
   // Create a top-down renderer.
-  ilqgames::TopDownRenderer top_down_renderer(log, x_idxs, y_idxs,
-                                              heading_idxs);
+  ilqgames::TopDownRenderer top_down_renderer(
+      log, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
