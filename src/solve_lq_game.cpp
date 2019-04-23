@@ -81,7 +81,7 @@ std::vector<Strategy> SolveLQGame(
   // List of player-indexed strategies (each of which is a time-indexed
   // affine state error-feedback controller).
   std::vector<Strategy> strategies;
-  for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++)
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
     strategies.emplace_back(horizon, dynamics.XDim(), dynamics.UDim(ii));
 
   // Cache the total number of control dimensions, since this is inefficient

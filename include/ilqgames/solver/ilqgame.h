@@ -65,13 +65,12 @@ class ILQGame {
   virtual ~ILQGame() {}
   ILQGame(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
           const std::vector<PlayerCost>& player_costs, Time time_horizon,
-          Time time_step, const std::shared_ptr<Log>& log = nullptr)
+          Time time_step)
       : dynamics_(dynamics),
         player_costs_(player_costs),
         time_horizon_(time_horizon),
         time_step_(time_step),
-        num_time_steps_(static_cast<size_t>(time_horizon / time_step)),
-        log_(log) {
+        num_time_steps_(static_cast<size_t>(time_horizon / time_step)) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
     CHECK_NOTNULL(dynamics_.get());
   }
@@ -80,7 +79,12 @@ class ILQGame {
   bool Solve(const VectorXf& x0, const OperatingPoint& initial_operating_point,
              const std::vector<Strategy>& initial_strategies,
              OperatingPoint* final_operating_point,
-             std::vector<Strategy>* final_strategies);
+             std::vector<Strategy>* final_strategies,
+             Log* log = nullptr);
+
+  // Access time information.
+  Time TimeHorizon() const { return time_horizon_; }
+  Time TimeStep() const { return time_step_; }
 
  protected:
   // Modify LQ strategies to improve convergence properties.
@@ -116,11 +120,7 @@ class ILQGame {
   const Time time_horizon_;
   const Time time_step_;
   const size_t num_time_steps_;
-
-  // Log in which to store each solver iterate.
-  std::shared_ptr<Log> log_;
-
-};  //\class ILQGame
+};  // class ILQGame
 
 }  // namespace ilqgames
 

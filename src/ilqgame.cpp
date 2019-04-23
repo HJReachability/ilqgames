@@ -60,7 +60,7 @@ bool ILQGame::Solve(const VectorXf& x0,
                     const OperatingPoint& initial_operating_point,
                     const std::vector<Strategy>& initial_strategies,
                     OperatingPoint* final_operating_point,
-                    std::vector<Strategy>* final_strategies) {
+                    std::vector<Strategy>* final_strategies, Log* log) {
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
@@ -96,8 +96,7 @@ bool ILQGame::Solve(const VectorXf& x0,
   size_t num_iterations = 0;
 
   // Log initial iterate.
-  if (log_.get())
-    log_->AddSolverIterate(initial_operating_point, initial_strategies);
+  if (log) log->AddSolverIterate(initial_operating_point, initial_strategies);
 
   // Keep iterating until convergence.
   while (!HasConverged(num_iterations, last_operating_point,
@@ -136,8 +135,7 @@ bool ILQGame::Solve(const VectorXf& x0,
       return false;
 
     // Log current iterate.
-    if (log_.get())
-      log_->AddSolverIterate(current_operating_point, current_strategies);
+    if (log) log->AddSolverIterate(current_operating_point, current_strategies);
   }
 
   // Set final strategies and operating point.

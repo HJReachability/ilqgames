@@ -36,67 +36,47 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Core renderer for 2D top-down trajectories. Integrates with DearImGui.
+// Base class specifying the problem interface for managing calls to the core
+// ILQGame solver. Specific examples will be derived from this class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GUI_TOP_DOWN_RENDERER_H
-#define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
-
+#include <ilqgames/solver/ilqgame.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/log.h>
-#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
-#include <imgui/imgui.h>
+#include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-class TopDownRenderer {
- public:
-  ~TopDownRenderer() {}
+std::shared_ptr<Log> Problem::Solve() {
+  std::shared_ptr<Log> log = CreateNewLog();
 
-  // Takes in a log and lists of x/y/heading indices in
-  // the state vector.
-  TopDownRenderer(const std::shared_ptr<const Log>& log,
-                  const std::vector<Dimension>& x_idxs,
-                  const std::vector<Dimension>& y_idxs,
-                  const std::vector<Dimension>& heading_idxs)
-      : log_(log),
-        x_idxs_(x_idxs),
-        y_idxs_(y_idxs),
-        heading_idxs_(heading_idxs) {
-    CHECK_NOTNULL(log_.get());
-    CHECK_EQ(x_idxs_.size(), y_idxs_.size());
-    CHECK_EQ(x_idxs_.size(), heading_idxs_.size());
-  }
+  // Solver the problem.
+  std::vector<Strategy> final_strategies(*strategies_);
+  OperatingPoint final_operating_point(*operating_point_);
+  if (!solver_->Solve(x0_, *operating_point_, *strategies_,
+                      &final_operating_point, &final_strategies, log.get()))
+    return nullptr;
 
-  // Render the log in a top-down view.
-  void Render() const;
+  // Store these new strategies/operating point.
+  strategies_->swap(final_strategies);
+  operating_point_->swap(final_operating_point);
 
- private:
-  // Convert between positions/headings in Cartesian coordinates and window
-  // coordinates.
-  float LengthToPixels(float l) const { return l * pixel_to_meter_ratio_; }
-  float HeadingToWindowCoordinates(float heading) const { return -heading; }
-  ImVec2 PositionToWindowCoordinates(float x, float y) const;
+  return log;
+}
 
-  // Static variables for what time to show the state and which iterate to use,
-  // and also the pixel-to-meter ratio (i.e., zoom).
-  static float time_;
-  static int iterate_;
-  static float pixel_to_meter_ratio_;
+void Problem::ResetInitialConditions(const VectorXf& x0, Time t0) {
+  x0_ = x0;
 
-  // Log to render.
-  const std::shared_ptr<const Log> log_;
+  // TODO!
+}
 
-  // Lists of x/y/heading indices in the state vector.
-  const std::vector<Dimension> x_idxs_;
-  const std::vector<Dimension> y_idxs_;
-  const std::vector<Dimension> heading_idxs_;
-};  // class TopDownRenderer
+std::shared_ptr<Log> Problem::CreateNewLog() const {
+  return std::make_shared<Log>(solver_->TimeStep());
+}
 
 }  // namespace ilqgames
-
-#endif
