@@ -72,6 +72,8 @@ static constexpr float kInterAxleLength = 5.0;  // m
 
 // Cost weights.
 static constexpr float kLaneCostWeight = 100.0;
+static constexpr float kControlCostWeight = 1.0;
+static constexpr float kGoalCostWeight = 0.1;
 
 // Initial state.
 static constexpr float kP1InitialX = -5.0;   // m
@@ -103,6 +105,14 @@ static constexpr Dimension kP3XIdx = 10;
 static constexpr Dimension kP3YIdx = 11;
 static constexpr Dimension kP3HeadingIdx = 12;
 static constexpr Dimension kP3VIdx = 13;
+
+// Control dimensions.
+static constexpr Dimension kP1OmegaIdx = 0;
+static constexpr Dimension kP1AIdx = 1;
+static constexpr Dimension kP2OmegaIdx = 0;
+static constexpr Dimension kP2AIdx = 1;
+static constexpr Dimension kP3OmegaIdx = 0;
+static constexpr Dimension kP3AIdx = 1;
 }  // anonymous namespace
 
 ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
@@ -141,6 +151,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), dynamics));
 
   // Set up costs for all players.
+  PlayerCost p1_cost, p2_cost, p3_cost;
+
+  // Stay in lanes.
   const Polyline2 lane1(
       {Point2(kP1InitialX, -100.0), Point2(kP1InitialX, 100.0)});
   const Polyline2 lane2({Point2(kP2InitialX, -100.0), Point2(kP2InitialX, 18.0),
@@ -151,11 +164,65 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   const Polyline2 lane3(
       {Point2(-100.0, kP3InitialY), Point2(100.0, kP3InitialY)});
 
-  const QuadraticPolyline2Cost p1_lane_cost(kLaneCostWeight, lane1,
-                                            {kP1XIdx, kP1YIdx});
+  const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx}));
+  p1_cost.AddStateCost(p1_lane_cost);
+
+  const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx}));
+  p2_cost.AddStateCost(p2_lane_cost);
+
+  const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx}));
+  p3_cost.AddStateCost(p3_lane_cost);
+
+  // Penalize control effort.
+  const auto p1_omega_cost =
+      std::make_shared<QuadraticCost>(kControlCostWeight, kP1OmegaIdx);
+  const auto p1_a_cost =
+      std::make_shared<QuadraticCost>(kControlCostWeight, kP1AIdx);
+  p1_cost.AddControlCost(0, p1_omega_cost);
+  p1_cost.AddControlCost(0, p1_a_cost);
+
+  const auto p2_omega_cost =
+      std::make_shared<QuadraticCost>(kControlCostWeight, kP2OmegaIdx);
+  const auto p2_a_cost =
+      std::make_shared<QuadraticCost>(kControlCostWeight, kP2AIdx);
+  p2_cost.AddControlCost(1, p2_omega_cost);
+  p2_cost.AddControlCost(1, p2_a_cost);
+
+  const auto p3_omega_cost =
+      std::make_shared<QuadraticCost>(kControlCostWeight, kP3OmegaIdx);
+  const auto p3_a_cost =
+      std::make_shared<QuadraticCost>(kControlCostWeight, kP3AIdx);
+  p3_cost.AddControlCost(2, p3_omega_cost);
+  p3_cost.AddControlCost(2, p3_a_cost);
+
+  // Goal costs.
+  const auto p1_goalx_cost =
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx);
+  const auto p1_goaly_cost =
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx);
+  p1_cost.AddStateCost(p1_goalx_cost);
+  p1_cost.AddStateCost(p1_goaly_cost);
+
+  const auto p2_goalx_cost =
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx);
+  const auto p2_goaly_cost =
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx);
+  p2_cost.AddStateCost(p2_goalx_cost);
+  p2_cost.AddStateCost(p2_goaly_cost);
+
+  const auto p3_goalx_cost =
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx);
+  const auto p3_goaly_cost =
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx);
+  p3_cost.AddStateCost(p3_goalx_cost);
+  p3_cost.AddStateCost(p3_goaly_cost);
 
   // Set up solver.
-  solver_.reset(new ILQGame(dynamics, player_costs, kTimeHorizon, kTimeStep));
+  solver_.reset(new ILQGame(dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon,
+                            kTimeStep));
 }
 
 }  // namespace ilqgames
