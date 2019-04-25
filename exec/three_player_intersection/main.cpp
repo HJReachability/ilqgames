@@ -81,8 +81,12 @@ int main(int, char**) {
   // Set up the game.
   ilqgames::ThreePlayerIntersectionExample problem;
 
+  std::cout << "problem constructed." << std::endl;
+
   // Solve the game.
   std::shared_ptr<ilqgames::Log> log = problem.Solve();
+
+  std::cout << "problem solved." << std::endl;
 
   // Create a top-down renderer.
   ilqgames::TopDownRenderer top_down_renderer(

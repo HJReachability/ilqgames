@@ -47,21 +47,31 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
 std::shared_ptr<Log> Problem::Solve() {
+  CHECK_NOTNULL(solver_.get());
+  CHECK_NOTNULL(strategies_.get());
+  CHECK_NOTNULL(operating_point_.get());
+
+  // Create empty log.
   std::shared_ptr<Log> log = CreateNewLog();
 
+  std::cout << "made new log" << std::endl;
   // Solver the problem.
   std::vector<Strategy> final_strategies(*strategies_);
   OperatingPoint final_operating_point(*operating_point_);
   if (!solver_->Solve(x0_, *operating_point_, *strategies_,
-                      &final_operating_point, &final_strategies, log.get()))
+                      &final_operating_point, &final_strategies, log.get())) {
+    std::cout << "solver failed" << std::endl;
     return nullptr;
+  }
 
+  std::cout << "solver succeeded" << std::endl;
   // Store these new strategies/operating point.
   strategies_->swap(final_strategies);
   operating_point_->swap(final_operating_point);

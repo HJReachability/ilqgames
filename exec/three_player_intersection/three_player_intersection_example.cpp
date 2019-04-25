@@ -153,6 +153,8 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost;
 
+  std::cout << "yo" << std::endl;
+
   // Stay in lanes.
   const Polyline2 lane1(
       {Point2(kP1InitialX, -100.0), Point2(kP1InitialX, 100.0)});
@@ -219,6 +221,8 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx);
   p3_cost.AddStateCost(p3_goalx_cost);
   p3_cost.AddStateCost(p3_goaly_cost);
+
+  std::cout << "yo" << std::endl;
 
   // Set up solver.
   solver_.reset(new ILQGame(dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon,
