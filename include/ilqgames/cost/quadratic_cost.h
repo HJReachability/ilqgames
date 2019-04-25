@@ -51,9 +51,10 @@ namespace ilqgames {
 class QuadraticCost : public TimeInvariantCost {
  public:
   // Construct from a multiplicative weight and the dimension in which to apply
-  // the quadratic cost. If dimension < 0, then applies to all dimensions.
-  QuadraticCost(float weight, Dimension dim)
-      : TimeInvariantCost(weight), dimension_(dim) {}
+  // the quadratic cost (difference from nominal). If dimension < 0, then
+  // applies to all dimensions (i.e. ||input - nominal * ones()||^2).
+  QuadraticCost(float weight, Dimension dim, float nominal = 0.0)
+      : TimeInvariantCost(weight), dimension_(dim), nominal_(nominal) {}
 
   // Evaluate this cost at the current input.
   float Evaluate(const VectorXf& input) const;
@@ -66,6 +67,9 @@ class QuadraticCost : public TimeInvariantCost {
  private:
   // Dimension in which to apply the quadratic cost.
   const Dimension dimension_;
+
+  // Nominal value in this (or all) dimensions.
+  const float nominal_;
 };  //\class QuadraticCost
 
 }  // namespace ilqgames

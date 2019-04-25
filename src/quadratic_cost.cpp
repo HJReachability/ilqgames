@@ -52,11 +52,14 @@ float QuadraticCost::Evaluate(const VectorXf& input) const {
   CHECK_LT(dimension_, input.size());
 
   // If dimension non-negative, then just square the desired dimension.
-  if (dimension_ >= 0)
-    return 0.5 * weight_ * input(dimension_) * input(dimension_);
+  if (dimension_ >= 0) {
+    const float delta = input(dimension_) - nominal_;
+    return 0.5 * weight_ * delta * delta;
+  }
 
   // Otherwise, cost is squared 2-norm of entire input.
-  return 0.5 * weight_ * input.squaredNorm();
+  return 0.5 * weight_ *
+         (input - VectorXf::Constant(input.size(), nominal_)).squaredNorm();
 }
 
 // Quadraticize this cost at the given input, and add to the running
@@ -76,7 +79,8 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   if (dimension_ >= 0) {
     hess->coeffRef(dimension_, dimension_) += weight_;
 
-    if (grad) grad->coeffRef(dimension_) += weight_ * input(dimension_);
+    if (grad)
+      grad->coeffRef(dimension_) += weight_ * (input(dimension_) - nominal_);
   }
 
   // Handle dimension < 0 case.
@@ -84,7 +88,8 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
     hess->diagonal() =
         hess->diagonal() + VectorXf::Constant(input.size(), weight_);
 
-    if (grad) *grad += weight_ * input;
+    if (grad)
+      *grad += weight_ * (input - VectorXf::Constant(input.size(), nominal_));
   }
 }
 

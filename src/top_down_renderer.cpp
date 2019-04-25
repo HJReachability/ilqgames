@@ -53,7 +53,7 @@ namespace ilqgames {
 
 float TopDownRenderer::time_ = 0.0;
 int TopDownRenderer::iterate_ = 0;
-float TopDownRenderer::pixel_to_meter_ratio_ = 10.0;
+float TopDownRenderer::pixel_to_meter_ratio_ = 5.0;
 
 void TopDownRenderer::Render() const {
   // Do nothing if no iterates yet.
@@ -67,7 +67,7 @@ void TopDownRenderer::Render() const {
   ImGui::SliderInt("Iterate", &iterate_, 0, log_->NumIterates() - 1);
 
   // Make a slider to get the desired zoom level.
-  ImGui::SliderFloat("Zoom", &pixel_to_meter_ratio_, 1.0, 100.0);
+  ImGui::SliderFloat("Zoom", &pixel_to_meter_ratio_, 1.0, 20.0);
 
   // Get the draw list for this window.
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -84,8 +84,9 @@ void TopDownRenderer::Render() const {
                                       log_->State(iterate_, kk, y_idxs_[ii]));
     }
 
-    draw_list->AddPolyline(points, log_->NumTimeSteps(), trajectory_color, true,
-                           trajectory_thickness);
+    constexpr bool kPolylineIsClosed = false;
+    draw_list->AddPolyline(points, log_->NumTimeSteps(), trajectory_color,
+                           kPolylineIsClosed, trajectory_thickness);
   }
 
   // Agent colors will all be greenish. Also specify circle radius and triangle

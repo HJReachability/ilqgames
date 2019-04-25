@@ -61,21 +61,20 @@ std::shared_ptr<Log> Problem::Solve() {
   // Create empty log.
   std::shared_ptr<Log> log = CreateNewLog();
 
-  std::cout << "made new log" << std::endl;
   // Solver the problem.
   std::vector<Strategy> final_strategies(*strategies_);
   OperatingPoint final_operating_point(*operating_point_);
   if (!solver_->Solve(x0_, *operating_point_, *strategies_,
                       &final_operating_point, &final_strategies, log.get())) {
-    std::cout << "solver failed" << std::endl;
+    LOG(WARNING) << "Solver failed.";
     return nullptr;
   }
 
-  std::cout << "solver succeeded" << std::endl;
   // Store these new strategies/operating point.
   strategies_->swap(final_strategies);
   operating_point_->swap(final_operating_point);
 
+  LOG(INFO) << "Solver succeeded.";
   return log;
 }
 
