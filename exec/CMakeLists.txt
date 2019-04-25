@@ -12,4 +12,4 @@ endforeach()
 add_definitions(-DILQGAMES_EXEC_DIR="${CMAKE_SOURCE_DIR}/exec")
 
 # Define the path to the log directory.
-add_definitions(-DILQGAMES_EXEC_LOG_DIR="${CMAKE_SOURCE_DIR}/exec/logs")
+add_definitions(-DILQGAMES_LOG_DIR="${CMAKE_SOURCE_DIR}/logs")
