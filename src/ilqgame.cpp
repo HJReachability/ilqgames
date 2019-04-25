@@ -75,9 +75,10 @@ bool ILQGame::Solve(const VectorXf& x0,
       }));
 
   // Last and current operating points.
-  OperatingPoint last_operating_point(initial_operating_point);
-  OperatingPoint current_operating_point(num_time_steps_,
-                                         dynamics_->NumPlayers());
+  OperatingPoint last_operating_point(num_time_steps_, dynamics_->NumPlayers());
+  OperatingPoint current_operating_point(initial_operating_point);
+
+  std::cout << "set up operating points" << std::endl;
 
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
@@ -92,43 +93,62 @@ bool ILQGame::Solve(const VectorXf& x0,
     quads.resize(dynamics_->NumPlayers(),
                  QuadraticCostApproximation(dynamics_->XDim()));
 
+  std::cout << "set up quadraticizations and linearizations" << std::endl;
+
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;
 
   // Log initial iterate.
   if (log) log->AddSolverIterate(initial_operating_point, initial_strategies);
 
+  std::cout << "added solver iterate to log" << std::endl;
+
   // Keep iterating until convergence.
   while (!HasConverged(num_iterations, last_operating_point,
                        current_operating_point)) {
     num_iterations++;
+
+    std::cout << "Iteration " << num_iterations << std::endl;
 
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
     CurrentOperatingPoint(x0, last_operating_point, current_strategies,
                           &current_operating_point);
 
+    std::cout << "Got new opertaing point" << std::endl;
+
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point.
-    for (size_t ii = 0; ii < num_time_steps_; ii++) {
-      const Time t = ComputeTimeStamp(ii);
-      const auto& x = current_operating_point.xs[ii];
-      const auto& us = current_operating_point.us[ii];
+    for (size_t kk = 0; kk < num_time_steps_; kk++) {
+      const Time t = ComputeTimeStamp(kk);
+      const auto& x = current_operating_point.xs[kk];
+      const auto& us = current_operating_point.us[kk];
+
+      std::cout << "state: " << x.transpose() << std::endl;
+      for (PlayerIndex ii = 0; ii < us.size(); ii++)
+        std::cout << "control " << ii << ": " << us[ii].transpose()
+                  << std::endl;
 
       // Linearize dynamics.
-      linearization[ii] = dynamics_->Linearize(t, time_step_, x, us);
+      linearization[kk] = dynamics_->Linearize(t, time_step_, x, us);
+
+      std::cout << "lin: " << kk << " done." << std::endl;
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
-                     quadraticization[ii].begin(),
+                     quadraticization[kk].begin(),
                      [&t, &x, &us](const PlayerCost& cost) {
                        return cost.Quadraticize(t, x, us);
                      });
     }
 
+    std::cout << "populated lins and quads" << std::endl;
+
     // Solve LQ game.
     current_strategies =
         SolveLQGame(*dynamics_, linearization, quadraticization);
+
+    std::cout << "solved lq game" << std::endl;
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))
@@ -153,25 +173,31 @@ void ILQGame::CurrentOperatingPoint(
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(x0);
-  for (size_t ii = 0; ii < num_time_steps_; ii++) {
-    Time t = ComputeTimeStamp(ii);
+  for (size_t kk = 0; kk < num_time_steps_; kk++) {
+    Time t = ComputeTimeStamp(kk);
 
     // Unpack.
-    const VectorXf delta_x = x - last_operating_point.xs[ii];
-    const auto& last_us = last_operating_point.us[ii];
-    auto& current_us = current_operating_point->us[ii];
+    const VectorXf delta_x = x - last_operating_point.xs[kk];
+    const auto& last_us = last_operating_point.us[kk];
+    auto& current_us = current_operating_point->us[kk];
 
     // Record state.
-    current_operating_point->xs[ii] = x;
+    current_operating_point->xs[kk] = x;
+    std::cout << "next x: " << x.transpose() << std::endl;
+    std::cout << "delta x: " << delta_x.transpose() << std::endl;
 
     // Compute and record control for each player.
     for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
       const auto& strategy = current_strategies[jj];
-      current_us[jj] = strategy(ii, delta_x, last_us[jj]);
+      std::cout << "last u" << jj << ": " << last_us[jj] << std::endl;
+
+      current_us[jj] = strategy(kk, delta_x, last_us[jj]);
+      std::cout << "next u" << jj << ": " << current_us[jj].transpose()
+                << std::endl;
     }
 
     // Integrate dynamics for one time step.
-    if (ii < num_time_steps_ - 1)
+    if (kk < num_time_steps_ - 1)
       x = dynamics_->Integrate(t, time_step_, x, current_us);
   }
 }
@@ -187,15 +213,16 @@ bool ILQGame::HasConverged(
 
   // Check iterations.
   if (iteration >= kMaxIterations) return true;
+  if (iteration == 0) return false;
 
   // Check operating points.
-  for (size_t ii = 0; ii < num_time_steps_; ii++) {
+  for (size_t kk = 0; kk < num_time_steps_; kk++) {
     VectorXf delta =
-        current_operating_point.xs[ii] - last_operating_point.xs[ii];
+        current_operating_point.xs[kk] - last_operating_point.xs[kk];
     if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
 
-    const auto& current_us = current_operating_point.us[ii];
-    const auto& last_us = last_operating_point.us[ii];
+    const auto& current_us = current_operating_point.us[kk];
+    const auto& last_us = last_operating_point.us[kk];
     for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
       delta = current_us[jj] - last_us[jj];
       if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
