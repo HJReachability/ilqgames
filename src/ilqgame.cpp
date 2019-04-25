@@ -78,8 +78,6 @@ bool ILQGame::Solve(const VectorXf& x0,
   OperatingPoint last_operating_point(num_time_steps_, dynamics_->NumPlayers());
   OperatingPoint current_operating_point(initial_operating_point);
 
-  std::cout << "set up operating points" << std::endl;
-
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
 
@@ -93,29 +91,21 @@ bool ILQGame::Solve(const VectorXf& x0,
     quads.resize(dynamics_->NumPlayers(),
                  QuadraticCostApproximation(dynamics_->XDim()));
 
-  std::cout << "set up quadraticizations and linearizations" << std::endl;
-
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;
 
   // Log initial iterate.
   if (log) log->AddSolverIterate(initial_operating_point, initial_strategies);
 
-  std::cout << "added solver iterate to log" << std::endl;
-
   // Keep iterating until convergence.
   while (!HasConverged(num_iterations, last_operating_point,
                        current_operating_point)) {
     num_iterations++;
 
-    std::cout << "Iteration " << num_iterations << std::endl;
-
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
     CurrentOperatingPoint(x0, last_operating_point, current_strategies,
                           &current_operating_point);
-
-    std::cout << "Got new opertaing point" << std::endl;
 
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point.
@@ -124,15 +114,8 @@ bool ILQGame::Solve(const VectorXf& x0,
       const auto& x = current_operating_point.xs[kk];
       const auto& us = current_operating_point.us[kk];
 
-      std::cout << "state: " << x.transpose() << std::endl;
-      for (PlayerIndex ii = 0; ii < us.size(); ii++)
-        std::cout << "control " << ii << ": " << us[ii].transpose()
-                  << std::endl;
-
       // Linearize dynamics.
       linearization[kk] = dynamics_->Linearize(t, time_step_, x, us);
-
-      std::cout << "lin: " << kk << " done." << std::endl;
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
@@ -142,13 +125,9 @@ bool ILQGame::Solve(const VectorXf& x0,
                      });
     }
 
-    std::cout << "populated lins and quads" << std::endl;
-
     // Solve LQ game.
     current_strategies =
         SolveLQGame(*dynamics_, linearization, quadraticization);
-
-    std::cout << "solved lq game" << std::endl;
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))
@@ -183,17 +162,11 @@ void ILQGame::CurrentOperatingPoint(
 
     // Record state.
     current_operating_point->xs[kk] = x;
-    std::cout << "next x: " << x.transpose() << std::endl;
-    std::cout << "delta x: " << delta_x.transpose() << std::endl;
 
     // Compute and record control for each player.
     for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
       const auto& strategy = current_strategies[jj];
-      std::cout << "last u" << jj << ": " << last_us[jj] << std::endl;
-
       current_us[jj] = strategy(kk, delta_x, last_us[jj]);
-      std::cout << "next u" << jj << ": " << current_us[jj].transpose()
-                << std::endl;
     }
 
     // Integrate dynamics for one time step.
@@ -208,7 +181,7 @@ bool ILQGame::HasConverged(
   // As a simple starting point, we'll say that we've converged if it's been
   // at least 50 iterations or the current operating_point and last operating
   // point are within 0.1 in every dimension at every time.
-  constexpr size_t kMaxIterations = 50;
+  constexpr size_t kMaxIterations = 500;
   constexpr float kMaxElementwiseDifference = 0.1;
 
   // Check iterations.
@@ -237,7 +210,7 @@ bool ILQGame::ModifyLQStrategies(const OperatingPoint& current_operating_point,
   CHECK_NOTNULL(strategies);
 
   // As a simple starting point, just scale all the 'alphas' in the strategy to
-  // 0.05 of their original value.
+  // a fraction of their original value.
   constexpr float kAlphaScalingFactor = 0.05;
   for (auto& strategy : *strategies) {
     for (auto& alpha : strategy.alphas) alpha *= kAlphaScalingFactor;

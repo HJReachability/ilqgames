@@ -77,16 +77,19 @@ static void glfw_error_callback(int error, const char* description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-int main(int, char**) {
+int main(int argc, char** argv) {
+  const std::string log_file =
+      ILQGAMES_EXEC_LOG_DIR + std::string("/three_player_intersection.log");
+  google::SetLogDestination(0, log_file.c_str());
+  FLAGS_logtostderr = true;
+  FLAGS_minloglevel = 1;
+  google::InitGoogleLogging(argv[0]);
+
   // Set up the game.
   ilqgames::ThreePlayerIntersectionExample problem;
 
-  std::cout << "problem constructed." << std::endl;
-
   // Solve the game.
   std::shared_ptr<ilqgames::Log> log = problem.Solve();
-
-  std::cout << "problem solved." << std::endl;
 
   // Create a top-down renderer.
   ilqgames::TopDownRenderer top_down_renderer(

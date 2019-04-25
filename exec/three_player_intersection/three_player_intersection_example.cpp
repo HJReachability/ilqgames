@@ -73,7 +73,17 @@ static constexpr float kInterAxleLength = 5.0;  // m
 // Cost weights.
 static constexpr float kLaneCostWeight = 100.0;
 static constexpr float kControlCostWeight = 1.0;
-static constexpr float kGoalCostWeight = 0.1;
+static constexpr float kGoalCostWeight = 5.0;
+
+// Goal points.
+static constexpr float kP1GoalX = -6.0;  // m
+static constexpr float kP1GoalY = 50.0;  // m
+
+static constexpr float kP2GoalX = 50.0;  // m
+static constexpr float kP2GoalY = 12.0;  // m
+
+static constexpr float kP3GoalX = 5.0;   // m
+static constexpr float kP3GoalY = 14.0;  // m
 
 // Initial state.
 static constexpr float kP1InitialX = -5.0;   // m
@@ -153,18 +163,16 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost;
 
-  std::cout << "yo" << std::endl;
-
   // Stay in lanes.
   const Polyline2 lane1(
-      {Point2(kP1InitialX, -100.0), Point2(kP1InitialX, 100.0)});
-  const Polyline2 lane2({Point2(kP2InitialX, -100.0), Point2(kP2InitialX, 18.0),
-                         Point2(kP2InitialX + 0.5, 15.0),
-                         Point2(kP2InitialX + 1.0, 14.0),
-                         Point2(kP2InitialX + 3.0, 12.5),
-                         Point2(kP2InitialX + 6.0, 12.0), Point2(100.0, 12.0)});
+      {Point2(kP1InitialX - 1.0, -100.0), Point2(kP1InitialX - 1.0, 100.0)});
+  const Polyline2 lane2(
+      {Point2(kP2InitialX + 1.0, -100.0), Point2(kP2InitialX + 1.0, 18.0),
+       Point2(kP2InitialX + 1.5, 15.0), Point2(kP2InitialX + 2.0, 14.0),
+       Point2(kP2InitialX + 4.0, 12.5), Point2(kP2InitialX + 7.0, 12.0),
+       Point2(100.0, 12.0)});
   const Polyline2 lane3(
-      {Point2(-100.0, kP3InitialY), Point2(100.0, kP3InitialY)});
+      {Point2(-100.0, kP3InitialY - 1.0), Point2(100.0, kP3InitialY - 1.0)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx}));
@@ -202,27 +210,25 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
 
   // Goal costs.
   const auto p1_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx);
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX);
   const auto p1_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx);
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY);
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
 
   const auto p2_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx);
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX);
   const auto p2_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx);
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY);
   p2_cost.AddStateCost(p2_goalx_cost);
   p2_cost.AddStateCost(p2_goaly_cost);
 
   const auto p3_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx);
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX);
   const auto p3_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx);
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY);
   p3_cost.AddStateCost(p3_goalx_cost);
   p3_cost.AddStateCost(p3_goaly_cost);
-
-  std::cout << "yo" << std::endl;
 
   // Set up solver.
   solver_.reset(new ILQGame(dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon,
