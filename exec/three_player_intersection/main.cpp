@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/log.h>
@@ -91,9 +92,10 @@ int main(int argc, char** argv) {
   // Solve the game.
   std::shared_ptr<ilqgames::Log> log = problem.Solve();
 
-  // Create a top-down renderer.
+  // Create a top-down renderer and control sliders.
+  auto sliders = std::make_shared<ilqgames::ControlSliders>();
   ilqgames::TopDownRenderer top_down_renderer(
-      log, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
+      sliders, log, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -164,12 +166,11 @@ int main(int argc, char** argv) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    // Control sliders.
+    sliders->Render(log->FinalTime(), log->NumIterates());
+
     // Top down view.
-    {
-      ImGui::Begin("Top-Down View");
-      top_down_renderer.Render();
-      ImGui::End();
-    }
+    top_down_renderer.Render();
 
     // Rendering
     ImGui::Render();

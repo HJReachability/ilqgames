@@ -36,70 +36,29 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Core renderer for 2D top-down trajectories. Integrates with DearImGui.
+// Static variables shared by all GUI windows.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GUI_TOP_DOWN_RENDERER_H
-#define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
-
 #include <ilqgames/gui/control_sliders.h>
-#include <ilqgames/utils/log.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <imgui/imgui.h>
-#include <vector>
 
 namespace ilqgames {
 
-class TopDownRenderer {
- public:
-  ~TopDownRenderer() {}
+void ControlSliders::Render(float final_time, int num_solver_iterates) {
+  ImGui::Begin("Control Sliders");
 
-  // Takes in a log and lists of x/y/heading indices in
-  // the state vector.
-  TopDownRenderer(const std::shared_ptr<const ControlSliders>& sliders,
-                  const std::shared_ptr<const Log>& log,
-                  const std::vector<Dimension>& x_idxs,
-                  const std::vector<Dimension>& y_idxs,
-                  const std::vector<Dimension>& heading_idxs)
-      : sliders_(sliders),
-        log_(log),
-        x_idxs_(x_idxs),
-        y_idxs_(y_idxs),
-        heading_idxs_(heading_idxs) {
-    CHECK_NOTNULL(sliders_.get());
-    CHECK_NOTNULL(log_.get());
-    CHECK_EQ(x_idxs_.size(), y_idxs_.size());
-    CHECK_EQ(x_idxs_.size(), heading_idxs_.size());
-  }
+  // Make a slider to get the desired interpolation time.
+  ImGui::SliderFloat("Interpolation Time (s)", &interpolation_time_, 0.0,
+                     final_time);
 
-  // Render the log in a top-down view.
-  void Render() const;
+  // Make a slider to get the desired iterate.
+  ImGui::SliderInt("Iterate", &solver_iterate_, 0, num_solver_iterates - 1);
 
- private:
-  // Convert between positions/headings in Cartesian coordinates and window
-  // coordinates.
-  float LengthToPixels(float l) const {
-    return l * sliders_->PixelToMeterRatio();
-  }
-  float HeadingToWindowCoordinates(float heading) const { return -heading; }
-  ImVec2 PositionToWindowCoordinates(float x, float y) const;
-
-  // Control sliders.
-  const std::shared_ptr<const ControlSliders> sliders_;
-
-  // Log to render.
-  const std::shared_ptr<const Log> log_;
-
-  // Lists of x/y/heading indices in the state vector.
-  const std::vector<Dimension> x_idxs_;
-  const std::vector<Dimension> y_idxs_;
-  const std::vector<Dimension> heading_idxs_;
-};  // class TopDownRenderer
+  // Make a slider to get the desired zoom level.
+  ImGui::SliderFloat("Zoom", &pixel_to_meter_ratio_, 1.0, 20.0);
+  ImGui::End();
+}
 
 }  // namespace ilqgames
-
-#endif

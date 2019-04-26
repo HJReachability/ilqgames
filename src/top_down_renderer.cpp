@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
@@ -51,23 +52,14 @@
 
 namespace ilqgames {
 
-float TopDownRenderer::time_ = 0.0;
-int TopDownRenderer::iterate_ = 0;
-float TopDownRenderer::pixel_to_meter_ratio_ = 5.0;
-
 void TopDownRenderer::Render() const {
   // Do nothing if no iterates yet.
   if (log_->NumIterates() == 0) return;
   const size_t num_agents = x_idxs_.size();
 
-  // Make a slider to get the desired interpolation time.
-  ImGui::SliderFloat("Interpolation Time (s)", &time_, 0.0, log_->FinalTime());
-
-  // Make a slider to get the desired iterate.
-  ImGui::SliderInt("Iterate", &iterate_, 0, log_->NumIterates() - 1);
-
-  // Make a slider to get the desired zoom level.
-  ImGui::SliderFloat("Zoom", &pixel_to_meter_ratio_, 1.0, 20.0);
+  // Set up main top-down viewer window.
+  ImGui::SetNextWindowContentSize(ImVec2(10000.0, 10000.0));
+  ImGui::Begin("Top-Down View");
 
   // Get the draw list for this window.
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -79,9 +71,9 @@ void TopDownRenderer::Render() const {
   ImVec2 points[log_->NumTimeSteps()];
   for (size_t ii = 0; ii < num_agents; ii++) {
     for (size_t kk = 0; kk < log_->NumTimeSteps(); kk++) {
-      points[kk] =
-          PositionToWindowCoordinates(log_->State(iterate_, kk, x_idxs_[ii]),
-                                      log_->State(iterate_, kk, y_idxs_[ii]));
+      points[kk] = PositionToWindowCoordinates(
+          log_->State(sliders_->SolverIterate(), kk, x_idxs_[ii]),
+          log_->State(sliders_->SolverIterate(), kk, y_idxs_[ii]));
     }
 
     constexpr bool kPolylineIsClosed = false;
@@ -100,14 +92,15 @@ void TopDownRenderer::Render() const {
   // >= 0) or a circle (if heading idx < 0).
   for (size_t ii = 0; ii < num_agents; ii++) {
     const ImVec2 p = PositionToWindowCoordinates(
-        log_->InterpolateState(iterate_, time_, x_idxs_[ii]),
-        log_->InterpolateState(iterate_, time_, y_idxs_[ii]));
+        log_->InterpolateState(sliders_->SolverIterate(), sliders_->InterpolationTime(), x_idxs_[ii]),
+        log_->InterpolateState(sliders_->SolverIterate(), sliders_->InterpolationTime(),
+                               y_idxs_[ii]));
 
     if (heading_idxs_[ii] < 0)
       draw_list->AddCircleFilled(p, agent_radius, agent_color);
     else {
-      const float heading = HeadingToWindowCoordinates(
-          log_->InterpolateState(iterate_, time_, heading_idxs_[ii]));
+      const float heading = HeadingToWindowCoordinates(log_->InterpolateState(
+          sliders_->SolverIterate(), sliders_->InterpolationTime(), heading_idxs_[ii]));
       const float cheading = std::cos(heading);
       const float sheading = std::sin(heading);
 
@@ -123,6 +116,8 @@ void TopDownRenderer::Render() const {
       draw_list->AddTriangleFilled(bl, br, top, agent_color);
     }
   }
+
+  ImGui::End();
 }
 
 inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,

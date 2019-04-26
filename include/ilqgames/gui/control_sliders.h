@@ -36,69 +36,41 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Core renderer for 2D top-down trajectories. Integrates with DearImGui.
+// Static variables shared by all GUI windows.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GUI_TOP_DOWN_RENDERER_H
-#define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
-
-#include <ilqgames/gui/control_sliders.h>
-#include <ilqgames/utils/log.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/types.h>
-
-#include <glog/logging.h>
-#include <imgui/imgui.h>
-#include <vector>
+#ifndef ILQGAMES_GUI_STATIC_VARIABLES_H
+#define ILQGAMES_GUI_STATIC_VARIABLES_H
 
 namespace ilqgames {
 
-class TopDownRenderer {
+class ControlSliders {
  public:
-  ~TopDownRenderer() {}
+  ~ControlSliders() {}
+  ControlSliders()
+      : interpolation_time_(0.0),
+        solver_iterate_(0),
+        pixel_to_meter_ratio_(5.0) {}
 
-  // Takes in a log and lists of x/y/heading indices in
-  // the state vector.
-  TopDownRenderer(const std::shared_ptr<const ControlSliders>& sliders,
-                  const std::shared_ptr<const Log>& log,
-                  const std::vector<Dimension>& x_idxs,
-                  const std::vector<Dimension>& y_idxs,
-                  const std::vector<Dimension>& heading_idxs)
-      : sliders_(sliders),
-        log_(log),
-        x_idxs_(x_idxs),
-        y_idxs_(y_idxs),
-        heading_idxs_(heading_idxs) {
-    CHECK_NOTNULL(sliders_.get());
-    CHECK_NOTNULL(log_.get());
-    CHECK_EQ(x_idxs_.size(), y_idxs_.size());
-    CHECK_EQ(x_idxs_.size(), heading_idxs_.size());
-  }
+  // Render all the sliders in a separate window.
+  void Render(float final_time, int num_solver_iterates);
 
-  // Render the log in a top-down view.
-  void Render() const;
+  // Accessors.
+  float InterpolationTime() const { return interpolation_time_; }
+  int SolverIterate() const { return solver_iterate_; }
+  float PixelToMeterRatio() const { return pixel_to_meter_ratio_; }
 
  private:
-  // Convert between positions/headings in Cartesian coordinates and window
-  // coordinates.
-  float LengthToPixels(float l) const {
-    return l * sliders_->PixelToMeterRatio();
-  }
-  float HeadingToWindowCoordinates(float heading) const { return -heading; }
-  ImVec2 PositionToWindowCoordinates(float x, float y) const;
+  // Time at which to interpolate trajectory.
+  float interpolation_time_;
 
-  // Control sliders.
-  const std::shared_ptr<const ControlSliders> sliders_;
+  // Solver iterate to display.
+  int solver_iterate_;
 
-  // Log to render.
-  const std::shared_ptr<const Log> log_;
-
-  // Lists of x/y/heading indices in the state vector.
-  const std::vector<Dimension> x_idxs_;
-  const std::vector<Dimension> y_idxs_;
-  const std::vector<Dimension> heading_idxs_;
-};  // class TopDownRenderer
+  // Zoom: pixel to meter conversion ratio.
+  float pixel_to_meter_ratio_;
+};  // class ControlSliders
 
 }  // namespace ilqgames
 
