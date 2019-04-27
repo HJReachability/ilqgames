@@ -58,13 +58,20 @@ static constexpr float kPixelsToZoomConversion = 1.0 / 20.0;
 static constexpr float kMinZoom = 2.0;
 }  // anonymous namespace
 
-void TopDownRenderer::Render() const {
+void TopDownRenderer::Render() {
   // Do nothing if no iterates yet.
   if (log_->NumIterates() == 0) return;
   const size_t num_agents = x_idxs_.size();
 
   // Set up main top-down viewer window.
   ImGui::Begin("Top-Down View");
+
+  // Set up child window displaying key codes for navigation and zoom.
+  if (ImGui::BeginChild("User Guide")) {
+    ImGui::TextUnformatted("Press \"c\" key to enable navigation.");
+    ImGui::TextUnformatted("Press \"n\" key to change zoom.");
+  }
+  ImGui::EndChild();
 
   // Update last mouse position if "c" or "z" key was just pressed.
   constexpr bool kCatchRepeats = false;

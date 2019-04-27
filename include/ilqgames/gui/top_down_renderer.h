@@ -80,7 +80,7 @@ class TopDownRenderer {
   }
 
   // Render the log in a top-down view.
-  void Render() const;
+  void Render();
 
  private:
   // Convert between positions/headings in Cartesian coordinates and window
@@ -104,13 +104,13 @@ class TopDownRenderer {
   const std::vector<Dimension> heading_idxs_;
 
   // Difference from center of the window in world coordinates.
-  mutable ImVec2 center_delta_;
+  ImVec2 center_delta_;
 
   // Mouse position at most recent key press, in window coordinates.
-  mutable ImVec2 last_mouse_position_;
+  ImVec2 last_mouse_position_;
 
   // Zoom level. This will be the pixel-to-meter ratio.
-  mutable float pixel_to_meter_ratio_;
+  float pixel_to_meter_ratio_;
 };  // class TopDownRenderer
 
 }  // namespace ilqgames
