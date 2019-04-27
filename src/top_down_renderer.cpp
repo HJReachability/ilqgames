@@ -67,8 +67,10 @@ void TopDownRenderer::Render() const {
     last_mouse_position_ = ImGui::GetMousePos();
   else if (ImGui::IsKeyReleased(ImGui::GetIO().KeyMap[ImGuiKey_C])) {
     const ImVec2 mouse_position = ImGui::GetMousePos();
-    center_delta_.x += mouse_position.x - last_mouse_position_.x;
-    center_delta_.y += mouse_position.y - last_mouse_position_.y;
+    center_delta_.x +=
+        PixelsToLength(mouse_position.x - last_mouse_position_.x);
+    center_delta_.y -=
+        PixelsToLength(mouse_position.y - last_mouse_position_.y);
   }
 
   // Get the draw list for this window.
@@ -135,8 +137,16 @@ void TopDownRenderer::Render() const {
 inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,
                                                            float y) const {
   ImVec2 coords = WindowCenter();
-  coords.x += LengthToPixels(x);
-  coords.y -= LengthToPixels(y);
+
+  // Offsets if "c" key is currently down.
+  if (ImGui::IsKeyDown(ImGui::GetIO().KeyMap[ImGuiKey_C])) {
+    const ImVec2 mouse_position = ImGui::GetMousePos();
+    x += PixelsToLength(mouse_position.x - last_mouse_position_.x);
+    y -= PixelsToLength(mouse_position.y - last_mouse_position_.y);
+  }
+
+  coords.x += LengthToPixels(x + center_delta_.x);
+  coords.y -= LengthToPixels(y + center_delta_.y);
   return coords;
 }
 
@@ -145,15 +155,8 @@ inline ImVec2 TopDownRenderer::WindowCenter() const {
   const float window_width = ImGui::GetWindowWidth();
   const float window_height = ImGui::GetWindowHeight();
 
-  // Offsets if "c" key is currently down.
-  float center_x = window_pos.x + 0.5 * window_width + center_delta_.x;
-  float center_y = window_pos.y + 0.5 * window_height + center_delta_.y;
-  if (ImGui::IsKeyDown(ImGui::GetIO().KeyMap[ImGuiKey_C])) {
-    const ImVec2 mouse_position = ImGui::GetMousePos();
-    center_x += mouse_position.x - last_mouse_position_.x;
-    center_y += mouse_position.y - last_mouse_position_.y;
-  }
-
+  const float center_x = window_pos.x + 0.5 * window_width;
+  const float center_y = window_pos.y + 0.5 * window_height;
   return ImVec2(center_x, center_y);
 }
 
