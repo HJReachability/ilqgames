@@ -44,6 +44,7 @@
 #include "three_player_intersection_example.h"
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
@@ -74,6 +75,7 @@ static constexpr float kInterAxleLength = 5.0;  // m
 static constexpr float kLaneCostWeight = 100.0;
 static constexpr float kControlCostWeight = 1.0;
 static constexpr float kGoalCostWeight = 5.0;
+static constexpr float kMaxVWeight = 20.0;
 
 // Goal points.
 static constexpr float kP1GoalX = -6.0;  // m
@@ -84,6 +86,11 @@ static constexpr float kP2GoalY = 12.0;  // m
 
 static constexpr float kP3GoalX = 5.0;   // m
 static constexpr float kP3GoalY = 14.0;  // m
+
+// Max speed.
+static constexpr float kP1MaxV = 15.0;  // m/s
+static constexpr float kP2MaxV = 15.0;  // m/s
+static constexpr float kP3MaxV = 1.0;   // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = -5.0;   // m
@@ -185,6 +192,29 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx}));
   p3_cost.AddStateCost(p3_lane_cost);
+
+  // Max/min speed costs.
+  constexpr bool kOrientedRight = true;
+  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVWeight, kP1VIdx, 0.0, !kOrientedRight);
+  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVWeight, kP1VIdx, kP1MaxV, kOrientedRight);
+  p1_cost.AddStateCost(p1_min_v_cost);
+  p1_cost.AddStateCost(p1_max_v_cost);
+
+  const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVWeight, kP2VIdx, 0.0, !kOrientedRight);
+  const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVWeight, kP2VIdx, kP2MaxV, kOrientedRight);
+  p2_cost.AddStateCost(p2_min_v_cost);
+  p2_cost.AddStateCost(p2_max_v_cost);
+
+  const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVWeight, kP3VIdx, 0.0, !kOrientedRight);
+  const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVWeight, kP3VIdx, kP3MaxV, kOrientedRight);
+  p3_cost.AddStateCost(p3_min_v_cost);
+  p3_cost.AddStateCost(p3_max_v_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost =
