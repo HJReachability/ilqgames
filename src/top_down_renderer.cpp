@@ -58,8 +58,18 @@ void TopDownRenderer::Render() const {
   const size_t num_agents = x_idxs_.size();
 
   // Set up main top-down viewer window.
-  ImGui::SetNextWindowContentSize(ImVec2(10000.0, 10000.0));
   ImGui::Begin("Top-Down View");
+
+  // Update last mouse position if "c" key was just pressed.
+  // When "c" is released, update center delta.
+  constexpr bool kCatchRepeats = false;
+  if (ImGui::IsKeyPressed(ImGui::GetIO().KeyMap[ImGuiKey_C], kCatchRepeats))
+    last_mouse_position_ = ImGui::GetMousePos();
+  else if (ImGui::IsKeyReleased(ImGui::GetIO().KeyMap[ImGuiKey_C])) {
+    const ImVec2 mouse_position = ImGui::GetMousePos();
+    center_delta_.x += mouse_position.x - last_mouse_position_.x;
+    center_delta_.y += mouse_position.y - last_mouse_position_.y;
+  }
 
   // Get the draw list for this window.
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
@@ -92,15 +102,17 @@ void TopDownRenderer::Render() const {
   // >= 0) or a circle (if heading idx < 0).
   for (size_t ii = 0; ii < num_agents; ii++) {
     const ImVec2 p = PositionToWindowCoordinates(
-        log_->InterpolateState(sliders_->SolverIterate(), sliders_->InterpolationTime(), x_idxs_[ii]),
-        log_->InterpolateState(sliders_->SolverIterate(), sliders_->InterpolationTime(),
-                               y_idxs_[ii]));
+        log_->InterpolateState(sliders_->SolverIterate(),
+                               sliders_->InterpolationTime(), x_idxs_[ii]),
+        log_->InterpolateState(sliders_->SolverIterate(),
+                               sliders_->InterpolationTime(), y_idxs_[ii]));
 
     if (heading_idxs_[ii] < 0)
       draw_list->AddCircleFilled(p, agent_radius, agent_color);
     else {
       const float heading = HeadingToWindowCoordinates(log_->InterpolateState(
-          sliders_->SolverIterate(), sliders_->InterpolationTime(), heading_idxs_[ii]));
+          sliders_->SolverIterate(), sliders_->InterpolationTime(),
+          heading_idxs_[ii]));
       const float cheading = std::cos(heading);
       const float sheading = std::sin(heading);
 
@@ -122,16 +134,27 @@ void TopDownRenderer::Render() const {
 
 inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,
                                                            float y) const {
-  // The virtual origin will be in the center of the current window, and the
-  // y-axis is flipped relative to ImGui coordinates.
+  ImVec2 coords = WindowCenter();
+  coords.x += LengthToPixels(x);
+  coords.y -= LengthToPixels(y);
+  return coords;
+}
+
+inline ImVec2 TopDownRenderer::WindowCenter() const {
   const ImVec2 window_pos = ImGui::GetWindowPos();
   const float window_width = ImGui::GetWindowWidth();
   const float window_height = ImGui::GetWindowHeight();
 
-  const float window_x = window_pos.x + 0.5 * window_width + LengthToPixels(x);
-  const float window_y = window_pos.y + 0.5 * window_height - LengthToPixels(y);
+  // Offsets if "c" key is currently down.
+  float center_x = window_pos.x + 0.5 * window_width + center_delta_.x;
+  float center_y = window_pos.y + 0.5 * window_height + center_delta_.y;
+  if (ImGui::IsKeyDown(ImGui::GetIO().KeyMap[ImGuiKey_C])) {
+    const ImVec2 mouse_position = ImGui::GetMousePos();
+    center_x += mouse_position.x - last_mouse_position_.x;
+    center_y += mouse_position.y - last_mouse_position_.y;
+  }
 
-  return ImVec2(window_x, window_y);
+  return ImVec2(center_x, center_y);
 }
 
 }  // namespace ilqgames
