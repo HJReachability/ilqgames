@@ -69,7 +69,7 @@ void TopDownRenderer::Render() const {
     const ImVec2 mouse_position = ImGui::GetMousePos();
     center_delta_.x +=
         PixelsToLength(mouse_position.x - last_mouse_position_.x);
-    center_delta_.y -=
+    center_delta_.y +=
         PixelsToLength(mouse_position.y - last_mouse_position_.y);
   }
 
@@ -146,7 +146,7 @@ inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,
   }
 
   coords.x += LengthToPixels(x + center_delta_.x);
-  coords.y -= LengthToPixels(y + center_delta_.y);
+  coords.y -= LengthToPixels(y - center_delta_.y);
   return coords;
 }
 
