@@ -55,9 +55,6 @@ void ControlSliders::Render(float final_time, int num_solver_iterates) {
 
   // Make a slider to get the desired iterate.
   ImGui::SliderInt("Iterate", &solver_iterate_, 0, num_solver_iterates - 1);
-
-  // Make a slider to get the desired zoom level.
-  ImGui::SliderFloat("Zoom", &pixel_to_meter_ratio_, 1.0, 20.0);
   ImGui::End();
 }
 

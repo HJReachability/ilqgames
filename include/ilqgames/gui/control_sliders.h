@@ -48,10 +48,7 @@ namespace ilqgames {
 class ControlSliders {
  public:
   ~ControlSliders() {}
-  ControlSliders()
-      : interpolation_time_(0.0),
-        solver_iterate_(0),
-        pixel_to_meter_ratio_(5.0) {}
+  ControlSliders() : interpolation_time_(0.0), solver_iterate_(0) {}
 
   // Render all the sliders in a separate window.
   void Render(float final_time, int num_solver_iterates);
@@ -59,7 +56,6 @@ class ControlSliders {
   // Accessors.
   float InterpolationTime() const { return interpolation_time_; }
   int SolverIterate() const { return solver_iterate_; }
-  float PixelToMeterRatio() const { return pixel_to_meter_ratio_; }
 
  private:
   // Time at which to interpolate trajectory.
@@ -67,9 +63,6 @@ class ControlSliders {
 
   // Solver iterate to display.
   int solver_iterate_;
-
-  // Zoom: pixel to meter conversion ratio.
-  float pixel_to_meter_ratio_;
 };  // class ControlSliders
 
 }  // namespace ilqgames
