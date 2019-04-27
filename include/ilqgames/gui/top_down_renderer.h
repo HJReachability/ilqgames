@@ -87,6 +87,9 @@ class TopDownRenderer {
   float LengthToPixels(float l) const {
     return l * sliders_->PixelToMeterRatio();
   }
+  float PixelsToLength(float p) const {
+    return p / sliders_->PixelToMeterRatio();
+  }
   float HeadingToWindowCoordinates(float heading) const { return -heading; }
   ImVec2 PositionToWindowCoordinates(float x, float y) const;
   ImVec2 WindowCenter() const;
@@ -102,9 +105,10 @@ class TopDownRenderer {
   const std::vector<Dimension> y_idxs_;
   const std::vector<Dimension> heading_idxs_;
 
-  // Difference from center of the window in world coordinates, and position of
-  // mouse at most recent key press.
+  // Difference from center of the window in world coordinates.
   mutable ImVec2 center_delta_;
+
+  // Mouse position at most recent key press, in window coordinates.
   mutable ImVec2 last_mouse_position_;
 };  // class TopDownRenderer
 
