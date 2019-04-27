@@ -44,7 +44,7 @@
 #ifndef ILQGAMES_SOLVER_PROBLEM_H
 #define ILQGAMES_SOLVER_PROBLEM_H
 
-#include <ilqgames/solver/ilqgame.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/utils/log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -73,7 +73,7 @@ class Problem {
   virtual std::shared_ptr<Log> CreateNewLog() const;
 
   // Solver.
-  std::unique_ptr<ILQGame> solver_;
+  std::unique_ptr<ILQSolver> solver_;
 
   // Initial condition.
   VectorXf x0_;

@@ -36,56 +36,45 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class specifying the problem interface for managing calls to the core
-// ILQGame solver. Specific examples will be derived from this class.
+// More stable version of the ILQSolver class, in which the method
+// 'ModifyLQStrategies' is overridden to implement a simple linesearch based on
+// bounding the change in operating points.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef ILQGAMES_SOLVER_LINESEARCHING_ILQ_SOLVER_H
+#define ILQGAMES_SOLVER_LINESEARCHING_ILQ_SOLVER_H
+
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/solver/ilq_solver.h>
-#include <ilqgames/solver/problem.h>
-#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-std::shared_ptr<Log> Problem::Solve() {
-  CHECK_NOTNULL(solver_.get());
-  CHECK_NOTNULL(strategies_.get());
-  CHECK_NOTNULL(operating_point_.get());
+class LinesearchingILQSolver : public ILQSolver {
+ public:
+  virtual ~LinesearchingILQSolver() {}
+  LinesearchingILQSolver(
+      const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
+      const std::vector<PlayerCost>& player_costs, Time time_horizon,
+      Time time_step)
+      : ILQSolver(dynamics, player_costs, time_horizon, time_step) {}
 
-  // Create empty log.
-  std::shared_ptr<Log> log = CreateNewLog();
-
-  // Solver the problem.
-  std::vector<Strategy> final_strategies(*strategies_);
-  OperatingPoint final_operating_point(*operating_point_);
-  if (!solver_->Solve(x0_, *operating_point_, *strategies_,
-                      &final_operating_point, &final_strategies, log.get())) {
-    LOG(WARNING) << "Solver failed.";
-    return nullptr;
-  }
-
-  // Store these new strategies/operating point.
-  strategies_->swap(final_strategies);
-  operating_point_->swap(final_operating_point);
-
-  LOG(INFO) << "Solver succeeded.";
-  return log;
-}
-
-void Problem::ResetInitialConditions(const VectorXf& x0, Time t0) {
-  x0_ = x0;
-
-  // TODO!
-}
-
-std::shared_ptr<Log> Problem::CreateNewLog() const {
-  return std::make_shared<Log>(solver_->TimeStep());
-}
+ protected:
+  // Modify LQ strategies to improve convergence properties.
+  // This function replaces an Armijo linesearch that would take place in ILQR.
+  // Returns true if successful.
+  bool ModifyLQStrategies(const OperatingPoint& current_operating_point,
+                          std::vector<Strategy>* strategies) const;
+};  // class LinesearchingILQSolver
 
 }  // namespace ilqgames
+
+#endif
