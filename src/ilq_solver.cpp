@@ -43,7 +43,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/solver/ilqgame.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/solve_lq_game.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
@@ -56,11 +56,11 @@
 
 namespace ilqgames {
 
-bool ILQGame::Solve(const VectorXf& x0,
-                    const OperatingPoint& initial_operating_point,
-                    const std::vector<Strategy>& initial_strategies,
-                    OperatingPoint* final_operating_point,
-                    std::vector<Strategy>* final_strategies, Log* log) {
+bool ILQSolver::Solve(const VectorXf& x0,
+                      const OperatingPoint& initial_operating_point,
+                      const std::vector<Strategy>& initial_strategies,
+                      OperatingPoint* final_operating_point,
+                      std::vector<Strategy>* final_strategies, Log* log) {
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
@@ -77,6 +77,9 @@ bool ILQGame::Solve(const VectorXf& x0,
   // Last and current operating points.
   OperatingPoint last_operating_point(num_time_steps_, dynamics_->NumPlayers());
   OperatingPoint current_operating_point(initial_operating_point);
+
+  // Ensure that the current operating point starts at the initial state.
+  current_operating_point.xs[0] = x0;
 
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
@@ -104,7 +107,7 @@ bool ILQGame::Solve(const VectorXf& x0,
 
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
-    CurrentOperatingPoint(x0, last_operating_point, current_strategies,
+    CurrentOperatingPoint(last_operating_point, current_strategies,
                           &current_operating_point);
 
     // Linearize dynamics and quadraticize costs for all players about the new
@@ -144,14 +147,14 @@ bool ILQGame::Solve(const VectorXf& x0,
   return true;
 }
 
-void ILQGame::CurrentOperatingPoint(
-    const VectorXf& x0, const OperatingPoint& last_operating_point,
+void ILQSolver::CurrentOperatingPoint(
+    const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
     OperatingPoint* current_operating_point) const {
   CHECK_NOTNULL(current_operating_point);
 
   // Integrate dynamics and populate operating point, one time step at a time.
-  VectorXf x(x0);
+  VectorXf x(last_operating_point.xs[0]);
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
     Time t = ComputeTimeStamp(kk);
 
@@ -175,7 +178,7 @@ void ILQGame::CurrentOperatingPoint(
   }
 }
 
-bool ILQGame::HasConverged(
+bool ILQSolver::HasConverged(
     size_t iteration, const OperatingPoint& last_operating_point,
     const OperatingPoint& current_operating_point) const {
   // As a simple starting point, we'll say that we've converged if it's been
@@ -190,23 +193,17 @@ bool ILQGame::HasConverged(
 
   // Check operating points.
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    VectorXf delta =
+    const VectorXf delta =
         current_operating_point.xs[kk] - last_operating_point.xs[kk];
     if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
-
-    const auto& current_us = current_operating_point.us[kk];
-    const auto& last_us = last_operating_point.us[kk];
-    for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
-      delta = current_us[jj] - last_us[jj];
-      if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
-    }
   }
 
   return true;
 }
 
-bool ILQGame::ModifyLQStrategies(const OperatingPoint& current_operating_point,
-                                 std::vector<Strategy>* strategies) const {
+bool ILQSolver::ModifyLQStrategies(
+    const OperatingPoint& current_operating_point,
+    std::vector<Strategy>* strategies) const {
   CHECK_NOTNULL(strategies);
 
   // As a simple starting point, just scale all the 'alphas' in the strategy to

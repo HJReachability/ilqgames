@@ -42,8 +42,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_ILQGAME_H
-#define ILQGAMES_SOLVER_ILQGAME_H
+#ifndef ILQGAMES_SOLVER_ILQ_SOLVER_H
+#define ILQGAMES_SOLVER_ILQ_SOLVER_H
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
@@ -60,12 +60,12 @@
 
 namespace ilqgames {
 
-class ILQGame {
+class ILQSolver {
  public:
-  virtual ~ILQGame() {}
-  ILQGame(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
-          const std::vector<PlayerCost>& player_costs, Time time_horizon,
-          Time time_step)
+  virtual ~ILQSolver() {}
+  ILQSolver(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
+            const std::vector<PlayerCost>& player_costs, Time time_horizon,
+            Time time_step)
       : dynamics_(dynamics),
         player_costs_(player_costs),
         time_horizon_(time_horizon),
@@ -79,8 +79,7 @@ class ILQGame {
   bool Solve(const VectorXf& x0, const OperatingPoint& initial_operating_point,
              const std::vector<Strategy>& initial_strategies,
              OperatingPoint* final_operating_point,
-             std::vector<Strategy>* final_strategies,
-             Log* log = nullptr);
+             std::vector<Strategy>* final_strategies, Log* log = nullptr);
 
   // Access time information.
   Time TimeHorizon() const { return time_horizon_; }
@@ -100,8 +99,7 @@ class ILQGame {
 
   // Compute the current operating point based on the current set of strategies
   // and the last operating point.
-  void CurrentOperatingPoint(const VectorXf& x0,
-                             const OperatingPoint& last_operating_point,
+  void CurrentOperatingPoint(const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
                              OperatingPoint* current_operating_point) const;
 
@@ -120,7 +118,7 @@ class ILQGame {
   const Time time_horizon_;
   const Time time_step_;
   const size_t num_time_steps_;
-};  // class ILQGame
+};  // class ILQSolver
 
 }  // namespace ilqgames
 
