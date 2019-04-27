@@ -52,6 +52,12 @@
 
 namespace ilqgames {
 
+namespace {
+// Zoom paramters.
+static constexpr float kPixelsToZoomConversion = 1.0 / 20.0;
+static constexpr float kMinZoom = 2.0;
+}  // anonymous namespace
+
 void TopDownRenderer::Render() const {
   // Do nothing if no iterates yet.
   if (log_->NumIterates() == 0) return;
@@ -60,17 +66,24 @@ void TopDownRenderer::Render() const {
   // Set up main top-down viewer window.
   ImGui::Begin("Top-Down View");
 
-  // Update last mouse position if "c" key was just pressed.
-  // When "c" is released, update center delta.
+  // Update last mouse position if "c" or "z" key was just pressed.
   constexpr bool kCatchRepeats = false;
-  if (ImGui::IsKeyPressed(ImGui::GetIO().KeyMap[ImGuiKey_C], kCatchRepeats))
+  if (ImGui::IsKeyPressed(ImGui::GetIO().KeyMap[ImGuiKey_C], kCatchRepeats) ||
+      ImGui::IsKeyPressed(ImGui::GetIO().KeyMap[ImGuiKey_Z], kCatchRepeats))
     last_mouse_position_ = ImGui::GetMousePos();
   else if (ImGui::IsKeyReleased(ImGui::GetIO().KeyMap[ImGuiKey_C])) {
+    // When "c" is released, update center delta.
     const ImVec2 mouse_position = ImGui::GetMousePos();
     center_delta_.x +=
         PixelsToLength(mouse_position.x - last_mouse_position_.x);
-    center_delta_.y +=
+    center_delta_.y -=
         PixelsToLength(mouse_position.y - last_mouse_position_.y);
+  } else if (ImGui::IsKeyReleased(ImGui::GetIO().KeyMap[ImGuiKey_Z])) {
+    // When "z" is released, update pixel to meter ratio.
+    const float mouse_delta_y = ImGui::GetMousePos().y - last_mouse_position_.y;
+    pixel_to_meter_ratio_ =
+        std::max(kMinZoom, pixel_to_meter_ratio_ -
+                               kPixelsToZoomConversion * mouse_delta_y);
   }
 
   // Get the draw list for this window.
@@ -134,6 +147,19 @@ void TopDownRenderer::Render() const {
   ImGui::End();
 }
 
+inline float TopDownRenderer::CurrentZoomLevel() const {
+  float conversion = pixel_to_meter_ratio_;
+
+  // Handle "z" down case.
+  if (ImGui::IsKeyDown(ImGui::GetIO().KeyMap[ImGuiKey_Z])) {
+    const float mouse_delta_y = ImGui::GetMousePos().y - last_mouse_position_.y;
+    conversion = std::max(kMinZoom,
+                          conversion - kPixelsToZoomConversion * mouse_delta_y);
+  }
+
+  return conversion;
+}
+
 inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,
                                                            float y) const {
   ImVec2 coords = WindowCenter();
@@ -146,7 +172,7 @@ inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,
   }
 
   coords.x += LengthToPixels(x + center_delta_.x);
-  coords.y -= LengthToPixels(y - center_delta_.y);
+  coords.y -= LengthToPixels(y + center_delta_.y);
   return coords;
 }
 
