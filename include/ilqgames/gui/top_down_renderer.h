@@ -69,7 +69,9 @@ class TopDownRenderer {
         log_(log),
         x_idxs_(x_idxs),
         y_idxs_(y_idxs),
-        heading_idxs_(heading_idxs) {
+        heading_idxs_(heading_idxs),
+        center_delta_(0.0, 0.0),
+        last_mouse_position_(0.0, 0.0) {
     CHECK_NOTNULL(sliders_.get());
     CHECK_NOTNULL(log_.get());
     CHECK_EQ(x_idxs_.size(), y_idxs_.size());
@@ -87,6 +89,7 @@ class TopDownRenderer {
   }
   float HeadingToWindowCoordinates(float heading) const { return -heading; }
   ImVec2 PositionToWindowCoordinates(float x, float y) const;
+  ImVec2 WindowCenter() const;
 
   // Control sliders.
   const std::shared_ptr<const ControlSliders> sliders_;
@@ -98,6 +101,11 @@ class TopDownRenderer {
   const std::vector<Dimension> x_idxs_;
   const std::vector<Dimension> y_idxs_;
   const std::vector<Dimension> heading_idxs_;
+
+  // Difference from center of the window in world coordinates, and position of
+  // mouse at most recent key press.
+  mutable ImVec2 center_delta_;
+  mutable ImVec2 last_mouse_position_;
 };  // class TopDownRenderer
 
 }  // namespace ilqgames
