@@ -43,6 +43,7 @@
 
 #include "three_player_intersection_example.h"
 #include <ilqgames/cost/curvature_cost.h>
+#include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
@@ -325,24 +326,30 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   p3_cost.AddStateCost(p3_s_cost);
 
   // Goal costs.
-  const auto p1_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX);
-  const auto p1_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY);
+  const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
+      kTimeHorizon - 1.0);
+  const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
+      kTimeHorizon - 1.0);
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
 
-  const auto p2_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX);
-  const auto p2_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY);
+  const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
+      kTimeHorizon - 1.0);
+  const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
+      kTimeHorizon - 1.0);
   p2_cost.AddStateCost(p2_goalx_cost);
   p2_cost.AddStateCost(p2_goaly_cost);
 
-  const auto p3_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX);
-  const auto p3_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY);
+  const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX),
+      kTimeHorizon - 1.0);
+  const auto p3_goaly_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY),
+      kTimeHorizon - 1.0);
   p3_cost.AddStateCost(p3_goalx_cost);
   p3_cost.AddStateCost(p3_goaly_cost);
 
