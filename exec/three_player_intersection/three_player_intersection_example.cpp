@@ -42,12 +42,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "three_player_intersection_example.h"
+#include <ilqgames/cost/curvature_cost.h>
+#include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
-#include <ilqgames/dynamics/single_player_car_5d.h>
-#include <ilqgames/dynamics/single_player_unicycle_4d.h>
+#include <ilqgames/dynamics/single_player_car_7d.h>
+#include <ilqgames/dynamics/single_player_unicycle_5d.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/linesearching_ilq_solver.h>
@@ -73,26 +75,22 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
-static constexpr float kLaneCostWeight = 50.0;
+static constexpr float kLaneCostWeight = 10.0;
 static constexpr float kACostWeight = 1.0;
-static constexpr float kOmegaCostWeight = 25.0;
-static constexpr float kGoalCostWeight = 2.0;
+static constexpr float kOmegaCostWeight = 1.0;
+static constexpr float kSCostWeight = 1.0;
 static constexpr float kMaxVCostWeight = 100.0;
+static constexpr float kCurvatureCostWeight = 10.0;
 
-// Goal points.
-static constexpr float kP1GoalX = -6.0;  // m
-static constexpr float kP1GoalY = 50.0;  // m
-
-static constexpr float kP2GoalX = 50.0;  // m
-static constexpr float kP2GoalY = 12.0;  // m
-
-static constexpr float kP3GoalX = 5.0;   // m
-static constexpr float kP3GoalY = 14.0;  // m
-
-// Max speed.
+// Nominal and max speed.
 static constexpr float kP1MaxV = 15.0;  // m/s
 static constexpr float kP2MaxV = 15.0;  // m/s
-static constexpr float kP3MaxV = 1.0;   // m/s
+static constexpr float kP3MaxV = 3.0;   // m/s
+static constexpr float kMinV = 0.1;     // m/s
+
+static constexpr float kP1NominalV = 10.0;  // m/s
+static constexpr float kP2NominalV = 10.0;  // m/s
+static constexpr float kP3NominalV = 1.0;   // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = -5.0;   // m
@@ -107,7 +105,7 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 2.0;  // m/s
+static constexpr float kP1InitialSpeed = 5.0;  // m/s
 static constexpr float kP2InitialSpeed = 5.0;  // m/s
 static constexpr float kP3InitialSpeed = 1.0;  // m/s
 
@@ -116,14 +114,19 @@ static constexpr Dimension kP1XIdx = 0;
 static constexpr Dimension kP1YIdx = 1;
 static constexpr Dimension kP1HeadingIdx = 2;
 static constexpr Dimension kP1VIdx = 4;
-static constexpr Dimension kP2XIdx = 5;
-static constexpr Dimension kP2YIdx = 6;
-static constexpr Dimension kP2HeadingIdx = 7;
-static constexpr Dimension kP2VIdx = 9;
-static constexpr Dimension kP3XIdx = 10;
-static constexpr Dimension kP3YIdx = 11;
-static constexpr Dimension kP3HeadingIdx = 12;
-static constexpr Dimension kP3VIdx = 13;
+static constexpr Dimension kP1KappaIdx = 5;
+static constexpr Dimension kP1SIdx = 6;
+static constexpr Dimension kP2XIdx = 7;
+static constexpr Dimension kP2YIdx = 8;
+static constexpr Dimension kP2HeadingIdx = 9;
+static constexpr Dimension kP2VIdx = 11;
+static constexpr Dimension kP2KappaIdx = 12;
+static constexpr Dimension kP2SIdx = 13;
+static constexpr Dimension kP3XIdx = 14;
+static constexpr Dimension kP3YIdx = 15;
+static constexpr Dimension kP3HeadingIdx = 16;
+static constexpr Dimension kP3VIdx = 17;
+static constexpr Dimension kP3SIdx = 18;
 
 // Control dimensions.
 static constexpr Dimension kP1OmegaIdx = 0;
@@ -141,9 +144,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   // Create dynamics.
   const std::shared_ptr<ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerCar5D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar5D>(kInterAxleLength),
-           std::make_shared<SinglePlayerUnicycle4D>()}));
+          {std::make_shared<SinglePlayerCar7D>(kInterAxleLength),
+           std::make_shared<SinglePlayerCar7D>(kInterAxleLength),
+           std::make_shared<SinglePlayerUnicycle5D>()}));
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
@@ -198,25 +201,34 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   // Max/min speed costs.
   constexpr bool kOrientedRight = true;
   const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, 0.0, !kOrientedRight);
+      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight);
   const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight);
   p1_cost.AddStateCost(p1_min_v_cost);
   p1_cost.AddStateCost(p1_max_v_cost);
 
   const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, 0.0, !kOrientedRight);
+      kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight);
   const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight);
   p2_cost.AddStateCost(p2_min_v_cost);
   p2_cost.AddStateCost(p2_max_v_cost);
 
   const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, 0.0, !kOrientedRight);
+      kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight);
   const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight);
   p3_cost.AddStateCost(p3_min_v_cost);
   p3_cost.AddStateCost(p3_max_v_cost);
+
+  // Curvature costs for P1 and P2.
+  const auto p1_curvature_cost =
+      std::make_shared<QuadraticCost>(kCurvatureCostWeight, kP1KappaIdx);
+  p1_cost.AddStateCost(p1_curvature_cost);
+
+  const auto p2_curvature_cost =
+      std::make_shared<QuadraticCost>(kCurvatureCostWeight, kP2KappaIdx);
+  p2_cost.AddStateCost(p2_curvature_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost =
@@ -237,31 +249,22 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
-  // Goal costs.
-  const auto p1_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX);
-  const auto p1_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY);
-  p1_cost.AddStateCost(p1_goalx_cost);
-  p1_cost.AddStateCost(p1_goaly_cost);
+  // Path lenth (negative) costs.
+  const auto p1_s_cost = std::make_shared<NominalPathLengthCost>(
+      kSCostWeight, kP1SIdx, kP1NominalV);
+  p1_cost.AddStateCost(p1_s_cost);
 
-  const auto p2_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX);
-  const auto p2_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY);
-  p2_cost.AddStateCost(p2_goalx_cost);
-  p2_cost.AddStateCost(p2_goaly_cost);
+  const auto p2_s_cost = std::make_shared<NominalPathLengthCost>(
+      kSCostWeight, kP2SIdx, kP2NominalV);
+  p2_cost.AddStateCost(p2_s_cost);
 
-  const auto p3_goalx_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX);
-  const auto p3_goaly_cost =
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY);
-  p3_cost.AddStateCost(p3_goalx_cost);
-  p3_cost.AddStateCost(p3_goaly_cost);
+  const auto p3_s_cost = std::make_shared<NominalPathLengthCost>(
+      kSCostWeight, kP3SIdx, kP3NominalV);
+  p3_cost.AddStateCost(p3_s_cost);
 
   // Set up solver.
-  solver_.reset(new ILQSolver(
-      dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon, kTimeStep));
+  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
+                              kTimeHorizon, kTimeStep));
 }
 
 }  // namespace ilqgames

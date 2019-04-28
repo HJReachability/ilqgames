@@ -69,7 +69,7 @@ void TopDownRenderer::Render() {
   // Set up child window displaying key codes for navigation and zoom.
   if (ImGui::BeginChild("User Guide")) {
     ImGui::TextUnformatted("Press \"c\" key to enable navigation.");
-    ImGui::TextUnformatted("Press \"n\" key to change zoom.");
+    ImGui::TextUnformatted("Press \"z\" key to change zoom.");
   }
   ImGui::EndChild();
 
