@@ -72,15 +72,16 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
-static constexpr float kInterAxleLength = 4.0;  // m
+static constexpr float kInterAxleLength = 1.0;  // m
 
 // Cost weights.
-static constexpr float kLaneCostWeight = 10.0;
-static constexpr float kACostWeight = 1.0;
-static constexpr float kOmegaCostWeight = 1.0;
+static constexpr float kLaneCostWeight = 100.0;
+static constexpr float kACostWeight = 0.1;
+static constexpr float kOmegaCostWeight = 10.0;
 static constexpr float kSCostWeight = 1.0;
 static constexpr float kMaxVCostWeight = 100.0;
-static constexpr float kCurvatureCostWeight = 10.0;
+static constexpr float kNominalVCostWeight = 1.0;
+static constexpr float kCurvatureCostWeight = 50.0;
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 15.0;  // m/s
@@ -106,27 +107,32 @@ static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
 static constexpr float kP1InitialSpeed = 5.0;  // m/s
-static constexpr float kP2InitialSpeed = 5.0;  // m/s
+static constexpr float kP2InitialSpeed = 2.0;  // m/s
 static constexpr float kP3InitialSpeed = 1.0;  // m/s
 
 // State dimensions.
-static constexpr Dimension kP1XIdx = 0;
-static constexpr Dimension kP1YIdx = 1;
-static constexpr Dimension kP1HeadingIdx = 2;
-static constexpr Dimension kP1VIdx = 4;
-static constexpr Dimension kP1KappaIdx = 5;
-static constexpr Dimension kP1SIdx = 6;
-static constexpr Dimension kP2XIdx = 7;
-static constexpr Dimension kP2YIdx = 8;
-static constexpr Dimension kP2HeadingIdx = 9;
-static constexpr Dimension kP2VIdx = 11;
-static constexpr Dimension kP2KappaIdx = 12;
-static constexpr Dimension kP2SIdx = 13;
-static constexpr Dimension kP3XIdx = 14;
-static constexpr Dimension kP3YIdx = 15;
-static constexpr Dimension kP3HeadingIdx = 16;
-static constexpr Dimension kP3VIdx = 17;
-static constexpr Dimension kP3SIdx = 18;
+using P1 = SinglePlayerCar7D;
+using P2 = SinglePlayerCar7D;
+using P3 = SinglePlayerUnicycle5D;
+
+static constexpr Dimension kP1XIdx = P1::kPxIdx;
+static constexpr Dimension kP1YIdx = P1::kPyIdx;
+static constexpr Dimension kP1HeadingIdx = P1::kThetaIdx;
+static constexpr Dimension kP1VIdx = P1::kVIdx;
+static constexpr Dimension kP1KappaIdx = P1::kKappaIdx;
+static constexpr Dimension kP1SIdx = P1::kSIdx;
+static constexpr Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
+static constexpr Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
+static constexpr Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
+static constexpr Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
+static constexpr Dimension kP2KappaIdx = P1::kNumXDims + P2::kKappaIdx;
+static constexpr Dimension kP2SIdx = P1::kNumXDims + P2::kSIdx;
+static constexpr Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
+static constexpr Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
+static constexpr Dimension kP3HeadingIdx =
+    P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
+static constexpr Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
+static constexpr Dimension kP3SIdx = P1::kNumXDims + P2::kNumXDims + P3::kSIdx;
 
 // Control dimensions.
 static constexpr Dimension kP1OmegaIdx = 0;
@@ -198,28 +204,37 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx}));
   p3_cost.AddStateCost(p3_lane_cost);
 
-  // Max/min speed costs.
+  // Max/min/nominal speed costs.
   constexpr bool kOrientedRight = true;
   const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight);
   const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight);
+  const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
+      kNominalVCostWeight, kP1VIdx, kP1NominalV);
   p1_cost.AddStateCost(p1_min_v_cost);
   p1_cost.AddStateCost(p1_max_v_cost);
+  p1_cost.AddStateCost(p1_nominal_v_cost);
 
   const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight);
   const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight);
+  const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
+      kNominalVCostWeight, kP2VIdx, kP2NominalV);
   p2_cost.AddStateCost(p2_min_v_cost);
   p2_cost.AddStateCost(p2_max_v_cost);
+  p2_cost.AddStateCost(p2_nominal_v_cost);
 
   const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight);
   const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight);
+  const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
+      kNominalVCostWeight, kP3VIdx, kP3NominalV);
   p3_cost.AddStateCost(p3_min_v_cost);
   p3_cost.AddStateCost(p3_max_v_cost);
+  p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // Curvature costs for P1 and P2.
   const auto p1_curvature_cost =
