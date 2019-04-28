@@ -36,49 +36,76 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost in a particular (or all) dimension(s).
+// Semiquadratic cost on distance from a polyline.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/semiquadratic_cost.h>
+#include <ilqgames/cost/semiquadratic_polyline2_cost.h>
+#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
+#include <tuple>
 
 namespace ilqgames {
 
-// Evaluate this cost at the current input.
-float SemiquadraticCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dimension_, input.size());
+float SemiquadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
+  CHECK_LT(xidx_, input.size());
+  CHECK_LT(yidx_, input.size());
 
-  const float diff = input(dimension_) - threshold_;
-  if ((diff > 0.0 && oriented_right_) || (diff < 0.0 && !oriented_right_))
-    return 0.5 * weight_ * diff * diff;
+  // Compute signed squared distance by finding closest point.
+  float signed_squared_distance;
+  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)),
+                         &signed_squared_distance);
 
-  return 0.0;
+  // Check which side we're on.
+  if (!IsActive(signed_squared_distance)) return 0.0;
+
+  // Handle orientation.
+  const float signed_distance = sgn(signed_squared_distance) *
+                                std::sqrt(std::abs(signed_squared_distance));
+  const float diff = signed_distance - threshold_;
+  return 0.5 * weight_ * diff * diff;
 }
 
-// Quadraticize this cost at the given input, and add to the running
-// sum of gradients and Hessians (if non-null).
-void SemiquadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                     VectorXf* grad) const {
-  CHECK_LT(dimension_, input.size());
+void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
+                                              MatrixXf* hess,
+                                              VectorXf* grad) const {
+  CHECK_LT(xidx_, input.size());
+  CHECK_LT(yidx_, input.size());
 
-  // Handle no cost case first.
-  const float diff = input(dimension_) - threshold_;
-  if ((diff < 0.0 && oriented_right_) || (diff > 0.0 && !oriented_right_))
-    return;
-
-  // Check dimensions.
   CHECK_NOTNULL(hess);
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
 
-  (*hess)(dimension_, dimension_) += weight_;
+  // Compute signed squared distance by finding closest point.
+  float signed_squared_distance;
+  const Point2 closest_point = polyline_.ClosestPoint(
+      Point2(input(xidx_), input(yidx_)), &signed_squared_distance);
 
+  /// Check if cost is active.
+  if (!IsActive(signed_squared_distance)) return;
+
+  // Compute signed distance and diff.
+  const float signed_distance = sgn(signed_squared_distance) *
+                                std::sqrt(std::abs(signed_squared_distance));
+  const float diff = signed_distance - threshold_;
+
+  // Handle Hessian first.
+  (*hess)(xidx_, xidx_) += weight_;
+  (*hess)(yidx_, yidx_) += weight_;
+
+  // Maybe handle gradient.
   if (grad) {
     CHECK_EQ(input.size(), grad->size());
-    (*grad)(dimension_) += weight_ * diff;
+
+    // Unpack current position and find closest point.
+    const Point2 current_position(input(xidx_), input(yidx_));
+    Point2 relative = current_position - closest_point;
+    relative *= std::abs(diff) * relative.norm();
+
+    (*grad)(xidx_) += weight_ * relative.x();
+    (*grad)(yidx_) += weight_ * relative.y();
   }
 }
 
