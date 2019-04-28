@@ -79,11 +79,11 @@ static constexpr float kInterAxleLength = 4.0;  // m
 // Cost weights.
 static constexpr float kLaneCostWeight = 50.0;
 static constexpr float kLaneBoundaryCostWeight = 200.0;
-static constexpr float kACostWeight = 1.0;
+static constexpr float kACostWeight = 10.0;
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kSCostWeight = 0.0;
-static constexpr float kMaxVCostWeight = 100.0;
-static constexpr float kNominalVCostWeight = 0.0;
+static constexpr float kMaxVCostWeight = 1000.0;
+static constexpr float kNominalVCostWeight = 0.01;
 static constexpr float kCurvatureCostWeight = 0.0;
 static constexpr float kGoalCostWeight = 10.0;
 
