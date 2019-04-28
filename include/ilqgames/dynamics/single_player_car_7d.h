@@ -131,8 +131,8 @@ inline void SinglePlayerCar7D::Linearize(Time t, Time time_step,
       x(kVIdx) * time_step / (inter_axle_distance_ * cphi * cphi);
   A(kThetaIdx, kVIdx) += tphi * time_step / inter_axle_distance_;
 
-  A(kKappaIdx, kPhiIdx) +=
-      2.0 * u(kOmegaIdx) * tphi / (cphi * cphi * inter_axle_distance_);
+  A(kKappaIdx, kPhiIdx) += 2.0 * time_step * u(kOmegaIdx) * tphi /
+                           (cphi * cphi * inter_axle_distance_);
 
   A(kSIdx, kVIdx) += time_step;
 
