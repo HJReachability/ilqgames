@@ -45,6 +45,7 @@
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
+#include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
@@ -77,20 +78,27 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
-static constexpr float kLaneCostWeight = 50.0;
-static constexpr float kLaneBoundaryCostWeight = 200.0;
-static constexpr float kACostWeight = 10.0;
+static constexpr float kACostWeight = 1.0;
 static constexpr float kOmegaCostWeight = 50.0;
-static constexpr float kSCostWeight = 0.0;
-static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 0.01;
 static constexpr float kCurvatureCostWeight = 0.0;
+
+static constexpr float kMaxVCostWeight = 100.0;
+static constexpr float kNominalVCostWeight = 1.0;
+
+static constexpr float kSCostWeight = 1.0;
 static constexpr float kGoalCostWeight = 10.0;
+
+static constexpr float kLaneCostWeight = 1.0;
+static constexpr float kLaneBoundaryCostWeight = 100.0;
+
+static constexpr float kP1ProximityCostWeight = 100.0;
+static constexpr float kP2ProximityCostWeight = 100.0;
+static constexpr float kP3ProximityCostWeight = 10.0;
 
 static constexpr bool kOrientedRight = true;
 
 // Lane dimension.
-static constexpr float kLaneHalfWidth = 4.0;  // m
+static constexpr float kLaneHalfWidth = 2.0;  // m
 
 // Goal points.
 static constexpr float kP1GoalX = -6.0;  // m
@@ -125,9 +133,9 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 5.0;  // m/s
-static constexpr float kP2InitialSpeed = 5.0;  // m/s
-static constexpr float kP3InitialSpeed = 1.0;  // m/s
+static constexpr float kP1InitialSpeed = 4.0;  // m/s
+static constexpr float kP2InitialSpeed = 4.0;  // m/s
+static constexpr float kP3InitialSpeed = 0.1;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar7D;
@@ -353,9 +361,31 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   p3_cost.AddStateCost(p3_goalx_cost);
   p3_cost.AddStateCost(p3_goaly_cost);
 
+  // Pairwise proximity costs.
+  const std::shared_ptr<ProximityCost> p1p2_proximity_cost(new ProximityCost(
+      kP1ProximityCostWeight, {kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx}));
+  const std::shared_ptr<ProximityCost> p1p3_proximity_cost(new ProximityCost(
+      kP1ProximityCostWeight, {kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx}));
+  p1_cost.AddStateCost(p1p2_proximity_cost);
+  p1_cost.AddStateCost(p1p3_proximity_cost);
+
+  const std::shared_ptr<ProximityCost> p2p1_proximity_cost(new ProximityCost(
+      kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx}));
+  const std::shared_ptr<ProximityCost> p2p3_proximity_cost(new ProximityCost(
+      kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx}));
+  p2_cost.AddStateCost(p2p1_proximity_cost);
+  p2_cost.AddStateCost(p2p3_proximity_cost);
+
+  const std::shared_ptr<ProximityCost> p3p1_proximity_cost(new ProximityCost(
+      kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx}));
+  const std::shared_ptr<ProximityCost> p3p2_proximity_cost(new ProximityCost(
+      kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx}));
+  p3_cost.AddStateCost(p3p1_proximity_cost);
+  p3_cost.AddStateCost(p3p2_proximity_cost);
+
   // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
-                              kTimeHorizon, kTimeStep));
+  solver_.reset(new LinesearchingILQSolver(
+      dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon, kTimeStep));
 }
 
 }  // namespace ilqgames

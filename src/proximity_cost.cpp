@@ -36,37 +36,26 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost in a particular (or all) dimension(s).
+// Penalizes 1.0 / (relative distance)^2 between two pairs of state dimensions
+// (representing two positions of vehicles whose states have been concatenated).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 
 namespace ilqgames {
 
-// Evaluate this cost at the current input.
-float QuadraticCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dimension_, input.size());
-
-  // If dimension non-negative, then just square the desired dimension.
-  if (dimension_ >= 0) {
-    const float delta = input(dimension_) - nominal_;
-    return 0.5 * weight_ * delta * delta;
-  }
-
-  // Otherwise, cost is squared 2-norm of entire input.
-  return 0.5 * weight_ *
-         (input - VectorXf::Constant(input.size(), nominal_)).squaredNorm();
+float ProximityCost::Evaluate(const VectorXf& input) const {
+  const float dx = input(xidx1_) - input(xidx2_);
+  const float dy = input(yidx1_) - input(yidx2_);
+  return 0.5 * weight_ / (dx * dx + dy * dy);
 }
 
-// Quadraticize this cost at the given input, and add to the running
-// sum of gradients and Hessians (if non-null).
-void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
+void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
                                  VectorXf* grad) const {
-  CHECK_LT(dimension_, input.size());
   CHECK_NOTNULL(hess);
 
   // Check dimensions.
@@ -75,20 +64,48 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
 
   if (grad) CHECK_EQ(input.size(), grad->size());
 
-  // Handle single dimension case first.
-  if (dimension_ >= 0) {
-    (*hess)(dimension_, dimension_) += weight_;
+  // Compute Hessian and gradient.
+  const float dx = input(xidx1_) - input(xidx2_);
+  const float dy = input(yidx1_) - input(yidx2_);
+  const float distance_sq = dx * dx + dy * dy;
+  const float weight_over_distance_4th = weight_ / (distance_sq * distance_sq);
 
-    if (grad) (*grad)(dimension_) += weight_ * (input(dimension_) - nominal_);
-  }
+  const float hess_x1x1 =
+      weight_over_distance_4th * (4.0 * dx * dx / distance_sq - 1.0);
+  (*hess)(xidx1_, xidx1_) += hess_x1x1;
+  (*hess)(xidx1_, xidx2_) -= hess_x1x1;
+  (*hess)(xidx2_, xidx1_) -= hess_x1x1;
+  (*hess)(xidx2_, xidx2_) += hess_x1x1;
 
-  // Handle dimension < 0 case.
-  else {
-    hess->diagonal() =
-        hess->diagonal() + VectorXf::Constant(input.size(), weight_);
+  const float hess_y1y1 =
+      weight_over_distance_4th * (4.0 * dy * dy / distance_sq - 1.0);
+  (*hess)(yidx1_, yidx1_) += hess_y1y1;
+  (*hess)(yidx1_, yidx2_) -= hess_y1y1;
+  (*hess)(yidx2_, yidx1_) -= hess_y1y1;
+  (*hess)(yidx2_, yidx2_) += hess_y1y1;
 
-    if (grad)
-      *grad += weight_ * (input - VectorXf::Constant(input.size(), nominal_));
+  const float hess_x1y1 =
+      4.0 * weight_over_distance_4th * dx * dy / distance_sq;
+  (*hess)(xidx1_, yidx1_) += hess_x1y1;
+  (*hess)(yidx1_, xidx1_) += hess_x1y1;
+
+  (*hess)(xidx1_, yidx2_) -= hess_x1y1;
+  (*hess)(yidx2_, xidx1_) -= hess_x1y1;
+
+  (*hess)(xidx2_, yidx1_) -= hess_x1y1;
+  (*hess)(yidx1_, xidx2_) -= hess_x1y1;
+
+  (*hess)(xidx2_, yidx2_) += hess_x1y1;
+  (*hess)(yidx2_, xidx2_) += hess_x1y1;
+
+  if (grad) {
+    const float ddx1 = -weight_over_distance_4th * dx;
+    (*grad)(xidx1_) += ddx1;
+    (*grad)(xidx2_) -= ddx1;
+
+    const float ddy1 = -weight_over_distance_4th * dy;
+    (*grad)(yidx1_) += ddy1;
+    (*grad)(yidx2_) -= ddy1;
   }
 }
 

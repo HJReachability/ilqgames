@@ -36,60 +36,44 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost in a particular (or all) dimension(s).
+// Penalizes 1.0 / (relative distance) between two pairs of state dimensions
+// (representing two positions of vehicles whose states have been concatenated).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/quadratic_cost.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_COST_PROXIMITY_COST_H
+#define ILQGAMES_COST_PROXIMITY_COST_H
 
-#include <glog/logging.h>
+#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/utils/types.h>
 
 namespace ilqgames {
 
-// Evaluate this cost at the current input.
-float QuadraticCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dimension_, input.size());
+class ProximityCost : public TimeInvariantCost {
+ public:
+  ProximityCost(float weight,
+                const std::pair<Dimension, Dimension>& position_idxs1,
+                const std::pair<Dimension, Dimension>& position_idxs2)
+      : TimeInvariantCost(weight),
+        xidx1_(position_idxs1.first),
+        yidx1_(position_idxs1.second),
+        xidx2_(position_idxs2.first),
+        yidx2_(position_idxs2.second) {}
 
-  // If dimension non-negative, then just square the desired dimension.
-  if (dimension_ >= 0) {
-    const float delta = input(dimension_) - nominal_;
-    return 0.5 * weight_ * delta * delta;
-  }
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
 
-  // Otherwise, cost is squared 2-norm of entire input.
-  return 0.5 * weight_ *
-         (input - VectorXf::Constant(input.size(), nominal_)).squaredNorm();
-}
+  // Quadraticize this cost at the given input, and add to the running=
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
 
-// Quadraticize this cost at the given input, and add to the running
-// sum of gradients and Hessians (if non-null).
-void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
-  CHECK_LT(dimension_, input.size());
-  CHECK_NOTNULL(hess);
-
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Handle single dimension case first.
-  if (dimension_ >= 0) {
-    (*hess)(dimension_, dimension_) += weight_;
-
-    if (grad) (*grad)(dimension_) += weight_ * (input(dimension_) - nominal_);
-  }
-
-  // Handle dimension < 0 case.
-  else {
-    hess->diagonal() =
-        hess->diagonal() + VectorXf::Constant(input.size(), weight_);
-
-    if (grad)
-      *grad += weight_ * (input - VectorXf::Constant(input.size(), nominal_));
-  }
-}
+ private:
+  // Position indices for two vehicles.
+  const Dimension xidx1_, yidx1_;
+  const Dimension xidx2_, yidx2_;
+};  //\class ProximityCost
 
 }  // namespace ilqgames
+
+#endif
