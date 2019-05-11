@@ -57,22 +57,29 @@
 using namespace ilqgames;
 
 namespace {
+// Cost weight and dimension.
+static constexpr float kCostWeight = 1.0;
+static constexpr Dimension kInputDimension = 5;
+
 // Step size for forward differences.
-static constexpr float kForwardStep = 1e-4;
-static constexpr float kNumericalPrecision = 1e-2;
+static constexpr float kGradForwardStep = 1e-3;
+static constexpr float kHessForwardStep = 1e-2;
+static constexpr float kNumericalPrecision = 0.5;
 
 // Function to compute numerical gradient of a cost.
 VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
   VectorXf grad(input.size());
 
-  // Evaluate original cost.
-  const float original_cost = cost.Evaluate(t, input);
-
-  // Forward differences.
+  // Central differences.
   VectorXf query(input);
   for (size_t ii = 0; ii < input.size(); ii++) {
-    query(ii) += kForwardStep;
-    grad(ii) = (cost.Evaluate(t, query) - original_cost) / kForwardStep;
+    query(ii) += kGradForwardStep;
+    const float hi = cost.Evaluate(t, query);
+
+    query(ii) = input(ii) - kGradForwardStep;
+    const float lo = cost.Evaluate(t, query);
+
+    grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
     query(ii) = input(ii);
   }
 
@@ -83,14 +90,16 @@ VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
 MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
   MatrixXf hess(input.size(), input.size());
 
-  // Original gradient.
-  const VectorXf grad = NumericalGradient(cost, t, input);
-
-  // Forward differences.
+  // Central differences.
   VectorXf query(input);
   for (size_t ii = 0; ii < input.size(); ii++) {
-    query(ii) += kForwardStep;
-    hess.row(ii) = (NumericalGradient(cost, t, query) - grad) / kForwardStep;
+    query(ii) += kHessForwardStep;
+    const VectorXf hi = NumericalGradient(cost, t, query);
+
+    query(ii) = input(ii) - kHessForwardStep;
+    const VectorXf lo = NumericalGradient(cost, t, query);
+
+    hess.col(ii) = 0.5 * (hi - lo) / kHessForwardStep;
     query(ii) = input(ii);
   }
 
@@ -98,7 +107,7 @@ MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
 }
 
 // Test that each cost's gradient and Hessian match a numerical approximation.
-void CheckQuadraticization(const Cost& cost, Dimension dim) {
+void CheckQuadraticization(const Cost& cost) {
   // Random number generator to make random timestamps.
   std::random_device rd;
   std::default_random_engine rng(rd());
@@ -107,88 +116,31 @@ void CheckQuadraticization(const Cost& cost, Dimension dim) {
   // Try a bunch of random points.
   constexpr size_t kNumRandomPoints = 10;
   for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
-    const VectorXf input(VectorXf::Random(dim));
+    const VectorXf input(VectorXf::Random(kInputDimension));
     const Time t = time_distribution(rng);
 
-    MatrixXf hess_analytic(MatrixXf::Zero(system.XDim(), system.XDim()));
-    VectorXf grad_analytic(VectorXf::Zero(system.XDim(), system.UDim()));
-    system.Linearize(t, kTimeStep, x, u, A_analytic, B_analytic);
+    MatrixXf hess_analytic(MatrixXf::Zero(kInputDimension, kInputDimension));
+    VectorXf grad_analytic(VectorXf::Zero(kInputDimension));
+    cost.Quadraticize(t, input, &hess_analytic, &grad_analytic);
 
-    MatrixXf A_numerical(MatrixXf::Identity(system.XDim(), system.XDim()));
-    MatrixXf B_numerical(MatrixXf::Zero(system.XDim(), system.UDim()));
-    NumericalJacobian(system, t, kTimeStep, x, u, A_numerical, B_numerical);
+    MatrixXf hess_numerical = NumericalHessian(cost, t, input);
+    VectorXf grad_numerical = NumericalGradient(cost, t, input);
 
-    EXPECT_NEAR((A_analytic - A_numerical).cwiseAbs().maxCoeff(), 0.0,
+    EXPECT_NEAR((hess_analytic - hess_numerical).cwiseAbs().maxCoeff(), 0.0,
                 kNumericalPrecision);
-    EXPECT_NEAR((B_analytic - B_numerical).cwiseAbs().maxCoeff(), 0.0,
+    EXPECT_NEAR((grad_analytic - grad_numerical).cwiseAbs().maxCoeff(), 0.0,
                 kNumericalPrecision);
-  }
-}
-
-void CheckLinearization(const MultiPlayerDynamicalSystem& system) {
-  constexpr Time kTimeStep = 0.1;
-
-  // Random number generator to make random timestamps.
-  std::random_device rd;
-  std::default_random_engine rng(rd());
-  std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
-
-  // Try a bunch of random points.
-  constexpr size_t kNumRandomPoints = 10;
-  for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
-    const VectorXf x(VectorXf::Random(system.XDim()));
-    const Time t = time_distribution(rng);
-
-    std::vector<VectorXf> us(system.NumPlayers());
-    for (size_t jj = 0; jj < system.NumPlayers(); jj++)
-      us[jj] = VectorXf::Random(system.UDim(jj));
-
-    const LinearDynamicsApproximation analytic =
-        system.Linearize(t, kTimeStep, x, us);
-    const LinearDynamicsApproximation numerical =
-        NumericalJacobian(system, t, kTimeStep, x, us);
-
-    EXPECT_NEAR((analytic.A - numerical.A).cwiseAbs().maxCoeff(), 0.0,
-                kNumericalPrecision);
-    for (size_t jj = 0; jj < system.NumPlayers(); jj++)
-      EXPECT_NEAR((analytic.Bs[jj] - numerical.Bs[jj]).cwiseAbs().maxCoeff(),
-                  0.0, kNumericalPrecision);
   }
 }
 
 }  // anonymous namespace
 
-TEST(SinglePlayerUnicycle4DTest, LinearizesCorrectly) {
-  const SinglePlayerUnicycle4D system;
-  CheckLinearization(system);
+TEST(QuadraticCostTest, QuadraticizesCorrectly) {
+  QuadraticCost cost(kCostWeight, 0, 10.0);
+  CheckQuadraticization(cost);
 }
 
-TEST(SinglePlayerUnicycle5DTest, LinearizesCorrectly) {
-  const SinglePlayerUnicycle5D system;
-  CheckLinearization(system);
-}
-
-TEST(SinglePlayerCar5DTest, LinearizesCorrectly) {
-  constexpr float kInterAxleLength = 4.0;  // m
-  const SinglePlayerCar5D system(kInterAxleLength);
-  CheckLinearization(system);
-}
-
-TEST(SinglePlayerCar7DTest, LinearizesCorrectly) {
-  constexpr float kInterAxleLength = 4.0;  // m
-  const SinglePlayerCar7D system(kInterAxleLength);
-  CheckLinearization(system);
-}
-
-TEST(TwoPlayerUnicycle4DTest, LinearizesCorrectly) {
-  const TwoPlayerUnicycle4D system;
-  CheckLinearization(system);
-}
-
-TEST(ConcatenatedDynamicalSystemTest, LinearizesCorrectly) {
-  constexpr float kInterAxleLength = 5.0;  // m
-  const ConcatenatedDynamicalSystem system(
-      {std::make_shared<SinglePlayerUnicycle4D>(),
-       std::make_shared<SinglePlayerCar5D>(kInterAxleLength)});
-  CheckLinearization(system);
+TEST(SemiquadraticCostTest, QuadraticizesCorrectly) {
+  SemiquadraticCost cost(kCostWeight, 0, 0.0, true);
+  CheckQuadraticization(cost);
 }
