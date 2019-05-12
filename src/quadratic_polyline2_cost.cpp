@@ -73,6 +73,8 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
 
+  if (grad) CHECK_EQ(input.size(), grad->size());
+
   // Unpack current position and find closest point / segment.
   const Point2 current_position(input(xidx_), input(yidx_));
 
@@ -81,26 +83,36 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const Point2 closest_point =
       polyline_.ClosestPoint(current_position, &is_vertex, &segment, nullptr);
 
-  const Point2 relative = current_position - segment.FirstPoint();
-  const Point2& unit_segment = segment.UnitDirection();
+  // Handle cases separately depending on whether or not closest point is
+  // a vertex of the polyline.
+  if (!is_vertex) {
+    const Point2 relative = current_position - segment.FirstPoint();
+    const Point2& unit_segment = segment.UnitDirection();
 
-  // Handle Hessian first.
-  (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
-  (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
+    // Handle Hessian first.
+    (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
+    (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
 
-  const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
-  (*hess)(xidx_, yidx_) -= cross_term;
-  (*hess)(yidx_, xidx_) -= cross_term;
+    const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
+    (*hess)(xidx_, yidx_) -= cross_term;
+    (*hess)(yidx_, xidx_) -= cross_term;
 
-  // Maybe handle gradient.
-  if (grad) {
-    CHECK_EQ(input.size(), grad->size());
+    // Maybe handle gradient.
+    if (grad) {
+      const float w_cross = weight_ * (relative.x() * unit_segment.y() -
+                                       relative.y() * unit_segment.x());
 
-    const float w_cross = weight_ * (relative.x() * unit_segment.y() -
-                                     relative.y() * unit_segment.x());
+      (*grad)(xidx_) += w_cross * unit_segment.y();
+      (*grad)(yidx_) -= w_cross * unit_segment.x();
+    }
+  } else {
+    (*hess)(xidx_, xidx_) += weight_;
+    (*hess)(yidx_, yidx_) += weight_;
 
-    (*grad)(xidx_) += w_cross * unit_segment.y();
-    (*grad)(yidx_) -= w_cross * unit_segment.x();
+    if (grad) {
+      (*grad)(xidx_) += weight_ * (current_position.x() - closest_point.x());
+      (*grad)(yidx_) += weight_ * (current_position.y() - closest_point.y());
+    }
   }
 }
 

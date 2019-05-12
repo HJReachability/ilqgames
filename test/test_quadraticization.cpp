@@ -151,13 +151,23 @@ TEST(SemiquadraticCostTest, QuadraticizesCorrectly) {
 }
 
 TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
-  Polyline2 polyline({Point2(-2.0, -2.0), Point2(2.0, 2.0)});
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   QuadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1});
   CheckQuadraticization(cost);
 }
 
 TEST(SemiquadraticPolyline2CostTest, QuadraticizesCorrectly) {
-  Polyline2 polyline({Point2(-2.0, -2.0), Point2(2.0, 2.0)});
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.0, true);
+  CheckQuadraticization(cost);
+}
+
+TEST(CurvatureCostTest, QuadraticizesCorrectly) {
+  CurvatureCost cost(kCostWeight, 0, 1);
+  CheckQuadraticization(cost);
+}
+
+TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
+  NominalPathLengthCost cost(kCostWeight, 0, 1.0);
   CheckQuadraticization(cost);
 }

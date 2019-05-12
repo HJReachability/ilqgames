@@ -48,7 +48,7 @@
 
 namespace ilqgames {
 
-inline float CurvatureCost::Evaluate(const VectorXf& input) const {
+float CurvatureCost::Evaluate(const VectorXf& input) const {
   const float curvature = Curvature(input);
   return 0.5 * weight_ * curvature * curvature;
 }
