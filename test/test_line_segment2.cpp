@@ -59,36 +59,44 @@ TEST(LineSegment2Test, ClosestPointWorks) {
   const Point2 upper = Point2(0.0, 1.0);
   const LineSegment2 segment(lower, upper);
   float signed_squared_distance;
+  bool is_endpoint;
 
   // Pick points in the right half plane and check closest points/distances.
   Point2 query(1.0, -2.0);
-  Point2 closest = segment.ClosestPoint(query, &signed_squared_distance);
+  Point2 closest =
+      segment.ClosestPoint(query, &is_endpoint, &signed_squared_distance);
+  EXPECT_TRUE(is_endpoint);
   EXPECT_TRUE(closest.isApprox(lower));
   EXPECT_NEAR(signed_squared_distance, 2.0, constants::kSmallNumber);
 
   query << 1.0, 0.0;
-  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  closest = segment.ClosestPoint(query, &is_endpoint, &signed_squared_distance);
+  EXPECT_FALSE(is_endpoint);
   EXPECT_LT(closest.squaredNorm(), constants::kSmallNumber);
   EXPECT_NEAR(signed_squared_distance, 1.0, constants::kSmallNumber);
 
   query << 1.0, 2.0;
-  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  closest = segment.ClosestPoint(query, &is_endpoint, &signed_squared_distance);
+  EXPECT_TRUE(is_endpoint);
   EXPECT_TRUE(closest.isApprox(upper));
   EXPECT_NEAR(signed_squared_distance, 2.0, constants::kSmallNumber);
 
   // Pick points in the left half plane and check closest points/distances.
   query << -1.0, -2.0;
-  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  closest = segment.ClosestPoint(query, &is_endpoint, &signed_squared_distance);
+  EXPECT_TRUE(is_endpoint);
   EXPECT_TRUE(closest.isApprox(lower));
   EXPECT_NEAR(signed_squared_distance, -2.0, constants::kSmallNumber);
 
   query << -1.0, 0.0;
-  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  closest = segment.ClosestPoint(query, &is_endpoint, &signed_squared_distance);
+  EXPECT_FALSE(is_endpoint);
   EXPECT_LT(closest.squaredNorm(), constants::kSmallNumber);
   EXPECT_NEAR(signed_squared_distance, -1.0, constants::kSmallNumber);
 
   query << -1.0, 2.0;
-  closest = segment.ClosestPoint(query, &signed_squared_distance);
+  closest = segment.ClosestPoint(query, &is_endpoint, &signed_squared_distance);
+  EXPECT_TRUE(is_endpoint);
   EXPECT_TRUE(closest.isApprox(upper));
   EXPECT_NEAR(signed_squared_distance, -2.0, constants::kSmallNumber);
 }

@@ -63,8 +63,8 @@ static constexpr Dimension kInputDimension = 5;
 
 // Step size for forward differences.
 static constexpr float kGradForwardStep = 1e-3;
-static constexpr float kHessForwardStep = 1e-2;
-static constexpr float kNumericalPrecision = 0.5;
+static constexpr float kHessForwardStep = 1e-3;
+static constexpr float kNumericalPrecision = 1e-1;
 
 // Function to compute numerical gradient of a cost.
 VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
@@ -90,16 +90,21 @@ VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
 MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
   MatrixXf hess(input.size(), input.size());
 
-  // Central differences.
+  // Central differences on analytic gradients (otherwise things get too noisy).
+  MatrixXf hess_analytic(input.size(), input.size());
   VectorXf query(input);
   for (size_t ii = 0; ii < input.size(); ii++) {
+    VectorXf grad_analytic_hi = VectorXf::Zero(input.size());
+    VectorXf grad_analytic_lo = VectorXf::Zero(input.size());
+
     query(ii) += kHessForwardStep;
-    const VectorXf hi = NumericalGradient(cost, t, query);
+    cost.Quadraticize(t, query, &hess_analytic, &grad_analytic_hi);
 
     query(ii) = input(ii) - kHessForwardStep;
-    const VectorXf lo = NumericalGradient(cost, t, query);
+    cost.Quadraticize(t, query, &hess_analytic, &grad_analytic_lo);
 
-    hess.col(ii) = 0.5 * (hi - lo) / kHessForwardStep;
+    hess.col(ii) =
+        0.5 * (grad_analytic_hi - grad_analytic_lo) / kHessForwardStep;
     query(ii) = input(ii);
   }
 
@@ -114,7 +119,7 @@ void CheckQuadraticization(const Cost& cost) {
   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
 
   // Try a bunch of random points.
-  constexpr size_t kNumRandomPoints = 10;
+  constexpr size_t kNumRandomPoints = 1;
   for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
     const VectorXf input(VectorXf::Random(kInputDimension));
     const Time t = time_distribution(rng);
@@ -136,11 +141,23 @@ void CheckQuadraticization(const Cost& cost) {
 }  // anonymous namespace
 
 TEST(QuadraticCostTest, QuadraticizesCorrectly) {
-  QuadraticCost cost(kCostWeight, 0, 10.0);
+  QuadraticCost cost(kCostWeight, -1, 10.0);
   CheckQuadraticization(cost);
 }
 
 TEST(SemiquadraticCostTest, QuadraticizesCorrectly) {
   SemiquadraticCost cost(kCostWeight, 0, 0.0, true);
+  CheckQuadraticization(cost);
+}
+
+TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(2.0, 2.0)});
+  QuadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1});
+  CheckQuadraticization(cost);
+}
+
+TEST(SemiquadraticPolyline2CostTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(2.0, 2.0)});
+  SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.0, true);
   CheckQuadraticization(cost);
 }

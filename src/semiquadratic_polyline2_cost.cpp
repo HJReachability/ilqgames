@@ -55,7 +55,7 @@ float SemiquadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
 
   // Compute signed squared distance by finding closest point.
   float signed_squared_distance;
-  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)),
+  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_squared_distance);
 
   // Check which side we're on.
@@ -78,34 +78,38 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
 
-  // Compute signed squared distance by finding closest point.
+  // Unpack current position and find closest point / segment.
+  const Point2 current_position(input(xidx_), input(yidx_));
+
   float signed_squared_distance;
+  bool is_vertex;
+  LineSegment2 segment(Point2(0.0, 0.0), Point2(1.0, 1.0));
   const Point2 closest_point = polyline_.ClosestPoint(
-      Point2(input(xidx_), input(yidx_)), &signed_squared_distance);
+      current_position, &is_vertex, &segment, &signed_squared_distance);
 
   /// Check if cost is active.
   if (!IsActive(signed_squared_distance)) return;
 
-  // Compute signed distance and diff.
-  const float signed_distance = sgn(signed_squared_distance) *
-                                std::sqrt(std::abs(signed_squared_distance));
-  const float diff = signed_distance - threshold_;
+  const Point2 relative = current_position - segment.FirstPoint();
+  const Point2& unit_segment = segment.UnitDirection();
 
   // Handle Hessian first.
-  (*hess)(xidx_, xidx_) += weight_;
-  (*hess)(yidx_, yidx_) += weight_;
+  (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
+  (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
+
+  const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
+  (*hess)(xidx_, yidx_) -= cross_term;
+  (*hess)(yidx_, xidx_) -= cross_term;
 
   // Maybe handle gradient.
   if (grad) {
     CHECK_EQ(input.size(), grad->size());
 
-    // Unpack current position and find closest point.
-    const Point2 current_position(input(xidx_), input(yidx_));
-    Point2 relative = current_position - closest_point;
-    relative *= std::abs(diff) * relative.norm();
+    const float w_cross = weight_ * (relative.x() * unit_segment.y() -
+                                     relative.y() * unit_segment.x());
 
-    (*grad)(xidx_) += weight_ * relative.x();
-    (*grad)(yidx_) += weight_ * relative.y();
+    (*grad)(xidx_) += w_cross * unit_segment.y();
+    (*grad)(yidx_) -= w_cross * unit_segment.x();
   }
 }
 
