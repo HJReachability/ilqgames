@@ -67,17 +67,18 @@ class LineSegment2 {
   const Point2& UnitDirection() const { return unit_direction_; }
 
   // Find closest point on this line segment to a given point (and optionally
-  // the signed squared distance, where right is positive).
-  Point2 ClosestPoint(const Point2& query,
-                      float* signed_squared_distance) const;
+  // the signed squared distance, where right is positive, and whether or not
+  // the closest point is an endpoint).
+  Point2 ClosestPoint(const Point2& query, bool* is_endpoint = nullptr,
+                      float* signed_squared_distance = nullptr) const;
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
  private:
-  const Point2 p1_;
-  const Point2 p2_;
-  const float length_;
-  const Point2 unit_direction_;
+  Point2 p1_;
+  Point2 p2_;
+  float length_;
+  Point2 unit_direction_;
 };  // struct LineSegment2
 
 }  // namespace ilqgames

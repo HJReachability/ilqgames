@@ -48,7 +48,6 @@
 
 namespace ilqgames {
 
-// Construct from a list of points. This list must contain at least 2  points!
 Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
   CHECK_GT(points.size(), 1);
 
@@ -59,29 +58,31 @@ Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
   }
 }
 
-// Add a new point to the end of the polyline.
 void Polyline2::AddPoint(const Point2& point) {
   segments_.emplace_back(LineSegment2(segments_.back().SecondPoint(), point));
   length_ += segments_.back().Length();
 }
 
-// Find closest point on this line segment to a given point (and optionally
-// the signed squared distance, where right is positive).
-Point2 Polyline2::ClosestPoint(const Point2& query,
+Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
+                               LineSegment2* segment,
                                float* signed_squared_distance) const {
   // Walk along each line segment and remember which was closest.
   float closest_signed_squared_distance = constants::kInfinity;
   Point2 closest_point;
 
   float current_signed_squared_distance;
-  for (const auto& segment : segments_) {
+  for (const auto& s : segments_) {
+    bool is_endpoint;
     const Point2 current_point =
-        segment.ClosestPoint(query, &current_signed_squared_distance);
+        s.ClosestPoint(query, &is_endpoint, &current_signed_squared_distance);
 
     if (std::abs(current_signed_squared_distance) <
         closest_signed_squared_distance) {
       closest_signed_squared_distance = current_signed_squared_distance;
       closest_point = current_point;
+
+      if (is_vertex) *is_vertex = is_endpoint;
+      if (segment) *segment = s;
     }
   }
 

@@ -45,9 +45,7 @@
 
 namespace ilqgames {
 
-// Find closest point on this line segment to a given point (and optionally
-// the signed squared distance, where right is positive).
-Point2 LineSegment2::ClosestPoint(const Point2& query,
+Point2 LineSegment2::ClosestPoint(const Point2& query, bool* is_endpoint,
                                   float* signed_squared_distance) const {
   // Find query relative to p1.
   const Point2 relative_query = query - p1_;
@@ -63,6 +61,8 @@ Point2 LineSegment2::ClosestPoint(const Point2& query,
   // the segment.
   if (dot_product < 0.0) {
     // Query lies behind this line segment, so closest point is p1.
+    if (is_endpoint) *is_endpoint = true;
+
     if (signed_squared_distance) {
       *signed_squared_distance =
           cross_product_sign * relative_query.squaredNorm();
@@ -71,6 +71,8 @@ Point2 LineSegment2::ClosestPoint(const Point2& query,
     return p1_;
   } else if (dot_product > length_) {
     // Closest point is p2.
+    if (is_endpoint) *is_endpoint = true;
+
     if (signed_squared_distance) {
       *signed_squared_distance =
           cross_product_sign * (query - p2_).squaredNorm();
@@ -80,6 +82,8 @@ Point2 LineSegment2::ClosestPoint(const Point2& query,
   }
 
   // Closest point is in the interior of the line segment.
+  if (is_endpoint) *is_endpoint = false;
+
   if (signed_squared_distance)
     *signed_squared_distance =
         cross_product_sign * cross_product * cross_product;

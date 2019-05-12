@@ -55,51 +55,71 @@ TEST(Polyline2Test, ClosestPointWorks) {
   const Point2 p3(2.0, 1.0);
   const Polyline2 polyline({p1, p2, p3});
   float signed_squared_distance;
+  LineSegment2 segment(p1, p2);
+  bool is_vertex;
 
   // Pick points to the right of the polyline.
   Point2 query(1.0, -2.0);
-  Point2 closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  Point2 closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                         &signed_squared_distance);
+  EXPECT_TRUE(is_vertex);
   EXPECT_TRUE(closest.isApprox(p1));
   EXPECT_NEAR(signed_squared_distance, 2.0, constants::kSmallNumber);
 
   query << 0.5, 0.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_FALSE(is_vertex);
   EXPECT_LT(closest.squaredNorm(), constants::kSmallNumber);
   EXPECT_NEAR(signed_squared_distance, 0.5 * 0.5, constants::kSmallNumber);
 
   query << 1.5, 0.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_FALSE(is_vertex);
   EXPECT_TRUE(closest.isApprox(Point2(1.5, 1.0)));
   EXPECT_NEAR(signed_squared_distance, 1.0, constants::kSmallNumber);
 
   query << 3.0, 0.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_TRUE(is_vertex);
   EXPECT_TRUE(closest.isApprox(p3));
   EXPECT_NEAR(signed_squared_distance, 2.0, constants::kSmallNumber);
 
   // Pick points to the left of the polyline.
   query << -1.0, -2.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_TRUE(is_vertex);
   EXPECT_TRUE(closest.isApprox(p1));
   EXPECT_NEAR(signed_squared_distance, -2.0, constants::kSmallNumber);
 
   query << -1.0, 0.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_FALSE(is_vertex);
   EXPECT_LT(closest.squaredNorm(), constants::kSmallNumber);
   EXPECT_NEAR(signed_squared_distance, -1.0, constants::kSmallNumber);
 
   query << -1.0, 2.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_TRUE(is_vertex);
   EXPECT_TRUE(closest.isApprox(p2));
   EXPECT_NEAR(signed_squared_distance, -2.0, constants::kSmallNumber);
 
   query << 0.5, 2.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_FALSE(is_vertex);
   EXPECT_TRUE(closest.isApprox(Point2(0.5, 1.0)));
   EXPECT_NEAR(signed_squared_distance, -1.0, constants::kSmallNumber);
 
   query << 3.0, 2.0;
-  closest = polyline.ClosestPoint(query, &signed_squared_distance);
+  closest = polyline.ClosestPoint(query, &is_vertex, &segment,
+                                  &signed_squared_distance);
+  EXPECT_TRUE(is_vertex);
   EXPECT_TRUE(closest.isApprox(p3));
   EXPECT_NEAR(signed_squared_distance, -2.0, constants::kSmallNumber);
 }

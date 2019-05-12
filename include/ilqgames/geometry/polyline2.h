@@ -63,10 +63,12 @@ class Polyline2 {
   // Compute length.
   float Length() const { return length_; }
 
-  // Find closest point on this line segment to a given point (and optionally
-  // the signed squared distance, where right is positive).
-  Point2 ClosestPoint(const Point2& query,
-                      float* signed_squared_distance) const;
+  // Find closest point on this line segment to a given point, and optionally
+  // the line segment that point belongs to (and flag for whether it is a
+  // vertex), and the signed squared distance, where right is positive.
+  Point2 ClosestPoint(const Point2& query, bool* is_vertex = nullptr,
+                      LineSegment2* segment = nullptr,
+                      float* signed_squared_distance = nullptr) const;
 
  private:
   std::vector<LineSegment2> segments_;
