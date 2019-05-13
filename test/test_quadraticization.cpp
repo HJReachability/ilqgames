@@ -117,11 +117,18 @@ void CheckQuadraticization(const Cost& cost) {
   std::random_device rd;
   std::default_random_engine rng(rd());
   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
+  std::bernoulli_distribution sign_distribution;
+  std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
 
   // Try a bunch of random points.
-  constexpr size_t kNumRandomPoints = 1;
+  constexpr size_t kNumRandomPoints = 10;
   for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
-    const VectorXf input(VectorXf::Random(kInputDimension));
+    VectorXf input(kInputDimension);
+    for (size_t jj = 0; jj < kInputDimension; jj++) {
+      const float s = sign_distribution(rng);
+      input(jj) = (1.0 - 2.0 * s) * entry_distribution(rng);
+    }
+
     const Time t = time_distribution(rng);
 
     MatrixXf hess_analytic(MatrixXf::Zero(kInputDimension, kInputDimension));
@@ -131,10 +138,10 @@ void CheckQuadraticization(const Cost& cost) {
     MatrixXf hess_numerical = NumericalHessian(cost, t, input);
     VectorXf grad_numerical = NumericalGradient(cost, t, input);
 
-    EXPECT_NEAR((hess_analytic - hess_numerical).cwiseAbs().maxCoeff(), 0.0,
-                kNumericalPrecision);
-    EXPECT_NEAR((grad_analytic - grad_numerical).cwiseAbs().maxCoeff(), 0.0,
-                kNumericalPrecision);
+    EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
+              kNumericalPrecision);
+    EXPECT_LT((grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
+              kNumericalPrecision);
   }
 }
 
@@ -169,5 +176,10 @@ TEST(CurvatureCostTest, QuadraticizesCorrectly) {
 
 TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
   NominalPathLengthCost cost(kCostWeight, 0, 1.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(ProximityCostTest, QuadraticizesCorrectly) {
+  ProximityCost cost(kCostWeight, {0, 1}, {2, 3});
   CheckQuadraticization(cost);
 }
