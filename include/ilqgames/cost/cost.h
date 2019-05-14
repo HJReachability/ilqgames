@@ -46,6 +46,8 @@
 
 #include <ilqgames/utils/types.h>
 
+#include <string>
+
 namespace ilqgames {
 
 class Cost {
@@ -60,11 +62,18 @@ class Cost {
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad = nullptr) const = 0;
 
+  // Access the name of this cost.
+  const std::string& Name() const { return name_; }
+
  protected:
-  explicit Cost(float weight) : weight_(weight) {}
+  explicit Cost(float weight, const std::string& name = "")
+      : weight_(weight), name_(name) {}
 
   // Multiplicative weight associated to this cost.
   const float weight_;
+
+  // Name associated to every cost.
+  const std::string name_;
 };  //\class Cost
 
 }  // namespace ilqgames

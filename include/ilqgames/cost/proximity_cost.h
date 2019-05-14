@@ -47,14 +47,17 @@
 #include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <string>
+
 namespace ilqgames {
 
 class ProximityCost : public TimeInvariantCost {
  public:
   ProximityCost(float weight,
                 const std::pair<Dimension, Dimension>& position_idxs1,
-                const std::pair<Dimension, Dimension>& position_idxs2)
-      : TimeInvariantCost(weight),
+                const std::pair<Dimension, Dimension>& position_idxs2,
+                const std::string& name = "")
+      : TimeInvariantCost(weight, name),
         xidx1_(position_idxs1.first),
         yidx1_(position_idxs1.second),
         xidx2_(position_idxs2.first),

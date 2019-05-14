@@ -46,6 +46,8 @@
 #include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <string>
+
 namespace ilqgames {
 
 class QuadraticCost : public TimeInvariantCost {
@@ -53,8 +55,9 @@ class QuadraticCost : public TimeInvariantCost {
   // Construct from a multiplicative weight and the dimension in which to apply
   // the quadratic cost (difference from nominal). If dimension < 0, then
   // applies to all dimensions (i.e. ||input - nominal * ones()||^2).
-  QuadraticCost(float weight, Dimension dim, float nominal = 0.0)
-      : TimeInvariantCost(weight), dimension_(dim), nominal_(nominal) {}
+  QuadraticCost(float weight, Dimension dim, float nominal = 0.0,
+                const std::string& name = "")
+      : TimeInvariantCost(weight, name), dimension_(dim), nominal_(nominal) {}
 
   // Evaluate this cost at the current input.
   float Evaluate(const VectorXf& input) const;

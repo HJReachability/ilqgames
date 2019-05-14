@@ -47,14 +47,17 @@
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <string>
+
 namespace ilqgames {
 
 class NominalPathLengthCost : public Cost {
  public:
   // Construct from a multiplicative weight and the dimension in which to apply
   // the quadratic cost (difference from nominal).
-  NominalPathLengthCost(float weight, Dimension dim, float nominal_speed)
-      : Cost(weight), dimension_(dim), nominal_speed_(nominal_speed) {}
+  NominalPathLengthCost(float weight, Dimension dim, float nominal_speed,
+                        const std::string& name = "")
+      : Cost(weight, name), dimension_(dim), nominal_speed_(nominal_speed) {}
 
   // Evaluate this cost at the current time and  input.
   float Evaluate(Time t, const VectorXf& input) const;

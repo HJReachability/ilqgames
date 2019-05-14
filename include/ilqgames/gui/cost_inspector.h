@@ -36,51 +36,50 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Semiquadratic cost in a particular dimension, starting above or below a given
-// threshold.
+// Utility for plotting different costs for each player over time. Integrates
+// with DearImGui.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_SEMIQUADRATIC_COST_H
-#define ILQGAMES_COST_SEMIQUADRATIC_COST_H
+#ifndef ILQGAMES_GUI_COST_INSPECTOR_H
+#define ILQGAMES_GUI_COST_INSPECTOR_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/gui/control_sliders.h>
+#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/player_cost_cache.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <string>
+#include <imgui/imgui.h>
+#include <vector>
 
 namespace ilqgames {
 
-class SemiquadraticCost : public TimeInvariantCost {
+class CostInspector {
  public:
-  // Construct from a multiplicative weight, the dimension in which to apply
-  // the semiquadratic cost, a threshold, and a flag for which side to apply it.
-  SemiquadraticCost(float weight, Dimension dim, float threshold,
-                    bool oriented_right, const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        dimension_(dim),
-        threshold_(threshold),
-        oriented_right_(oriented_right) {
-    CHECK_GE(dimension_, 0);
+  ~CostInspector() {}
+
+  // Takes in a log and lists of x/y/heading indices in
+  // the state vector.
+  CostInspector(const std::shared_ptr<const ControlSliders>& sliders,
+                const std::shared_ptr<const Log>& log,
+                const std::vector<PlayerCost>& player_costs)
+      : sliders_(sliders), player_costs_(log, player_costs) {
+    CHECK_NOTNULL(sliders_.get());
   }
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
-
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians (if non-null).
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+  // Render the appropriate costs.
+  void Render() const;
 
  private:
-  // Dimension in which to apply the quadratic cost.
-  const Dimension dimension_;
+  // Control sliders.
+  const std::shared_ptr<const ControlSliders> sliders_;
 
-  // Threshold and which side to apply it to.
-  const float threshold_;
-  const bool oriented_right_;
-};  //\class SemiquadraticCost
+  // Player cost cache.
+  const PlayerCostCache player_costs_;
+};  // class CostInspector
 
 }  // namespace ilqgames
 

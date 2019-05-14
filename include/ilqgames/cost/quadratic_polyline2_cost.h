@@ -47,6 +47,7 @@
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
+#include <string>
 #include <tuple>
 
 namespace ilqgames {
@@ -56,8 +57,9 @@ class QuadraticPolyline2Cost : public TimeInvariantCost {
   // Construct from a multiplicative weight and the input dimensions
   // corresponding to (x, y)-position.
   QuadraticPolyline2Cost(float weight, const Polyline2& polyline,
-                         const std::pair<Dimension, Dimension>& position_idxs)
-      : TimeInvariantCost(weight),
+                         const std::pair<Dimension, Dimension>& position_idxs,
+                         const std::string& name = "")
+      : TimeInvariantCost(weight, name),
         polyline_(polyline),
         xidx_(position_idxs.first),
         yidx_(position_idxs.second) {}

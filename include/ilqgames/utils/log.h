@@ -115,7 +115,6 @@ class Log : private Uncopyable {
     return alpha(iterate, TimeToIndex(t), player);
   }
 
- private:
   // Get index corresponding to the time step immediately before the given time.
   size_t TimeToIndex(Time t) const {
     return static_cast<size_t>(std::max(constants::kSmallNumber, t) /
@@ -127,10 +126,11 @@ class Log : private Uncopyable {
     return time_step_ * static_cast<Time>(idx);
   }
 
+ private:
   // Time discretization.
   const Time time_step_;
 
-  // Operating points and stratgies, indexed by solver iterate.
+  // Operating points and strategies indexed by solver iterate.
   std::vector<OperatingPoint> operating_points_;
   std::vector<std::vector<Strategy>> strategies_;
 };  // class Log
