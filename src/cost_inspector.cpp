@@ -36,52 +36,27 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Semiquadratic cost in a particular dimension, starting above or below a given
-// threshold.
+// Utility for plotting different costs for each player over time. Integrates
+// with DearImGui.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_SEMIQUADRATIC_COST_H
-#define ILQGAMES_COST_SEMIQUADRATIC_COST_H
-
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/gui/control_sliders.h>
+#include <ilqgames/gui/cost_inspector.h>
+#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/player_cost_cache.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <string>
+#include <imgui/imgui.h>
+#include <vector>
 
 namespace ilqgames {
 
-class SemiquadraticCost : public TimeInvariantCost {
- public:
-  // Construct from a multiplicative weight, the dimension in which to apply
-  // the semiquadratic cost, a threshold, and a flag for which side to apply it.
-  SemiquadraticCost(float weight, Dimension dim, float threshold,
-                    bool oriented_right, const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        dimension_(dim),
-        threshold_(threshold),
-        oriented_right_(oriented_right) {
-    CHECK_GE(dimension_, 0);
-  }
-
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
-
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians (if non-null).
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
-
- private:
-  // Dimension in which to apply the quadratic cost.
-  const Dimension dimension_;
-
-  // Threshold and which side to apply it to.
-  const float threshold_;
-  const bool oriented_right_;
-};  //\class SemiquadraticCost
+// Render the appropriate costs.
+void CostInspector::Render() const {
+  // TODO!
+}
 
 }  // namespace ilqgames
-
-#endif

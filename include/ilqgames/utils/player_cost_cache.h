@@ -36,51 +36,44 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Semiquadratic cost in a particular dimension, starting above or below a given
-// threshold.
+// Storage utility for inspecting player costs corresponding to a log.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_SEMIQUADRATIC_COST_H
-#define ILQGAMES_COST_SEMIQUADRATIC_COST_H
+#ifndef ILQGAMES_UTILS_PLAYER_COST_CACHE_H
+#define ILQGAMES_UTILS_PLAYER_COST_CACHE_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <string>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace ilqgames {
 
-class SemiquadraticCost : public TimeInvariantCost {
+class PlayerCostCache {
  public:
-  // Construct from a multiplicative weight, the dimension in which to apply
-  // the semiquadratic cost, a threshold, and a flag for which side to apply it.
-  SemiquadraticCost(float weight, Dimension dim, float threshold,
-                    bool oriented_right, const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        dimension_(dim),
-        threshold_(threshold),
-        oriented_right_(oriented_right) {
-    CHECK_GE(dimension_, 0);
-  }
+  ~PlayerCostCache() {}
+  PlayerCostCache(const std::shared_ptr<const Log>& log,
+                  const std::vector<PlayerCost>& player_costs);
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
-
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians (if non-null).
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+  // Interpolate the given cost at the specified iterate and time.
+  float Interpolate(size_t iterate, Time t, PlayerIndex player,
+                    const std::string& name) const;
 
  private:
-  // Dimension in which to apply the quadratic cost.
-  const Dimension dimension_;
+  // Log. Currently only used for converting between times and time steps.
+  const std::shared_ptr<const Log> log_;
 
-  // Threshold and which side to apply it to.
-  const float threshold_;
-  const bool oriented_right_;
-};  //\class SemiquadraticCost
+  // Player costs (indexed by player and string ID) evaluated every iterate
+  // and time step.
+  std::vector<std::unordered_map<std::string, std::vector<std::vector<float>>>>
+      evaluated_player_costs_;
+};  // class PlayerCostCache
 
 }  // namespace ilqgames
 

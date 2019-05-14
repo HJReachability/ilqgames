@@ -51,6 +51,13 @@
 
 using namespace ilqgames;
 
+namespace {
+// Constants.
+static constexpr float kCostWeight = 1.0;
+static constexpr size_t kNumPlayers = 2;
+static constexpr Dimension kVectorDimension = 5;
+}  // anonymous namespace
+
 class PlayerCostTest : public ::testing::Test {
  protected:
   void SetUp() {
@@ -66,11 +73,6 @@ class PlayerCostTest : public ::testing::Test {
     for (size_t ii = 0; ii < kNumPlayers; ii++)
       us_.emplace_back(VectorXf::Random(kVectorDimension));
   }
-
-  // Constants.
-  static constexpr float kCostWeight = 1.0;
-  static constexpr size_t kNumPlayers = 2;
-  static constexpr Dimension kVectorDimension = 5;
 
   // PlayerCost, state, and controls for each player.
   PlayerCost player_cost_;
@@ -92,7 +94,8 @@ TEST_F(PlayerCostTest, EvaluateWorks) {
 
 // Check that we quadraticize correctly when dimension >= 0.
 TEST_F(PlayerCostTest, QuadraticizeWorks) {
-  const QuadraticCostApproximation quad = player_cost_.Quadraticize(0.0, x_, us_);
+  const QuadraticCostApproximation quad =
+      player_cost_.Quadraticize(0.0, x_, us_);
 
   // Check state Hessian is just kCostWeight on the diagonal.
   EXPECT_TRUE(quad.Q.diagonal().isApprox(

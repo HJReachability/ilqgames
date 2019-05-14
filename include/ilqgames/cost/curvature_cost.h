@@ -46,12 +46,15 @@
 #include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <string>
+
 namespace ilqgames {
 
 class CurvatureCost : public TimeInvariantCost {
  public:
-  CurvatureCost(float weight, Dimension omega_idx, Dimension v_idx)
-      : TimeInvariantCost(weight), omega_idx_(omega_idx), v_idx_(v_idx) {}
+  CurvatureCost(float weight, Dimension omega_idx, Dimension v_idx,
+                const std::string& name = "")
+      : TimeInvariantCost(weight, name), omega_idx_(omega_idx), v_idx_(v_idx) {}
 
   // Evaluate this cost at the current input.
   float Evaluate(const VectorXf& input) const;

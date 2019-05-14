@@ -54,9 +54,6 @@ namespace ilqgames {
 
 class PlayerCost {
  public:
-  PlayerCost() {}
-  ~PlayerCost() {}
-
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
@@ -68,6 +65,15 @@ class PlayerCost {
   // Quadraticize this cost at the given time, state, and controls.
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
+
+  // Accessors.
+  const std::vector<std::shared_ptr<Cost>> StateCosts() const {
+    return state_costs_;
+  }
+  const std::unordered_multimap<PlayerIndex, std::shared_ptr<Cost>>
+  ControlCosts() const {
+    return control_costs_;
+  }
 
  private:
   // State costs and control costs.

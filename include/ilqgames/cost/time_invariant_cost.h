@@ -46,6 +46,8 @@
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <string>
+
 namespace ilqgames {
 
 class TimeInvariantCost : public Cost {
@@ -66,7 +68,8 @@ class TimeInvariantCost : public Cost {
   }
 
  protected:
-  explicit TimeInvariantCost(float weight) : Cost(weight) {}
+  explicit TimeInvariantCost(float weight, const std::string& name = "")
+      : Cost(weight, name) {}
   virtual ~TimeInvariantCost() {}
 };  //\class TimeInvariantCost
 
