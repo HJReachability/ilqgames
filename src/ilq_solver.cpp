@@ -184,7 +184,7 @@ bool ILQSolver::HasConverged(
   // As a simple starting point, we'll say that we've converged if it's been
   // at least 50 iterations or the current operating_point and last operating
   // point are within 0.1 in every dimension at every time.
-  constexpr size_t kMaxIterations = 500;
+  constexpr size_t kMaxIterations = 200;
   constexpr float kMaxElementwiseDifference = 1e-2;
 
   // Check iterations.
@@ -208,7 +208,7 @@ bool ILQSolver::ModifyLQStrategies(
 
   // As a simple starting point, just scale all the 'alphas' in the strategy to
   // a fraction of their original value.
-  constexpr float kAlphaScalingFactor = 0.02;
+  constexpr float kAlphaScalingFactor = 0.015;
   for (auto& strategy : *strategies) {
     for (auto& alpha : strategy.alphas) alpha *= kAlphaScalingFactor;
   }
