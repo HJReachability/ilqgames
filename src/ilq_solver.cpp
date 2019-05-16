@@ -60,7 +60,7 @@ bool ILQSolver::Solve(const VectorXf& x0,
                       const OperatingPoint& initial_operating_point,
                       const std::vector<Strategy>& initial_strategies,
                       OperatingPoint* final_operating_point,
-                      std::vector<Strategy>* final_strategies, Log* log) {
+                      std::vector<Strategy>* final_strategies, SolverLog* log) {
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 

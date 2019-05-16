@@ -48,9 +48,9 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
@@ -79,11 +79,12 @@ class ILQSolver {
   bool Solve(const VectorXf& x0, const OperatingPoint& initial_operating_point,
              const std::vector<Strategy>& initial_strategies,
              OperatingPoint* final_operating_point,
-             std::vector<Strategy>* final_strategies, Log* log = nullptr);
+             std::vector<Strategy>* final_strategies, SolverLog* log = nullptr);
 
-  // Access time information.
+  // Access time information and costs.
   Time TimeHorizon() const { return time_horizon_; }
   Time TimeStep() const { return time_step_; }
+  const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
 
  protected:
   // Modify LQ strategies to improve convergence properties.

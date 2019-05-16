@@ -43,7 +43,7 @@
 
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
@@ -53,13 +53,13 @@
 
 namespace ilqgames {
 
-std::shared_ptr<Log> Problem::Solve() {
+std::shared_ptr<SolverLog> Problem::Solve() {
   CHECK_NOTNULL(solver_.get());
   CHECK_NOTNULL(strategies_.get());
   CHECK_NOTNULL(operating_point_.get());
 
   // Create empty log.
-  std::shared_ptr<Log> log = CreateNewLog();
+  std::shared_ptr<SolverLog> log = CreateNewLog();
 
   // Solver the problem.
   std::vector<Strategy> final_strategies(*strategies_);
@@ -84,8 +84,8 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0) {
   // TODO!
 }
 
-std::shared_ptr<Log> Problem::CreateNewLog() const {
-  return std::make_shared<Log>(solver_->TimeStep());
+std::shared_ptr<SolverLog> Problem::CreateNewLog() const {
+  return std::make_shared<SolverLog>(solver_->TimeStep());
 }
 
 }  // namespace ilqgames

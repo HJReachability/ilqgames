@@ -41,9 +41,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/player_cost_cache.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -53,7 +53,7 @@
 
 namespace ilqgames {
 
-PlayerCostCache::PlayerCostCache(const std::shared_ptr<const Log>& log,
+PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
                                  const std::vector<PlayerCost>& player_costs)
     : log_(log) {
   CHECK_NOTNULL(log.get());
@@ -69,9 +69,11 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const Log>& log,
     for (const auto& cost : player_cost.StateCosts()) {
       auto e = evaluated_costs.emplace(cost->Name(),
                                        std::vector<std::vector<float>>());
-      LOG_IF(WARNING, e.second) << "Duplicate cost with name: " << cost->Name();
+      LOG_IF(WARNING, !e.second)
+          << "Player " << ii
+          << " has duplicate cost with name: " << cost->Name();
 
-      auto entry = e.first->second;
+      auto& entry = e.first->second;
       entry.resize(log->NumIterates());
       for (size_t jj = 0; jj < log->NumIterates(); jj++) {
         entry[jj].resize(log->NumTimeSteps());
@@ -79,6 +81,8 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const Log>& log,
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
           entry[jj][kk] =
               cost->Evaluate(log->IndexToTime(kk), log->State(jj, kk));
+          //          CHECK(!std::isnan(entry[jj][kk]) && !std::isinf(entry[jj][kk]))
+          //              << "Player " << ii << ", " << cost->Name() << " is inf or nan.";
         }
       }
     }
@@ -89,7 +93,9 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const Log>& log,
       const auto& cost = cost_pair.second;
       auto e = evaluated_costs.emplace(cost->Name(),
                                        std::vector<std::vector<float>>());
-      LOG_IF(WARNING, e.second) << "Duplicate cost with name: " << cost->Name();
+      LOG_IF(WARNING, !e.second)
+          << "Player " << ii
+          << " has duplicate cost with name: " << cost->Name();
 
       auto entry = e.first->second;
       entry.resize(log->NumIterates());
@@ -98,7 +104,9 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const Log>& log,
 
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
           entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk),
-                                        log->Control(jj, kk, other_player));
+                                         log->Control(jj, kk, other_player));
+          CHECK(!std::isnan(entry[jj][kk]) && !std::isinf(entry[jj][kk]))
+              << "Player " << ii << ", " << cost->Name() << " is inf or nan.";
         }
       }
     }

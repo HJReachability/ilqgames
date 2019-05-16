@@ -46,13 +46,14 @@
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/gui/control_sliders.h>
-#include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/player_cost_cache.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 #include <imgui/imgui.h>
+#include <string>
 #include <vector>
 
 namespace ilqgames {
@@ -64,14 +65,17 @@ class CostInspector {
   // Takes in a log and lists of x/y/heading indices in
   // the state vector.
   CostInspector(const std::shared_ptr<const ControlSliders>& sliders,
-                const std::shared_ptr<const Log>& log,
+                const std::shared_ptr<const SolverLog>& log,
                 const std::vector<PlayerCost>& player_costs)
-      : sliders_(sliders), player_costs_(log, player_costs) {
+      : sliders_(sliders),
+        player_costs_(log, player_costs),
+        selected_player_(0),
+        selected_cost_name_("<Please select a cost>") {
     CHECK_NOTNULL(sliders_.get());
   }
 
   // Render the appropriate costs.
-  void Render() const;
+  void Render();
 
  private:
   // Control sliders.
@@ -79,6 +83,10 @@ class CostInspector {
 
   // Player cost cache.
   const PlayerCostCache player_costs_;
+
+  // Currently selected player and cost name.
+  PlayerIndex selected_player_;
+  std::string selected_cost_name_;
 };  // class CostInspector
 
 }  // namespace ilqgames

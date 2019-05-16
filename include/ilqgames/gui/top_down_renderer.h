@@ -44,7 +44,7 @@
 #define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
 
 #include <ilqgames/gui/control_sliders.h>
-#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
@@ -61,7 +61,7 @@ class TopDownRenderer {
   // Takes in a log and lists of x/y/heading indices in
   // the state vector.
   TopDownRenderer(const std::shared_ptr<const ControlSliders>& sliders,
-                  const std::shared_ptr<const Log>& log,
+                  const std::shared_ptr<const SolverLog>& log,
                   const std::vector<Dimension>& x_idxs,
                   const std::vector<Dimension>& y_idxs,
                   const std::vector<Dimension>& heading_idxs)
@@ -96,7 +96,7 @@ class TopDownRenderer {
   const std::shared_ptr<const ControlSliders> sliders_;
 
   // Log to render.
-  const std::shared_ptr<const Log> log_;
+  const std::shared_ptr<const SolverLog> log_;
 
   // Lists of x/y/heading indices in the state vector.
   const std::vector<Dimension> x_idxs_;

@@ -45,7 +45,7 @@
 #define ILQGAMES_SOLVER_PROBLEM_H
 
 #include <ilqgames/solver/ilq_solver.h>
-#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
@@ -59,18 +59,21 @@ class Problem {
   virtual ~Problem() {}
 
   // Solve this game. Returns log populated by solver.
-  std::shared_ptr<Log> Solve();
+  std::shared_ptr<SolverLog> Solve();
 
   // Update initial state and modify previous strategies and operating points to
   // start at the specified time step.
   void ResetInitialConditions(const VectorXf& x0, Time t0);
+
+  // Access the solver.
+  const ILQSolver& Solver() const { return *solver_; }
 
  protected:
   Problem() {}
 
   // Create a new log. This may be overridden by derived classes (e.g., to
   // change the name of the log).
-  virtual std::shared_ptr<Log> CreateNewLog() const;
+  virtual std::shared_ptr<SolverLog> CreateNewLog() const;
 
   // Solver.
   std::unique_ptr<ILQSolver> solver_;

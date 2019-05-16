@@ -44,8 +44,8 @@
 #define ILQGAMES_UTILS_PLAYER_COST_CACHE_H
 
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -55,19 +55,37 @@
 
 namespace ilqgames {
 
-class PlayerCostCache {
+class PlayerCostCache : private Uncopyable {
  public:
   ~PlayerCostCache() {}
-  PlayerCostCache(const std::shared_ptr<const Log>& log,
+  PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
                   const std::vector<PlayerCost>& player_costs);
 
   // Interpolate the given cost at the specified iterate and time.
   float Interpolate(size_t iterate, Time t, PlayerIndex player,
                     const std::string& name) const;
 
+  // Accessors.
+  const SolverLog& Log() const { return *log_; }
+  size_t NumPlayers() const { return evaluated_player_costs_.size(); }
+  size_t NumCosts(PlayerIndex player) const {
+    return evaluated_player_costs_[player].size();
+  }
+  bool PlayerHasCost(PlayerIndex player, const std::string& name) const {
+    return evaluated_player_costs_[player].count(name) > 0;
+  }
+  const std::unordered_map<std::string, std::vector<std::vector<float>>>&
+  EvaluatedCosts(PlayerIndex player) const {
+    return evaluated_player_costs_[player];
+  }
+  const std::vector<float>& EvaluatedCost(size_t iterate, PlayerIndex player,
+                                          const std::string& name) const {
+    return evaluated_player_costs_[player].at(name)[iterate];
+  }
+
  private:
   // Log. Currently only used for converting between times and time steps.
-  const std::shared_ptr<const Log> log_;
+  const std::shared_ptr<const SolverLog> log_;
 
   // Player costs (indexed by player and string ID) evaluated every iterate
   // and time step.

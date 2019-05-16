@@ -43,20 +43,65 @@
 
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
-#include <ilqgames/utils/log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/player_cost_cache.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 #include <imgui/imgui.h>
+#include <string>
 #include <vector>
 
 namespace ilqgames {
 
-// Render the appropriate costs.
-void CostInspector::Render() const {
-  // TODO!
+void CostInspector::Render() {
+  // Do nothing if log is empty.
+  if (player_costs_.Log().NumIterates() == 0) return;
+
+  // Set up main window.
+  ImGui::Begin("Cost Inspector");
+
+  // Combo box to select player.
+  if (ImGui::BeginCombo("Player", std::to_string(selected_player_).c_str())) {
+    for (PlayerIndex ii = 0; ii < player_costs_.NumPlayers(); ii++) {
+      const bool is_selected = (selected_player_ == ii);
+      if (ImGui::Selectable(std::to_string(ii).c_str(), is_selected))
+        selected_player_ = ii;
+      if (is_selected) ImGui::SetItemDefaultFocus();
+    }
+
+    ImGui::EndCombo();
+  }
+
+  // Combo box to select cost.
+  if (ImGui::BeginCombo("Cost", selected_cost_name_.c_str())) {
+    for (const auto& entry : player_costs_.EvaluatedCosts(selected_player_)) {
+      const std::string& cost_name = entry.first;
+      const bool is_selected = (selected_cost_name_ == cost_name);
+      if (ImGui::Selectable(cost_name.c_str(), is_selected))
+        selected_cost_name_ = cost_name;
+      if (is_selected) ImGui::SetItemDefaultFocus();
+    }
+
+    ImGui::EndCombo();
+  }
+
+  // Plot the given cost.
+  if (ImGui::BeginChild("Cost over time", ImVec2(0, 0), false)) {
+    const std::string label = "Player " + std::to_string(selected_player_) +
+                              ": " + selected_cost_name_;
+    if (player_costs_.PlayerHasCost(selected_player_, selected_cost_name_)) {
+      const std::vector<float>& values = player_costs_.EvaluatedCost(
+          sliders_->SolverIterate(), selected_player_, selected_cost_name_);
+      ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0, NULL,
+                       FLT_MAX, FLT_MAX, ImGui::GetWindowContentRegionMax());
+    }
+  }
+  ImGui::EndChild();
+
+  // End this window.
+  ImGui::End();
 }
 
 }  // namespace ilqgames

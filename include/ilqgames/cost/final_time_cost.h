@@ -48,14 +48,16 @@
 
 #include <glog/logging.h>
 #include <memory>
+#include <string>
 
 namespace ilqgames {
 
 class FinalTimeCost : public Cost {
  public:
   ~FinalTimeCost() {}
-  FinalTimeCost(const std::shared_ptr<const Cost>& cost, Time threshold_time)
-      : Cost(0.0), cost_(cost), threshold_time_(threshold_time) {
+  FinalTimeCost(const std::shared_ptr<const Cost>& cost, Time threshold_time,
+                const std::string& name = "")
+      : Cost(0.0, name), cost_(cost), threshold_time_(threshold_time) {
     CHECK_NOTNULL(cost.get());
   }
 
