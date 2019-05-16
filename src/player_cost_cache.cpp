@@ -81,8 +81,6 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
           entry[jj][kk] =
               cost->Evaluate(log->IndexToTime(kk), log->State(jj, kk));
-          //          CHECK(!std::isnan(entry[jj][kk]) && !std::isinf(entry[jj][kk]))
-          //              << "Player " << ii << ", " << cost->Name() << " is inf or nan.";
         }
       }
     }
@@ -97,7 +95,7 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
           << "Player " << ii
           << " has duplicate cost with name: " << cost->Name();
 
-      auto entry = e.first->second;
+      auto& entry = e.first->second;
       entry.resize(log->NumIterates());
       for (size_t jj = 0; jj < log->NumIterates(); jj++) {
         entry[jj].resize(log->NumTimeSteps());
@@ -105,8 +103,6 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
           entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk),
                                          log->Control(jj, kk, other_player));
-          CHECK(!std::isnan(entry[jj][kk]) && !std::isinf(entry[jj][kk]))
-              << "Player " << ii << ", " << cost->Name() << " is inf or nan.";
         }
       }
     }

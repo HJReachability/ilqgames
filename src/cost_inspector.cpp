@@ -94,8 +94,9 @@ void CostInspector::Render() {
     if (player_costs_.PlayerHasCost(selected_player_, selected_cost_name_)) {
       const std::vector<float>& values = player_costs_.EvaluatedCost(
           sliders_->SolverIterate(), selected_player_, selected_cost_name_);
-      ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0, NULL,
-                       FLT_MAX, FLT_MAX, ImGui::GetWindowContentRegionMax());
+      ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0,
+                       label.c_str(), FLT_MAX, FLT_MAX,
+                       ImGui::GetWindowContentRegionMax());
     }
   }
   ImGui::EndChild();
