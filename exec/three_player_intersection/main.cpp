@@ -41,9 +41,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/gui/control_sliders.h>
+#include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/solver_log.h>
 #include "three_player_intersection_example.h"
 
 #include <gflags/gflags.h>
@@ -90,12 +91,14 @@ int main(int argc, char** argv) {
   ilqgames::ThreePlayerIntersectionExample problem;
 
   // Solve the game.
-  std::shared_ptr<ilqgames::Log> log = problem.Solve();
+  std::shared_ptr<ilqgames::SolverLog> log = problem.Solve();
 
-  // Create a top-down renderer and control sliders.
+  // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>();
   ilqgames::TopDownRenderer top_down_renderer(
       sliders, log, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
+  ilqgames::CostInspector cost_inspector(sliders, log,
+                                         problem.Solver().PlayerCosts());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -150,7 +153,8 @@ int main(int argc, char** argv) {
   // ImGui::StyleColorsClassic();
 
   // Background color.
-  const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+  const ImVec4 clear_color =
+      ImVec4(213.0 / 255.0, 216.0 / 255.0, 226.0 / 255.0, 1.0f);
 
   // Setup Platform/Renderer bindings
   ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -171,6 +175,9 @@ int main(int argc, char** argv) {
 
     // Top down view.
     top_down_renderer.Render();
+
+    // Cost inspector.
+    cost_inspector.Render();
 
     // Rendering
     ImGui::Render();

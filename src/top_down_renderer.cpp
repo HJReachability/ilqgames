@@ -42,7 +42,7 @@
 
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/top_down_renderer.h>
-#include <ilqgames/utils/log.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 

@@ -40,8 +40,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GUI_STATIC_VARIABLES_H
-#define ILQGAMES_GUI_STATIC_VARIABLES_H
+#ifndef ILQGAMES_GUI_CONTROL_SLIDERS_H
+#define ILQGAMES_GUI_CONTROL_SLIDERS_H
 
 namespace ilqgames {
 
