@@ -42,8 +42,8 @@
 
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/top_down_renderer.h>
-#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
 
 #include <imgui/imgui.h>
@@ -148,6 +148,7 @@ void TopDownRenderer::Render() {
                       p.y - 0.5 * agent_base * cheading);
 
       draw_list->AddTriangleFilled(bl, br, top, agent_color);
+      draw_list->AddCircle(p, agent_radius, agent_color);
     }
   }
 
