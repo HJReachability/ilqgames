@@ -108,13 +108,15 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
 
     // Maybe handle gradient.
     if (grad) {
-      const float w_cross = weight_ * (relative.x() * unit_segment.y() -
-                                       relative.y() * unit_segment.x());
+      const float w_cross =
+          weight_ * (relative.x() * unit_segment.y() -
+                     relative.y() * unit_segment.x() - threshold_);
 
       (*grad)(xidx_) += w_cross * unit_segment.y();
       (*grad)(yidx_) -= w_cross * unit_segment.x();
     }
   } else {
+    // Closest point is a vertex.
     (*hess)(xidx_, xidx_) += weight_;
     (*hess)(yidx_, yidx_) += weight_;
 

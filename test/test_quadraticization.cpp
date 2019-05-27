@@ -165,7 +165,7 @@ TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
 
 TEST(SemiquadraticPolyline2CostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
-  SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.0, true);
+  SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.5, true);
   CheckQuadraticization(cost);
 }
 
