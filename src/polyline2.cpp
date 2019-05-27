@@ -53,13 +53,13 @@ Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
 
   // Parse into list of line segents.
   for (size_t ii = 1; ii < points.size(); ii++) {
-    segments_.emplace_back(LineSegment2(points[ii - 1], points[ii]));
+    segments_.emplace_back(points[ii - 1], points[ii]);
     length_ += segments_.back().Length();
   }
 }
 
 void Polyline2::AddPoint(const Point2& point) {
-  segments_.emplace_back(LineSegment2(segments_.back().SecondPoint(), point));
+  segments_.emplace_back(segments_.back().SecondPoint(), point);
   length_ += segments_.back().Length();
 }
 
@@ -77,7 +77,7 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
         s.ClosestPoint(query, &is_endpoint, &current_signed_squared_distance);
 
     if (std::abs(current_signed_squared_distance) <
-        closest_signed_squared_distance) {
+        std::abs(closest_signed_squared_distance)) {
       closest_signed_squared_distance = current_signed_squared_distance;
       closest_point = current_point;
 
