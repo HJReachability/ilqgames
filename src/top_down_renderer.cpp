@@ -74,7 +74,8 @@ void TopDownRenderer::Render() {
     ImGui::TextUnformatted("Press \"z\" key to change zoom.");
 
     const Point2 mouse_point = WindowCoordinatesToPosition(mouse_position);
-    ImGui::Text("Mouse is at: (%f, %f)", mouse_point.x(), mouse_point.y());
+    ImGui::Text("Mouse is at: (%3.1f, %3.1f)", mouse_point.x(),
+                mouse_point.y());
   }
   ImGui::EndChild();
 

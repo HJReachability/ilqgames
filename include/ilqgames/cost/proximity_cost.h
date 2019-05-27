@@ -36,8 +36,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Penalizes 1.0 / (relative distance) between two pairs of state dimensions
-// (representing two positions of vehicles whose states have been concatenated).
+// Penalizes -log(relative distance^2 - threshold^2) between two pairs of state
+// dimensions (representing two positions of vehicles whose states have been
+// concatenated).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -56,8 +57,9 @@ class ProximityCost : public TimeInvariantCost {
   ProximityCost(float weight,
                 const std::pair<Dimension, Dimension>& position_idxs1,
                 const std::pair<Dimension, Dimension>& position_idxs2,
-                const std::string& name = "")
+                float threshold, const std::string& name = "")
       : TimeInvariantCost(weight, name),
+        threshold_sq_(threshold * threshold),
         xidx1_(position_idxs1.first),
         yidx1_(position_idxs1.second),
         xidx2_(position_idxs2.first),
@@ -72,6 +74,9 @@ class ProximityCost : public TimeInvariantCost {
                     VectorXf* grad = nullptr) const;
 
  private:
+  // Threshold for minimum squared relative distance.
+  const float threshold_sq_;
+
   // Position indices for two vehicles.
   const Dimension xidx1_, yidx1_;
   const Dimension xidx2_, yidx2_;

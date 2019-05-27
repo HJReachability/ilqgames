@@ -180,6 +180,6 @@ TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
 }
 
 TEST(ProximityCostTest, QuadraticizesCorrectly) {
-  ProximityCost cost(kCostWeight, {0, 1}, {2, 3});
+  ProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
   CheckQuadraticization(cost);
 }
