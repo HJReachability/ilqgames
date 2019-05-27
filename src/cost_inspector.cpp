@@ -63,10 +63,10 @@ void CostInspector::Render() {
   ImGui::Begin("Cost Inspector");
 
   // Combo box to select player.
-  if (ImGui::BeginCombo("Player", std::to_string(selected_player_).c_str())) {
+  if (ImGui::BeginCombo("Player", std::to_string(selected_player_ + 1).c_str())) {
     for (PlayerIndex ii = 0; ii < player_costs_.NumPlayers(); ii++) {
       const bool is_selected = (selected_player_ == ii);
-      if (ImGui::Selectable(std::to_string(ii).c_str(), is_selected))
+      if (ImGui::Selectable(std::to_string(ii + 1).c_str(), is_selected))
         selected_player_ = ii;
       if (is_selected) ImGui::SetItemDefaultFocus();
     }
@@ -89,7 +89,7 @@ void CostInspector::Render() {
 
   // Plot the given cost.
   if (ImGui::BeginChild("Cost over time", ImVec2(0, 0), false)) {
-    const std::string label = "Player " + std::to_string(selected_player_) +
+    const std::string label = "Player " + std::to_string(selected_player_ + 1) +
                               ": " + selected_cost_name_;
     if (player_costs_.PlayerHasCost(selected_player_, selected_cost_name_)) {
       const std::vector<float>& values = player_costs_.EvaluatedCost(
