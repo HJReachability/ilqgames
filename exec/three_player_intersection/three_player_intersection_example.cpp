@@ -69,7 +69,7 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.05;     // s
+static constexpr Time kTimeStep = 0.05;    // s
 static constexpr Time kTimeHorizon = 5.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
@@ -91,6 +91,7 @@ static constexpr float kGoalCostWeight = 1000.0;
 static constexpr float kLaneCostWeight = 50.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
+static constexpr float kMinProximity = 4.0;
 static constexpr float kP0ProximityCostWeight = 10.0;
 static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
@@ -118,7 +119,7 @@ static constexpr float kMinV = 0.5;     // m/s
 
 static constexpr float kP0NominalV = 8.0;  // m/s
 static constexpr float kP1NominalV = 5.0;  // m/s
-static constexpr float kP2NominalV = 1.0;   // m/s
+static constexpr float kP2NominalV = 1.0;  // m/s
 
 // Initial state.
 static constexpr float kP0InitialX = -5.0;   // m
@@ -342,7 +343,7 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   p2_cost.AddStateCost(p2_s_cost);
 
   // Goal costs.
-  constexpr float kFinalTimeWindow = 0.5; // s
+  constexpr float kFinalTimeWindow = 0.5;  // s
   const auto p0_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP0XIdx, kP0GoalX),
       kTimeHorizon - kFinalTimeWindow, "GoalX");
@@ -373,28 +374,28 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   // Pairwise proximity costs.
   const std::shared_ptr<ProximityCost> p0p1_proximity_cost(
       new ProximityCost(kP0ProximityCostWeight, {kP0XIdx, kP0YIdx},
-                        {kP1XIdx, kP1YIdx}, "ProximityP1"));
+                        {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   const std::shared_ptr<ProximityCost> p0p2_proximity_cost(
       new ProximityCost(kP0ProximityCostWeight, {kP0XIdx, kP0YIdx},
-                        {kP2XIdx, kP2YIdx}, "ProximityP2"));
+                        {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   p0_cost.AddStateCost(p0p1_proximity_cost);
   p0_cost.AddStateCost(p0p2_proximity_cost);
 
   const std::shared_ptr<ProximityCost> p1p0_proximity_cost(
       new ProximityCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                        {kP0XIdx, kP0YIdx}, "ProximityP0"));
+                        {kP0XIdx, kP0YIdx}, kMinProximity, "ProximityP0"));
   const std::shared_ptr<ProximityCost> p1p2_proximity_cost(
       new ProximityCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                        {kP2XIdx, kP2YIdx}, "ProximityP2"));
+                        {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   p1_cost.AddStateCost(p1p0_proximity_cost);
   p1_cost.AddStateCost(p1p2_proximity_cost);
 
   const std::shared_ptr<ProximityCost> p2p0_proximity_cost(
       new ProximityCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                        {kP0XIdx, kP0YIdx}, "ProximityP0"));
+                        {kP0XIdx, kP0YIdx}, kMinProximity, "ProximityP0"));
   const std::shared_ptr<ProximityCost> p2p1_proximity_cost(
       new ProximityCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                        {kP1XIdx, kP1YIdx}, "ProximityP1"));
+                        {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   p2_cost.AddStateCost(p2p0_proximity_cost);
   p2_cost.AddStateCost(p2p1_proximity_cost);
 

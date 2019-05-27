@@ -36,8 +36,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Penalizes 1.0 / (relative distance)^2 between two pairs of state dimensions
-// (representing two positions of vehicles whose states have been concatenated).
+// Penalizes -log(relative distance^2 - threshold^2) between two pairs of state
+// dimensions (representing two positions of vehicles whose states have been
+// concatenated).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +52,8 @@ namespace ilqgames {
 float ProximityCost::Evaluate(const VectorXf& input) const {
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
-  return 0.5 * weight_ / (dx * dx + dy * dy);
+  const float gap = dx * dx + dy * dy - threshold_sq_;
+  return -0.5 * weight_ * std::log(gap);
 }
 
 void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
@@ -67,25 +69,23 @@ void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   // Compute Hessian and gradient.
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
-  const float distance_sq = dx * dx + dy * dy;
-  const float weight_over_distance_4th = weight_ / (distance_sq * distance_sq);
+  const float gap = dx * dx + dy * dy - threshold_sq_;
+  const float weight_gap = weight_ / gap;
+  const float weight_gap_sq = weight_gap / gap;
 
-  const float hess_x1x1 =
-      weight_over_distance_4th * (4.0 * dx * dx / distance_sq - 1.0);
+  const float hess_x1x1 = 2.0 * weight_gap_sq * dx * dx - weight_gap;
   (*hess)(xidx1_, xidx1_) += hess_x1x1;
   (*hess)(xidx1_, xidx2_) -= hess_x1x1;
   (*hess)(xidx2_, xidx1_) -= hess_x1x1;
   (*hess)(xidx2_, xidx2_) += hess_x1x1;
 
-  const float hess_y1y1 =
-      weight_over_distance_4th * (4.0 * dy * dy / distance_sq - 1.0);
+  const float hess_y1y1 = 2.0 * weight_gap_sq * dy * dy - weight_gap;
   (*hess)(yidx1_, yidx1_) += hess_y1y1;
   (*hess)(yidx1_, yidx2_) -= hess_y1y1;
   (*hess)(yidx2_, yidx1_) -= hess_y1y1;
   (*hess)(yidx2_, yidx2_) += hess_y1y1;
 
-  const float hess_x1y1 =
-      4.0 * weight_over_distance_4th * dx * dy / distance_sq;
+  const float hess_x1y1 = 2.0 * weight_gap_sq * dx * dy;
   (*hess)(xidx1_, yidx1_) += hess_x1y1;
   (*hess)(yidx1_, xidx1_) += hess_x1y1;
 
@@ -99,11 +99,11 @@ void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   (*hess)(yidx2_, xidx2_) += hess_x1y1;
 
   if (grad) {
-    const float ddx1 = -weight_over_distance_4th * dx;
+    const float ddx1 = -weight_gap * dx;
     (*grad)(xidx1_) += ddx1;
     (*grad)(xidx2_) -= ddx1;
 
-    const float ddy1 = -weight_over_distance_4th * dy;
+    const float ddy1 = -weight_gap * dy;
     (*grad)(yidx1_) += ddy1;
     (*grad)(yidx2_) -= ddy1;
   }
