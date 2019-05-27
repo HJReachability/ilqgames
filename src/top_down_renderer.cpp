@@ -66,10 +66,15 @@ void TopDownRenderer::Render() {
   // Set up main top-down viewer window.
   ImGui::Begin("Top-Down View");
 
-  // Set up child window displaying key codes for navigation and zoom.
+  // Set up child window displaying key codes for navigation and zoom,
+  // as well as mouse position.
+  const ImVec2 mouse_position = ImGui::GetMousePos();
   if (ImGui::BeginChild("User Guide")) {
     ImGui::TextUnformatted("Press \"c\" key to enable navigation.");
     ImGui::TextUnformatted("Press \"z\" key to change zoom.");
+
+    const Point2 mouse_point = WindowCoordinatesToPosition(mouse_position);
+    ImGui::Text("Mouse is at: (%f, %f)", mouse_point.x(), mouse_point.y());
   }
   ImGui::EndChild();
 
@@ -77,17 +82,16 @@ void TopDownRenderer::Render() {
   constexpr bool kCatchRepeats = false;
   if (ImGui::IsKeyPressed(ImGui::GetIO().KeyMap[ImGuiKey_C], kCatchRepeats) ||
       ImGui::IsKeyPressed(ImGui::GetIO().KeyMap[ImGuiKey_Z], kCatchRepeats))
-    last_mouse_position_ = ImGui::GetMousePos();
+    last_mouse_position_ = mouse_position;
   else if (ImGui::IsKeyReleased(ImGui::GetIO().KeyMap[ImGuiKey_C])) {
     // When "c" is released, update center delta.
-    const ImVec2 mouse_position = ImGui::GetMousePos();
     center_delta_.x +=
         PixelsToLength(mouse_position.x - last_mouse_position_.x);
     center_delta_.y -=
         PixelsToLength(mouse_position.y - last_mouse_position_.y);
   } else if (ImGui::IsKeyReleased(ImGui::GetIO().KeyMap[ImGuiKey_Z])) {
     // When "z" is released, update pixel to meter ratio.
-    const float mouse_delta_y = ImGui::GetMousePos().y - last_mouse_position_.y;
+    const float mouse_delta_y = mouse_position.y - last_mouse_position_.y;
     pixel_to_meter_ratio_ =
         std::max(kMinZoom, pixel_to_meter_ratio_ -
                                kPixelsToZoomConversion * mouse_delta_y);
@@ -182,6 +186,16 @@ inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,
   coords.x += LengthToPixels(x + center_delta_.x);
   coords.y -= LengthToPixels(y + center_delta_.y);
   return coords;
+}
+
+inline Point2 TopDownRenderer::WindowCoordinatesToPosition(
+    const ImVec2& coords) const {
+  const ImVec2 center = WindowCenter();
+
+  // NOTE: only correct when "c" key is not down.
+  const float x = PixelsToLength(coords.x - center.x) + center_delta_.x;
+  const float y = PixelsToLength(center.y - coords.y) - center_delta_.y;
+  return Point2(x, y);
 }
 
 inline ImVec2 TopDownRenderer::WindowCenter() const {

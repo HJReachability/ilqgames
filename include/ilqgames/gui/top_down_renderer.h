@@ -90,6 +90,7 @@ class TopDownRenderer {
   float PixelsToLength(float p) const { return p / CurrentZoomLevel(); }
   float HeadingToWindowCoordinates(float heading) const { return -heading; }
   ImVec2 PositionToWindowCoordinates(float x, float y) const;
+  Point2 WindowCoordinatesToPosition(const ImVec2& coords) const;
   ImVec2 WindowCenter() const;
 
   // Control sliders.
