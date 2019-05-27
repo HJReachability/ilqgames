@@ -69,7 +69,7 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;     // s
+static constexpr Time kTimeStep = 0.05;     // s
 static constexpr Time kTimeHorizon = 5.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
@@ -78,27 +78,27 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
-static constexpr float kACostWeight = 1.0;
+static constexpr float kACostWeight = 20.0;
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kCurvatureCostWeight = 0.0;
 
-static constexpr float kMaxVCostWeight = 100.0;
-static constexpr float kNominalVCostWeight = 1.0;
+static constexpr float kMaxVCostWeight = 1000.0;
+static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kSCostWeight = 0.0;
-static constexpr float kGoalCostWeight = 100.0;
+static constexpr float kGoalCostWeight = 1000.0;
 
-static constexpr float kLaneCostWeight = 20.0;
+static constexpr float kLaneCostWeight = 50.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kP0ProximityCostWeight = 100.0;
-static constexpr float kP1ProximityCostWeight = 100.0;
+static constexpr float kP0ProximityCostWeight = 10.0;
+static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
 
 static constexpr bool kOrientedRight = true;
 
 // Lane dimension.
-static constexpr float kLaneHalfWidth = 2.0;  // m
+static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Goal points.
 static constexpr float kP0GoalX = -6.0;  // m
@@ -111,13 +111,13 @@ static constexpr float kP2GoalX = 5.0;   // m
 static constexpr float kP2GoalY = 14.0;  // m
 
 // Nominal and max speed.
-static constexpr float kP0MaxV = 20.0;  // m/s
-static constexpr float kP1MaxV = 20.0;  // m/s
-static constexpr float kP2MaxV = 3.0;   // m/s
+static constexpr float kP0MaxV = 12.0;  // m/s
+static constexpr float kP1MaxV = 12.0;  // m/s
+static constexpr float kP2MaxV = 2.0;   // m/s
 static constexpr float kMinV = 0.5;     // m/s
 
-static constexpr float kP0NominalV = 10.0;  // m/s
-static constexpr float kP1NominalV = 10.0;  // m/s
+static constexpr float kP0NominalV = 8.0;  // m/s
+static constexpr float kP1NominalV = 5.0;  // m/s
 static constexpr float kP2NominalV = 1.0;   // m/s
 
 // Initial state.
@@ -342,30 +342,31 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   p2_cost.AddStateCost(p2_s_cost);
 
   // Goal costs.
+  constexpr float kFinalTimeWindow = 0.5; // s
   const auto p0_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP0XIdx, kP0GoalX),
-      kTimeHorizon - 1.0, "GoalX");
+      kTimeHorizon - kFinalTimeWindow, "GoalX");
   const auto p0_goaly_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP0YIdx, kP0GoalY),
-      kTimeHorizon - 1.0, "GoalY");
+      kTimeHorizon - kFinalTimeWindow, "GoalY");
   p0_cost.AddStateCost(p0_goalx_cost);
   p0_cost.AddStateCost(p0_goaly_cost);
 
   const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
-      kTimeHorizon - 1.0, "GoalX");
+      kTimeHorizon - kFinalTimeWindow, "GoalX");
   const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
-      kTimeHorizon - 1.0, "GoalY");
+      kTimeHorizon - kFinalTimeWindow, "GoalY");
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
 
   const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
-      kTimeHorizon - 1.0, "GoalX");
+      kTimeHorizon - kFinalTimeWindow, "GoalX");
   const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
-      kTimeHorizon - 1.0, "GoalY");
+      kTimeHorizon - kFinalTimeWindow, "GoalY");
   p2_cost.AddStateCost(p2_goalx_cost);
   p2_cost.AddStateCost(p2_goaly_cost);
 
