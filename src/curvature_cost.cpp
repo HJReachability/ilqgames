@@ -80,7 +80,7 @@ void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
 
   if (grad) {
     (*grad)(omega_idx_) += weight_omega_over_vsq;
-    (*grad)(v_idx_) += -weight_omega_over_vsq * omega / v;
+    (*grad)(v_idx_) -= weight_omega_over_vsq * omega / v;
   }
 }
 
