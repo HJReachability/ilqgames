@@ -194,8 +194,8 @@ inline Point2 TopDownRenderer::WindowCoordinatesToPosition(
   const ImVec2 center = WindowCenter();
 
   // NOTE: only correct when "c" key is not down.
-  const float x = PixelsToLength(coords.x - center.x) + center_delta_.x;
-  const float y = PixelsToLength(center.y - coords.y) - center_delta_.y;
+  const float x = PixelsToLength(coords.x - center.x) - center_delta_.x;
+  const float y = PixelsToLength(center.y - coords.y) + center_delta_.y;
   return Point2(x, y);
 }
 
