@@ -63,7 +63,8 @@ void CostInspector::Render() {
   ImGui::Begin("Cost Inspector");
 
   // Combo box to select player.
-  if (ImGui::BeginCombo("Player", std::to_string(selected_player_ + 1).c_str())) {
+  if (ImGui::BeginCombo("Player",
+                        std::to_string(selected_player_ + 1).c_str())) {
     for (PlayerIndex ii = 0; ii < player_costs_.NumPlayers(); ii++) {
       const bool is_selected = (selected_player_ == ii);
       if (ImGui::Selectable(std::to_string(ii + 1).c_str(), is_selected))
@@ -97,8 +98,26 @@ void CostInspector::Render() {
       ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0,
                        label.c_str(), FLT_MAX, FLT_MAX,
                        ImGui::GetWindowContentRegionMax());
+
+      // Show a vertical line at the current time.
+      const float time = sliders_->InterpolationTime();
+      const ImU32 color =
+          ImColor(ImVec4(234.0 / 255.0, 110.0 / 255.0, 110.0 / 255.0, 0.5));
+      constexpr float kLineThickness = 2.0;
+
+      const ImVec2 window_top_left = ImGui::GetWindowPos();
+      const float line_y_lower = window_top_left.y + ImGui::GetWindowHeight();
+      const float line_y_upper = window_top_left.y;
+      const float line_x =
+          window_top_left.x +
+          ImGui::GetWindowWidth() * time / player_costs_.Log().FinalTime();
+
+      ImDrawList* draw_list = ImGui::GetWindowDrawList();
+      draw_list->AddLine(ImVec2(line_x, line_y_lower),
+                         ImVec2(line_x, line_y_upper), color, kLineThickness);
     }
   }
+
   ImGui::EndChild();
 
   // End this window.
