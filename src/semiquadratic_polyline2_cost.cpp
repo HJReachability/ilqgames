@@ -121,8 +121,12 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
     (*hess)(yidx_, yidx_) += weight_;
 
     if (grad) {
-      (*grad)(xidx_) += weight_ * (current_position.x() - closest_point.x());
-      (*grad)(yidx_) += weight_ * (current_position.y() - closest_point.y());
+      float scaling = std::sqrt(std::abs(signed_squared_distance));
+      scaling = (scaling - std::abs(threshold_)) / scaling;
+      (*grad)(xidx_) +=
+          weight_ * scaling * (current_position.x() - closest_point.x());
+      (*grad)(yidx_) +=
+          weight_ * scaling * (current_position.y() - closest_point.y());
     }
   }
 }

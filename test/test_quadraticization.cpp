@@ -62,8 +62,8 @@ static constexpr float kCostWeight = 1.0;
 static constexpr Dimension kInputDimension = 5;
 
 // Step size for forward differences.
-static constexpr float kGradForwardStep = 1e-3;
-static constexpr float kHessForwardStep = 1e-3;
+static constexpr float kGradForwardStep = 1e-4;
+static constexpr float kHessForwardStep = 2e-3;
 static constexpr float kNumericalPrecision = 1e-1;
 
 // Function to compute numerical gradient of a cost.
@@ -114,14 +114,13 @@ MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
 // Test that each cost's gradient and Hessian match a numerical approximation.
 void CheckQuadraticization(const Cost& cost) {
   // Random number generator to make random timestamps.
-  std::random_device rd;
-  std::default_random_engine rng(rd());
+  std::default_random_engine rng(0);
   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
   std::bernoulli_distribution sign_distribution;
   std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
 
   // Try a bunch of random points.
-  constexpr size_t kNumRandomPoints = 10;
+  constexpr size_t kNumRandomPoints = 20;
   for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
     VectorXf input(kInputDimension);
     for (size_t jj = 0; jj < kInputDimension; jj++) {
@@ -138,6 +137,17 @@ void CheckQuadraticization(const Cost& cost) {
     MatrixXf hess_numerical = NumericalHessian(cost, t, input);
     VectorXf grad_numerical = NumericalGradient(cost, t, input);
 
+#if 0
+    if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
+        kNumericalPrecision) {
+      std::cout << "input: " << input.transpose() << std::endl;
+      std::cout << "numeric hess: \n" << hess_numerical << std::endl;
+      std::cout << "analytic hess: \n" << hess_analytic << std::endl;
+      std::cout << "numeric grad: \n" << grad_numerical << std::endl;
+      std::cout << "analytic grad: \n" << grad_analytic << std::endl;
+    }
+#endif
+
     EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
               kNumericalPrecision);
     EXPECT_LT((grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
@@ -148,7 +158,7 @@ void CheckQuadraticization(const Cost& cost) {
 }  // anonymous namespace
 
 TEST(QuadraticCostTest, QuadraticizesCorrectly) {
-  QuadraticCost cost(kCostWeight, -1, 10.0);
+  QuadraticCost cost(kCostWeight, -1, 1.0);
   CheckQuadraticization(cost);
 }
 
@@ -164,7 +174,8 @@ TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
 }
 
 TEST(SemiquadraticPolyline2CostTest, QuadraticizesCorrectly) {
-  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  Polyline2 polyline(
+      {Point2(-200.0, -200.0), Point2(0.5, 1.0), Point2(200.0, 200.0)});
   SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.5, true);
   CheckQuadraticization(cost);
 }
