@@ -78,10 +78,55 @@ std::shared_ptr<SolverLog> Problem::Solve() {
   return log;
 }
 
-void Problem::ResetInitialConditions(const VectorXf& x0, Time t0) {
-  x0_ = x0;
+void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
+                                     Time planner_runtime) {
+  CHECK_GT(planner_runtime, 0.0);
+  CHECK_LT(planner_runtime + t0, solver_->TimeHorizon());
+  CHECK_GE(t0, 0.0);
 
-  // TODO!
+  const MultiPlayerDynamicalSystem& dynamics = solver_->Dynamics();
+
+  // Integrate x0 forward from t0 by approximately planner_runtime to get
+  // actual initial state. First, handle integrating up to the next timestep,
+  // then handle integration for future time steps up to planner_runtime.
+  const size_t current_timestep = static_cast<size_t>(t0 / solver_->TimeStep());
+  const Time remaining_time_this_step =
+      t0 - solver_->TimeStep() * current_timestep;
+  const size_t num_steps_to_integrate =
+      1 + static_cast<size_t>((planner_runtime - remaining_time_this_step) /
+                              solver_->TimeStep());
+
+  // Interpolate x0_ref.
+  const float frac = remaining_time_this_step / solver_->TimeStep();
+  const VectorXf x0_ref =
+      frac * operating_point_->xs[current_timestep] +
+      (1.0 - frac) * operating_point_->xs[current_timestep + 1];
+
+  // Compute controls for each player.
+  std::vector<VectorXf> us(dynamics.NumPlayers());
+  for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++)
+    us[ii] = (*strategies_)[ii](current_timestep, x0 - x0_ref,
+                                operating_point_->us[current_timestep][ii]);
+
+  // Integrate up to the next time step.
+  VectorXf x = dynamics.Integrate(t0, remaining_time_this_step, x0, us);
+
+  // Integrate the remaining time steps.
+  for (size_t kk = current_timestep + 1;
+       kk < current_timestep + 1 + num_steps_to_integrate; kk++) {
+    // Compute controls for each player.
+    for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++)
+      us[ii] = (*strategies_)[ii](kk, x - operating_point_->xs[kk],
+                                  operating_point_->us[kk][ii]);
+
+    x = dynamics.Integrate(solver_->ComputeTimeStamp(kk), solver_->TimeStep(),
+                           x, us);
+  }
+
+  // Set initial state to this state.
+  x0_ = x;
+
+  // Populate
 }
 
 std::shared_ptr<SolverLog> Problem::CreateNewLog() const {

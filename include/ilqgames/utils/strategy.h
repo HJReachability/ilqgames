@@ -71,8 +71,8 @@ struct Strategy {
 
   // Operator for computing control given time index and delta x.
   VectorXf operator()(size_t time_index, const VectorXf& delta_x,
-                      const VectorXf& last_u) const {
-    return last_u - Ps[time_index] * delta_x - alphas[time_index];
+                      const VectorXf& u_ref) const {
+    return u_ref - Ps[time_index] * delta_x - alphas[time_index];
   }
 
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
