@@ -68,7 +68,7 @@ class Problem {
   // By default, extends operating points and strategies as follows:
   // 1. new controls are zero
   // 2. new states are those that result from zero control
-  // 3. new strategies are the same as the previous final strategy
+  // 3. new strategies are also zero
   virtual void ResetInitialConditions(const VectorXf& x0, Time t0,
                                       Time planner_runtime = 0.1);
 

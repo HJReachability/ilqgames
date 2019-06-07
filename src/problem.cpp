@@ -95,6 +95,8 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   const size_t num_steps_to_integrate =
       1 + static_cast<size_t>((planner_runtime - remaining_time_this_step) /
                               solver_->TimeStep());
+  const size_t first_timestep_in_new_problem =
+      current_timestep + 1 + num_steps_to_integrate;
 
   // Interpolate x0_ref.
   const float frac = remaining_time_this_step / solver_->TimeStep();
@@ -112,8 +114,8 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   VectorXf x = dynamics.Integrate(t0, remaining_time_this_step, x0, us);
 
   // Integrate the remaining time steps.
-  for (size_t kk = current_timestep + 1;
-       kk < current_timestep + 1 + num_steps_to_integrate; kk++) {
+  for (size_t kk = current_timestep + 1; kk < first_timestep_in_new_problem;
+       kk++) {
     // Compute controls for each player.
     for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++)
       us[ii] = (*strategies_)[ii](kk, x - operating_point_->xs[kk],
@@ -126,7 +128,37 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   // Set initial state to this state.
   x0_ = x;
 
-  // Populate
+  // Populate strategies and opeating point for the remainder of the
+  // existing plan, reusing the old operating point when possible.
+  for (size_t kk = first_timestep_in_new_problem;
+       kk < operating_point_->xs.size(); kk++) {
+    const size_t kk_new_problem = kk - first_timestep_in_new_problem;
+
+    // Set current state and controls in operating point.
+    operating_point_->xs[kk_new_problem] = operating_point_->xs[kk];
+    operating_point_->us[kk_new_problem].swap(operating_point_->us[kk]);
+
+    // Set current stategy.
+    for (auto& strategy : *strategies_) {
+      strategy.Ps[kk_new_problem] = strategy.Ps[kk];
+      strategy.alphas[kk_new_problem] = strategy.alphas[kk];
+    }
+  }
+
+  // Set new operating point controls and strategies to zero and propagate state
+  // forward accordingly.
+  for (size_t kk = operating_point_->xs.size() - first_timestep_in_new_problem;
+       kk < operating_point_->xs.size(); kk++) {
+    for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      (*strategies_)[ii].Ps[kk] *= 0.0;
+      (*strategies_)[ii].alphas[kk] *= 0.0;
+      operating_point_->us[kk][ii] *= 0.0;
+    }
+
+    operating_point_->xs[kk] = dynamics.Integrate(
+        solver_->ComputeTimeStamp(kk - 1), solver_->TimeStep(),
+        operating_point_->xs[kk - 1], operating_point_->us[kk - 1]);
+  }
 }
 
 std::shared_ptr<SolverLog> Problem::CreateNewLog() const {
