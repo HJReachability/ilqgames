@@ -150,9 +150,9 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   for (size_t kk = operating_point_->xs.size() - first_timestep_in_new_problem;
        kk < operating_point_->xs.size(); kk++) {
     for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      (*strategies_)[ii].Ps[kk] *= 0.0;
-      (*strategies_)[ii].alphas[kk] *= 0.0;
-      operating_point_->us[kk][ii] *= 0.0;
+      (*strategies_)[ii].Ps[kk].setZero();
+      (*strategies_)[ii].alphas[kk].setZero();
+      operating_point_->us[kk][ii].setZero();
     }
 
     operating_point_->xs[kk] = dynamics.Integrate(
