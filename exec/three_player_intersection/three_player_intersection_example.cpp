@@ -69,7 +69,7 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;     // s
+static constexpr Time kTimeStep = 0.1;      // s
 static constexpr Time kTimeHorizon = 10.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
@@ -206,7 +206,7 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
                               dynamics->UDim(ii));
 
   operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), dynamics));
+      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost;

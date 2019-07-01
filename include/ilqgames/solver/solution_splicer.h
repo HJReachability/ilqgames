@@ -36,15 +36,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Container to store an operating point, i.e. states and controls for each
-// player.
+// Splice together existing and new solutions to a receding horizon problem.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_UTILS_OPERATING_POINT_H
-#define ILQGAMES_UTILS_OPERATING_POINT_H
+#ifndef ILQGAMES_SOLVER_SOLUTION_SPLICER_H
+#define ILQGAMES_SOLVER_SOLUTION_SPLICER_H
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/solver_log.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <memory>
@@ -52,29 +53,24 @@
 
 namespace ilqgames {
 
-struct OperatingPoint {
-  // Time-indexed list of states.
-  std::vector<VectorXf> xs;
+class SolutionSplicer {
+ public:
+  ~SolutionSplicer() {}
+  explicit SolutionSplicer(const SolverLog& log);
 
-  // Time-indexed list of controls for all players, i.e. us[kk] is the list of
-  // controls for all players at time index kk.
-  std::vector<std::vector<VectorXf>> us;
+  // Splice in a new solution stored in a solver log. Also prune before the
+  // current time.
+  void Splice(const SolverLog& log, Time current_time);
 
-  // Initial time stamp.
-  Time t0;
+  // Accessors.
+  const std::vector<Strategy>& Strategies() const { return strategies_; }
+  const OperatingPoint& OperatingPoint() const { return operating_point_; }
 
-  // Construct with empty vectors of the right size, and optionally zero out if
-  // dynamics is non-null.
-  OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
-                 Time initial_time,
-                 const std::shared_ptr<const MultiPlayerDynamicalSystem>&
-                     dynamics = nullptr);
-
-  // Custom swap function.
-  void swap(OperatingPoint& other);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-};  // struct OperatingPoint
+ private:
+  // Converged strategies and operating points for all players.
+  std::vector<Strategy> strategies_;
+  OperatingPoint operating_point_;
+};  // class SolutionSplicer
 
 }  // namespace ilqgames
 

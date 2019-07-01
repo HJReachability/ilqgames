@@ -87,7 +87,8 @@ bool LinesearchingILQSolver::ModifyLQStrategies(
     const OperatingPoint& current_operating_point,
     std::vector<Strategy>* strategies) const {
   // Compute next operating point.
-  OperatingPoint next_operating_point(num_time_steps_, dynamics_->NumPlayers());
+  OperatingPoint next_operating_point(num_time_steps_, dynamics_->NumPlayers(),
+                                      current_operating_point.t0);
   CurrentOperatingPoint(current_operating_point, *strategies,
                         &next_operating_point);
 
