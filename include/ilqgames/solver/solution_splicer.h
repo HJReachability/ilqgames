@@ -63,8 +63,10 @@ class SolutionSplicer {
   void Splice(const SolverLog& log, Time current_time);
 
   // Accessors.
-  const std::vector<Strategy>& Strategies() const { return strategies_; }
-  const OperatingPoint& OperatingPoint() const { return operating_point_; }
+  const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
+  const OperatingPoint& CurrentOperatingPoint() const {
+    return operating_point_;
+  }
 
  private:
   // Converged strategies and operating points for all players.
