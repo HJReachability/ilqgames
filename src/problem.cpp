@@ -89,9 +89,11 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   // Integrate x0 forward from t0 by approximately planner_runtime to get
   // actual initial state. First, handle integrating up to the next timestep,
   // then handle integration for future time steps up to planner_runtime.
-  const size_t current_timestep = static_cast<size_t>(t0 / solver_->TimeStep());
+  const Time relative_t0 = t0 - operating_point_->t0;
+  const size_t current_timestep =
+      static_cast<size_t>(relative_t0 / solver_->TimeStep());
   const Time remaining_time_this_step =
-      t0 - solver_->TimeStep() * current_timestep;
+      relative_t0 - solver_->TimeStep() * current_timestep;
   const size_t num_steps_to_integrate =
       1 + static_cast<size_t>((planner_runtime - remaining_time_this_step) /
                               solver_->TimeStep());
@@ -121,12 +123,16 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
       us[ii] = (*strategies_)[ii](kk, x - operating_point_->xs[kk],
                                   operating_point_->us[kk][ii]);
 
-    x = dynamics.Integrate(solver_->ComputeTimeStamp(kk), solver_->TimeStep(),
-                           x, us);
+    x = dynamics.Integrate(operating_point_->t0 + solver_->ComputeTimeStamp(kk),
+                           solver_->TimeStep(), x, us);
   }
 
   // Set initial state to this state.
   x0_ = x;
+
+  // Set initial time to first timestamp in new problem.
+  operating_point_->t0 +=
+      solver_->ComputeTimeStamp(first_timestep_in_new_problem);
 
   // Populate strategies and opeating point for the remainder of the
   // existing plan, reusing the old operating point when possible.
@@ -156,8 +162,9 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
     }
 
     operating_point_->xs[kk] = dynamics.Integrate(
-        solver_->ComputeTimeStamp(kk - 1), solver_->TimeStep(),
-        operating_point_->xs[kk - 1], operating_point_->us[kk - 1]);
+        operating_point_->t0 + solver_->ComputeTimeStamp(kk - 1),
+        solver_->TimeStep(), operating_point_->xs[kk - 1],
+        operating_point_->us[kk - 1]);
   }
 }
 
