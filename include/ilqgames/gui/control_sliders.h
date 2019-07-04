@@ -48,14 +48,16 @@ namespace ilqgames {
 class ControlSliders {
  public:
   ~ControlSliders() {}
-  ControlSliders() : interpolation_time_(0.0), solver_iterate_(0) {}
+  ControlSliders()
+      : interpolation_time_(0.0), solver_iterate_(0), log_index_(0) {}
 
   // Render all the sliders in a separate window.
-  void Render(float final_time, int num_solver_iterates);
+  void Render(int num_logs, float final_time, int num_solver_iterates);
 
   // Accessors.
   float InterpolationTime() const { return interpolation_time_; }
   int SolverIterate() const { return solver_iterate_; }
+  int LogIndex() const { return log_index_; }
 
  private:
   // Time at which to interpolate trajectory.
@@ -63,6 +65,9 @@ class ControlSliders {
 
   // Solver iterate to display.
   int solver_iterate_;
+
+  // Log index to render for receding horizon problems.
+  int log_index_;
 };  // class ControlSliders
 
 }  // namespace ilqgames

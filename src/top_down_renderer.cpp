@@ -59,8 +59,11 @@ static constexpr float kMinZoom = 2.0;
 }  // anonymous namespace
 
 void TopDownRenderer::Render() {
+  // Extract current log.
+  const auto& log = logs_[sliders_->LogIndex()];
+
   // Do nothing if no iterates yet.
-  if (log_->NumIterates() == 0) return;
+  if (log->NumIterates() == 0) return;
   const size_t num_agents = x_idxs_.size();
 
   // Set up main top-down viewer window.
@@ -105,16 +108,16 @@ void TopDownRenderer::Render() {
   const ImU32 trajectory_color = ImColor(ImVec4(1.0, 1.0, 1.0, 0.5));
   const float trajectory_thickness = std::min(1.0f, LengthToPixels(0.5));
 
-  ImVec2 points[log_->NumTimeSteps()];
+  ImVec2 points[log->NumTimeSteps()];
   for (size_t ii = 0; ii < num_agents; ii++) {
-    for (size_t kk = 0; kk < log_->NumTimeSteps(); kk++) {
+    for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
       points[kk] = PositionToWindowCoordinates(
-          log_->State(sliders_->SolverIterate(), kk, x_idxs_[ii]),
-          log_->State(sliders_->SolverIterate(), kk, y_idxs_[ii]));
+          log->State(sliders_->SolverIterate(), kk, x_idxs_[ii]),
+          log->State(sliders_->SolverIterate(), kk, y_idxs_[ii]));
     }
 
     constexpr bool kPolylineIsClosed = false;
-    draw_list->AddPolyline(points, log_->NumTimeSteps(), trajectory_color,
+    draw_list->AddPolyline(points, log->NumTimeSteps(), trajectory_color,
                            kPolylineIsClosed, trajectory_thickness);
   }
 
@@ -129,15 +132,15 @@ void TopDownRenderer::Render() {
   // >= 0) or a circle (if heading idx < 0).
   for (size_t ii = 0; ii < num_agents; ii++) {
     const ImVec2 p = PositionToWindowCoordinates(
-        log_->InterpolateState(sliders_->SolverIterate(),
+        log->InterpolateState(sliders_->SolverIterate(),
                                sliders_->InterpolationTime(), x_idxs_[ii]),
-        log_->InterpolateState(sliders_->SolverIterate(),
+        log->InterpolateState(sliders_->SolverIterate(),
                                sliders_->InterpolationTime(), y_idxs_[ii]));
 
     if (heading_idxs_[ii] < 0)
       draw_list->AddCircleFilled(p, agent_radius, agent_color);
     else {
-      const float heading = HeadingToWindowCoordinates(log_->InterpolateState(
+      const float heading = HeadingToWindowCoordinates(log->InterpolateState(
           sliders_->SolverIterate(), sliders_->InterpolationTime(),
           heading_idxs_[ii]));
       const float cheading = std::cos(heading);
