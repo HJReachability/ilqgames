@@ -41,7 +41,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "three_player_intersection_example.h"
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
@@ -53,6 +52,7 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
+#include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/linesearching_ilq_solver.h>

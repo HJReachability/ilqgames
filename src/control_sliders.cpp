@@ -46,8 +46,12 @@
 
 namespace ilqgames {
 
-void ControlSliders::Render(float final_time, int num_solver_iterates) {
+void ControlSliders::Render(int num_logs, float final_time,
+                            int num_solver_iterates) {
   ImGui::Begin("Control Sliders");
+
+  // Make a slider to get the desired log index from a receding horizon problem.
+  if (num_logs > 1) ImGui::SliderInt("Log Index", &log_index_, 0, num_logs - 1);
 
   // Make a slider to get the desired interpolation time.
   ImGui::SliderFloat("Interpolation Time (s)", &interpolation_time_, 0.0,

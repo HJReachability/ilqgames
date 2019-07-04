@@ -89,15 +89,17 @@ int main(int argc, char** argv) {
 
   // Set up the game.
   ilqgames::ThreePlayerIntersectionExample problem;
+  ilqgames::RecedingHorizonExample receding_horizon(problem);
 
-  // Solve the game.
-  std::shared_ptr<ilqgames::SolverLog> log = problem.Solve();
+  // Solve the game in a receding horizon.
+  std::vector<std::shared_ptr<ilqgames::SolverLog>> logs =
+      receding_horizon.Solve();
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>();
   ilqgames::TopDownRenderer top_down_renderer(
-      sliders, {log}, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
-  ilqgames::CostInspector cost_inspector(sliders, {log},
+      sliders, logs, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
+  ilqgames::CostInspector cost_inspector(sliders, logs,
                                          problem.Solver().PlayerCosts());
 
   // Setup window
@@ -171,7 +173,8 @@ int main(int argc, char** argv) {
     ImGui::NewFrame();
 
     // Control sliders.
-    sliders->Render(1, log->FinalTime(), log->NumIterates());
+    sliders->Render(logs.size(), logs[sliders->LogIndex()]->FinalTime(),
+                    logs[sliders->LogIndex()]->NumIterates());
 
     // Top down view.
     top_down_renderer.Render();

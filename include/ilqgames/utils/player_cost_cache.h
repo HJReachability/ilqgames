@@ -55,7 +55,7 @@
 
 namespace ilqgames {
 
-class PlayerCostCache : private Uncopyable {
+class PlayerCostCache {
  public:
   ~PlayerCostCache() {}
   PlayerCostCache(const std::shared_ptr<const SolverLog>& log,

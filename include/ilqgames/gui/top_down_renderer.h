@@ -44,8 +44,8 @@
 #define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
 
 #include <ilqgames/gui/control_sliders.h>
-#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -61,12 +61,12 @@ class TopDownRenderer {
   // Takes in a log and lists of x/y/heading indices in
   // the state vector.
   TopDownRenderer(const std::shared_ptr<const ControlSliders>& sliders,
-                  const std::shared_ptr<const SolverLog>& log,
+                  const std::vector<std::shared_ptr<const SolverLog>>& logs,
                   const std::vector<Dimension>& x_idxs,
                   const std::vector<Dimension>& y_idxs,
                   const std::vector<Dimension>& heading_idxs)
       : sliders_(sliders),
-        log_(log),
+        logs_(logs),
         x_idxs_(x_idxs),
         y_idxs_(y_idxs),
         heading_idxs_(heading_idxs),
@@ -74,9 +74,9 @@ class TopDownRenderer {
         last_mouse_position_(0.0, 0.0),
         pixel_to_meter_ratio_(5.0) {
     CHECK_NOTNULL(sliders_.get());
-    CHECK_NOTNULL(log_.get());
     CHECK_EQ(x_idxs_.size(), y_idxs_.size());
     CHECK_EQ(x_idxs_.size(), heading_idxs_.size());
+    for (const auto& log : logs) CHECK_NOTNULL(log.get());
   }
 
   // Render the log in a top-down view.
@@ -97,7 +97,7 @@ class TopDownRenderer {
   const std::shared_ptr<const ControlSliders> sliders_;
 
   // Log to render.
-  const std::shared_ptr<const SolverLog> log_;
+  const std::vector<std::shared_ptr<const SolverLog>> logs_;
 
   // Lists of x/y/heading indices in the state vector.
   const std::vector<Dimension> x_idxs_;
