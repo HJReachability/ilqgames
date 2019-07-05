@@ -40,8 +40,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
-#define ILQGAMES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#define ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
 #include <ilqgames/solver/problem.h>
 

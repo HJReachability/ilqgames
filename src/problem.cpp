@@ -80,6 +80,8 @@ std::shared_ptr<SolverLog> Problem::Solve() {
 
 void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
                                      Time planner_runtime) {
+  CHECK_NOTNULL(strategies_.get());
+  CHECK_NOTNULL(operating_point_.get());
   CHECK_GT(planner_runtime, 0.0);
   CHECK_LT(planner_runtime + t0, solver_->TimeHorizon());
   CHECK_GE(t0, 0.0);
@@ -166,6 +168,22 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
         solver_->TimeStep(), operating_point_->xs[kk - 1],
         operating_point_->us[kk - 1]);
   }
+}
+
+VectorXf Problem::SimulateForward(Time t) const {
+  CHECK_NOTNULL(operating_point_.get());
+  CHECK_GE(t, operating_point_->t0);
+
+  // Find the timestep immediately preceding 't' and corresponding time.
+  const size_t prior_timestep =
+      static_cast<size_t>((t - operating_point_->t0) / solver_->TimeStep());
+  const Time prior_time =
+      operating_point_->t0 + solver_->TimeStep() * prior_timestep;
+
+  // Integrate from this timestep up to 't'.
+  return solver_->Dynamics().Integrate(prior_time, t - prior_time,
+                                       operating_point_->xs[prior_timestep],
+                                       operating_point_->us[prior_timestep]);
 }
 
 std::shared_ptr<SolverLog> Problem::CreateNewLog() const {

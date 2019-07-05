@@ -36,72 +36,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class specifying the problem interface for managing calls to the core
-// ILQGame solver. Specific examples will be derived from this class.
+// Utility for solving a problem using a receding horizon, simulating dynamics
+// forward at each stage to account for the passage of time.
+//
+// This class is intended as a facsimile of a real-time, online receding horizon
+// problem in which short horizon problems are solved asynchronously throughout
+// operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_PROBLEM_H
-#define ILQGAMES_SOLVER_PROBLEM_H
+#ifndef ILQGAMES_EXAMPLE_RECEDING_HORIZON_SIMULATOR_H
+#define ILQGAMES_EXAMPLE_RECEDING_HORIZON_SIMULATOR_H
 
-#include <ilqgames/solver/ilq_solver.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/solver_log.h>
-#include <ilqgames/utils/strategy.h>
-#include <ilqgames/utils/types.h>
 
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-class Problem {
- public:
-  virtual ~Problem() {}
-
-  // Solve this game. Returns log populated by solver.
-  std::shared_ptr<SolverLog> Solve();
-
-  // Update initial state and modify previous strategies and operating points to
-  // start at the specified time. Since time is continuous and we will want to
-  // maintain the same fixed discretization, we will integrate x0 forward from
-  // t0 by approximately planner_runtime as the new initial state/time.
-  // By default, extends operating points and strategies as follows:
-  // 1. new controls are zero
-  // 2. new states are those that result from zero control
-  // 3. new strategies are also zero
-  virtual void ResetInitialConditions(const VectorXf& x0, Time t0,
-                                      Time planner_runtime = 0.1);
-
-  // Integrate dynamics forward from x0 up to the given time.
-  VectorXf SimulateForward(Time t) const;
-
-  // Accessors.
-  const ILQSolver& Solver() const { return *solver_; }
-  const VectorXf& InitialState() const { return x0_; }
-  const std::vector<Strategy>& ConvergedStrategies() const {
-    return *strategies_;
-  }
-  const OperatingPoint& ConvergedOperatingPoint() const {
-    return *operating_point_;
-  }
-
- protected:
-  Problem() {}
-
-  // Create a new log. This may be overridden by derived classes (e.g., to
-  // change the name of the log).
-  virtual std::shared_ptr<SolverLog> CreateNewLog() const;
-
-  // Solver.
-  std::unique_ptr<ILQSolver> solver_;
-
-  // Initial condition.
-  VectorXf x0_;
-
-  // Converged strategies and operating points for all players.
-  std::unique_ptr<std::vector<Strategy>> strategies_;
-  std::unique_ptr<OperatingPoint> operating_point_;
-};  // class Problem
+// Solve this game following a receding horizon, accounting for the time used
+// to solve each subproblem and integrating dynamics forward accordingly.
+std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
+    const Problem& problem);
 
 }  // namespace ilqgames
 
