@@ -95,7 +95,7 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   const size_t current_timestep =
       static_cast<size_t>(relative_t0 / solver_->TimeStep());
   const Time remaining_time_this_step =
-      relative_t0 - solver_->TimeStep() * current_timestep;
+      solver_->TimeStep() * (current_timestep + 1) - relative_t0;
   const size_t num_steps_to_integrate =
       1 + static_cast<size_t>((planner_runtime - remaining_time_this_step) /
                               solver_->TimeStep());
@@ -103,6 +103,7 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
       current_timestep + 1 + num_steps_to_integrate;
 
   // Interpolate x0_ref.
+  CHECK_LT(current_timestep + 1, operating_point_->xs.size());
   const float frac = remaining_time_this_step / solver_->TimeStep();
   const VectorXf x0_ref =
       frac * operating_point_->xs[current_timestep] +
