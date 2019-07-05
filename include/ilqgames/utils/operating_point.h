@@ -44,13 +44,14 @@
 #ifndef ILQGAMES_UTILS_OPERATING_POINT_H
 #define ILQGAMES_UTILS_OPERATING_POINT_H
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/types.h>
 
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
+
+class MultiPlayerDynamicalSystem;
 
 struct OperatingPoint {
   // Time-indexed list of states.

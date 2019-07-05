@@ -41,6 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 

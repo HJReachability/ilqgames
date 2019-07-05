@@ -47,8 +47,6 @@
 
 namespace ilqgames {
 
-// Integrate these dynamics forward in time using Runge-Kutta 4th order
-// numerical integration.
 VectorXf MultiPlayerDynamicalSystem::Integrate(
     Time t0, Time time_step, const VectorXf& x0,
     const std::vector<VectorXf>& us) const {
@@ -69,6 +67,70 @@ VectorXf MultiPlayerDynamicalSystem::Integrate(
   }
 
   return x;
+}
+
+VectorXf MultiPlayerDynamicalSystem::Integrate(
+    Time t0, Time time_step, Time t, const VectorXf& x0,
+    const OperatingPoint& operating_point,
+    const std::vector<Strategy>& strategies) const {
+  CHECK_GE(t, t0);
+  CHECK_GE(t0, operating_point.t0);
+  CHECK_EQ(strategies.size(), NumPlayers());
+
+  std::vector<VectorXf> us(NumPlayers());
+
+  // Compute current timestep.
+  const Time relative_t0 = t0 - operating_point.t0;
+  const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step);
+
+  // Handle case where 't0' is after 'operating_point.t0' by integrating from
+  // 't0' to the next discrete timestep.
+  VectorXf x(x0);
+  if (t0 > operating_point.t0) {
+    const Time remaining_time_this_step =
+        time_step * (current_timestep + 1) - relative_t0;
+
+    // Interpolate x0_ref.
+    CHECK_LT(current_timestep + 1, operating_point.xs.size());
+    const float frac = remaining_time_this_step / time_step;
+    const VectorXf x0_ref =
+        frac * operating_point.xs[current_timestep] +
+        (1.0 - frac) * operating_point.xs[current_timestep + 1];
+
+    // Populate controls for each player.
+    for (PlayerIndex ii = 0; ii < NumPlayers(); ii++)
+      us[ii] = strategies[ii](current_timestep, x0 - x0_ref,
+                              operating_point.us[current_timestep][ii]);
+
+    x = Integrate(t0, remaining_time_this_step, x0, us);
+  }
+
+  // Integrate forward step by step up to timestep including t.
+  const Time relative_t = t - operating_point.t0;
+  const size_t final_timestep = static_cast<size_t>(relative_t / time_step);
+  const Time remaining_time_final_step =
+      relative_t -
+      time_step * final_timestep;  // NB: opposite direction as above.
+
+  for (size_t kk = current_timestep + 1; kk < final_timestep; kk++) {
+    const Time time = operating_point.t0 + kk * time_step;
+
+    for (PlayerIndex ii = 0; ii < NumPlayers(); ii++)
+      us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
+                              operating_point.us[kk][ii]);
+
+    x = Integrate(time, time_step, x, us);
+  }
+
+  // Integrate forward from this timestep to t.
+  for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) {
+    us[ii] =
+        strategies[ii](final_timestep, x - operating_point.xs[final_timestep],
+                       operating_point.us[final_timestep][ii]);
+  }
+
+  return Integrate(operating_point.t0 + time_step * final_timestep,
+                   remaining_time_final_step, x, us);
 }
 
 }  // namespace ilqgames
