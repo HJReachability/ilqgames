@@ -71,7 +71,7 @@ class MultiPlayerDynamicalSystem {
   // and within a single timestep.
   VectorXf Integrate(Time t0, Time time_step, const VectorXf& x0,
                      const std::vector<VectorXf>& us) const;
-  VectorXf Integrate(Time t0, Time time_step, Time t, const VectorXf& x0,
+  VectorXf Integrate(Time t0, Time t, Time time_step, const VectorXf& x0,
                      const OperatingPoint& operating_point,
                      const std::vector<Strategy>& strategies) const;
   VectorXf Integrate(size_t initial_timestep, size_t final_timestep,

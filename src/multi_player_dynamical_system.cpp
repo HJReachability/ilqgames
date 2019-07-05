@@ -70,7 +70,7 @@ VectorXf MultiPlayerDynamicalSystem::Integrate(
 }
 
 VectorXf MultiPlayerDynamicalSystem::Integrate(
-    Time t0, Time time_step, Time t, const VectorXf& x0,
+    Time t0, Time t, Time time_step, const VectorXf& x0,
     const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   CHECK_GE(t, t0);

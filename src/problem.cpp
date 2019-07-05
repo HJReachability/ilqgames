@@ -89,8 +89,9 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   const MultiPlayerDynamicalSystem& dynamics = solver_->Dynamics();
 
   // Integrate x0 forward from t0 by approximately planner_runtime to get
-  // actual initial state. First, handle integrating up to the next timestep,
-  // then handle integration for future time steps up to planner_runtime.
+  // actual initial state. Integrate up to the next discrete timestep, then
+  // integrate for an integer number of discrete timesteps until at least
+  // 'planner_runtime' has elapsed.
   const Time relative_t0 = t0 - operating_point_->t0;
   const size_t current_timestep =
       static_cast<size_t>(relative_t0 / solver_->TimeStep());
@@ -102,33 +103,11 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   const size_t first_timestep_in_new_problem =
       current_timestep + 1 + num_steps_to_integrate;
 
-  // Interpolate x0_ref.
-  CHECK_LT(current_timestep + 1, operating_point_->xs.size());
-  const float frac = remaining_time_this_step / solver_->TimeStep();
-  const VectorXf x0_ref =
-      frac * operating_point_->xs[current_timestep] +
-      (1.0 - frac) * operating_point_->xs[current_timestep + 1];
-
-  // Compute controls for each player.
-  std::vector<VectorXf> us(dynamics.NumPlayers());
-  for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++)
-    us[ii] = (*strategies_)[ii](current_timestep, x0 - x0_ref,
-                                operating_point_->us[current_timestep][ii]);
-
-  // Integrate up to the next time step.
-  VectorXf x = dynamics.Integrate(t0, remaining_time_this_step, x0, us);
-
-  // Integrate the remaining time steps.
-  for (size_t kk = current_timestep + 1; kk < first_timestep_in_new_problem;
-       kk++) {
-    // Compute controls for each player.
-    for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++)
-      us[ii] = (*strategies_)[ii](kk, x - operating_point_->xs[kk],
-                                  operating_point_->us[kk][ii]);
-
-    x = dynamics.Integrate(operating_point_->t0 + solver_->ComputeTimeStamp(kk),
-                           solver_->TimeStep(), x, us);
-  }
+  VectorXf x = dynamics.IntegrateToNextTimeStep(
+      t0, solver_->TimeStep(), x0, *operating_point_, *strategies_);
+  x = dynamics.Integrate(current_timestep + 1, first_timestep_in_new_problem,
+                         solver_->TimeStep(), x, *operating_point_,
+                         *strategies_);
 
   // Set initial state to this state.
   x0_ = x;
