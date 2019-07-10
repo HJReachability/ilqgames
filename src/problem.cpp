@@ -150,22 +150,6 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   }
 }
 
-VectorXf Problem::SimulateForward(Time t) const {
-  CHECK_NOTNULL(operating_point_.get());
-  CHECK_GE(t, operating_point_->t0);
-
-  // Find the timestep immediately preceding 't' and corresponding time.
-  const size_t prior_timestep =
-      static_cast<size_t>((t - operating_point_->t0) / solver_->TimeStep());
-  const Time prior_time =
-      operating_point_->t0 + solver_->TimeStep() * prior_timestep;
-
-  // Integrate from this timestep up to 't'.
-  return solver_->Dynamics().Integrate(prior_time, t - prior_time,
-                                       operating_point_->xs[prior_timestep],
-                                       operating_point_->us[prior_timestep]);
-}
-
 std::shared_ptr<SolverLog> Problem::CreateNewLog() const {
   return std::make_shared<SolverLog>(solver_->TimeStep());
 }

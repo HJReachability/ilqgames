@@ -92,8 +92,10 @@ int main(int argc, char** argv) {
   ilqgames::ThreePlayerIntersectionExample problem;
 
   // Solve the game in a receding horizon.
+  constexpr ilqgames::Time kFinalTime = 10.0;      // s
+  constexpr ilqgames::Time kPlannerRuntime = 0.5;  // s
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
-      RecedingHorizonSimulator(problem);
+      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &problem);
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>();

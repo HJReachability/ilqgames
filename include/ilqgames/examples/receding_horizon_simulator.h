@@ -59,7 +59,7 @@ namespace ilqgames {
 // Solve this game following a receding horizon, accounting for the time used
 // to solve each subproblem and integrating dynamics forward accordingly.
 std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
-    const Problem& problem);
+    Time final_time, Time planner_runtime, Problem* problem);
 
 }  // namespace ilqgames
 
