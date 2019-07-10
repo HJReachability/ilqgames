@@ -52,16 +52,33 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <chrono>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
+using clock = std::chrono::system_clock;
+
 std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
-    const Problem& problem) {
+    Time final_time, Time planner_runtime, Problem* problem) {
+  CHECK_NOTNULL(problem);
+
+  // Set up a list of solver logs, one per solver invocation.
   std::vector<std::shared_ptr<const SolverLog>> logs;
 
+  // Initial run of the solver. Keep track of time in order to know how much to
+  // integrate dynamics forward.
+  auto solver_call_time = clock::now();
+  logs.push_back(problem->Solve());
+  Time elapsed_time =
+      std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+
+  CHECK_LE(elapsed_time, planner_runtime);
+
+  // Repeatedly integrate dynamics forward, reset problem initial conditions,
+  // and resolve.
   // TODO!
 
   return logs;

@@ -72,9 +72,6 @@ class Problem {
   virtual void ResetInitialConditions(const VectorXf& x0, Time t0,
                                       Time planner_runtime = 0.1);
 
-  // Integrate dynamics forward from x0 up to the given time.
-  VectorXf SimulateForward(Time t) const;
-
   // Accessors.
   const ILQSolver& Solver() const { return *solver_; }
   const VectorXf& InitialState() const { return x0_; }
