@@ -105,7 +105,8 @@ void TopDownRenderer::Render() {
   const ImU32 trajectory_color = ImColor(ImVec4(1.0, 1.0, 1.0, 0.5));
   const float trajectory_thickness = std::min(1.0f, LengthToPixels(0.5));
 
-  ImVec2 points[log_->NumTimeSteps()];
+//  ImVec2 points[log_->NumTimeSteps()];
+  std::vector<ImVec2> points(log_->NumTimeSteps());
   for (size_t ii = 0; ii < num_agents; ii++) {
     for (size_t kk = 0; kk < log_->NumTimeSteps(); kk++) {
       points[kk] = PositionToWindowCoordinates(
@@ -114,7 +115,7 @@ void TopDownRenderer::Render() {
     }
 
     constexpr bool kPolylineIsClosed = false;
-    draw_list->AddPolyline(points, log_->NumTimeSteps(), trajectory_color,
+    draw_list->AddPolyline(points.data(), log_->NumTimeSteps(), trajectory_color,
                            kPolylineIsClosed, trajectory_thickness);
   }
 
