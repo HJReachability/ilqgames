@@ -70,8 +70,8 @@ class SolutionSplicer {
 
  private:
   // Converged strategies and operating points for all players.
-  std::vector<Strategy> strategies_;
   OperatingPoint operating_point_;
+  std::vector<Strategy> strategies_;
 };  // class SolutionSplicer
 
 }  // namespace ilqgames

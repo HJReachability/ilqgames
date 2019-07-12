@@ -48,6 +48,7 @@
 #include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solution_splicer.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -77,9 +78,53 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
 
   CHECK_LE(elapsed_time, planner_runtime);
 
+  std::cout << "solved first problem in " << elapsed_time << " seconds"
+            << std::endl;
+
+  // Handy references.
+  const auto& dynamics = problem->Solver().Dynamics();
+  const Time time_step = problem->Solver().TimeStep();
+
+  // Keep a solution splicer to incorporate new receding horizon solutions.
+  SolutionSplicer splicer(*logs.front());
+
+  std::cout << "created splicer" << std::endl;
+
   // Repeatedly integrate dynamics forward, reset problem initial conditions,
   // and resolve.
-  // TODO!
+  VectorXf x(problem->InitialState());
+  Time t = splicer.CurrentOperatingPoint().t0;
+  while (t < final_time) {
+    // Set up next receding horizon problem and solve.
+    problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
+
+    std::cout << "reset initial condition" << std::endl;
+
+    solver_call_time = clock::now();
+    logs.push_back(problem->Solve());
+    elapsed_time =
+        std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+
+    std::cout << "solved problem in " << elapsed_time << " seconds"
+              << std::endl;
+
+    // Integrate dynamics forward.
+    x = dynamics.Integrate(t, t + elapsed_time, time_step, x,
+                           splicer.CurrentOperatingPoint(),
+                           splicer.CurrentStrategies());
+    t += elapsed_time;
+
+    std::cout << "integrated dynamics forward" << std::endl;
+
+    // Add new solution to splicer.
+    splicer.Splice(*logs.back(), t);
+
+    std::cout << "spliced in new solution" << std::endl;
+
+    // Overwrite problem with spliced solution.
+    problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
+                              splicer.CurrentStrategies());
+  }
 
   return logs;
 }

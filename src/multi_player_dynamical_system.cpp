@@ -125,6 +125,8 @@ VectorXf MultiPlayerDynamicalSystem::IntegrateToNextTimeStep(
     Time t0, Time time_step, const VectorXf& x0,
     const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
+  CHECK_GE(t0, operating_point.t0);
+
   // Compute remaining time this timestep.
   const Time relative_t0 = t0 - operating_point.t0;
   const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step);
