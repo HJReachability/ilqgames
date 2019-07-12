@@ -43,6 +43,11 @@
 #ifndef ILQGAMES_GUI_CONTROL_SLIDERS_H
 #define ILQGAMES_GUI_CONTROL_SLIDERS_H
 
+#include <ilqgames/utils/solver_log.h>
+
+#include <memory>
+#include <vector>
+
 namespace ilqgames {
 
 class ControlSliders {
@@ -52,7 +57,8 @@ class ControlSliders {
       : interpolation_time_(0.0), solver_iterate_(0), log_index_(0) {}
 
   // Render all the sliders in a separate window.
-  void Render(int num_logs, float final_time, int num_solver_iterates);
+  void Render(
+      const std::vector<std::shared_ptr<const ilqgames::SolverLog>>& logs);
 
   // Accessors.
   float InterpolationTime() const { return interpolation_time_; }
