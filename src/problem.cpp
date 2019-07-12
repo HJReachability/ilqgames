@@ -78,13 +78,13 @@ std::shared_ptr<SolverLog> Problem::Solve() {
   return log;
 }
 
-void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
-                                     Time planner_runtime) {
+void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
+                                       Time planner_runtime) {
   CHECK_NOTNULL(strategies_.get());
   CHECK_NOTNULL(operating_point_.get());
   CHECK_GT(planner_runtime, 0.0);
   CHECK_LT(planner_runtime + t0, solver_->TimeHorizon());
-  CHECK_GE(t0, 0.0);
+  CHECK_GE(t0, operating_point_->t0);
 
   const MultiPlayerDynamicalSystem& dynamics = solver_->Dynamics();
 
@@ -115,6 +115,12 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
   // Set initial time to first timestamp in new problem.
   operating_point_->t0 +=
       solver_->ComputeTimeStamp(first_timestep_in_new_problem);
+
+  std::cout << "Updated operating point to start at " << operating_point_->t0
+            << std::endl;
+
+  // TODO! Keep integrating forward so that operating point states are
+  // consistent with the new state.
 
   // Populate strategies and opeating point for the remainder of the
   // existing plan, reusing the old operating point when possible.
@@ -147,6 +153,27 @@ void Problem::ResetInitialConditions(const VectorXf& x0, Time t0,
         operating_point_->t0 + solver_->ComputeTimeStamp(kk - 1),
         solver_->TimeStep(), operating_point_->xs[kk - 1],
         operating_point_->us[kk - 1]);
+  }
+}
+
+void Problem::OverwriteSolution(const OperatingPoint& operating_point,
+                                const std::vector<Strategy>& strategies) {
+  CHECK_NOTNULL(operating_point_.get());
+  CHECK_NOTNULL(strategies_.get());
+
+  x0_ = operating_point.xs[0];
+  operating_point_->t0 = operating_point.t0;
+
+  const size_t num_copies =
+      std::min(operating_point.xs.size(), operating_point_->xs.size());
+  for (size_t kk = 0; kk < num_copies; kk++) {
+    operating_point_->xs[kk] = operating_point.xs[kk];
+    operating_point_->us[kk] = operating_point.us[kk];
+
+    for (PlayerIndex ii = 0; ii < strategies_->size(); ii++) {
+      (*strategies_)[ii].Ps[kk] = strategies[ii].Ps[kk];
+      (*strategies_)[ii].alphas[kk] = strategies[ii].alphas[kk];
+    }
   }
 }
 
