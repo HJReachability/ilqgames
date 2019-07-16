@@ -116,11 +116,9 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   operating_point_->t0 +=
       solver_->ComputeTimeStamp(first_timestep_in_new_problem);
 
-  std::cout << "Updated operating point to start at " << operating_point_->t0
-            << std::endl;
-
-  // TODO! Keep integrating forward so that operating point states are
-  // consistent with the new state.
+  // NOTE: when we call 'solve' on this new operating point it will
+  // automatically end up starting at 'x0', so there is no need to enforce that
+  // here.
 
   // Populate strategies and opeating point for the remainder of the
   // existing plan, reusing the old operating point when possible.

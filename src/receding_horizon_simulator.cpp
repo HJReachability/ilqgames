@@ -78,17 +78,12 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
 
   CHECK_LE(elapsed_time, planner_runtime);
 
-  std::cout << "solved first problem in " << elapsed_time << " seconds"
-            << std::endl;
-
   // Handy references.
   const auto& dynamics = problem->Solver().Dynamics();
   const Time time_step = problem->Solver().TimeStep();
 
   // Keep a solution splicer to incorporate new receding horizon solutions.
   SolutionSplicer splicer(*logs.front());
-
-  std::cout << "created splicer" << std::endl;
 
   // Repeatedly integrate dynamics forward, reset problem initial conditions,
   // and resolve.
@@ -98,15 +93,13 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     // Set up next receding horizon problem and solve.
     problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
 
-    std::cout << "reset initial condition" << std::endl;
-
     solver_call_time = clock::now();
     logs.push_back(problem->Solve());
     elapsed_time =
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
-    std::cout << "solved problem in " << elapsed_time << " seconds"
-              << std::endl;
+    LOG(INFO) << "Solved warm-started problem in " << elapsed_time
+              << " seconds.";
 
     // Integrate dynamics forward.
     constexpr Time kExtraTime = 1.0;
@@ -115,12 +108,8 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
                            splicer.CurrentStrategies());
     t += elapsed_time + kExtraTime;
 
-    std::cout << "integrated dynamics forward" << std::endl;
-
     // Add new solution to splicer.
     splicer.Splice(*logs.back(), t);
-
-    std::cout << "spliced in new solution" << std::endl;
 
     // Overwrite problem with spliced solution.
     problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
