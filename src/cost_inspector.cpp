@@ -55,9 +55,12 @@
 
 namespace ilqgames {
 
-void CostInspector::Render() {
+void CostInspector::Render() const {
+  // Extract player costs.
+  const auto& costs = player_costs_[sliders_->LogIndex()];
+
   // Do nothing if log is empty.
-  if (player_costs_.Log().NumIterates() == 0) return;
+  if (costs.Log().NumIterates() == 0) return;
 
   // Set up main window.
   ImGui::Begin("Cost Inspector");
@@ -65,7 +68,7 @@ void CostInspector::Render() {
   // Combo box to select player.
   if (ImGui::BeginCombo("Player",
                         std::to_string(selected_player_ + 1).c_str())) {
-    for (PlayerIndex ii = 0; ii < player_costs_.NumPlayers(); ii++) {
+    for (PlayerIndex ii = 0; ii < costs.NumPlayers(); ii++) {
       const bool is_selected = (selected_player_ == ii);
       if (ImGui::Selectable(std::to_string(ii + 1).c_str(), is_selected))
         selected_player_ = ii;
@@ -77,7 +80,7 @@ void CostInspector::Render() {
 
   // Combo box to select cost.
   if (ImGui::BeginCombo("Cost", selected_cost_name_.c_str())) {
-    for (const auto& entry : player_costs_.EvaluatedCosts(selected_player_)) {
+    for (const auto& entry : costs.EvaluatedCosts(selected_player_)) {
       const std::string& cost_name = entry.first;
       const bool is_selected = (selected_cost_name_ == cost_name);
       if (ImGui::Selectable(cost_name.c_str(), is_selected))
@@ -92,8 +95,8 @@ void CostInspector::Render() {
   if (ImGui::BeginChild("Cost over time", ImVec2(0, 0), false)) {
     const std::string label = "Player " + std::to_string(selected_player_ + 1) +
                               ": " + selected_cost_name_;
-    if (player_costs_.PlayerHasCost(selected_player_, selected_cost_name_)) {
-      const std::vector<float>& values = player_costs_.EvaluatedCost(
+    if (costs.PlayerHasCost(selected_player_, selected_cost_name_)) {
+      const std::vector<float>& values = costs.EvaluatedCost(
           sliders_->SolverIterate(), selected_player_, selected_cost_name_);
       ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0,
                        label.c_str(), FLT_MAX, FLT_MAX,
@@ -108,9 +111,8 @@ void CostInspector::Render() {
       const ImVec2 window_top_left = ImGui::GetWindowPos();
       const float line_y_lower = window_top_left.y + ImGui::GetWindowHeight();
       const float line_y_upper = window_top_left.y;
-      const float line_x =
-          window_top_left.x +
-          ImGui::GetWindowWidth() * time / player_costs_.Log().FinalTime();
+      const float line_x = window_top_left.x + ImGui::GetWindowWidth() * time /
+                                                   costs.Log().FinalTime();
 
       ImDrawList* draw_list = ImGui::GetWindowDrawList();
       draw_list->AddLine(ImVec2(line_x, line_y_lower),

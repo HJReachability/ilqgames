@@ -41,7 +41,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "three_player_intersection_example.h"
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
@@ -53,6 +52,7 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
+#include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/linesearching_ilq_solver.h>
@@ -69,7 +69,7 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;     // s
+static constexpr Time kTimeStep = 0.1;      // s
 static constexpr Time kTimeHorizon = 10.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
@@ -206,7 +206,7 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
                               dynamics->UDim(ii));
 
   operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), dynamics));
+      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost;

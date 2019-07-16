@@ -62,11 +62,25 @@ class Problem {
   std::shared_ptr<SolverLog> Solve();
 
   // Update initial state and modify previous strategies and operating points to
-  // start at the specified time step.
-  void ResetInitialConditions(const VectorXf& x0, Time t0);
+  // start at the specified runtime after the current time t0. Since time is
+  // continuous and we will want to maintain the same fixed discretization, we
+  // will integrate x0 forward from t0 by approximately planner_runtime as the
+  // new initial state/time. By default, extends operating points and strategies
+  // as follows:
+  // 1. new controls are zero
+  // 2. new states are those that result from zero control
+  // 3. new strategies are also zero
+  virtual void SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
+                                        Time planner_runtime = 0.1);
 
-  // Access the solver.
+  // Overwrite existing solution with the given operating point and strategies.
+  // Truncates to fit in the same memory.
+  virtual void OverwriteSolution(const OperatingPoint& operating_point,
+                                 const std::vector<Strategy>& strategies);
+
+  // Accessors.
   const ILQSolver& Solver() const { return *solver_; }
+  const VectorXf& InitialState() const { return x0_; }
 
  protected:
   Problem() {}
@@ -82,8 +96,8 @@ class Problem {
   VectorXf x0_;
 
   // Converged strategies and operating points for all players.
-  std::unique_ptr<std::vector<Strategy>> strategies_;
   std::unique_ptr<OperatingPoint> operating_point_;
+  std::unique_ptr<std::vector<Strategy>> strategies_;
 };  // class Problem
 
 }  // namespace ilqgames

@@ -81,10 +81,16 @@ class ILQSolver {
              OperatingPoint* final_operating_point,
              std::vector<Strategy>* final_strategies, SolverLog* log = nullptr);
 
-  // Access time information and costs.
+  // Accessors.
   Time TimeHorizon() const { return time_horizon_; }
   Time TimeStep() const { return time_step_; }
   const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
+  const MultiPlayerDynamicalSystem& Dynamics() const { return *dynamics_; }
+
+  // Compute time stamp from time index.
+  Time ComputeTimeStamp(size_t time_index) const {
+    return time_step_ * static_cast<Time>(time_index);
+  }
 
  protected:
   // Modify LQ strategies to improve convergence properties.
@@ -103,11 +109,6 @@ class ILQSolver {
   void CurrentOperatingPoint(const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
                              OperatingPoint* current_operating_point) const;
-
-  // Helper function to compute time stamp from time index.
-  Time ComputeTimeStamp(size_t time_index) const {
-    return time_step_ * static_cast<Time>(time_index);
-  }
 
   // Dynamical system.
   const std::shared_ptr<const MultiPlayerDynamicalSystem> dynamics_;

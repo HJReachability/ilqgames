@@ -67,6 +67,9 @@ class SolverLog : private Uncopyable {
 
   // Accessors.
   Time TimeStep() const { return time_step_; }
+  Time InitialTime() const {
+    return (NumIterates() > 0) ? operating_points_[0].t0 : 0.0;
+  }
   Time FinalTime() const {
     return (NumIterates() > 0) ? IndexToTime(operating_points_[0].xs.size() - 1)
                                : 0.0;
@@ -74,7 +77,14 @@ class SolverLog : private Uncopyable {
   PlayerIndex NumPlayers() const { return strategies_[0].size(); }
   size_t NumIterates() const { return operating_points_.size(); }
   size_t NumTimeSteps() const {
-    return static_cast<size_t>(FinalTime() / time_step_);
+    return static_cast<size_t>((FinalTime() - InitialTime()) / time_step_);
+  }
+
+  const std::vector<Strategy>& FinalStrategies() const {
+    return strategies_.back();
+  }
+  const OperatingPoint& FinalOperatingPoint() const {
+    return operating_points_.back();
   }
 
   VectorXf InterpolateState(size_t iterate, Time t) const;
@@ -118,13 +128,13 @@ class SolverLog : private Uncopyable {
 
   // Get index corresponding to the time step immediately before the given time.
   size_t TimeToIndex(Time t) const {
-    return static_cast<size_t>(std::max(constants::kSmallNumber, t) /
-                               time_step_);
+    return static_cast<size_t>(
+        std::max(constants::kSmallNumber, t - InitialTime()) / time_step_);
   }
 
   // Get time stamp corresponding to a particular index.
   Time IndexToTime(size_t idx) const {
-    return time_step_ * static_cast<Time>(idx);
+    return InitialTime() + time_step_ * static_cast<Time>(idx);
   }
 
  private:

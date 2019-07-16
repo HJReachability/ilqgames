@@ -36,33 +36,43 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Three player intersection example.
+// Splice together existing and new solutions to a receding horizon problem.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
-#define ILQGAMES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#ifndef ILQGAMES_SOLVER_SOLUTION_SPLICER_H
+#define ILQGAMES_SOLVER_SOLUTION_SPLICER_H
 
-#include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/solver_log.h>
+#include <ilqgames/utils/strategy.h>
+#include <ilqgames/utils/types.h>
+
+#include <memory>
+#include <vector>
 
 namespace ilqgames {
 
-class ThreePlayerIntersectionExample : public Problem {
+class SolutionSplicer {
  public:
-  ~ThreePlayerIntersectionExample() {}
-  ThreePlayerIntersectionExample();
+  ~SolutionSplicer() {}
+  explicit SolutionSplicer(const SolverLog& log);
+
+  // Splice in a new solution stored in a solver log. Also prune before the
+  // current time.
+  void Splice(const SolverLog& log, Time current_time);
 
   // Accessors.
-  const std::vector<Dimension>& XIdxs() const { return x_idxs_; }
-  const std::vector<Dimension>& YIdxs() const { return y_idxs_; }
-  const std::vector<Dimension>& HeadingIdxs() const { return heading_idxs_; }
+  const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
+  const OperatingPoint& CurrentOperatingPoint() const {
+    return operating_point_;
+  }
 
  private:
-  // Indices for x/y/heading.
-  const std::vector<Dimension> x_idxs_;
-  const std::vector<Dimension> y_idxs_;
-  const std::vector<Dimension> heading_idxs_;
-};  // class ThreePlayerIntersectionExample
+  // Converged strategies and operating points for all players.
+  OperatingPoint operating_point_;
+  std::vector<Strategy> strategies_;
+};  // class SolutionSplicer
 
 }  // namespace ilqgames
 
