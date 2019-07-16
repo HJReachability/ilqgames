@@ -63,8 +63,9 @@ void ControlSliders::Render() {
 
   // Make a slider to get the desired interpolation time.
   const Time final_time = logs_[LogIndex()]->FinalTime();
-  ImGui::SliderFloat("Interpolation Time (s)", &interpolation_time_, 0.0,
-                     final_time);
+  const Time initial_time = logs_[LogIndex()]->InitialTime();
+  ImGui::SliderFloat("Interpolation Time (s)", &interpolation_time_,
+                     initial_time, final_time);
 
   ImGui::End();
 
