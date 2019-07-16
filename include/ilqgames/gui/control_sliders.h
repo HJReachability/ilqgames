@@ -43,19 +43,39 @@
 #ifndef ILQGAMES_GUI_CONTROL_SLIDERS_H
 #define ILQGAMES_GUI_CONTROL_SLIDERS_H
 
+#include <ilqgames/utils/solver_log.h>
+
+#include <memory>
+#include <vector>
+
 namespace ilqgames {
 
 class ControlSliders {
  public:
   ~ControlSliders() {}
-  ControlSliders() : interpolation_time_(0.0), solver_iterate_(0) {}
+  ControlSliders(
+      const std::vector<std::shared_ptr<const ilqgames::SolverLog>>& logs)
+      : interpolation_time_(0.0),
+        solver_iterate_(0),
+        log_index_(0),
+        logs_(logs) {}
 
   // Render all the sliders in a separate window.
-  void Render(float final_time, int num_solver_iterates);
+  void Render();
 
   // Accessors.
-  float InterpolationTime() const { return interpolation_time_; }
-  int SolverIterate() const { return solver_iterate_; }
+  float InterpolationTime() const {
+    return std::max(
+        std::min(interpolation_time_, logs_[LogIndex()]->FinalTime()),
+        logs_[LogIndex()]->InitialTime());
+  }
+  int SolverIterate() const {
+    return std::min(solver_iterate_,
+                    static_cast<int>(logs_[LogIndex()]->NumIterates() - 1));
+  }
+  int LogIndex() const {
+    return std::min(log_index_, static_cast<int>(logs_.size() - 1));
+  }
 
  private:
   // Time at which to interpolate trajectory.
@@ -63,6 +83,12 @@ class ControlSliders {
 
   // Solver iterate to display.
   int solver_iterate_;
+
+  // Log index to render for receding horizon problems.
+  int log_index_;
+
+  // List of all logs we might want to inspect.
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_;
 };  // class ControlSliders
 
 }  // namespace ilqgames

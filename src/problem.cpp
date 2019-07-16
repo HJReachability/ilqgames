@@ -78,10 +78,101 @@ std::shared_ptr<SolverLog> Problem::Solve() {
   return log;
 }
 
-void Problem::ResetInitialConditions(const VectorXf& x0, Time t0) {
-  x0_ = x0;
+void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
+                                       Time planner_runtime) {
+  CHECK_NOTNULL(strategies_.get());
+  CHECK_NOTNULL(operating_point_.get());
+  CHECK_GT(planner_runtime, 0.0);
+  CHECK_LT(planner_runtime + t0, operating_point_->t0 + solver_->TimeHorizon());
+  CHECK_GE(t0, operating_point_->t0);
 
-  // TODO!
+  const MultiPlayerDynamicalSystem& dynamics = solver_->Dynamics();
+
+  // Integrate x0 forward from t0 by approximately planner_runtime to get
+  // actual initial state. Integrate up to the next discrete timestep, then
+  // integrate for an integer number of discrete timesteps until at least
+  // 'planner_runtime' has elapsed.
+  const Time relative_t0 = t0 - operating_point_->t0;
+  const size_t current_timestep =
+      static_cast<size_t>(relative_t0 / solver_->TimeStep());
+  const Time remaining_time_this_step =
+      solver_->TimeStep() * (current_timestep + 1) - relative_t0;
+  const size_t num_steps_to_integrate =
+      1 + static_cast<size_t>((planner_runtime - remaining_time_this_step) /
+                              solver_->TimeStep());
+  const size_t first_timestep_in_new_problem =
+      current_timestep + 1 + num_steps_to_integrate;
+
+  VectorXf x = dynamics.IntegrateToNextTimeStep(
+      t0, solver_->TimeStep(), x0, *operating_point_, *strategies_);
+  x = dynamics.Integrate(current_timestep + 1, first_timestep_in_new_problem,
+                         solver_->TimeStep(), x, *operating_point_,
+                         *strategies_);
+
+  // Set initial state to this state.
+  x0_ = x;
+
+  // Set initial time to first timestamp in new problem.
+  operating_point_->t0 +=
+      solver_->ComputeTimeStamp(first_timestep_in_new_problem);
+
+  // NOTE: when we call 'solve' on this new operating point it will
+  // automatically end up starting at 'x0', so there is no need to enforce that
+  // here.
+
+  // Populate strategies and opeating point for the remainder of the
+  // existing plan, reusing the old operating point when possible.
+  for (size_t kk = first_timestep_in_new_problem;
+       kk < operating_point_->xs.size(); kk++) {
+    const size_t kk_new_problem = kk - first_timestep_in_new_problem;
+
+    // Set current state and controls in operating point.
+    operating_point_->xs[kk_new_problem] = operating_point_->xs[kk];
+    operating_point_->us[kk_new_problem].swap(operating_point_->us[kk]);
+
+    // Set current stategy.
+    for (auto& strategy : *strategies_) {
+      strategy.Ps[kk_new_problem] = strategy.Ps[kk];
+      strategy.alphas[kk_new_problem] = strategy.alphas[kk];
+    }
+  }
+
+  // Set new operating point controls and strategies to zero and propagate state
+  // forward accordingly.
+  for (size_t kk = operating_point_->xs.size() - first_timestep_in_new_problem;
+       kk < operating_point_->xs.size(); kk++) {
+    for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      (*strategies_)[ii].Ps[kk].setZero();
+      (*strategies_)[ii].alphas[kk].setZero();
+      operating_point_->us[kk][ii].setZero();
+    }
+
+    operating_point_->xs[kk] = dynamics.Integrate(
+        operating_point_->t0 + solver_->ComputeTimeStamp(kk - 1),
+        solver_->TimeStep(), operating_point_->xs[kk - 1],
+        operating_point_->us[kk - 1]);
+  }
+}
+
+void Problem::OverwriteSolution(const OperatingPoint& operating_point,
+                                const std::vector<Strategy>& strategies) {
+  CHECK_NOTNULL(operating_point_.get());
+  CHECK_NOTNULL(strategies_.get());
+
+  x0_ = operating_point.xs[0];
+  operating_point_->t0 = operating_point.t0;
+
+  const size_t num_copies =
+      std::min(operating_point.xs.size(), operating_point_->xs.size());
+  for (size_t kk = 0; kk < num_copies; kk++) {
+    operating_point_->xs[kk] = operating_point.xs[kk];
+    operating_point_->us[kk] = operating_point.us[kk];
+
+    for (PlayerIndex ii = 0; ii < strategies_->size(); ii++) {
+      (*strategies_)[ii].Ps[kk] = strategies[ii].Ps[kk];
+      (*strategies_)[ii].alphas[kk] = strategies[ii].alphas[kk];
+    }
+  }
 }
 
 std::shared_ptr<SolverLog> Problem::CreateNewLog() const {

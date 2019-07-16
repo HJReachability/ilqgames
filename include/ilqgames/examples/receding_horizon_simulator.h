@@ -36,52 +36,31 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost on curvature (angular speed / longitudinal speed)
-// NOTE: this is currently implemented as a state cost.
+// Utility for solving a problem using a receding horizon, simulating dynamics
+// forward at each stage to account for the passage of time.
+//
+// This class is intended as a facsimile of a real-time, online receding horizon
+// problem in which short horizon problems are solved asynchronously throughout
+// operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/curvature_cost.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_EXAMPLE_RECEDING_HORIZON_SIMULATOR_H
+#define ILQGAMES_EXAMPLE_RECEDING_HORIZON_SIMULATOR_H
 
-#include <glog/logging.h>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/solver_log.h>
+
+#include <memory>
+#include <vector>
 
 namespace ilqgames {
 
-float CurvatureCost::Evaluate(const VectorXf& input) const {
-  const float curvature = Curvature(input);
-  return 0.5 * weight_ * curvature * curvature;
-}
-
-void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
-  CHECK_NOTNULL(hess);
-
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Populate Hessian and gradient.
-  const float v = input(v_idx_);
-  const float omega = input(omega_idx_);
-  const float one_over_vsq = 1.0 / (v * v);
-  const float weight_over_vsq = weight_ * one_over_vsq;
-  const float weight_omega_over_vsq = omega * weight_over_vsq;
-
-  (*hess)(omega_idx_, omega_idx_) += weight_over_vsq;
-
-  const float cross_term = -2.0 * weight_omega_over_vsq / v;
-  (*hess)(omega_idx_, v_idx_) += cross_term;
-  (*hess)(v_idx_, omega_idx_) += cross_term;
-
-  (*hess)(v_idx_, v_idx_) += 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
-
-  if (grad) {
-    (*grad)(omega_idx_) += weight_omega_over_vsq;
-    (*grad)(v_idx_) -= weight_omega_over_vsq * omega / v;
-  }
-}
+// Solve this game following a receding horizon, accounting for the time used
+// to solve each subproblem and integrating dynamics forward accordingly.
+std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
+    Time final_time, Time planner_runtime, Problem* problem);
 
 }  // namespace ilqgames
+
+#endif

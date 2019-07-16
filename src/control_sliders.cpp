@@ -41,21 +41,37 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/gui/control_sliders.h>
+#include <ilqgames/utils/solver_log.h>
+#include <ilqgames/utils/types.h>
 
 #include <imgui/imgui.h>
+#include <memory>
+#include <vector>
 
 namespace ilqgames {
 
-void ControlSliders::Render(float final_time, int num_solver_iterates) {
+void ControlSliders::Render() {
   ImGui::Begin("Control Sliders");
 
-  // Make a slider to get the desired interpolation time.
-  ImGui::SliderFloat("Interpolation Time (s)", &interpolation_time_, 0.0,
-                     final_time);
+  // Make a slider to get the desired log index from a receding horizon problem.
+  if (!logs_.empty())
+    ImGui::SliderInt("Log Index", &log_index_, 0, logs_.size() - 1);
 
   // Make a slider to get the desired iterate.
+  const size_t num_solver_iterates = logs_[LogIndex()]->NumIterates();
   ImGui::SliderInt("Iterate", &solver_iterate_, 0, num_solver_iterates - 1);
+
+  // Make a slider to get the desired interpolation time.
+  const Time final_time = logs_[LogIndex()]->FinalTime();
+  const Time initial_time = logs_[LogIndex()]->InitialTime();
+  ImGui::SliderFloat("Interpolation Time (s)", &interpolation_time_,
+                     initial_time, final_time);
+
   ImGui::End();
+
+  // Threshold for consistency.
+  solver_iterate_ = SolverIterate();
+  interpolation_time_ = InterpolationTime();
 }
 
 }  // namespace ilqgames

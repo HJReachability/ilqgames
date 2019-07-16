@@ -45,7 +45,11 @@
 #define ILQGAMES_DYNAMICS_MULTI_PLAYER_DYNAMICAL_SYSTEM_H
 
 #include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
+
+#include <vector>
 
 namespace ilqgames {
 
@@ -62,10 +66,26 @@ class MultiPlayerDynamicalSystem {
       Time t, Time time_step, const VectorXf& x,
       const std::vector<VectorXf>& us) const = 0;
 
-  // Integrate these dynamics forward in time using Runge-Kutta 4th order
-  // numerical integration.
+  // Integrate these dynamics forward in time.
+  // Options include integration for a single timestep, between arbitrary times,
+  // and within a single timestep.
   VectorXf Integrate(Time t0, Time time_step, const VectorXf& x0,
                      const std::vector<VectorXf>& us) const;
+  VectorXf Integrate(Time t0, Time t, Time time_step, const VectorXf& x0,
+                     const OperatingPoint& operating_point,
+                     const std::vector<Strategy>& strategies) const;
+  VectorXf Integrate(size_t initial_timestep, size_t final_timestep,
+                     Time time_step, const VectorXf& x0,
+                     const OperatingPoint& operating_point,
+                     const std::vector<Strategy>& strategies) const;
+  VectorXf IntegrateToNextTimeStep(
+      Time t0, Time time_step, const VectorXf& x0,
+      const OperatingPoint& operating_point,
+      const std::vector<Strategy>& strategies) const;
+  VectorXf IntegrateFromPriorTimeStep(
+      Time t, Time time_step, const VectorXf& x0,
+      const OperatingPoint& operating_point,
+      const std::vector<Strategy>& strategies) const;
 
   // Getters.
   Dimension XDim() const { return xdim_; }

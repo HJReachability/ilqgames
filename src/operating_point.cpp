@@ -41,6 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
@@ -49,9 +50,9 @@
 namespace ilqgames {
 
 OperatingPoint::OperatingPoint(
-    size_t num_time_steps, PlayerIndex num_players,
+    size_t num_time_steps, PlayerIndex num_players, Time initial_time,
     const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics)
-    : xs(num_time_steps), us(num_time_steps) {
+    : xs(num_time_steps), us(num_time_steps), t0(initial_time) {
   for (auto& entry : us) entry.resize(num_players);
 
   if (dynamics.get()) {
@@ -66,6 +67,7 @@ OperatingPoint::OperatingPoint(
 void OperatingPoint::swap(OperatingPoint& other) {
   xs.swap(other.xs);
   us.swap(other.us);
+  std::swap(t0, other.t0);
 }
 
 }  // namespace ilqgames

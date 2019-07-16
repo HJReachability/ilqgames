@@ -248,7 +248,7 @@ TEST_F(SolveLQGameTest, MatchesLyapunovIterations) {
 
 TEST_F(SolveLQGameTest, LocalNashEquilibrium) {
   // Set a zero operating point.
-  OperatingPoint operating_point(kNumTimeSteps, dynamics_.NumPlayers());
+  OperatingPoint operating_point(kNumTimeSteps, dynamics_.NumPlayers(), 0.0);
   for (size_t kk = 0; kk < kNumTimeSteps; kk++) {
     operating_point.xs[kk] = MatrixXf::Zero(dynamics_.XDim(), dynamics_.XDim());
     for (PlayerIndex ii = 0; ii < dynamics_.NumPlayers(); ii++)

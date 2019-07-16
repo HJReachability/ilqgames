@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
@@ -90,9 +91,11 @@ int main(int argc, char** argv) {
   // Set up the game.
   ilqgames::ThreePlayerIntersectionExample problem;
 
-  // Solve the game.
-  std::shared_ptr<const ilqgames::SolverLog> log = problem.Solve();
-  const auto logs = {log};
+  // Solve the game in a receding horizon.
+  constexpr ilqgames::Time kFinalTime = 10.0;      // s
+  constexpr ilqgames::Time kPlannerRuntime = 2.0;  // s
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
+      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &problem);
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);

@@ -36,52 +36,34 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost on curvature (angular speed / longitudinal speed)
-// NOTE: this is currently implemented as a state cost.
+// Three player intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/curvature_cost.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#define ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
-#include <glog/logging.h>
+#include <ilqgames/solver/problem.h>
 
 namespace ilqgames {
 
-float CurvatureCost::Evaluate(const VectorXf& input) const {
-  const float curvature = Curvature(input);
-  return 0.5 * weight_ * curvature * curvature;
-}
+class ThreePlayerIntersectionExample : public Problem {
+ public:
+  ~ThreePlayerIntersectionExample() {}
+  ThreePlayerIntersectionExample();
 
-void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
-  CHECK_NOTNULL(hess);
+  // Accessors.
+  const std::vector<Dimension>& XIdxs() const { return x_idxs_; }
+  const std::vector<Dimension>& YIdxs() const { return y_idxs_; }
+  const std::vector<Dimension>& HeadingIdxs() const { return heading_idxs_; }
 
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Populate Hessian and gradient.
-  const float v = input(v_idx_);
-  const float omega = input(omega_idx_);
-  const float one_over_vsq = 1.0 / (v * v);
-  const float weight_over_vsq = weight_ * one_over_vsq;
-  const float weight_omega_over_vsq = omega * weight_over_vsq;
-
-  (*hess)(omega_idx_, omega_idx_) += weight_over_vsq;
-
-  const float cross_term = -2.0 * weight_omega_over_vsq / v;
-  (*hess)(omega_idx_, v_idx_) += cross_term;
-  (*hess)(v_idx_, omega_idx_) += cross_term;
-
-  (*hess)(v_idx_, v_idx_) += 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
-
-  if (grad) {
-    (*grad)(omega_idx_) += weight_omega_over_vsq;
-    (*grad)(v_idx_) -= weight_omega_over_vsq * omega / v;
-  }
-}
+ private:
+  // Indices for x/y/heading.
+  const std::vector<Dimension> x_idxs_;
+  const std::vector<Dimension> y_idxs_;
+  const std::vector<Dimension> heading_idxs_;
+};  // class ThreePlayerIntersectionExample
 
 }  // namespace ilqgames
+
+#endif
