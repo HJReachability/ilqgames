@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
       RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &problem);
 
   // Create a top-down renderer, control sliders, and cost inspector.
-  auto sliders = std::make_shared<ilqgames::ControlSliders>();
+  auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
   ilqgames::TopDownRenderer top_down_renderer(
       sliders, logs, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
   ilqgames::CostInspector cost_inspector(sliders, logs,
@@ -175,8 +175,7 @@ int main(int argc, char** argv) {
     ImGui::NewFrame();
 
     // Control sliders.
-    sliders->Render(logs.size(), logs[sliders->LogIndex()]->FinalTime(),
-                    logs[sliders->LogIndex()]->NumIterates());
+    sliders->Render();
 
     // Top down view.
     top_down_renderer.Render();

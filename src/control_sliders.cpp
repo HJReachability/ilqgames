@@ -50,31 +50,27 @@
 
 namespace ilqgames {
 
-void ControlSliders::Render(
-    const std::vector<std::shared_ptr<const SolverLog>>& logs) {
+void ControlSliders::Render() {
   ImGui::Begin("Control Sliders");
 
   // Make a slider to get the desired log index from a receding horizon problem.
-  if (!logs.empty())
-    ImGui::SliderInt("Log Index", &log_index_, 0, logs.size() - 1);
+  if (!logs_.empty())
+    ImGui::SliderInt("Log Index", &log_index_, 0, logs_.size() - 1);
 
   // Make a slider to get the desired iterate.
-  const size_t num_solver_iterates = logs[log_index_]->NumIterates();
+  const size_t num_solver_iterates = logs_[LogIndex()]->NumIterates();
   ImGui::SliderInt("Iterate", &solver_iterate_, 0, num_solver_iterates - 1);
 
   // Make a slider to get the desired interpolation time.
-  const Time final_time = logs[log_index_]->FinalTime();
+  const Time final_time = logs_[LogIndex()]->FinalTime();
   ImGui::SliderFloat("Interpolation Time (s)", &interpolation_time_, 0.0,
                      final_time);
 
   ImGui::End();
 
-  // Clip to make sure everything is in bounds.
-  if (solver_iterate_ >= logs[log_index_]->NumIterates())
-    solver_iterate_ = logs[log_index_]->NumIterates();
-
-  if (interpolation_time_ > logs[log_index_]->FinalTime())
-    interpolation_time_ = logs[log_index_]->FinalTime();
+  // Threshold for consistency.
+  solver_iterate_ = SolverIterate();
+  interpolation_time_ = InterpolationTime();
 }
 
 }  // namespace ilqgames
