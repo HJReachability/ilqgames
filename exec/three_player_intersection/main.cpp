@@ -92,7 +92,8 @@ int main(int argc, char** argv) {
 
   // Solve the game.
   std::shared_ptr<const ilqgames::SolverLog> log = problem.Solve();
-  const auto logs = {log};
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log}
+  ;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
