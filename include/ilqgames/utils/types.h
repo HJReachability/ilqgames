@@ -86,6 +86,9 @@ using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
 class SinglePlayerDynamicalSystem;
 using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
 
+class SinglePlayerFlatSystem;
+using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
+
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
 
