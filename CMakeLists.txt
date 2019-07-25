@@ -34,8 +34,10 @@ include_directories(${CMAKE_SOURCE_DIR}/include ${imgui_SOURCE_DIR}/include)
 file(GLOB_RECURSE ilqgames_srcs ${CMAKE_SOURCE_DIR}/src/*.cpp)
 add_library(ilqgames ${ilqgames_srcs})
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include DESTINATION /usr/local/include/ilqgames)
-install(TARGETS ilqgames DESTINATION /usr/local/lib)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include DESTINATION include/ilqgames)
+install(TARGETS ilqgames
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib)
 
 # Set up output directory for executables.
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/)
