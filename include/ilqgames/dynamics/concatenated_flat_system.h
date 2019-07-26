@@ -61,7 +61,7 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
                     const std::vector<VectorXf>& us) const;
 
   // Discrete time approximation of the underlying linearized system.
-  LinearDynamicsApproximation LinearizedSystem(Time time_step) const;
+  void ComputeLinearizedSystem() const;
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
@@ -76,8 +76,8 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
   // Gradient and hessian of map from xi to x.
-  void GradientAndHessianXi(const VectorXf& xi, Eigen::Ref<VectorXf> grad,
-                            Eigen::Ref<MatrixXf> hess) const;
+  void GradientAndHessianXi(const VectorXf& xi, VectorXf* grad,
+                            MatrixXf* hess) const;
 
   // Getters.
   Dimension UDim(PlayerIndex player_idx) const {
