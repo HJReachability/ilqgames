@@ -53,6 +53,7 @@
 
 #include <memory>
 #include <vector>
+#include <glog/logging.h>
 
 namespace ilqgames {
 

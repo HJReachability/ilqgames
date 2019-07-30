@@ -49,21 +49,12 @@
 
 namespace ilqgames {
 
-    : MultiPlayerFlatSystem(std::accumulate(
-          subsystems.begin(), subsystems.end(), 0,
-          [](Dimension total,
-             const std::shared_ptr<SinglePlayerFlatSystem>& subsystem) {
-            CHECK_NOTNULL(subsystem.get());
-            return total + subsystem->XDim();
-          }), time_step),
-      subsystems_(subsystems) {}
-
 VectorXf MultiPlayerFlatSystem::Integrate(
     Time time_interval, const VectorXf& xi0,
     const std::vector<VectorXf>& vs) const {
   // Number of integration steps and corresponding time step.
   constexpr size_t kNumIntegrationSteps = 2;
-  const double dt = time_step / static_cast<Time>(kNumIntegrationSteps);
+  const double dt = time_step_ / static_cast<Time>(kNumIntegrationSteps);
 
   CHECK_NOTNULL(continuous_linear_system_.get())
   auto xi_dot = [this, &vs](const VectorXf& xi) {
@@ -90,104 +81,104 @@ VectorXf MultiPlayerFlatSystem::Integrate(
 }
 
 VectorXf MultiPlayerFlatSystem::Integrate(
-    Time t0, Time t, Time time_step, const VectorXf& x0,
+    Time t0, Time t, const VectorXf& xi0,
     const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   CHECK_GE(t, t0);
   CHECK_GE(t0, operating_point.t0);
   CHECK_EQ(strategies.size(), NumPlayers());
 
-  std::vector<VectorXf> us(NumPlayers());
+  std::vector<VectorXf> vs(NumPlayers());
 
   // Handle case where 't0' is after 'operating_point.t0' by integrating from
   // 't0' to the next discrete timestep.
-  VectorXf x(x0);
+  VectorXf xi(xi0);
   if (t0 > operating_point.t0)
-    x = IntegrateToNextTimeStep(t0, time_step, x0, operating_point, strategies);
+    xi = IntegrateToNextTimeStep(t0, xi0, operating_point, strategies);
 
   // Compute current timestep and final timestep.
   const Time relative_t0 = t0 - operating_point.t0;
-  const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step);
+  const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
 
   const Time relative_t = t - operating_point.t0;
-  const size_t final_timestep = static_cast<size_t>(relative_t / time_step);
+  const size_t final_timestep = static_cast<size_t>(relative_t / time_step_);
 
   // Integrate forward step by step up to timestep including t.
-  x = Integrate(current_timestep + 1, final_timestep, time_step, x,
+  xi = Integrate(current_timestep + 1, final_timestep, xi,
                 operating_point, strategies);
 
   // Integrate forward from this timestep to t.
-  return IntegrateFromPriorTimeStep(t, time_step, x, operating_point,
+  return IntegrateFromPriorTimeStep(t, xi, operating_point,
                                     strategies);
 }
 
 VectorXf MultiPlayerFlatSystem::Integrate(
-    size_t initial_timestep, size_t final_timestep, Time time_step,
-    const VectorXf& x0, const OperatingPoint& operating_point,
+    size_t initial_timestep, size_t final_timestep,
+    const VectorXf& xi0, const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
-  VectorXf x(x0);
-  std::vector<VectorXf> us(NumPlayers());
+  VectorXf xi(xi0);
+  std::vector<VectorXf> vs(NumPlayers());
   for (size_t kk = initial_timestep; kk < final_timestep; kk++) {
-    const Time t = operating_point.t0 + kk * time_step;
+    const Time t = operating_point.t0 + kk * time_step_;
 
     // Populate controls for all players.
     for (PlayerIndex ii = 0; ii < NumPlayers(); ii++)
-      us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
+      vs[ii] = strategies[ii](kk, xi - operating_point.xs[kk],
                               operating_point.us[kk][ii]);
 
-    x = Integrate(t, time_step, x, us);
+    xi = Integrate(t, xi, vs);
   }
 
-  return x;
+  return xi;
 }
 
 VectorXf MultiPlayerFlatSystem::IntegrateToNextTimeStep(
-    Time t0, Time time_step, const VectorXf& x0,
+    Time t0, const VectorXf& xi0,
     const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   CHECK_GE(t0, operating_point.t0);
 
   // Compute remaining time this timestep.
   const Time relative_t0 = t0 - operating_point.t0;
-  const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step);
+  const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
   const Time remaining_time_this_step =
-      time_step * (current_timestep + 1) - relative_t0;
+      time_step_ * (current_timestep + 1) - relative_t0;
 
   // Interpolate x0_ref.
   CHECK_LT(current_timestep + 1, operating_point.xs.size());
-  const float frac = remaining_time_this_step / time_step;
-  const VectorXf x0_ref =
+  const float frac = remaining_time_this_step / time_step_;
+  const VectorXf xi0_ref =
       frac * operating_point.xs[current_timestep] +
       (1.0 - frac) * operating_point.xs[current_timestep + 1];
 
   // Populate controls for each player.
-  std::vector<VectorXf> us(NumPlayers());
+  std::vector<VectorXf> vs(NumPlayers());
   for (PlayerIndex ii = 0; ii < NumPlayers(); ii++)
-    us[ii] = strategies[ii](current_timestep, x0 - x0_ref,
+    vs[ii] = strategies[ii](current_timestep, xi0 - xi0_ref,
                             operating_point.us[current_timestep][ii]);
 
-  return Integrate(t0, remaining_time_this_step, x0, us);
+  return Integrate(t0, remaining_time_this_step, xi0, vs);
 }
 
 VectorXf MultiPlayerFlatSystem::IntegrateFromPriorTimeStep(
-    Time t, Time time_step, const VectorXf& x0,
+    Time t, const VectorXf& xi0,
     const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   // Compute time until next timestep.
   const Time relative_t = t - operating_point.t0;
-  const size_t current_timestep = static_cast<size_t>(relative_t / time_step);
-  const Time remaining_time_until_t = relative_t - time_step * current_timestep;
+  const size_t current_timestep = static_cast<size_t>(relative_t / time_step_);
+  const Time remaining_time_until_t = relative_t - time_step_ * current_timestep;
 
   // Populate controls for each player.
-  std::vector<VectorXf> us(NumPlayers());
+  std::vector<VectorXf> vs(NumPlayers());
   for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) {
-    us[ii] = strategies[ii](current_timestep,
-                            x0 - operating_point.xs[current_timestep],
+    vs[ii] = strategies[ii](current_timestep,
+                            xi0 - operating_point.xs[current_timestep],
                             operating_point.us[current_timestep][ii]);
   }
 
-  return Integrate(operating_point.t0 + time_step * current_timestep,
-                   remaining_time_until_t, x0, us);
+  return Integrate(operating_point.t0 + time_step_ * current_timestep,
+                   remaining_time_until_t, xi0, vs);
 }
 
 }  // namespace ilqgames

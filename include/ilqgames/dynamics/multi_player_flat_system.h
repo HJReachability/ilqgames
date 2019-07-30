@@ -113,7 +113,7 @@ class MultiPlayerFlatSystem {
   virtual PlayerIndex NumPlayers() const = 0;
 
  protected:
-  explicit MultiPlayerFlatSystem(Dimension xdim, Time time_step) 
+  MultiPlayerFlatSystem(Dimension xdim, Time time_step) 
         : xdim_(xdim), time_step_(time_step) {}
 
   // Discrete time approximation of the underlying linearized system.
