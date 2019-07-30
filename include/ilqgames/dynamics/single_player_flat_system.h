@@ -65,8 +65,10 @@ class SinglePlayerFlatSystem {
 
   virtual VectorXf AffineTerm(const VectorXf& x) const = 0;
 
-  virtual VectorXf LinearizingControl(const VectorXf& x, 
-                                      const VectorXf& v) const = 0;
+  VectorXf LinearizingControl(const VectorXf& x, 
+                              const VectorXf& v) const{
+    return InverseDecouplingMatrix(x) * v + AffineTerm(x);
+  }
 
   virtual VectorXf ToLinearSystemState(const VectorXf& x) const = 0;
 

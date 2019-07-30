@@ -178,7 +178,7 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
       y_idxs_({kP1YIdx, kP2YIdx, kP3YIdx}),
       heading_idxs_({kP1HeadingIdx, kP2HeadingIdx, kP3HeadingIdx}) {
   // Create dynamics.
-  const std::shared_ptr<ConcatenatedDynamicalSystem> dynamics(
+  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
           {std::make_shared<SinglePlayerCar7D>(kInterAxleLength),
            std::make_shared<SinglePlayerCar7D>(kInterAxleLength),
