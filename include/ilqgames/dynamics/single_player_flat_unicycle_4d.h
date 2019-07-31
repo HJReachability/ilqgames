@@ -79,6 +79,9 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
 
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
+  void GradientAndHessianXi(const VectorXf& xi, Eigen::Ref<VectorXf> grad,
+                            Eigen::Ref<MatrixXf> hess)
+
   // Constexprs for state indices.
   static constexpr Dimension kNumXDims = 4;
   static constexpr Dimension kPxIdx = 0;
@@ -157,6 +160,12 @@ inline VectorXf FromLinearSystemState(const VectorXf& xi) const{
   x(kVIdx) = std::hypot(xi(kVyIdx),xi(kVxIdx));
 
   return x;
-}  // namespace ilqgames
+}
 
+inline void GradientAndHessianXi(const VectorXf& xi, Eigen::Ref<VectorXf> grad,
+                                    Eigen::Ref<MatrixXf> hess) const{
+
+}
+
+}  // namespace ilqgames
 #endif

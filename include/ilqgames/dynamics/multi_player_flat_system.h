@@ -74,8 +74,8 @@ class MultiPlayerFlatSystem {
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
 
   // Gradient and hessian of map from xi to x.
-  virtual void GradientAndHessianXi(const VectorXf& xi, Eigen::Ref<VectorXf> grad,
-                                    Eigen::Ref<MatrixXf> hess) const = 0;
+  virtual void ChangeCostCoordinates(const VectorXf& xi, const std::vector<VectorXf>& vs,
+                                     QuadraticCostApproximation* q) const = 0;
 
   // Integrate these dynamics forward in time.
   // Options include integration for a single timestep, between arbitrary times,
