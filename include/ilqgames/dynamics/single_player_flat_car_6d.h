@@ -36,32 +36,33 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Single player dynamics modeling a unicycle. 4 states and 2 control inputs.
-// State is [x, y, theta, v], control is [omega, a], and dynamics are:
+// Single player dynamics modeling a car. 5 states and 2 control inputs.
+// State is [x, y, theta, phi, v], control is [omega, a], and dynamics are:
 //                     \dot px    = v cos theta
 //                     \dot py    = v sin theta
-//                     \dot theta = omega
+//                     \dot theta = (v / L) * tan phi
+//                     \dot phi   = omega
 //                     \dot v     = a
-//
-//  Linear system state xi is laid out as [x, y, vx, vy]:
-//                     vx = v * cos(theta)
-//                     vy = v * sin(theta)  
+// Please refer to
+// https://www.sciencedirect.com/science/article/pii/S2405896316301215
+// for further details.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_DYNAMICS_SINGLE_PLAYER_FLAT_UNICYCLE_4D_H
-#define ILQGAMES_DYNAMICS_SINGLE_PLAYER_FLAT_UNICYCLE_4D_H
+#ifndef ILQGAMES_DYNAMICS_SINGLE_PLAYER_FLAT_CAR_6D_H
+#define ILQGAMES_DYNAMICS_SINGLE_PLAYER_FLAT_CAR_6D_H
 
 #include <ilqgames/dynamics/single_player_flat_system.h>
 #include <ilqgames/utils/types.h>
 
 namespace ilqgames {
 
-class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
+class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
  public:
-  ~SinglePlayerFlatUnicycle4D() {}
-  SinglePlayerFlatUnicycle4D()
-      : SinglePlayerFlatSystem(kNumXDims, kNumUDims) {}
+  ~SinglePlayerFlatCar6D() {}
+  SinglePlayerFlatCar6D(float inter_axle_distance)
+      : SinglePlayerFlatSystem(kNumXDims, kNumUDims),
+        inter_axle_distance_(inter_axle_distance) {}
 
   // Compute time derivative of state.
   VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const;
@@ -80,43 +81,55 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
   // Constexprs for state indices.
-  static constexpr Dimension kNumXDims = 4;
+  static constexpr Dimension kNumXDims = 6;
   static constexpr Dimension kPxIdx = 0;
   static constexpr Dimension kPyIdx = 1;
   static constexpr Dimension kThetaIdx = 2;
-  static constexpr Dimension kVIdx = 3;
+  static constexpr Dimension kPhiIdx = 3;
+  static constexpr Dimension kVIdx = 4;
+  static constexpr Dimension kAIdx = 5;
   static constexpr Dimension kVxIdx = 2;
-  static constexpr Dimension kVyIdx = 3;  
+  static constexpr Dimension kVyIdx = 3;
+  static constexpr Dimension kAxIdx = 4;
+  static constexpr Dimension kAyIdx = 5;
 
   // Constexprs for control indices.
   static constexpr Dimension kNumUDims = 2;
   static constexpr Dimension kOmegaIdx = 0;
-  static constexpr Dimension kAIdx = 1;
-};  //\class SinglePlayerFlatUnicycle4D
+  static constexpr Dimension kJerkIdx = 1;
+
+ private:
+  // Inter-axle distance. Determines turning radius.
+  const float inter_axle_distance_;
+};  //\class SinglePlayerCar5D
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //
 
-inline VectorXf SinglePlayerFlatUnicycle4D::Evaluate(const VectorXf& x,
-                                                 const VectorXf& u) const {
+inline VectorXf SinglePlayerFlatCar6D::Evaluate(const VectorXf& x,
+                                            const VectorXf& u) const {
   VectorXf xdot(xdim_);
   xdot(kPxIdx) = x(kVIdx) * std::cos(x(kThetaIdx));
   xdot(kPyIdx) = x(kVIdx) * std::sin(x(kThetaIdx));
-  xdot(kThetaIdx) = u(kOmegaIdx);
-  xdot(kVIdx) = u(kAIdx);
+  xdot(kThetaIdx) = (x(kVIdx) / inter_axle_distance_) * std::tan(x(kPhiIdx));
+  xdot(kPhiIdx) = u(kOmegaIdx);
+  xdot(kVIdx) = x(kAIdx);
+  xdot(kAIdx) = u(kJerkIdx);
 
   return xdot;
 }
 
-inline void SinglePlayerFlatUnicycle4D::LinearizedSystem(
-                                              Time time_step,
-                                              Eigen::Ref<MatrixXf> A,
-                                              Eigen::Ref<MatrixXf> B) const {
+inline void SinglePlayerFlatCar6D::LinearizedSystem(
+                                         Time time_step,
+                                         Eigen::Ref<MatrixXf> A,
+                                         Eigen::Ref<MatrixXf> B) const {
 
   A(kPxIdx, kVxIdx) += time_step;
   A(kPyIdx, kVyIdx) += time_step;
+  A(kVxIdx, kAxIdx) += time_step;
+  A(kVyIdx, kAyIdx) += time_step;
 
-  B(kVxIdx, 0) = time_step;
-  B(kVyIdx, 1) = time_step;
+  B(kAxIdx, 0) = time_step;
+  B(kAyIdx, 1) = time_step;
 }
 
 inline MatrixXf InverseDecouplingMatrix(const VectorXf& x) const{
@@ -124,26 +137,47 @@ inline MatrixXf InverseDecouplingMatrix(const VectorXf& x) const{
 
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
+  const float cos_phi_v = std::cos(x(kPhiIdx))/x(kVIdx);
+  const float scaling = inter_axle_distance_ * cos_phi_v * cos_phi_v;
    
-  M_inv(0,0) = cos_t;
-  M_inv(0,1) = sin_t;
-  M_inv(1,0) = -sin_t / x(kVIdx);
-  M_inv(1,1) =  cos_t / x(kVIdx);
+  M_inv(0,0) = -scaling * sin_t;
+  M_inv(0,1) =  scaling * cos_t;
+  M_inv(1,0) =  cos_t;
+  M_inv(1,1) =  sin_t;
 
   return M_inv;
 }
 
 inline VectorXf AffineTerm(const VectorXf& x) const{
-  return VectorXf::Zero(kNumUDims);
+  VectorXf m = VectorXf::Zero(kNumUDims);
+
+  const float sin_t = std::sin(x(kThetaIdx));
+  const float cos_t = std::cos(x(kThetaIdx));
+  const float tan_phi = std::tan(x(kPhiIdx));
+  const float v_over_l = x(kVIdx)/inter_axle_distance_;
+
+  m(0) = -v_over_l * tan_phi * (3.0 * x(kAIdx) * sin_t + 
+                                v_over_l * x(kVIdx) * tan_phi * cos_t);
+  m(1) =  v_over_l * tan_phi * (3.0 * x(kAIdx) * cos_t - 
+                                v_over_l * x(kVIdx) * tan_phi * sin_t); 
+
+  return m;
 }
 
 inline VectorXf ToLinearSystemState(const VectorXf& x) const{
   VectorXf xi(kNumXDims);
 
+  const float sin_t = std::sin(x(kThetaIdx));
+  const float cos_t = std::cos(x(kThetaIdx));
+  const float tan_phi = std::tan(x(kPhiIdx));
+  const float vv_over_l = x(kVIdx) * x(kVIdx)/inter_axle_distance_;
+
   xi(kPxIdx) = x(kPxIdx);
   xi(kPyIdx) = x(kPyIdx);
-  xi(kVxIdx) = x(kVIdx) * std::cos(x(kThetaIdx));
-  xi(kVyIdx) = x(kVIdx) * std::sin(x(kThetaIdx));
+  xi(kVxIdx) = x(kVIdx) * cos_t;
+  xi(kVyIdx) = x(kVIdx) * sin_t;
+  xi(kAxIdx) = x(kAIdx) * cos_t - vv_over_l * sin_t * tan_phi;
+  xi(kAyIdx) = x(kAIdx) * sin_t + vv_over_l * cos_t * tan_phi;
 
   return xi;
 }
@@ -156,7 +190,16 @@ inline VectorXf FromLinearSystemState(const VectorXf& xi) const{
   x(kThetaIdx) = std::atan2(xi(kVyIdx),xi(kVxIdx));
   x(kVIdx) = std::hypot(xi(kVyIdx),xi(kVxIdx));
 
+  const float cos_t = xi(kVxIdx) / x(kVIdx);
+  const float sin_t = xi(kVyIdx) / x(kVIdx);
+
+  x(kAIdx) = cos_t * xi(kAxIdx) + sin_t * xi(kAyIdx);
+  x(kPhiIxd) = std::atan((x(kAIdx) * cos_t - xi(kAxIdx)) * 
+                  inter_axle_distance_ / (x(kVIdx) * x(kVIdx) * sin_t));
+
   return x;
+}  // namespace ilqgames
+
 }  // namespace ilqgames
 
 #endif
