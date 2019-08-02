@@ -106,10 +106,7 @@ inline void SinglePlayerDubinsCar::Linearize(Time t, Time time_step,
   const float stheta = std::sin(x(kThetaIdx)) * time_step;
 
   A(kPxIdx, kThetaIdx) += -v_ * stheta;
-  A(kPxIdx, kVIdx) += ctheta;
-
   A(kPyIdx, kThetaIdx) += v_ * ctheta;
-  A(kPyIdx, kVIdx) += stheta;
 
   B(kThetaIdx, kOmegaIdx) = time_step;
 }
