@@ -61,12 +61,15 @@ class Problem {
   // Solve this game. Returns log populated by solver.
   std::shared_ptr<SolverLog> Solve();
 
-  // Update initial state and modify previous strategies and operating points to
-  // start at the specified runtime after the current time t0. Since time is
-  // continuous and we will want to maintain the same fixed discretization, we
-  // will integrate x0 forward from t0 by approximately planner_runtime as the
-  // new initial state/time. By default, extends operating points and strategies
-  // as follows:
+  // Reset the initial time and change nothing else.
+  void ResetInitialTime(Time t0) { operating_point_->t0 = t0; }
+
+  // Update initial state and modify previous strategies and operating
+  // points to start at the specified runtime after the current time t0.
+  // Since time is continuous and we will want to maintain the same fixed
+  // discretization, we will integrate x0 forward from t0 by approximately
+  // planner_runtime as the new initial state/time. By default, extends
+  // operating points and strategies as follows:
   // 1. new controls are zero
   // 2. new states are those that result from zero control
   // 3. new strategies are also zero
@@ -75,8 +78,8 @@ class Problem {
 
   // Overwrite existing solution with the given operating point and strategies.
   // Truncates to fit in the same memory.
-  virtual void OverwriteSolution(const OperatingPoint& operating_point,
-                                 const std::vector<Strategy>& strategies);
+  void OverwriteSolution(const OperatingPoint& operating_point,
+                         const std::vector<Strategy>& strategies);
 
   // Accessors.
   const ILQSolver& Solver() const { return *solver_; }
