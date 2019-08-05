@@ -84,7 +84,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   CHECK_NOTNULL(operating_point_.get());
   CHECK_GT(planner_runtime, 0.0);
   CHECK_LT(planner_runtime + t0, operating_point_->t0 + solver_->TimeHorizon());
-  CHECK_GE(t0, operating_point_->t0);
+  CHECK_GE(t0, operating_point_->t0 - constants::kSmallNumber);
 
   const MultiPlayerDynamicalSystem& dynamics = solver_->Dynamics();
 
