@@ -81,7 +81,12 @@ using PlayerIndex = unsigned short;
 using Dimension = int;
 using Time = float;
 using Point2 = Eigen::Vector2f;
+
+#ifdef __APPLE__
 using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
+#else
+using PointList2 = std::vector<Point2>;
+#endif
 
 class SinglePlayerDynamicalSystem;
 using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
