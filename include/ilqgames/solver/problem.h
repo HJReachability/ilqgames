@@ -81,6 +81,12 @@ class Problem {
   // Accessors.
   const ILQSolver& Solver() const { return *solver_; }
   const VectorXf& InitialState() const { return x0_; }
+  const OperatingPoint& CurrentOperatingPoint() const {
+    return *operating_point_;
+  }
+  const std::vector<Strategy>& CurrentStrategies() const {
+    return *strategies_;
+  }
 
  protected:
   Problem() {}
