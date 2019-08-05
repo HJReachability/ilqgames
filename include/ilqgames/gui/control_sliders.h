@@ -65,9 +65,9 @@ class ControlSliders {
 
   // Accessors.
   Time InterpolationTime() const {
-    return std::max(
-        std::min(interpolation_time_, logs_[LogIndex()]->FinalTime()),
-        logs_[LogIndex()]->InitialTime());
+    return std::max(std::min(static_cast<Time>(interpolation_time_),
+                             logs_[LogIndex()]->FinalTime()),
+                    logs_[LogIndex()]->InitialTime());
   }
   int SolverIterate() const {
     return std::min(solver_iterate_,
@@ -79,7 +79,7 @@ class ControlSliders {
 
  private:
   // Time at which to interpolate trajectory.
-  Time interpolation_time_;
+  float interpolation_time_;
 
   // Solver iterate to display.
   int solver_iterate_;
