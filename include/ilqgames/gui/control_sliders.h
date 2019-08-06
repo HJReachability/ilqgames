@@ -64,10 +64,10 @@ class ControlSliders {
   void Render();
 
   // Accessors.
-  float InterpolationTime() const {
-    return std::max(
-        std::min(interpolation_time_, logs_[LogIndex()]->FinalTime()),
-        logs_[LogIndex()]->InitialTime());
+  Time InterpolationTime() const {
+    return std::max(std::min(static_cast<Time>(interpolation_time_),
+                             logs_[LogIndex()]->FinalTime()),
+                    logs_[LogIndex()]->InitialTime());
   }
   int SolverIterate() const {
     return std::min(solver_iterate_,

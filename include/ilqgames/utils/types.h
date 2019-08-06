@@ -62,6 +62,7 @@
 
 namespace ilqgames {
 namespace constants {
+#ifdef __APPLE__
 // Acceleration due to gravity (m/s/s).
 static constexpr float kGravity = 9.81;
 
@@ -73,15 +74,35 @@ static constexpr float kInfinity = std::numeric_limits<float>::infinity();
 
 // Constant for invalid values.
 static constexpr float kInvalidValue = std::numeric_limits<float>::quiet_NaN();
+
+#else
+// Acceleration due to gravity (m/s/s).
+static constexpr double kGravity = 9.81;
+
+// Small number for use in approximate equality checking.
+static constexpr double kSmallNumber = 1e-4;
+
+// Float precision infinity.
+static constexpr double kInfinity = std::numeric_limits<float>::infinity();
+
+// Constant for invalid values.
+static constexpr double kInvalidValue = std::numeric_limits<float>::quiet_NaN();
+#endif
 }  // namespace constants
 
 // --------------------------------- TYPES ---------------------------------- //
 
 using PlayerIndex = unsigned short;
 using Dimension = int;
-using Time = float;
 using Point2 = Eigen::Vector2f;
+
+#ifdef __APPLE__
 using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
+using Time = float;
+#else
+using PointList2 = std::vector<Point2>;
+using Time = double;
+#endif
 
 class SinglePlayerDynamicalSystem;
 using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;

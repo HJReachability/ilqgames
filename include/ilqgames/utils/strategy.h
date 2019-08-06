@@ -60,12 +60,11 @@ struct Strategy {
   std::vector<VectorXf> alphas;
 
   // Preallocate memory during construction.
-  // NOTE: does NOT set to zeros for speed.
   Strategy(size_t horizon, Dimension xdim, Dimension udim)
       : Ps(horizon), alphas(horizon) {
     for (size_t ii = 0; ii < horizon; ii++) {
-      Ps[ii].resize(udim, xdim);
-      alphas[ii].resize(udim);
+      Ps[ii] = MatrixXf::Zero(udim, xdim);
+      alphas[ii] = VectorXf::Zero(udim);
     }
   }
 
