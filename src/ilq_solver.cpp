@@ -77,9 +77,8 @@ bool ILQSolver::Solve(const VectorXf& x0,
   // Last and current operating points.
   OperatingPoint last_operating_point(num_time_steps_, dynamics_->NumPlayers(),
                                       initial_operating_point.t0);
-  OperatingPoint current_operating_point(initial_operating_point);
 
-  // Ensure that the current operating point starts at the initial state.
+  OperatingPoint current_operating_point(initial_operating_point);
   current_operating_point.xs[0] = x0;
 
   // Current strategies.
@@ -99,7 +98,7 @@ bool ILQSolver::Solve(const VectorXf& x0,
   size_t num_iterations = 0;
 
   // Log initial iterate.
-  if (log) log->AddSolverIterate(initial_operating_point, initial_strategies);
+  if (log) log->AddSolverIterate(current_operating_point, current_strategies);
 
   // Keep iterating until convergence.
   while (!HasConverged(num_iterations, last_operating_point,
