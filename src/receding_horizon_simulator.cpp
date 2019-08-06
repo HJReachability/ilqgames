@@ -76,6 +76,8 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
   Time elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
+  VLOG(0) << "Solved initial problem in " << elapsed_time << " seconds.";
+
   CHECK_LE(elapsed_time, planner_runtime);
 
   // Handy references.
@@ -98,8 +100,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     elapsed_time =
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
-    LOG(INFO) << "Solved warm-started problem in " << elapsed_time
-              << " seconds.";
+    VLOG(0) << "Solved warm-started problem in " << elapsed_time << " seconds.";
 
     // Integrate dynamics forward.
     constexpr Time kExtraTime = 1.0;
