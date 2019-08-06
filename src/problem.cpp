@@ -53,7 +53,7 @@
 
 namespace ilqgames {
 
-std::shared_ptr<SolverLog> Problem::Solve() {
+std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
   CHECK_NOTNULL(solver_.get());
   CHECK_NOTNULL(strategies_.get());
   CHECK_NOTNULL(operating_point_.get());
@@ -65,7 +65,8 @@ std::shared_ptr<SolverLog> Problem::Solve() {
   std::vector<Strategy> final_strategies(*strategies_);
   OperatingPoint final_operating_point(*operating_point_);
   if (!solver_->Solve(x0_, *operating_point_, *strategies_,
-                      &final_operating_point, &final_strategies, log.get())) {
+                      &final_operating_point, &final_strategies, log.get(),
+                      max_runtime)) {
     LOG(WARNING) << "Solver failed.";
     return nullptr;
   }

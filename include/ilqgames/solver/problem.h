@@ -49,6 +49,7 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -59,7 +60,8 @@ class Problem {
   virtual ~Problem() {}
 
   // Solve this game. Returns log populated by solver.
-  std::shared_ptr<SolverLog> Solve();
+  std::shared_ptr<SolverLog> Solve(
+      Time max_runtime = std::numeric_limits<Time>::infinity());
 
   // Reset the initial time and change nothing else.
   void ResetInitialTime(Time t0) { operating_point_->t0 = t0; }
