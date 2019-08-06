@@ -55,6 +55,7 @@
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -79,7 +80,8 @@ class ILQSolver {
   bool Solve(const VectorXf& x0, const OperatingPoint& initial_operating_point,
              const std::vector<Strategy>& initial_strategies,
              OperatingPoint* final_operating_point,
-             std::vector<Strategy>* final_strategies, SolverLog* log = nullptr);
+             std::vector<Strategy>* final_strategies, SolverLog* log = nullptr,
+             Time max_runtime = std::numeric_limits<Time>::infinity());
 
   // Accessors.
   Time TimeHorizon() const { return time_horizon_; }
