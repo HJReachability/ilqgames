@@ -51,16 +51,24 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
+#include <chrono>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
+using clock = std::chrono::system_clock;
+
 bool ILQSolver::Solve(const VectorXf& x0,
                       const OperatingPoint& initial_operating_point,
                       const std::vector<Strategy>& initial_strategies,
                       OperatingPoint* final_operating_point,
-                      std::vector<Strategy>* final_strategies, SolverLog* log) {
+                      std::vector<Strategy>* final_strategies, SolverLog* log,
+                      Time max_runtime) {
+  // Start a stopwatch.
+  const auto solver_call_time = clock::now();
+
+  // Chech return pointers not null.
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
@@ -101,7 +109,13 @@ bool ILQSolver::Solve(const VectorXf& x0,
   if (log) log->AddSolverIterate(current_operating_point, current_strategies);
 
   // Keep iterating until convergence.
-  while (!HasConverged(num_iterations, last_operating_point,
+  auto elapsed_time = [&solver_call_time]() {
+    return std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+  };  // elapsed_time
+
+  constexpr Time kMaxIterationRuntimeGuess = 1e-3;  // s
+  while (elapsed_time() < max_runtime - kMaxIterationRuntimeGuess &&
+         !HasConverged(num_iterations, last_operating_point,
                        current_operating_point)) {
     num_iterations++;
 
