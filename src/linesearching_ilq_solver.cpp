@@ -93,7 +93,7 @@ bool LinesearchingILQSolver::ModifyLQStrategies(
                         &next_operating_point);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary backtracking.
-  constexpr float kInitialAlphaScaling = 0.1;
+  constexpr float kInitialAlphaScaling = 0.05;
   //  ScaleAlphas(kInitialAlphaScaling, strategies);
 
   // Keep halving alphas until the maximum elementwise state difference is above
