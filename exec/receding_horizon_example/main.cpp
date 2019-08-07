@@ -82,7 +82,7 @@ static void glfw_error_callback(int error, const char* description) {
 
 int main(int argc, char** argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/three_player_intersection.log");
+      ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
   google::SetLogDestination(0, log_file.c_str());
   FLAGS_logtostderr = true;
   FLAGS_minloglevel = 1;

@@ -94,7 +94,7 @@ static constexpr float kLaneBoundaryCostWeight = 100.0;
 static constexpr float kMinProximity = 4.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
-static constexpr float kP3ProximityCostWeight = 100.0;
+static constexpr float kP3ProximityCostWeight = 10.0;
 
 static constexpr bool kOrientedRight = true;
 
@@ -108,7 +108,7 @@ static constexpr float kP1GoalY = 60.0;  // m
 static constexpr float kP2GoalX = 50.0;  // m
 static constexpr float kP2GoalY = 12.0;  // m
 
-static constexpr float kP3GoalX = 5.0;   // m
+static constexpr float kP3GoalX = 10.0;  // m
 static constexpr float kP3GoalY = 16.0;  // m
 
 // Nominal and max speed.
@@ -122,7 +122,7 @@ static constexpr float kP2NominalV = 5.0;  // m/s
 static constexpr float kP3NominalV = 1.0;  // m/s
 
 // Initial state.
-static constexpr float kP1InitialX = -5.0;   // m
+static constexpr float kP1InitialX = -2.0;   // m
 static constexpr float kP2InitialX = -10.0;  // m
 static constexpr float kP3InitialX = -11.0;  // m
 
@@ -134,9 +134,9 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 5.0;  // m/s
-static constexpr float kP2InitialSpeed = 5.0;  // m/s
-static constexpr float kP3InitialSpeed = 1.0;  // m/s
+static constexpr float kP1InitialSpeed = 5.0;   // m/s
+static constexpr float kP2InitialSpeed = 5.0;   // m/s
+static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar7D;
