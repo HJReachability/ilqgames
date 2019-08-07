@@ -109,14 +109,16 @@ bool ILQSolver::Solve(const VectorXf& x0,
   if (log) log->AddSolverIterate(current_operating_point, current_strategies);
 
   // Keep iterating until convergence.
-  auto elapsed_time = [&solver_call_time]() {
-    return std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
+    return std::chrono::duration<Time>(clock::now() - start).count();
   };  // elapsed_time
 
-  constexpr Time kMaxIterationRuntimeGuess = 1e-3;  // s
-  while (elapsed_time() < max_runtime - kMaxIterationRuntimeGuess &&
+  constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
+  while (elapsed_time(solver_call_time) <
+             max_runtime - kMaxIterationRuntimeGuess &&
          !HasConverged(num_iterations, last_operating_point,
                        current_operating_point)) {
+    // New iteration.
     num_iterations++;
 
     // Swap operating points and compute new current operating point.
