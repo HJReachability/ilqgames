@@ -72,7 +72,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
   // Initial run of the solver. Keep track of time in order to know how much to
   // integrate dynamics forward.
   auto solver_call_time = clock::now();
-  logs.push_back(problem->Solve());
+  logs.push_back(problem->Solve(planner_runtime));
   Time elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
@@ -103,11 +103,10 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     VLOG(0) << "Solved warm-started problem in " << elapsed_time << " seconds.";
 
     // Integrate dynamics forward.
-    constexpr Time kExtraTime = 1.0;
-    x = dynamics.Integrate(t, t + elapsed_time + kExtraTime, time_step, x,
+    x = dynamics.Integrate(t, t + planner_runtime, time_step, x,
                            splicer.CurrentOperatingPoint(),
                            splicer.CurrentStrategies());
-    t += elapsed_time + kExtraTime;
+    t += planner_runtime;
 
     // Add new solution to splicer.
     splicer.Splice(*logs.back(), t);
