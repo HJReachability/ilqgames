@@ -207,7 +207,7 @@ void ConcatenatedFlatSystem::GradientAndHessianXi(const VectorXf& xi, VectorXf* 
   *hess = MatrixXf::Zero(xi.size(), xi.size()); 
 
   Dimension x_dims_so_far = 0;
-  for (size_t ii = 0; ii < NumPlayers(); ii++) {
+  for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem = subsystems_[ii];
     const Dimension xdim = subsystem->XDim();
     subsystem->GradientAndHessianXi(xi.segment(x_dims_so_far, xdim), 
@@ -215,6 +215,20 @@ void ConcatenatedFlatSystem::GradientAndHessianXi(const VectorXf& xi, VectorXf* 
                                     hess->block(x_dims_so_far, x_dims_so_far, xdim, xdim));
 
     x_dims_so_far += xdim; 
+  }
+}
+
+void ConcatenatedFlatSystem::ChangeCostCoordinates(const VectorXf& xi, 
+                           const std::vector<VectorXf>& vs, 
+                           QuadraticCostApproximation* q) {
+  CHECK_NOTNULL(q);
+
+  Dimension x_dims_so_far = 0;
+  for(PlayerIndex ii=0; ii < NumPlayers(); ii++) {
+    const auto& subsystem = subsystems_[ii];
+    const Dimension xdim = subsystem->XDim();
+    subsystem->ModifyStateGradient(q->l.segment(x_dims_so_far, xdim));
+    x_dims_so_far += xdim;        
   }
 }
 

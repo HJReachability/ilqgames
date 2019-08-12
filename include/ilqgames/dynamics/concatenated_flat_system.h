@@ -75,9 +75,9 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
 
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
-  // Gradient and hessian of map from xi to x.
-  void GradientAndHessianXi(const VectorXf& xi, VectorXf* grad,
-                            MatrixXf* hess) const;
+  void ChangeCostCoordinates(const VectorXf& xi, 
+                             const std::vector<VectorXf>& vs, 
+                             QuadraticCostApproximation* q) const;
 
   // Getters.
   Dimension UDim(PlayerIndex player_idx) const {
