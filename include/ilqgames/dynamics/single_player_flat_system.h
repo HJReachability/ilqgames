@@ -74,9 +74,8 @@ class SinglePlayerFlatSystem {
 
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
 
-  // Gradient and hessian of map from xi to x.
-  virtual void GradientAndHessianXi(const VectorXf& xi, Eigen::Ref<VectorXf> grad,
-                                    Eigen::Ref<MatrixXf> hess) const = 0;
+  // Function to convert dg/dx to dg/dxi.
+  virtual void ModifyStateGradient(Eigen::Ref<VectorXf> l) const = 0;
 
   // Getters.
   Dimension XDim() const { return xdim_; }
