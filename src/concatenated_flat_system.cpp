@@ -50,13 +50,15 @@ namespace ilqgames {
 
 ConcatenatedFlatSystem::ConcatenatedFlatSystem(
     const FlatSubsystemList& subsystems, Time time_step)
-    : MultiPlayerFlatSystem(std::accumulate(
-          subsystems.begin(), subsystems.end(), 0,
-          [](Dimension total,
-             const std::shared_ptr<SinglePlayerFlatSystem>& subsystem) {
-            CHECK_NOTNULL(subsystem.get());
-            return total + subsystem->XDim();
-          }), time_step),
+    : MultiPlayerFlatSystem(
+          std::accumulate(
+              subsystems.begin(), subsystems.end(), 0,
+              [](Dimension total,
+                 const std::shared_ptr<SinglePlayerFlatSystem>& subsystem) {
+                CHECK_NOTNULL(subsystem.get());
+                return total + subsystem->XDim();
+              }),
+          time_step),
       subsystems_(subsystems) {}
 
 VectorXf ConcatenatedFlatSystem::Evaluate(
@@ -68,8 +70,8 @@ VectorXf ConcatenatedFlatSystem::Evaluate(
   Dimension dims_so_far = 0;
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem = subsystems_[ii];
-    xdot.segment(dims_so_far, subsystem->XDim()) = subsystem->Evaluate(
-        x.segment(dims_so_far, subsystem->XDim()), us[ii]);
+    xdot.segment(dims_so_far, subsystem->XDim()) =
+        subsystem->Evaluate(x.segment(dims_so_far, subsystem->XDim()), us[ii]);
     dims_so_far += subsystem->XDim();
   }
 
@@ -86,24 +88,26 @@ void ConcatenatedFlatSystem::ComputeLinearizedSystem() const {
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
     subsystem->LinearizedSystem(
-        time_step_,
-        linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
+        time_step_, linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
         linearization.Bs[ii].block(dims_so_far, 0, xdim, udim));
 
-    dims_so_far += xdim;  
+    dims_so_far += xdim;
   }
 
   discrete_linear_system_.reset(new LinearDynamicsApproximation(linearization));
-  
-  // Reconstruct the continuous system. 
-  linearization.A -= MatrixXf::Identity(XDim(),XDim());
+
+  // Reconstruct the continuous system.
+  linearization.A -= MatrixXf::Identity(XDim(), XDim());
   linearization.A /= time_step_;
-  for (size_t ii = 0; ii < NumPlayers(); ii++) linearization.Bs[ii] /= time_step_;
-  continuous_linear_system_.reset(new LinearDynamicsApproximation(linearization));
+  for (size_t ii = 0; ii < NumPlayers(); ii++)
+    linearization.Bs[ii] /= time_step_;
+  continuous_linear_system_.reset(
+      new LinearDynamicsApproximation(linearization));
 }
 
-MatrixXf ConcatenatedFlatSystem::InverseDecouplingMatrix(const VectorXf& x) const { 
-  // Populate a block-diagonal inverse decoupling matrix M. 
+MatrixXf ConcatenatedFlatSystem::InverseDecouplingMatrix(
+    const VectorXf& x) const {
+  // Populate a block-diagonal inverse decoupling matrix M.
   MatrixXf M = MatrixXf::Zero(TotalUDim(), TotalUDim());
 
   Dimension x_dims_so_far = 0;
@@ -113,17 +117,17 @@ MatrixXf ConcatenatedFlatSystem::InverseDecouplingMatrix(const VectorXf& x) cons
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
     M.block(u_dims_so_far, u_dims_so_far, udim, udim) =
-      subsystem->InverseDecouplingMatrix(x.segment(x_dims_so_far,xdim));
+        subsystem->InverseDecouplingMatrix(x.segment(x_dims_so_far, xdim));
 
-    x_dims_so_far += xdim;  
+    x_dims_so_far += xdim;
     u_dims_so_far += udim;
   }
 
   return M;
 }
 
-VectorXf ConcatenatedFlatSystem::AffineTerm(const VectorXf& x) const{
-  // Populate the affine term m for each subsystem. 
+VectorXf ConcatenatedFlatSystem::AffineTerm(const VectorXf& x) const {
+  // Populate the affine term m for each subsystem.
   VectorXf m(TotalUDim());
 
   Dimension x_dims_so_far = 0;
@@ -133,9 +137,9 @@ VectorXf ConcatenatedFlatSystem::AffineTerm(const VectorXf& x) const{
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
     m.segment(u_dims_so_far, udim) =
-      subsystem->AffineTerm(x.segment(x_dims_so_far,xdim));
+        subsystem->AffineTerm(x.segment(x_dims_so_far, xdim));
 
-    x_dims_so_far += xdim;  
+    x_dims_so_far += xdim;
     u_dims_so_far += udim;
   }
 
@@ -143,7 +147,7 @@ VectorXf ConcatenatedFlatSystem::AffineTerm(const VectorXf& x) const{
 }
 
 VectorXf ConcatenatedFlatSystem::LinearizingControl(const VectorXf& x,
-                            const VectorXf& v) const{
+                                                    const VectorXf& v) const {
   VectorXf u(TotalUDim());
 
   Dimension x_dims_so_far = 0;
@@ -152,18 +156,17 @@ VectorXf ConcatenatedFlatSystem::LinearizingControl(const VectorXf& x,
     const auto& subsystem = subsystems_[ii];
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
-    u.segment(u_dims_so_far, udim) =
-      subsystem->LinearizingControl(x.segment(x_dims_so_far,xdim),
-                                    v.segment(u_dims_so_far,udim));
+    u.segment(u_dims_so_far, udim) = subsystem->LinearizingControl(
+        x.segment(x_dims_so_far, xdim), v.segment(u_dims_so_far, udim));
 
-    x_dims_so_far += xdim;  
+    x_dims_so_far += xdim;
     u_dims_so_far += udim;
   }
 
-  return u; 
+  return u;
 }
 
-VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const{
+VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const {
   VectorXf xi(XDim());
 
   Dimension x_dims_so_far = 0;
@@ -171,15 +174,16 @@ VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const{
     const auto& subsystem = subsystems_[ii];
     const Dimension xdim = subsystem->XDim();
     xi.segment(x_dims_so_far, xdim) =
-      subsystem->ToLinearSystemState(x.segment(x_dims_so_far,xdim));
+        subsystem->ToLinearSystemState(x.segment(x_dims_so_far, xdim));
 
     x_dims_so_far += xdim;
   }
 
-  return xi;   
+  return xi;
 }
 
-VectorXf ConcatenatedFlatSystem::FromLinearSystemState(const VectorXf& xi) const{
+VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
+    const VectorXf& xi) const {
   VectorXf x(XDim());
 
   Dimension x_dims_so_far = 0;
@@ -187,104 +191,118 @@ VectorXf ConcatenatedFlatSystem::FromLinearSystemState(const VectorXf& xi) const
     const auto& subsystem = subsystems_[ii];
     const Dimension xdim = subsystem->XDim();
     x.segment(x_dims_so_far, xdim) =
-      subsystem->FromLinearSystemState(xi.segment(x_dims_so_far,xdim));
+        subsystem->FromLinearSystemState(xi.segment(x_dims_so_far, xdim));
 
     x_dims_so_far += xdim;
   }
 
-  return x;   
+  return x;
 }
 
 // Gradient and hessian of map from xi to x.
-void ConcatenatedFlatSystem::GradientAndHessianXi(const VectorXf& xi, VectorXf* grad,
-                          MatrixXf* hess) const{
+void ConcatenatedFlatSystem::GradientAndHessianXi(const VectorXf& xi,
+                                                  VectorXf* grad,
+                                                  MatrixXf* hess) const {
   // Populate a gradient and hessian.
   CHECK_NOTNULL(grad);
   CHECK_NOTNULL(hess);
 
   // Initialize with zeros.
   *grad = VectorXf::Zero(xi.size());
-  *hess = MatrixXf::Zero(xi.size(), xi.size()); 
+  *hess = MatrixXf::Zero(xi.size(), xi.size());
 
   Dimension x_dims_so_far = 0;
   for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem = subsystems_[ii];
     const Dimension xdim = subsystem->XDim();
-    subsystem->GradientAndHessianXi(xi.segment(x_dims_so_far, xdim), 
-                                    grad->segment(x_dims_so_far, xdim),
-                                    hess->block(x_dims_so_far, x_dims_so_far, xdim, xdim));
+    subsystem->GradientAndHessianXi(
+        xi.segment(x_dims_so_far, xdim), grad->segment(x_dims_so_far, xdim),
+        hess->block(x_dims_so_far, x_dims_so_far, xdim, xdim));
 
-    x_dims_so_far += xdim; 
+    x_dims_so_far += xdim;
   }
 }
 
-void ConcatenatedFlatSystem::ChangeCostCoordinates(const VectorXf& xi, 
-                           const std::vector<VectorXf>& vs, 
-                           std::vector<QuadraticCostApproximation>* q) {
+void ConcatenatedFlatSystem::ChangeCostCoordinates(
+    const VectorXf& xi, const std::vector<VectorXf>& vs,
+    std::vector<QuadraticCostApproximation>* q) {
   CHECK_NOTNULL(q);
 
   // For loop for hessian.
   // Vector that is going to contain all the cost hessians for each player.
-  std::vector<MatrixXf> hess_xs(q->size(),MatrixXf::Zero((XDim(),XDim())));
+  std::vector<MatrixXf> hess_xs(q->size(), MatrixXf::Zero((XDim(), XDim())));
   Dimension rows_so_far = 0;
 
   // Iterating over primary player indexes.
-  for(PlayerIndex pp=0; pp < NumPlayers(); pp++) {
+  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
     Dimension cols_so_far = rows_so_far;
     // Iterating over that player's number of dimensions.
-    for(Dimension ii=0; ii < XDim(pp); ii++) {
-      const Dimension ii_rows = ii+rows_so_far; 
+    for (Dimension ii = 0; ii < XDim(pp); ii++) {
+      const Dimension ii_rows = ii + rows_so_far;
 
       // Iterating over secondary player indexes.
-      for(PlayerIndex qq=pp; qq < NumPlayers(); qq++) {
+      for (PlayerIndex qq = pp; qq < NumPlayers(); qq++) {
         // Iterating over that player's number of dimensions.
-        for(Dimension jj=0; jj < XDim(qq); jj++) {
-          const Dimension jj_cols = jj+cols_so_far;
+        for (Dimension jj = 0; jj < XDim(qq); jj++) {
+          const Dimension jj_cols = jj + cols_so_far;
 
           // Iterating over each player's cost.
-          for(PlayerIndex rr=0; rr < NumPlayers(); rr++) {
-            const MatrixXf& Q = (*q)[rr].Q; 
+          for (PlayerIndex rr = 0; rr < NumPlayers(); rr++) {
+            const MatrixXf& Q = (*q)[rr].Q;
             const VectorXf& l = (*q)[rr].l;
-            MatrixXf&  xhess = hess_xs[rr]; 
-            for(Dimension kk=0; kk < XDim(pp); kk++) { // CHANGE KK?
-              if(Indicator(ii_rows,kk)) {
-                if(Indicator(ii_rows,jj_cols)) {
-                  xhess(ii_rows,jj_cols) += l(kk+rows_so_far) * subsystems_[pp]->Partial<kk,ii,jj>(); 
-                }
-                for(Dimension ll=0; ll < XDim(qq); ll++) { // CHANGE LL?
-                  double tmp = 0;
-                  if(Indicator(ll,jj_cols)) {
-                    tmp += Q(kk+rows_so_far,ll+cols_so_far) * subsystems_[pp]->Partial<ll,jj,-1>();
-                  }
-                }
-                xhess(ii_rows,jj_cols) += tmp * subsystems_[pp]->Partial<ll,ii,-1>();
+            MatrixXf& xhess = hess_xs[rr];
+            for (Dimension kk = 0; kk < XDim(pp); kk++) {
+              if (pp == qq) {
+                xhess(ii_rows, jj_cols) +=
+                    l(kk + rows_so_far) *
+                    subsystems_[pp]->Partial<kk, ii, jj>();
               }
+
+              float tmp = 0.0;
+              for (Dimension ll = 0; ll < XDim(qq); ll++) {  // CHANGE LL?
+                tmp += Q(kk + rows_so_far, ll + cols_so_far) *
+                       subsystems_[qq]->Partial<ll, jj>();
+              }
+
+              xhess(ii_rows, jj_cols) +=
+                  tmp * subsystems_[pp]->Partial<kk, ii>();
             }
           }
-          cols_so_far += XDim(qq);
 
+          // Increment columns so far to track next subsystem.
+          cols_so_far += XDim(qq);
         }
       }
+
+      // Increment rows so far to track next subsystem.
       rows_so_far += XDim(pp);
     }
   }
+
+  // Now modify the state gradient, i.e. 'l'.
+  // TODO!
+
+  // Now modify the cost hessians, i.e. 'Rs'.
+  // NOTE: this depends only on the decoupling matrix.
+  // TODO!
+
   //   const auto& subsystem = subsystems_[pp];
   //   const Dimension xdim = subsystem->XDim();
   //   // Modify l.
   //   subsystem->ModifyStateGradient(q->l.segment(x_dims_so_far, xdim));
 
-  //   x_dims_so_far += xdim;        
+  //   x_dims_so_far += xdim;
   // }
 
   // For loop for gradient.
   Dimension x_dims_so_far = 0;
-  for(PlayerIndex pp=0; pp < NumPlayers(); pp++) {
+  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
     const auto& subsystem = subsystems_[pp];
     const Dimension xdim = subsystem->XDim();
     // Modify l.
     subsystem->ModifyStateGradient(q->l.segment(x_dims_so_far, xdim));
 
-    x_dims_so_far += xdim;        
+    x_dims_so_far += xdim;
   }
 }
 

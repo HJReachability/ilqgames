@@ -51,17 +51,18 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <memory>
 #include <vector>
-#include <glog/logging.h>
 
 namespace ilqgames {
 
 bool ILQFlatSolver::Solve(const VectorXf& xi0,
-                      const OperatingPoint& initial_operating_point,
-                      const std::vector<Strategy>& initial_strategies,
-                      OperatingPoint* final_operating_point,
-                      std::vector<Strategy>* final_strategies, SolverLog* log) {
+                          const OperatingPoint& initial_operating_point,
+                          const std::vector<Strategy>& initial_strategies,
+                          OperatingPoint* final_operating_point,
+                          std::vector<Strategy>* final_strategies,
+                          SolverLog* log) {
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
@@ -89,8 +90,8 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   // Preallocate vectors for linearizations and quadraticizations.
   // Both are time-indexed (and quadraticizations' inner vector is indexed by
   // player).
-  std::vector<LinearDynamicsApproximation> linearization(num_time_steps_,
-                                                  dynamics_->LinearizedSystem());
+  std::vector<LinearDynamicsApproximation> linearization(
+      num_time_steps_, dynamics_->LinearizedSystem());
   std::vector<std::vector<QuadraticCostApproximation>> quadraticization(
       num_time_steps_);
   for (auto& quads : quadraticization)
@@ -99,7 +100,7 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
 
   // Preallocate vector of non-linear system controls.
   std::vector<VectorXf> us(dynamics_->NumPlayers());
-  for (PlayerIndex ii=0; ii < dynamics_->NumPlayers(); ii++)
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
     u.resize(dynamics_->UDim(ii));
 
   // Number of iterations, starting from 0.
@@ -126,18 +127,18 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
       const auto& vs = current_operating_point.us[kk];
 
       // Quadraticize costs.
-      std::transform(player_costs_.begin(), player_costs_.end(),
-                     quadraticization[kk].begin(),
-                     [&t, &xi, &vs, &us](const PlayerCost& cost) {
-                       const VectorXf x = dynamics_->FromLinearSystemState(xi);
-                       for (PlayerIndex ii=0; ii < dynamics_->NumPlayers(); ii++)
-                          us[ii] = dynamics_->LinearizingControl(x, vs[ii]);
-                       QuadraticCostApproximation q = cost.Quadraticize(t, x, us);
-                       return q;
-                     });
+      std::transform(
+          player_costs_.begin(), player_costs_.end(),
+          quadraticization[kk].begin(),
+          [&t, &xi, &vs, &us](const PlayerCost& cost) {
+            const VectorXf x = dynamics_->FromLinearSystemState(xi);
+            for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+              us[ii] = dynamics_->LinearizingControl(x, vs[ii]);
+            QuadraticCostApproximation q = cost.Quadraticize(t, x, us);
+            return q;
+          });
 
       dynamics_->ChangeCostCoordinates(xi, vs, &quadraticization[kk]);
-
     }
 
     // Solve LQ game.
