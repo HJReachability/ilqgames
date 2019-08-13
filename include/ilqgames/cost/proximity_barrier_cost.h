@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Penalizes (thresh - relative distance)^2 between two pairs of state
+// Penalizes -log(relative distance^2 - threshold^2) between two pairs of state
 // dimensions (representing two positions of vehicles whose states have been
-// concatenated) whenever relative distance is less than thresh.
+// concatenated).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_PROXIMITY_COST_H
-#define ILQGAMES_COST_PROXIMITY_COST_H
+#ifndef ILQGAMES_COST_PROXIMITY_BARRIER_COST_H
+#define ILQGAMES_COST_PROXIMITY_BARRIER_COST_H
 
 #include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
@@ -52,14 +52,13 @@
 
 namespace ilqgames {
 
-class ProximityCost : public TimeInvariantCost {
+class ProximityBarrierCost : public TimeInvariantCost {
  public:
-  ProximityCost(float weight,
-                const std::pair<Dimension, Dimension>& position_idxs1,
-                const std::pair<Dimension, Dimension>& position_idxs2,
-                float threshold, const std::string& name = "")
+  ProximityBarrierCost(float weight,
+                       const std::pair<Dimension, Dimension>& position_idxs1,
+                       const std::pair<Dimension, Dimension>& position_idxs2,
+                       float threshold, const std::string& name = "")
       : TimeInvariantCost(weight, name),
-        threshold_(threshold),
         threshold_sq_(threshold * threshold),
         xidx1_(position_idxs1.first),
         yidx1_(position_idxs1.second),
@@ -76,7 +75,7 @@ class ProximityCost : public TimeInvariantCost {
 
  private:
   // Threshold for minimum squared relative distance.
-  const float threshold_, threshold_sq_;
+  const float threshold_sq_;
 
   // Position indices for two vehicles.
   const Dimension xidx1_, yidx1_;
