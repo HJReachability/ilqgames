@@ -220,14 +220,70 @@ void ConcatenatedFlatSystem::GradientAndHessianXi(const VectorXf& xi, VectorXf* 
 
 void ConcatenatedFlatSystem::ChangeCostCoordinates(const VectorXf& xi, 
                            const std::vector<VectorXf>& vs, 
-                           QuadraticCostApproximation* q) {
+                           std::vector<QuadraticCostApproximation>* q) {
   CHECK_NOTNULL(q);
 
+  // For loop for hessian.
+  // Vector that is going to contain all the cost hessians for each player.
+  std::vector<MatrixXf> hess_xs(q->size(),MatrixXf::Zero((XDim(),XDim())));
+  Dimension rows_so_far = 0;
+
+  // Iterating over primary player indexes.
+  for(PlayerIndex pp=0; pp < NumPlayers(); pp++) {
+    Dimension cols_so_far = rows_so_far;
+    // Iterating over that player's number of dimensions.
+    for(Dimension ii=0; ii < XDim(pp); ii++) {
+      const Dimension ii_rows = ii+rows_so_far; 
+
+      // Iterating over secondary player indexes.
+      for(PlayerIndex qq=pp; qq < NumPlayers(); qq++) {
+        // Iterating over that player's number of dimensions.
+        for(Dimension jj=0; jj < XDim(qq); jj++) {
+          const Dimension jj_cols = jj+cols_so_far;
+
+          // Iterating over each player's cost.
+          for(PlayerIndex rr=0; rr < NumPlayers(); rr++) {
+            const MatrixXf& Q = (*q)[rr].Q; 
+            const VectorXf& l = (*q)[rr].l;
+            MatrixXf&  xhess = hess_xs[rr]; 
+            for(Dimension kk=0; kk < XDim(pp); kk++) { // CHANGE KK?
+              if(Indicator(ii_rows,kk)) {
+                if(Indicator(ii_rows,jj_cols)) {
+                  xhess(ii_rows,jj_cols) += l(kk+rows_so_far) * subsystems_[pp]->Partial<kk,ii,jj>(); 
+                }
+                for(Dimension ll=0; ll < XDim(qq); ll++) { // CHANGE LL?
+                  double tmp = 0;
+                  if(Indicator(ll,jj_cols)) {
+                    tmp += Q(kk+rows_so_far,ll+cols_so_far) * subsystems_[pp]->Partial<ll,jj,-1>();
+                  }
+                }
+                xhess(ii_rows,jj_cols) += tmp * subsystems_[pp]->Partial<ll,ii,-1>();
+              }
+            }
+          }
+          cols_so_far += XDim(qq);
+
+        }
+      }
+      rows_so_far += XDim(pp);
+    }
+  }
+  //   const auto& subsystem = subsystems_[pp];
+  //   const Dimension xdim = subsystem->XDim();
+  //   // Modify l.
+  //   subsystem->ModifyStateGradient(q->l.segment(x_dims_so_far, xdim));
+
+  //   x_dims_so_far += xdim;        
+  // }
+
+  // For loop for gradient.
   Dimension x_dims_so_far = 0;
-  for(PlayerIndex ii=0; ii < NumPlayers(); ii++) {
-    const auto& subsystem = subsystems_[ii];
+  for(PlayerIndex pp=0; pp < NumPlayers(); pp++) {
+    const auto& subsystem = subsystems_[pp];
     const Dimension xdim = subsystem->XDim();
+    // Modify l.
     subsystem->ModifyStateGradient(q->l.segment(x_dims_so_far, xdim));
+
     x_dims_so_far += xdim;        
   }
 }
