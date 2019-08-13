@@ -102,7 +102,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     VLOG(0) << "Solved warm-started problem in " << elapsed_time << " seconds.";
 
     // Integrate dynamics forward.
-    constexpr Time kExtraTime = 1.0;
+    constexpr Time kExtraTime = 0.1;
     x = dynamics.Integrate(t, t + elapsed_time + kExtraTime, time_step, x,
                            splicer.CurrentOperatingPoint(),
                            splicer.CurrentStrategies());
