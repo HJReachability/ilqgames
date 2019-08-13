@@ -133,9 +133,11 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
                        for (PlayerIndex ii=0; ii < dynamics_->NumPlayers(); ii++)
                           us[ii] = dynamics_->LinearizingControl(x, vs[ii]);
                        QuadraticCostApproximation q = cost.Quadraticize(t, x, us);
-                       dynamics_->ChangeCostCoordinates(xi, vs, &q);
                        return q;
                      });
+
+      dynamics_->ChangeCostCoordinates(xi, vs, &quadraticization[kk]);
+
     }
 
     // Solve LQ game.

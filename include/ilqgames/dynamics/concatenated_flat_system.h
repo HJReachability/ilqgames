@@ -77,9 +77,12 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
 
   void ChangeCostCoordinates(const VectorXf& xi, 
                              const std::vector<VectorXf>& vs, 
-                             QuadraticCostApproximation* q) const;
+                             std::vector<QuadraticCostApproximation>* q) const;
 
   // Getters.
+  Dimension XDim(PlayerIndex player_idx) const {
+    return subsystems_[player_idx]->XDim();
+  }
   Dimension UDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->UDim();
   }

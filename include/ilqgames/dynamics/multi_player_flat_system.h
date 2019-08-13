@@ -75,7 +75,7 @@ class MultiPlayerFlatSystem {
 
   // Gradient and hessian of map from xi to x.
   virtual void ChangeCostCoordinates(const VectorXf& xi, const std::vector<VectorXf>& vs,
-                                     QuadraticCostApproximation* q) const = 0;
+                                     std::vector<QuadraticCostApproximation>* q) const = 0;
 
   // Integrate these dynamics forward in time.
   // Options include integration for a single timestep, between arbitrary times,
