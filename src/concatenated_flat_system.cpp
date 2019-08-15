@@ -279,31 +279,49 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
     }
   }
 
-  // Now modify the state gradient, i.e. 'l'.
-  // TODO!
+  // For loop for gradient.
+  // Vector that is going to contain all the cost gradients for each player.
+  std::vector<VectorXf> grad_xs(q->size(), VectorXf::Zero(XDim()));
+  rows_so_far = 0;
+
+  // Iterating over primary player indexes.
+  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
+    // Iterating over that player's number of dimensions.
+    for (Dimension ii = 0; ii < XDim(pp); ii++) {
+      const VectorXf& l = (*q)[ii].l;
+
+      // Iterating over each player's cost.
+      for (Dimension jj = 0; jj < XDim(pp); jj++) {
+        grad_xs += l(ii+rows_so_far) * subsystems_[pp]->Partial<jj,ii>();
+      }
+
+    }
+    // Increment rows so far to track next subsystem.
+    rows_so_far += XDim(pp);
+  }
 
   // Now modify the cost hessians, i.e. 'Rs'.
   // NOTE: this depends only on the decoupling matrix.
-  // TODO!
+  const VectorXf x = FromLinearSystemState(xi);
+  const Dimension total_u_dim = TotalUDim();
 
-  //   const auto& subsystem = subsystems_[pp];
-  //   const Dimension xdim = subsystem->XDim();
-  //   // Modify l.
-  //   subsystem->ModifyStateGradient(q->l.segment(x_dims_so_far, xdim));
-
-  //   x_dims_so_far += xdim;
-  // }
-
-  // For loop for gradient.
-  Dimension x_dims_so_far = 0;
-  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
-    const auto& subsystem = subsystems_[pp];
-    const Dimension xdim = subsystem->XDim();
-    // Modify l.
-    subsystem->ModifyStateGradient(q->l.segment(x_dims_so_far, xdim));
-
-    x_dims_so_far += xdim;
+  Dimension x_dims_so_far;
+  Dimension u_dims_so_far;
+  for (size_t ii = 0; ii < NumPlayers(); ii++) {
+    x_dims_so_far = 0;
+    u_dims_so_far = 0;
+    for (auto& element : (*q)[ii].Rs) {
+      const auto& subsystem_jj = subsystems_[element.first];
+      const Dimension xdim = subsystem_jj->XDim();
+      const Dimension udim = subsystem_jj->UDim();
+      element.second.block(0, u_dims_so_far, total_u_dim, udim) =\
+        element.second.block(0, u_dims_so_far, total_u_dim, udim) *\ 
+        subsystem_jj->InverseDecouplingMatrix(x.segment(x_dims_so_far, xdim));
+      u_dims_so_far += udim;
+      x_dims_so_far += xdim;
+    }
   }
+
 }
 
 }  // namespace ilqgames
