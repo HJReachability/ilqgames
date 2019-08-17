@@ -65,6 +65,11 @@ class SinglePlayerDynamicalSystem {
                          const VectorXf& u, Eigen::Ref<MatrixXf> A,
                          Eigen::Ref<MatrixXf> B) const = 0;
 
+  // Distance metric on the state space. By default, just the *squared* 2-norm.
+  virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
+    return (x0 - x1).squaredNorm();
+  }
+
   // Getters.
   Dimension XDim() const { return xdim_; }
   Dimension UDim() const { return udim_; }

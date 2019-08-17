@@ -48,6 +48,8 @@
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/types.h>
 
+#include <algorithm>
+
 namespace ilqgames {
 
 class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
@@ -63,6 +65,9 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
   LinearDynamicsApproximation Linearize(Time t, Time time_step,
                                         const VectorXf& x,
                                         const std::vector<VectorXf>& us) const;
+
+  // Distance metric between two states.
+  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Getters.
   Dimension UDim(PlayerIndex player_idx) const {
