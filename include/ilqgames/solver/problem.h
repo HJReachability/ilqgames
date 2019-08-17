@@ -70,8 +70,9 @@ class Problem {
   // points to start at the specified runtime after the current time t0.
   // Since time is continuous and we will want to maintain the same fixed
   // discretization, we will integrate x0 forward from t0 by approximately
-  // planner_runtime as the new initial state/time. By default, extends
-  // operating points and strategies as follows:
+  // planner_runtime, then find the nearest state in the existing plan to that
+  // state, and start from there. By default, extends operating points and
+  // strategies as follows:
   // 1. new controls are zero
   // 2. new states are those that result from zero control
   // 3. new strategies are also zero
