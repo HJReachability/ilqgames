@@ -69,6 +69,9 @@ class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
                                         const VectorXf& x,
                                         const std::vector<VectorXf>& us) const;
 
+  // Distance metric between two states.
+  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
+
   // Getters.
   Dimension UDim(PlayerIndex player_idx) const {
     DCHECK(player_idx == 0 || player_idx == 1);
@@ -132,6 +135,14 @@ inline LinearDynamicsApproximation TwoPlayerUnicycle4D::Linearize(
   linearization.Bs[1](kPyIdx, kDyIdx) = time_step;
 
   return linearization;
+}
+
+inline float TwoPlayerUnicycle4D::DistanceBetween(const VectorXf& x0,
+                                                  const VectorXf& x1) const {
+  // Squared distance in position space.
+  const float dx = x0(kPxIdx) - x1(kPxIdx);
+  const float dy = x0(kPyIdx) - x1(kPyIdx);
+  return dx * dx + dy * dy;
 }
 
 }  // namespace ilqgames
