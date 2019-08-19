@@ -79,8 +79,72 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
 
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
-  void GradientAndHessianXi(const VectorXf& xi, Eigen::Ref<VectorXf> grad,
-                            Eigen::Ref<MatrixXf> hess)
+  // Partial derivatives of map from xi to x.
+  template<Dimension ii,Dimension jj>
+  float Partial(const VectorXf& xi) const { return 0.0; }
+
+  template<>
+  float Partial<kPxIdx, kPxIdx>(const VectorXf& xi) const { return 1.0; }
+
+  template<>
+  float Partial<kPyIdx, kPyIdx>(const VectorXf& xi) const { return 1.0; }
+
+  template<>
+  float Partial<kThetaIdx, kVxIdx>(const VectorXf& xi) const { 
+    return -xi(kVyIdx)/(xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx)); }
+
+  template<>
+  float Partial<kThetaIdx, kVyIdx>(const VectorXf& xi) const { 
+    return xi(kVxIdx)/(xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx)); }
+
+  template<>
+  float Partial<kVIdx, kVxIdx>(const VectorXf& xi) const { 
+    return xi(kVxIdx)/std::hypot(xi(kVxIdx),xi(kVyIdx)); }
+
+  template<>
+  float Partial<kVIdx, kVyIdx>(const VectorXf& xi) const { 
+    return xi(kVyIdx)/std::hypot(xi(kVxIdx),xi(kVyIdx)); }
+
+  template<Dimension kk,Dimension ii,Dimension jj>
+  float Partial(const VectorXf& xi) const { return 0.0; }
+
+  template<>
+  float Partial<kThetaIdx, kVxIdx, kVxIdx>(const VectorXf& xi) const {
+    const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
+    return 2.0 * xi(kVxIdx) * xi(kVyIdx)/(norm_squared * norm_squared); }
+
+  template<>
+  float Partial<kThetaIdx, kVxIdx, kVyIdx>(const VectorXf& xi) const { 
+    const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
+    return (xi(kVyIdx)*xi(kVyIdx) - xi(kVxIdx)*xi(kVxIdx))/(norm_squared * norm_squared); }
+
+  template<>
+  float Partial<kThetaIdx, kVyIdx, kVxIdx>(const VectorXf& xi) const { 
+    return Partial<kThetaIdx, kVxIdx, kVyIdx>(xi); }
+
+  template<>
+  float Partial<kThetaIdx, kVyIdx, kVyIdx>(const VectorXf& xi) const {
+    const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
+    return -2.0 * xi(kVxIdx) * xi(kVyIdx)/(norm_squared * norm_squared); }
+
+  template<>
+  float Partial<kVIdx, kVxIdx, kVxIdx>(const VectorXf& xi) const { 
+    const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
+    return (xi(kVyIdx) * xi(kVyIdx))/std::sqrt(norm_squared * norm_squared * norm_squared); }
+
+  template<>
+  float Partial<kVIdx, kVxIdx, kVyIdx>(const VectorXf& xi) const { 
+    const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
+    return (-xi(kVxIdx) * xi(kVyIdx))/std::sqrt(norm_squared * norm_squared * norm_squared); }
+
+  template<>
+  float Partial<kVIdx, kVyIdx, kVxIdx>(const VectorXf& xi) const { 
+    return Partial<kVIdx, kVxIdx, kVyIdx>(xi); }
+
+  template<>
+  float Partial<kVIdx, kVyIdx, kVyIdx>(const VectorXf& xi) const { 
+    const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
+    return (xi(kVxIdx) * xi(kVxIdx))/std::sqrt(norm_squared * norm_squared * norm_squared); }
 
   // Constexprs for state indices.
   static constexpr Dimension kNumXDims = 4;
@@ -160,11 +224,6 @@ inline VectorXf FromLinearSystemState(const VectorXf& xi) const{
   x(kVIdx) = std::hypot(xi(kVyIdx),xi(kVxIdx));
 
   return x;
-}
-
-inline void GradientAndHessianXi(const VectorXf& xi, Eigen::Ref<VectorXf> grad,
-                                    Eigen::Ref<MatrixXf> hess) const{
-
 }
 
 }  // namespace ilqgames

@@ -74,8 +74,13 @@ class SinglePlayerFlatSystem {
 
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
 
-  // Function to convert dg/dx to dg/dxi.
-  virtual void ModifyStateGradient(Eigen::Ref<VectorXf> l) const = 0;
+  // Partial derivatives of map from xi to x.
+  template<Dimension ii,Dimension jj>
+  float Partial(const VectorXf& xi) const = 0;
+
+  template<Dimension kk,Dimension ii,Dimension jj>
+  float Partial(const VectorXf& xi) const = 0;
+
 
   // Getters.
   Dimension XDim() const { return xdim_; }
