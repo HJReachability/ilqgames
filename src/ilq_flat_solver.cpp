@@ -101,7 +101,7 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   // Preallocate vector of non-linear system controls.
   std::vector<VectorXf> us(dynamics_->NumPlayers());
   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-    u.resize(dynamics_->UDim(ii));
+    us[ii].resize(dynamics_->UDim(ii));
 
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;
@@ -130,7 +130,7 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
       std::transform(
           player_costs_.begin(), player_costs_.end(),
           quadraticization[kk].begin(),
-          [&t, &xi, &vs, &us](const PlayerCost& cost) {
+          [this,&t, &xi, &vs, &us](const PlayerCost& cost) {
             const VectorXf x = dynamics_->FromLinearSystemState(xi);
             for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
               us[ii] = dynamics_->LinearizingControl(x, vs[ii]);
@@ -187,7 +187,7 @@ void ILQFlatSolver::CurrentOperatingPoint(
 
     // Integrate dynamics for one time step.
     if (kk < num_time_steps_ - 1)
-      x = dynamics_->Integrate(t, time_step_, x, current_us);
+      x = dynamics_->Integrate(time_step_, x, current_us);
   }
 }
 

@@ -75,12 +75,8 @@ class SinglePlayerFlatSystem {
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
 
   // Partial derivatives of map from xi to x.
-  template<Dimension ii,Dimension jj>
-  float Partial(const VectorXf& xi) const = 0;
-
-  template<Dimension kk,Dimension ii,Dimension jj>
-  float Partial(const VectorXf& xi) const = 0;
-
+  virtual void Partial(const VectorXf& xi, std::vector<VectorXf>* grads, 
+                        std::vector<MatrixXf>* hesses) const = 0;
 
   // Getters.
   Dimension XDim() const { return xdim_; }

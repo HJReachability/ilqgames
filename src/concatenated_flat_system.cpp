@@ -97,7 +97,7 @@ void ConcatenatedFlatSystem::ComputeLinearizedSystem() const {
   discrete_linear_system_.reset(new LinearDynamicsApproximation(linearization));
 
   // Reconstruct the continuous system.
-  linearization.A -= MatrixXf::Identity(XDim(), XDim());
+  linearization.A -= MatrixXf::Identity(xdim_, xdim_);
   linearization.A /= time_step_;
   for (size_t ii = 0; ii < NumPlayers(); ii++)
     linearization.Bs[ii] /= time_step_;
@@ -167,7 +167,7 @@ VectorXf ConcatenatedFlatSystem::LinearizingControl(const VectorXf& x,
 }
 
 VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const {
-  VectorXf xi(XDim());
+  VectorXf xi(xdim_);
 
   Dimension x_dims_so_far = 0;
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
@@ -184,7 +184,7 @@ VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const {
 
 VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
     const VectorXf& xi) const {
-  VectorXf x(XDim());
+  VectorXf x(xdim_);
 
   Dimension x_dims_so_far = 0;
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
@@ -200,50 +200,60 @@ VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
 }
 
 // Gradient and hessian of map from xi to x.
-void ConcatenatedFlatSystem::GradientAndHessianXi(const VectorXf& xi,
-                                                  VectorXf* grad,
-                                                  MatrixXf* hess) const {
-  // Populate a gradient and hessian.
-  CHECK_NOTNULL(grad);
-  CHECK_NOTNULL(hess);
+// void ConcatenatedFlatSystem::GradientAndHessianXi(const VectorXf& xi,
+//                                                   VectorXf* grad,
+//                                                   MatrixXf* hess) const {
+//   // Populate a gradient and hessian.
+//   CHECK_NOTNULL(grad);
+//   CHECK_NOTNULL(hess);
 
-  // Initialize with zeros.
-  *grad = VectorXf::Zero(xi.size());
-  *hess = MatrixXf::Zero(xi.size(), xi.size());
+//   // Initialize with zeros.
+//   *grad = VectorXf::Zero(xi.size());
+//   *hess = MatrixXf::Zero(xi.size(), xi.size());
 
-  Dimension x_dims_so_far = 0;
-  for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) {
-    const auto& subsystem = subsystems_[ii];
-    const Dimension xdim = subsystem->XDim();
-    subsystem->GradientAndHessianXi(
-        xi.segment(x_dims_so_far, xdim), grad->segment(x_dims_so_far, xdim),
-        hess->block(x_dims_so_far, x_dims_so_far, xdim, xdim));
+//   Dimension x_dims_so_far = 0;
+//   for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) {
+//     const auto& subsystem = subsystems_[ii];
+//     const Dimension xdim = subsystem->XDim();
+//     subsystem->GradientAndHessianXi(
+//         xi.segment(x_dims_so_far, xdim), grad->segment(x_dims_so_far, xdim),
+//         hess->block(x_dims_so_far, x_dims_so_far, xdim, xdim));
 
-    x_dims_so_far += xdim;
-  }
-}
+//     x_dims_so_far += xdim;
+//   }
+// }
 
 void ConcatenatedFlatSystem::ChangeCostCoordinates(
     const VectorXf& xi, const std::vector<VectorXf>& vs,
-    std::vector<QuadraticCostApproximation>* q) {
+    std::vector<QuadraticCostApproximation>* q) const {
   CHECK_NOTNULL(q);
+
+  std::vector<std::vector<VectorXf>> first_partials;
+  std::vector<std::vector<MatrixXf>> second_partials;
+  Dimension xi_dims_so_far = 0;
+  for(size_t ii=0; ii < NumPlayers(); ii++){
+    const auto& subsystem_ii = subsystems_[ii];
+    const Dimension xdim = subsystem_ii->XDim();
+    subsystem_ii->Partial(xi.segment(xi_dims_so_far,xdim),&first_partials[ii],&second_partials[ii]);
+    xi_dims_so_far += xdim;
+  }
 
   // For loop for hessian.
   // Vector that is going to contain all the cost hessians for each player.
-  std::vector<MatrixXf> hess_xs(q->size(), MatrixXf::Zero((XDim(), XDim())));
+  std::vector<MatrixXf> hess_xs(q->size(), MatrixXf::Zero(xdim_, xdim_));
   Dimension rows_so_far = 0;
 
   // Iterating over primary player indexes.
   for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
     Dimension cols_so_far = rows_so_far;
     // Iterating over that player's number of dimensions.
-    for (Dimension ii = 0; ii < XDim(pp); ii++) {
+    for (Dimension ii = 0; ii < SubsystemXDim(pp); ii++) {
       const Dimension ii_rows = ii + rows_so_far;
 
       // Iterating over secondary player indexes.
       for (PlayerIndex qq = pp; qq < NumPlayers(); qq++) {
         // Iterating over that player's number of dimensions.
-        for (Dimension jj = 0; jj < XDim(qq); jj++) {
+        for (Dimension jj = 0; jj < SubsystemXDim(qq); jj++) {
           const Dimension jj_cols = jj + cols_so_far;
 
           // Iterating over each player's cost.
@@ -251,53 +261,52 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
             const MatrixXf& Q = (*q)[rr].Q;
             const VectorXf& l = (*q)[rr].l;
             MatrixXf& xhess = hess_xs[rr];
-            for (Dimension kk = 0; kk < XDim(pp); kk++) {
+            for (Dimension kk = 0; kk < SubsystemXDim(pp); kk++) {
               if (pp == qq) {
                 xhess(ii_rows, jj_cols) +=
-                    l(kk + rows_so_far) *
-                    subsystems_[pp]->Partial<kk, ii, jj>(xi.segment(rows_so_far,XDim(pp)));
+                    l(kk + rows_so_far) * second_partials[pp][kk](ii,jj);
               }
 
               float tmp = 0.0;
-              for (Dimension ll = 0; ll < XDim(qq); ll++) {
+              for (Dimension ll = 0; ll < SubsystemXDim(qq); ll++) {
                 tmp += Q(kk + rows_so_far, ll + cols_so_far) *
-                       subsystems_[qq]->Partial<ll, jj>(xi.segment(cols_so_far,XDim(qq)));
+                       first_partials[qq][ll](jj);
               }
 
               xhess(ii_rows, jj_cols) +=
-                  tmp * subsystems_[pp]->Partial<kk, ii>(xi.segment(rows_so_far,XDim(pp)));
+                  tmp * first_partials[pp][kk](ii);
             }
           }
 
           // Increment columns so far to track next subsystem.
-          cols_so_far += XDim(qq);
+          cols_so_far += SubsystemXDim(qq);
         }
       }
 
       // Increment rows so far to track next subsystem.
-      rows_so_far += XDim(pp);
+      rows_so_far += SubsystemXDim(pp);
     }
   }
 
   // For loop for gradient.
   // Vector that is going to contain all the cost gradients for each player.
-  std::vector<VectorXf> grad_xs(q->size(), VectorXf::Zero(XDim()));
+  std::vector<VectorXf> grad_xs(q->size(), VectorXf::Zero(xdim_));
   rows_so_far = 0;
 
   // Iterating over primary player indexes.
   for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
     // Iterating over that player's number of dimensions.
-    for (Dimension ii = 0; ii < XDim(pp); ii++) {
+    for (Dimension ii = 0; ii < SubsystemXDim(pp); ii++) {
       const VectorXf& l = (*q)[ii].l;
 
       // Iterating over each player's cost.
-      for (Dimension jj = 0; jj < XDim(pp); jj++) {
-        grad_xs += l(ii+rows_so_far) * subsystems_[pp]->Partial<jj,ii>(xi.segment(rows_so_far,XDim(pp)));
+      for (Dimension jj = 0; jj < SubsystemXDim(pp); jj++) {
+        grad_xs[pp](ii) += l(ii+rows_so_far) * first_partials[pp][jj](ii);
       }
 
     }
     // Increment rows so far to track next subsystem.
-    rows_so_far += XDim(pp);
+    rows_so_far += SubsystemXDim(pp);
   }
 
   // Now modify the cost hessians, i.e. 'Rs'.
@@ -307,7 +316,6 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
   std::vector<MatrixXf> M_invs(NumPlayers());
 
   Dimension x_dims_so_far = 0;
-  Dimension u_dims_so_far = 0;
   for(size_t ii=0; ii < NumPlayers(); ii++){
     const auto& subsystem_ii = subsystems_[ii];
     const Dimension xdim = subsystem_ii->XDim();

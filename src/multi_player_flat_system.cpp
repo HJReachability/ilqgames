@@ -56,7 +56,7 @@ VectorXf MultiPlayerFlatSystem::Integrate(
   constexpr size_t kNumIntegrationSteps = 2;
   const double dt = time_step_ / static_cast<Time>(kNumIntegrationSteps);
 
-  CHECK_NOTNULL(continuous_linear_system_.get())
+  CHECK_NOTNULL(continuous_linear_system_.get());
   auto xi_dot = [this, &vs](const VectorXf& xi) {
     VectorXf deriv = this->continuous_linear_system_->A * xi;
     for (size_t ii=0; ii < NumPlayers(); ii++)
@@ -68,7 +68,7 @@ VectorXf MultiPlayerFlatSystem::Integrate(
   // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods for
   // further details.
   VectorXf xi(xi0);
-  for (Time t = t0; t < t0 + time_interval; t += dt) {
+  for (Time t = 0.0; t < time_interval - 0.5*dt; t += dt) {
     const VectorXf k1 = dt * xi_dot(xi);
     const VectorXf k2 = dt * xi_dot(xi + 0.5 * k1);
     const VectorXf k3 = dt * xi_dot(xi + 0.5 * k2);
@@ -157,7 +157,7 @@ VectorXf MultiPlayerFlatSystem::IntegrateToNextTimeStep(
     vs[ii] = strategies[ii](current_timestep, xi0 - xi0_ref,
                             operating_point.us[current_timestep][ii]);
 
-  return Integrate(t0, remaining_time_this_step, xi0, vs);
+  return Integrate(remaining_time_this_step, xi0, vs);
 }
 
 VectorXf MultiPlayerFlatSystem::IntegrateFromPriorTimeStep(
@@ -177,8 +177,7 @@ VectorXf MultiPlayerFlatSystem::IntegrateFromPriorTimeStep(
                             operating_point.us[current_timestep][ii]);
   }
 
-  return Integrate(operating_point.t0 + time_step_ * current_timestep,
-                   remaining_time_until_t, xi0, vs);
+  return Integrate(remaining_time_until_t, xi0, vs);
 }
 
 }  // namespace ilqgames

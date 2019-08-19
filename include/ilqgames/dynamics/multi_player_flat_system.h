@@ -48,6 +48,7 @@
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 
 #include <vector>
 
