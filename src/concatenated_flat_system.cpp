@@ -255,17 +255,17 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
               if (pp == qq) {
                 xhess(ii_rows, jj_cols) +=
                     l(kk + rows_so_far) *
-                    subsystems_[pp]->Partial<kk, ii, jj>();
+                    subsystems_[pp]->Partial<kk, ii, jj>(xi.segment(rows_so_far,XDim(pp)));
               }
 
               float tmp = 0.0;
-              for (Dimension ll = 0; ll < XDim(qq); ll++) {  // CHANGE LL?
+              for (Dimension ll = 0; ll < XDim(qq); ll++) {
                 tmp += Q(kk + rows_so_far, ll + cols_so_far) *
-                       subsystems_[qq]->Partial<ll, jj>();
+                       subsystems_[qq]->Partial<ll, jj>(xi.segment(cols_so_far,XDim(qq)));
               }
 
               xhess(ii_rows, jj_cols) +=
-                  tmp * subsystems_[pp]->Partial<kk, ii>();
+                  tmp * subsystems_[pp]->Partial<kk, ii>(xi.segment(rows_so_far,XDim(pp)));
             }
           }
 
@@ -292,7 +292,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
       // Iterating over each player's cost.
       for (Dimension jj = 0; jj < XDim(pp); jj++) {
-        grad_xs += l(ii+rows_so_far) * subsystems_[pp]->Partial<jj,ii>();
+        grad_xs += l(ii+rows_so_far) * subsystems_[pp]->Partial<jj,ii>(xi.segment(rows_so_far,XDim(pp)));
       }
 
     }
@@ -304,21 +304,21 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
   // NOTE: this depends only on the decoupling matrix.
   const VectorXf x = FromLinearSystemState(xi);
   const Dimension total_u_dim = TotalUDim();
+  std::vector<MatrixXf> M_invs(NumPlayers());
 
-  Dimension x_dims_so_far;
-  Dimension u_dims_so_far;
+  Dimension x_dims_so_far = 0;
+  Dimension u_dims_so_far = 0;
+  for(size_t ii=0; ii < NumPlayers(); ii++){
+    const auto& subsystem_ii = subsystems_[ii];
+    const Dimension xdim = subsystem_ii->XDim();
+    M_invs[ii] = subsystem_ii->InverseDecouplingMatrix(x.segment(x_dims_so_far, xdim));
+    x_dims_so_far += xdim;
+  }
+
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
-    x_dims_so_far = 0;
-    u_dims_so_far = 0;
     for (auto& element : (*q)[ii].Rs) {
-      const auto& subsystem_jj = subsystems_[element.first];
-      const Dimension xdim = subsystem_jj->XDim();
-      const Dimension udim = subsystem_jj->UDim();
-      element.second.block(0, u_dims_so_far, total_u_dim, udim) =\
-        element.second.block(0, u_dims_so_far, total_u_dim, udim) *\ 
-        subsystem_jj->InverseDecouplingMatrix(x.segment(x_dims_so_far, xdim));
-      u_dims_so_far += udim;
-      x_dims_so_far += xdim;
+      element.second =
+        M_invs[element.first].transpose() * element.second * M_invs[element.first]; 
     }
   }
 
