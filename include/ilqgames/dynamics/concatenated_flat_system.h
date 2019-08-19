@@ -80,7 +80,7 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
                              std::vector<QuadraticCostApproximation>* q) const;
 
   // Getters.
-  Dimension XDim(PlayerIndex player_idx) const {
+  Dimension SubsystemXDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->XDim();
   }
   Dimension UDim(PlayerIndex player_idx) const {
