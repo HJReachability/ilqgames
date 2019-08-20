@@ -166,15 +166,15 @@ std::vector<Strategy> SolveLQGame(
           S_block = BiZi * lin.Bs[jj];
         }
 
-        // Set appropriate blocks of Y.
-        Y.block(cumulative_udim_row, 0, dynamics.UDim(ii), dynamics.XDim()) =
-            BiZi * lin.A;
-        Y.col(dynamics.XDim()).segment(cumulative_udim_row, dynamics.UDim(ii)) =
-            lin.Bs[ii].transpose() * zetas[ii];
-
         // Increment cumulative_udim_col.
         cumulative_udim_col += dynamics.UDim(jj);
       }
+
+      // Set appropriate blocks of Y.
+      Y.block(cumulative_udim_row, 0, dynamics.UDim(ii), dynamics.XDim()) =
+        BiZi * lin.A;
+      Y.col(dynamics.XDim()).segment(cumulative_udim_row, dynamics.UDim(ii)) =
+        lin.Bs[ii].transpose() * zetas[ii];
 
       // Increment cumulative_udim_row.
       cumulative_udim_row += dynamics.UDim(ii);

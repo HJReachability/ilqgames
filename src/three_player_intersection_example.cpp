@@ -50,7 +50,9 @@
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
+#include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
+#include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
 #include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
@@ -94,7 +96,7 @@ static constexpr float kLaneBoundaryCostWeight = 100.0;
 static constexpr float kMinProximity = 4.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
-static constexpr float kP3ProximityCostWeight = 100.0;
+static constexpr float kP3ProximityCostWeight = 10.0;
 
 static constexpr bool kOrientedRight = true;
 
@@ -108,7 +110,7 @@ static constexpr float kP1GoalY = 60.0;  // m
 static constexpr float kP2GoalX = 50.0;  // m
 static constexpr float kP2GoalY = 12.0;  // m
 
-static constexpr float kP3GoalX = 5.0;   // m
+static constexpr float kP3GoalX = 10.0;  // m
 static constexpr float kP3GoalY = 16.0;  // m
 
 // Nominal and max speed.
@@ -122,7 +124,7 @@ static constexpr float kP2NominalV = 5.0;  // m/s
 static constexpr float kP3NominalV = 1.0;  // m/s
 
 // Initial state.
-static constexpr float kP1InitialX = -5.0;   // m
+static constexpr float kP1InitialX = -2.0;   // m
 static constexpr float kP2InitialX = -10.0;  // m
 static constexpr float kP3InitialX = -11.0;  // m
 
@@ -134,35 +136,30 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 5.0;  // m/s
-static constexpr float kP2InitialSpeed = 5.0;  // m/s
-static constexpr float kP3InitialSpeed = 1.0;  // m/s
+static constexpr float kP1InitialSpeed = 5.0;   // m/s
+static constexpr float kP2InitialSpeed = 5.0;   // m/s
+static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
-using P1 = SinglePlayerCar7D;
-using P2 = SinglePlayerCar7D;
-using P3 = SinglePlayerUnicycle5D;
+using P1 = SinglePlayerCar5D;
+using P2 = SinglePlayerCar5D;
+using P3 = SinglePlayerUnicycle4D;
 
 static constexpr Dimension kP1XIdx = P1::kPxIdx;
 static constexpr Dimension kP1YIdx = P1::kPyIdx;
 static constexpr Dimension kP1HeadingIdx = P1::kThetaIdx;
 static constexpr Dimension kP1VIdx = P1::kVIdx;
-static constexpr Dimension kP1KappaIdx = P1::kKappaIdx;
-static constexpr Dimension kP1SIdx = P1::kSIdx;
 
 static constexpr Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
 static constexpr Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
 static constexpr Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
 static constexpr Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
-static constexpr Dimension kP2KappaIdx = P1::kNumXDims + P2::kKappaIdx;
-static constexpr Dimension kP2SIdx = P1::kNumXDims + P2::kSIdx;
 
 static constexpr Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
 static constexpr Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
 static constexpr Dimension kP3HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
 static constexpr Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
-static constexpr Dimension kP3SIdx = P1::kNumXDims + P2::kNumXDims + P3::kSIdx;
 
 // Control dimensions.
 static constexpr Dimension kP1OmegaIdx = 0;
@@ -180,9 +177,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerCar7D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar7D>(kInterAxleLength),
-           std::make_shared<SinglePlayerUnicycle5D>()}));
+          {std::make_shared<SinglePlayerCar5D>(kInterAxleLength),
+           std::make_shared<SinglePlayerCar5D>(kInterAxleLength),
+           std::make_shared<SinglePlayerUnicycle4D>()}));
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
@@ -298,14 +295,14 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   p3_cost.AddStateCost(p3_max_v_cost);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
-  // Curvature costs for P1 and P2.
-  const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP1KappaIdx, 0.0, "Curvature");
-  p1_cost.AddStateCost(p1_curvature_cost);
+  // // Curvature costs for P1 and P2.
+  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP1KappaIdx, 0.0, "Curvature");
+  // p1_cost.AddStateCost(p1_curvature_cost);
 
-  const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP2KappaIdx, 0.0, "Curvature");
-  p2_cost.AddStateCost(p2_curvature_cost);
+  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP2KappaIdx, 0.0, "Curvature");
+  // p2_cost.AddStateCost(p2_curvature_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
@@ -329,18 +326,18 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
-  // Path lenth costs.
-  const auto p1_s_cost = std::make_shared<NominalPathLengthCost>(
-      kSCostWeight, kP1SIdx, kP1NominalV, "PathLength");
-  p1_cost.AddStateCost(p1_s_cost);
+  // // Path lenth costs.
+  // const auto p1_s_cost = std::make_shared<NominalPathLengthCost>(
+  //     kSCostWeight, kP1SIdx, kP1NominalV, "PathLength");
+  // p1_cost.AddStateCost(p1_s_cost);
 
-  const auto p2_s_cost = std::make_shared<NominalPathLengthCost>(
-      kSCostWeight, kP2SIdx, kP2NominalV, "PathLenth");
-  p2_cost.AddStateCost(p2_s_cost);
+  // const auto p2_s_cost = std::make_shared<NominalPathLengthCost>(
+  //     kSCostWeight, kP2SIdx, kP2NominalV, "PathLenth");
+  // p2_cost.AddStateCost(p2_s_cost);
 
-  const auto p3_s_cost = std::make_shared<NominalPathLengthCost>(
-      kSCostWeight, kP3SIdx, kP3NominalV, "PathLength");
-  p3_cost.AddStateCost(p3_s_cost);
+  // const auto p3_s_cost = std::make_shared<NominalPathLengthCost>(
+  //     kSCostWeight, kP3SIdx, kP3NominalV, "PathLength");
+  // p3_cost.AddStateCost(p3_s_cost);
 
   // Goal costs.
   constexpr float kFinalTimeWindow = 0.5;  // s

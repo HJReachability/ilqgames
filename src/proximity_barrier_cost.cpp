@@ -36,53 +36,77 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Penalizes (thresh - relative distance)^2 between two pairs of state
+// Penalizes -log(relative distance^2 - threshold^2) between two pairs of state
 // dimensions (representing two positions of vehicles whose states have been
-// concatenated) whenever relative distance is less than thresh.
+// concatenated).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_PROXIMITY_COST_H
-#define ILQGAMES_COST_PROXIMITY_COST_H
-
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/cost/proximity_barrier_cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <string>
+#include <glog/logging.h>
 
 namespace ilqgames {
 
-class ProximityCost : public TimeInvariantCost {
- public:
-  ProximityCost(float weight,
-                const std::pair<Dimension, Dimension>& position_idxs1,
-                const std::pair<Dimension, Dimension>& position_idxs2,
-                float threshold, const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        threshold_(threshold),
-        threshold_sq_(threshold * threshold),
-        xidx1_(position_idxs1.first),
-        yidx1_(position_idxs1.second),
-        xidx2_(position_idxs2.first),
-        yidx2_(position_idxs2.second) {}
+float ProximityBarrierCost::Evaluate(const VectorXf& input) const {
+  const float dx = input(xidx1_) - input(xidx2_);
+  const float dy = input(yidx1_) - input(yidx2_);
+  const float gap = dx * dx + dy * dy - threshold_sq_;
+  return -0.5 * weight_ * std::log(gap);
+}
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
+void ProximityBarrierCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
+                                 VectorXf* grad) const {
+  CHECK_NOTNULL(hess);
 
-  // Quadraticize this cost at the given input, and add to the running=
-  // sum of gradients and Hessians (if non-null).
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+  // Check dimensions.
+  CHECK_EQ(input.size(), hess->rows());
+  CHECK_EQ(input.size(), hess->cols());
 
- private:
-  // Threshold for minimum squared relative distance.
-  const float threshold_, threshold_sq_;
+  if (grad) CHECK_EQ(input.size(), grad->size());
 
-  // Position indices for two vehicles.
-  const Dimension xidx1_, yidx1_;
-  const Dimension xidx2_, yidx2_;
-};  //\class ProximityCost
+  // Compute Hessian and gradient.
+  const float dx = input(xidx1_) - input(xidx2_);
+  const float dy = input(yidx1_) - input(yidx2_);
+  const float gap = dx * dx + dy * dy - threshold_sq_;
+  const float weight_gap = weight_ / gap;
+  const float weight_gap_sq = weight_gap / gap;
+
+  const float hess_x1x1 = 2.0 * weight_gap_sq * dx * dx - weight_gap;
+  (*hess)(xidx1_, xidx1_) += hess_x1x1;
+  (*hess)(xidx1_, xidx2_) -= hess_x1x1;
+  (*hess)(xidx2_, xidx1_) -= hess_x1x1;
+  (*hess)(xidx2_, xidx2_) += hess_x1x1;
+
+  const float hess_y1y1 = 2.0 * weight_gap_sq * dy * dy - weight_gap;
+  (*hess)(yidx1_, yidx1_) += hess_y1y1;
+  (*hess)(yidx1_, yidx2_) -= hess_y1y1;
+  (*hess)(yidx2_, yidx1_) -= hess_y1y1;
+  (*hess)(yidx2_, yidx2_) += hess_y1y1;
+
+  const float hess_x1y1 = 2.0 * weight_gap_sq * dx * dy;
+  (*hess)(xidx1_, yidx1_) += hess_x1y1;
+  (*hess)(yidx1_, xidx1_) += hess_x1y1;
+
+  (*hess)(xidx1_, yidx2_) -= hess_x1y1;
+  (*hess)(yidx2_, xidx1_) -= hess_x1y1;
+
+  (*hess)(xidx2_, yidx1_) -= hess_x1y1;
+  (*hess)(yidx1_, xidx2_) -= hess_x1y1;
+
+  (*hess)(xidx2_, yidx2_) += hess_x1y1;
+  (*hess)(yidx2_, xidx2_) += hess_x1y1;
+
+  if (grad) {
+    const float ddx1 = -weight_gap * dx;
+    (*grad)(xidx1_) += ddx1;
+    (*grad)(xidx2_) -= ddx1;
+
+    const float ddy1 = -weight_gap * dy;
+    (*grad)(yidx1_) += ddy1;
+    (*grad)(yidx2_) -= ddy1;
+  }
+}
 
 }  // namespace ilqgames
-
-#endif
