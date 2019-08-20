@@ -68,7 +68,7 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
   VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const;
 
   // Discrete time approximation of the underlying linearized system.
-  void LinearizeSystem(Time time_step,
+  void LinearizedSystem(Time time_step,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Utilities for feedback linearization.
@@ -201,47 +201,6 @@ inline VectorXf SinglePlayerFlatCar6D::FromLinearSystemState(const VectorXf& xi)
                   inter_axle_distance_ / (x(kVIdx) * x(kVIdx) * sin_t));
 
   return x;
-}
-
-inline void SinglePlayerFlatCar6D::Partial(const VectorXf& xi, 
-              std::vector<VectorXf>* grads, std::vector<MatrixXf>* hesses) const {
-  CHECK_NOTNULL(grads);
-  CHECK_NOTNULL(hesses);
-
-  grads->resize(xi.size(),VectorXf::Zero(kNumXDims));
-  hesses->resize(xi.size(),MatrixXf::Zero(kNumXDims,kNumXDims));
-
-  const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
-  const float norm = std::sqrt(norm_squared);
-  const float norm_ss = norm_squared * norm_squared;
-  const float sqrt_norm_sss = std::sqrt(norm_ss * norm_squared);
-
-  (*grads)[kPxIdx](kPxIdx) = 1.0;
-  (*grads)[kPyIdx](kPyIdx) = 1.0;
-  (*grads)[kThetaIdx](kVxIdx) = -xi(kVyIdx)/norm_squared;
-  (*grads)[kThetaIdx](kVyIdx) = xi(kVxIdx)/norm_squared;
-  (*grads)[kVIdx](kVxIdx) = xi(kVxIdx)/norm;
-  (*grads)[kVIdx](kVyIdx) = xi(kVyIdx)/norm;
-  
-  (*grads)[kAIdx](kVxIdx) = xi(kVyIdx)*(xi(kAxIdx) * xi(kVyIdx) - xi(kAyIdx) * xi(kVxIdx))/sqrt_norm_sss;
-  (*grads)[kAIdx](kVyIdx) = xi(kVxIdx)*(xi(kAyIdx) * xi(kVxIdx) - xi(kAxIdx) * xi(kVyIdx))/sqrt_norm_sss;
-  (*grads)[kAIdx](kAxIdx) = (*grads)[kVIdx](kVxIdx);
-  (*grads)[kAIdx](kAyIdx) = (*grads)[kVIdx](kVyIdx);
-
-  (*grads)[kPhiIdx](kVxIdx) = // TODO
-  (*grads)[kPhiIdx](kVyIdx) = // TODO
-  (*grads)[kPhiIdx](kAxIdx) = // TODO
-  (*grads)[kPhiIdx](kAyIdx) = // TODO
-
-  (*hesses)[kThetaIdx](kVxIdx, kVxIdx) = 2.0 * xi(kVxIdx) * xi(kVyIdx)/norm_ss;
-  (*hesses)[kThetaIdx](kVxIdx, kVyIdx) = (xi(kVyIdx)*xi(kVyIdx) - xi(kVxIdx)*xi(kVxIdx))/norm_ss;
-  (*hesses)[kThetaIdx](kVyIdx, kVxIdx) = hesses[kThetaIdx](kVxIdx, kVyIdx);
-  (*hesses)[kThetaIdx](kVyIdx, kVyIdx) = -hesses[kThetaIdx](kVxIdx, kVxIdx);
-  (*hesses)[kVIdx](kVxIdx, kVxIdx) = (xi(kVyIdx) * xi(kVyIdx))/sqrt_norm_sss;
-  (*hesses)[kVIdx](kVxIdx, kVyIdx) = (-xi(kVxIdx) * xi(kVyIdx))/sqrt_norm_sss;
-  (*hesses)[kVIdx](kVyIdx, kVxIdx) = hesses[kVIdx](kVxIdx, kVyIdx);
-  (*hesses)[kVIdx](kVyIdx, kVyIdx) = (xi(kVxIdx) * xi(kVxIdx))/sqrt_norm_sss;
-
 }
 
 }  // namespace ilqgames
