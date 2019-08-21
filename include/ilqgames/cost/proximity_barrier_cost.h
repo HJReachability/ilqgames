@@ -36,50 +36,51 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Multi-player dynamical system comprised of several single player subsystems.
+// Penalizes -log(relative distance^2 - threshold^2) between two pairs of state
+// dimensions (representing two positions of vehicles whose states have been
+// concatenated).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_DYNAMICS_CONCATENATED_DYNAMICAL_SYSTEM_H
-#define ILQGAMES_DYNAMICS_CONCATENATED_DYNAMICAL_SYSTEM_H
+#ifndef ILQGAMES_COST_PROXIMITY_BARRIER_COST_H
+#define ILQGAMES_COST_PROXIMITY_BARRIER_COST_H
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/dynamics/single_player_dynamical_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <algorithm>
+#include <string>
 
 namespace ilqgames {
 
-class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
+class ProximityBarrierCost : public TimeInvariantCost {
  public:
-  ~ConcatenatedDynamicalSystem() {}
-  ConcatenatedDynamicalSystem(const SubsystemList& subsystems);
+  ProximityBarrierCost(float weight,
+                       const std::pair<Dimension, Dimension>& position_idxs1,
+                       const std::pair<Dimension, Dimension>& position_idxs2,
+                       float threshold, const std::string& name = "")
+      : TimeInvariantCost(weight, name),
+        threshold_sq_(threshold * threshold),
+        xidx1_(position_idxs1.first),
+        yidx1_(position_idxs1.second),
+        xidx2_(position_idxs2.first),
+        yidx2_(position_idxs2.second) {}
 
-  // Compute time derivative of state.
-  VectorXf Evaluate(Time t, const VectorXf& x,
-                    const std::vector<VectorXf>& us) const;
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
 
-  // Compute a discrete-time Jacobian linearization.
-  LinearDynamicsApproximation Linearize(Time t, Time time_step,
-                                        const VectorXf& x,
-                                        const std::vector<VectorXf>& us) const;
-
-  // Distance metric between two states.
-  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
-
-  // Getters.
-  Dimension UDim(PlayerIndex player_idx) const {
-    return subsystems_[player_idx]->UDim();
-  }
-
-  PlayerIndex NumPlayers() const { return subsystems_.size(); }
+  // Quadraticize this cost at the given input, and add to the running=
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
 
  private:
-  // List of subsystems, each of which controls the affects of a single player.
-  const SubsystemList subsystems_;
-};  // namespace ilqgames
+  // Threshold for minimum squared relative distance.
+  const float threshold_sq_;
+
+  // Position indices for two vehicles.
+  const Dimension xidx1_, yidx1_;
+  const Dimension xidx2_, yidx2_;
+};  //\class ProximityCost
 
 }  // namespace ilqgames
 

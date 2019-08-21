@@ -82,18 +82,17 @@ static void glfw_error_callback(int error, const char* description) {
 
 int main(int argc, char** argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/three_player_intersection.log");
+      ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
   google::SetLogDestination(0, log_file.c_str());
   FLAGS_logtostderr = true;
-  FLAGS_minloglevel = 1;
   google::InitGoogleLogging(argv[0]);
 
   // Set up the game.
   ilqgames::ThreePlayerIntersectionExample problem;
 
   // Solve the game in a receding horizon.
-  constexpr ilqgames::Time kFinalTime = 10.0;      // s
-  constexpr ilqgames::Time kPlannerRuntime = 2.0;  // s
+  constexpr ilqgames::Time kFinalTime = 10.0;       // s
+  constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
       RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &problem);
 
