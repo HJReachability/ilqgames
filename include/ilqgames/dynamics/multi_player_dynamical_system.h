@@ -48,12 +48,13 @@
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 
 #include <vector>
 
 namespace ilqgames {
 
-class MultiPlayerDynamicalSystem {
+class MultiPlayerDynamicalSystem : public MultiPlayerIntegrableSystem {
  public:
   virtual ~MultiPlayerDynamicalSystem() {}
 
@@ -63,29 +64,12 @@ class MultiPlayerDynamicalSystem {
 
   // Compute a discrete-time Jacobian linearization.
   virtual LinearDynamicsApproximation Linearize(
-      Time t, Time time_step, const VectorXf& x,
+      Time t, const VectorXf& x,
       const std::vector<VectorXf>& us) const = 0;
 
   // Integrate these dynamics forward in time.
-  // Options include integration for a single timestep, between arbitrary times,
-  // and within a single timestep.
-  VectorXf Integrate(Time t0, Time time_step, const VectorXf& x0,
+  VectorXf Integrate(Time t0, Time time_interval, const VectorXf& x0,
                      const std::vector<VectorXf>& us) const;
-  VectorXf Integrate(Time t0, Time t, Time time_step, const VectorXf& x0,
-                     const OperatingPoint& operating_point,
-                     const std::vector<Strategy>& strategies) const;
-  VectorXf Integrate(size_t initial_timestep, size_t final_timestep,
-                     Time time_step, const VectorXf& x0,
-                     const OperatingPoint& operating_point,
-                     const std::vector<Strategy>& strategies) const;
-  VectorXf IntegrateToNextTimeStep(
-      Time t0, Time time_step, const VectorXf& x0,
-      const OperatingPoint& operating_point,
-      const std::vector<Strategy>& strategies) const;
-  VectorXf IntegrateFromPriorTimeStep(
-      Time t, Time time_step, const VectorXf& x0,
-      const OperatingPoint& operating_point,
-      const std::vector<Strategy>& strategies) const;
 
   // Distance metric between two states. By default, just the *squared* 2-norm.
   virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
@@ -93,21 +77,13 @@ class MultiPlayerDynamicalSystem {
   }
 
   // Getters.
-  Dimension XDim() const { return xdim_; }
-  Dimension TotalUDim() const {
-    Dimension total = 0;
-    for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) total += UDim(ii);
-    return total;
-  }
-
   virtual Dimension UDim(PlayerIndex player_idx) const = 0;
   virtual PlayerIndex NumPlayers() const = 0;
 
  protected:
-  explicit MultiPlayerDynamicalSystem(Dimension xdim) : xdim_(xdim) {}
+  explicit MultiPlayerDynamicalSystem(Dimension xdim, Time time_step) : 
+    MultiPlayerIntegrableSystem(xdim, time_step) {}
 
-  // State dimension.
-  const Dimension xdim_;
 };  //\class MultiPlayerDynamicalSystem
 
 }  // namespace ilqgames
