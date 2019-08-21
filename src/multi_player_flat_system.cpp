@@ -61,7 +61,7 @@ VectorXf MultiPlayerFlatSystem::Integrate(
     VectorXf deriv = this->continuous_linear_system_->A * xi;
     for (size_t ii=0; ii < NumPlayers(); ii++)
       deriv += this->continuous_linear_system_->Bs[ii] * vs[ii];
-    
+
     return deriv;
   }; // xi_dot
 

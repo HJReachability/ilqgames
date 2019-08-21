@@ -54,7 +54,7 @@
 
 namespace ilqgames {
 
-class MultiPlayerFlatSystem {
+  class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
  public:
   virtual ~MultiPlayerFlatSystem() {}
 
@@ -67,7 +67,7 @@ class MultiPlayerFlatSystem {
 
   virtual VectorXf AffineTerm(const VectorXf& x) const = 0;
 
-  virtual VectorXf LinearizingControl(const VectorXf& x, 
+  virtual VectorXf LinearizingControl(const VectorXf& x,
                                       const VectorXf& v) const = 0;
 
   virtual VectorXf ToLinearSystemState(const VectorXf& x) const = 0;
@@ -114,7 +114,7 @@ class MultiPlayerFlatSystem {
   virtual PlayerIndex NumPlayers() const = 0;
 
  protected:
-  MultiPlayerFlatSystem(Dimension xdim, Time time_step) 
+  MultiPlayerFlatSystem(Dimension xdim, Time time_step)
         : xdim_(xdim), time_step_(time_step) {}
 
   // Discrete time approximation of the underlying linearized system.
