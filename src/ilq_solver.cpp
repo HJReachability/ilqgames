@@ -51,14 +51,12 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <chrono>
 #include <memory>
 #include <vector>
-#include <glog/logging.h>
 
 namespace ilqgames {
-
-using clock = std::chrono::system_clock;
 
 bool ILQSolver::Solve(const VectorXf& x0,
                       const OperatingPoint& initial_operating_point,
@@ -73,8 +71,12 @@ bool ILQSolver::Solve(const VectorXf& x0,
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
+  // Cast dynamics.
+  const auto dyn =
+      static_cast<const MultiPlayerDynamicalSystem*>(dynamics_.get());
+
   // Make sure we have enough strategies for each time step.
-  DCHECK_EQ(dynamics_->NumPlayers(), initial_strategies.size());
+  DCHECK_EQ(dyn->NumPlayers(), initial_strategies.size());
   DCHECK(std::accumulate(
       initial_strategies.begin(), initial_strategies.end(), true,
       [this](bool correct_so_far, const Strategy& strategy) {
@@ -84,7 +86,7 @@ bool ILQSolver::Solve(const VectorXf& x0,
       }));
 
   // Last and current operating points.
-  OperatingPoint last_operating_point(num_time_steps_, dynamics_->NumPlayers(),
+  OperatingPoint last_operating_point(num_time_steps_, dyn->NumPlayers(),
                                       initial_operating_point.t0);
 
   OperatingPoint current_operating_point(initial_operating_point);
@@ -100,8 +102,7 @@ bool ILQSolver::Solve(const VectorXf& x0,
   std::vector<std::vector<QuadraticCostApproximation>> quadraticization(
       num_time_steps_);
   for (auto& quads : quadraticization)
-    quads.resize(dynamics_->NumPlayers(),
-                 QuadraticCostApproximation(dynamics_->XDim()));
+    quads.resize(dyn->NumPlayers(), QuadraticCostApproximation(dyn->XDim()));
 
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;
@@ -135,7 +136,7 @@ bool ILQSolver::Solve(const VectorXf& x0,
       const auto& us = current_operating_point.us[kk];
 
       // Linearize dynamics.
-      linearization[kk] = dynamics_->Linearize(t, time_step_, x, us);
+      linearization[kk] = dyn->Linearize(t, x, us);
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
@@ -160,75 +161,6 @@ bool ILQSolver::Solve(const VectorXf& x0,
   // Set final strategies and operating point.
   final_strategies->swap(current_strategies);
   final_operating_point->swap(current_operating_point);
-
-  return true;
-}
-
-void ILQSolver::CurrentOperatingPoint(
-    const OperatingPoint& last_operating_point,
-    const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point) const {
-  CHECK_NOTNULL(current_operating_point);
-
-  // Integrate dynamics and populate operating point, one time step at a time.
-  VectorXf x(last_operating_point.xs[0]);
-  for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    Time t = ComputeTimeStamp(kk);
-
-    // Unpack.
-    const VectorXf delta_x = x - last_operating_point.xs[kk];
-    const auto& last_us = last_operating_point.us[kk];
-    auto& current_us = current_operating_point->us[kk];
-
-    // Record state.
-    current_operating_point->xs[kk] = x;
-
-    // Compute and record control for each player.
-    for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
-      const auto& strategy = current_strategies[jj];
-      current_us[jj] = strategy(kk, delta_x, last_us[jj]);
-    }
-
-    // Integrate dynamics for one time step.
-    if (kk < num_time_steps_ - 1)
-      x = dynamics_->Integrate(t, time_step_, x, current_us);
-  }
-}
-
-bool ILQSolver::HasConverged(
-    size_t iteration, const OperatingPoint& last_operating_point,
-    const OperatingPoint& current_operating_point) const {
-  // As a simple starting point, we'll say that we've converged if it's been
-  // at least 50 iterations or the current operating_point and last operating
-  // point are within 0.1 in every dimension at every time.
-  constexpr size_t kMaxIterations = 100;
-  constexpr float kMaxElementwiseDifference = 1e-1;
-
-  // Check iterations.
-  if (iteration >= kMaxIterations) return true;
-  if (iteration == 0) return false;
-
-  // Check operating points.
-  for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    const VectorXf delta =
-        current_operating_point.xs[kk] - last_operating_point.xs[kk];
-    if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
-  }
-
-  return true;
-}
-
-bool ILQSolver::ModifyLQStrategies(
-    const OperatingPoint& current_operating_point,
-    std::vector<Strategy>* strategies) const {
-  CHECK_NOTNULL(strategies);
-
-  // As a simple starting point, just scale all the 'alphas' in the strategy to
-  // a fraction of their original value.
-  constexpr float kAlphaScalingFactor = 0.02;
-  for (auto& strategy : *strategies) {
-    for (auto& alpha : strategy.alphas) alpha *= kAlphaScalingFactor;
-  }
 
   return true;
 }

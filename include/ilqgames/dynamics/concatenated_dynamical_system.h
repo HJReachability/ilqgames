@@ -55,15 +55,14 @@ namespace ilqgames {
 class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
  public:
   ~ConcatenatedDynamicalSystem() {}
-  ConcatenatedDynamicalSystem(const SubsystemList& subsystems);
+  ConcatenatedDynamicalSystem(const SubsystemList& subsystems, Time time_step);
 
   // Compute time derivative of state.
   VectorXf Evaluate(Time t, const VectorXf& x,
                     const std::vector<VectorXf>& us) const;
 
   // Compute a discrete-time Jacobian linearization.
-  LinearDynamicsApproximation Linearize(Time t, Time time_step,
-                                        const VectorXf& x,
+  LinearDynamicsApproximation Linearize(Time t, const VectorXf& x,
                                         const std::vector<VectorXf>& us) const;
 
   // Distance metric between two states.

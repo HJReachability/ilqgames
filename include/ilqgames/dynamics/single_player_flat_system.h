@@ -53,11 +53,10 @@ class SinglePlayerFlatSystem {
   virtual ~SinglePlayerFlatSystem() {}
 
   // Compute time derivative of state.
-  virtual VectorXf Evaluate(const VectorXf& x,
-                            const VectorXf& u) const = 0;
+  virtual VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const = 0;
 
   // Discrete time approximation of the underlying linearized system.
-  virtual void LinearizedSystem(Time time_step,  Eigen::Ref<MatrixXf> A,
+  virtual void LinearizedSystem(Time time_step, Eigen::Ref<MatrixXf> A,
                                 Eigen::Ref<MatrixXf> B) const = 0;
 
   // Utilities for feedback linearization.
@@ -65,8 +64,7 @@ class SinglePlayerFlatSystem {
 
   virtual VectorXf AffineTerm(const VectorXf& x) const = 0;
 
-  VectorXf LinearizingControl(const VectorXf& x, 
-                              const VectorXf& v) const{
+  VectorXf LinearizingControl(const VectorXf& x, const VectorXf& v) const {
     return InverseDecouplingMatrix(x) * (v - AffineTerm(x));
   }
 
@@ -75,8 +73,13 @@ class SinglePlayerFlatSystem {
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
 
   // Partial derivatives of map from xi to x.
-  virtual void Partial(const VectorXf& xi, std::vector<VectorXf>* grads, 
-                        std::vector<MatrixXf>* hesses) const = 0;
+  virtual void Partial(const VectorXf& xi, std::vector<VectorXf>* grads,
+                       std::vector<MatrixXf>* hesses) const = 0;
+
+  // Distance metric on the state space. By default, just the *squared* 2-norm.
+  virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
+    return (x0 - x1).squaredNorm();
+  }
 
   // Getters.
   Dimension XDim() const { return xdim_; }

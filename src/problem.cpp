@@ -41,7 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/solver/ilq_solver.h>
+#include <ilqgames/solver/solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -88,7 +88,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   CHECK_LT(planner_runtime + t0, operating_point_->t0 + solver_->TimeHorizon());
   CHECK_GE(t0, operating_point_->t0);
 
-  const MultiPlayerDynamicalSystem& dynamics = solver_->Dynamics();
+  const MultiPlayerIntegrableSystem& dynamics = solver_->Dynamics();
 
   // Integrate x0 forward from t0 by approximately planner_runtime to get
   // actual initial state. Integrate up to the next discrete timestep, then

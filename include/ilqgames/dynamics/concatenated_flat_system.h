@@ -53,12 +53,10 @@ namespace ilqgames {
 class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
  public:
   ~ConcatenatedFlatSystem() {}
-  ConcatenatedFlatSystem(const FlatSubsystemList& subsystems,
-                         Time time_step);
+  ConcatenatedFlatSystem(const FlatSubsystemList& subsystems, Time time_step);
 
   // Compute time derivative of state.
-  VectorXf Evaluate(const VectorXf& x,
-                    const std::vector<VectorXf>& us) const;
+  VectorXf Evaluate(const VectorXf& x, const std::vector<VectorXf>& us) const;
 
   // Discrete time approximation of the underlying linearized system.
   void ComputeLinearizedSystem() const;
@@ -68,16 +66,18 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
 
   VectorXf AffineTerm(const VectorXf& x) const;
 
-  VectorXf LinearizingControl(const VectorXf& x,
-                              const VectorXf& v) const;
+  VectorXf LinearizingControl(const VectorXf& x, const VectorXf& v) const;
 
   VectorXf ToLinearSystemState(const VectorXf& x) const;
 
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
-  void ChangeCostCoordinates(const VectorXf& xi, 
-                             const std::vector<VectorXf>& vs, 
+  void ChangeCostCoordinates(const VectorXf& xi,
+                             const std::vector<VectorXf>& vs,
                              std::vector<QuadraticCostApproximation>* q) const;
+
+  // Distance metric between two states.
+  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Getters.
   Dimension SubsystemXDim(PlayerIndex player_idx) const {

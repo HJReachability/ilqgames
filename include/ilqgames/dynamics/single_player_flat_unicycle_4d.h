@@ -45,7 +45,7 @@
 //
 //  Linear system state xi is laid out as [x, y, vx, vy]:
 //                     vx = v * cos(theta)
-//                     vy = v * sin(theta)  
+//                     vy = v * sin(theta)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -60,15 +60,14 @@ namespace ilqgames {
 class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
  public:
   ~SinglePlayerFlatUnicycle4D() {}
-  SinglePlayerFlatUnicycle4D()
-      : SinglePlayerFlatSystem(kNumXDims, kNumUDims) {}
+  SinglePlayerFlatUnicycle4D() : SinglePlayerFlatSystem(kNumXDims, kNumUDims) {}
 
   // Compute time derivative of state.
   VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const;
 
   // Discrete time approximation of the underlying linearized system.
-  void LinearizeSystem(Time time_step,
-                 Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
+  void LinearizeSystem(Time time_step, Eigen::Ref<MatrixXf> A,
+                       Eigen::Ref<MatrixXf> B) const;
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
@@ -79,8 +78,11 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
 
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
-  void Partial(const VectorXf& xi, std::vector<VectorXf>* grads, 
-              std::vector<MatrixXf>* hesses) const;
+  void Partial(const VectorXf& xi, std::vector<VectorXf>* grads,
+               std::vector<MatrixXf>* hesses) const;
+
+  // Distance metric between two states.
+  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Constexprs for state indices.
   static constexpr Dimension kNumXDims = 4;
@@ -89,7 +91,7 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
   static constexpr Dimension kThetaIdx = 2;
   static constexpr Dimension kVIdx = 3;
   static constexpr Dimension kVxIdx = 2;
-  static constexpr Dimension kVyIdx = 3;  
+  static constexpr Dimension kVyIdx = 3;
 
   // Constexprs for control indices.
   static constexpr Dimension kNumUDims = 2;
@@ -100,7 +102,7 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
 // ----------------------------- IMPLEMENTATION ----------------------------- //
 
 inline VectorXf SinglePlayerFlatUnicycle4D::Evaluate(const VectorXf& x,
-                                                 const VectorXf& u) const {
+                                                     const VectorXf& u) const {
   VectorXf xdot(xdim_);
   xdot(kPxIdx) = x(kVIdx) * std::cos(x(kThetaIdx));
   xdot(kPyIdx) = x(kVIdx) * std::sin(x(kThetaIdx));
@@ -111,10 +113,7 @@ inline VectorXf SinglePlayerFlatUnicycle4D::Evaluate(const VectorXf& x,
 }
 
 inline void SinglePlayerFlatUnicycle4D::LinearizedSystem(
-                                              Time time_step,
-                                              Eigen::Ref<MatrixXf> A,
-                                              Eigen::Ref<MatrixXf> B) const {
-
+    Time time_step, Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
   A(kPxIdx, kVxIdx) += time_step;
   A(kPyIdx, kVyIdx) += time_step;
 
@@ -122,25 +121,28 @@ inline void SinglePlayerFlatUnicycle4D::LinearizedSystem(
   B(kVyIdx, 1) = time_step;
 }
 
-inline MatrixXf SinglePlayerFlatUnicycle4D::InverseDecouplingMatrix(const VectorXf& x) const{
-  MatrixXf M_inv(kNumUDims,kNumUDims);
+inline MatrixXf SinglePlayerFlatUnicycle4D::InverseDecouplingMatrix(
+    const VectorXf& x) const {
+  MatrixXf M_inv(kNumUDims, kNumUDims);
 
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
-   
-  M_inv(0,0) = cos_t;
-  M_inv(0,1) = sin_t;
-  M_inv(1,0) = -sin_t / x(kVIdx);
-  M_inv(1,1) =  cos_t / x(kVIdx);
+
+  M_inv(0, 0) = cos_t;
+  M_inv(0, 1) = sin_t;
+  M_inv(1, 0) = -sin_t / x(kVIdx);
+  M_inv(1, 1) = cos_t / x(kVIdx);
 
   return M_inv;
 }
 
-inline VectorXf SinglePlayerFlatUnicycle4D::AffineTerm(const VectorXf& x) const{
+inline VectorXf SinglePlayerFlatUnicycle4D::AffineTerm(
+    const VectorXf& x) const {
   return VectorXf::Zero(kNumUDims);
 }
 
-inline VectorXf SinglePlayerFlatUnicycle4D::ToLinearSystemState(const VectorXf& x) const{
+inline VectorXf SinglePlayerFlatUnicycle4D::ToLinearSystemState(
+    const VectorXf& x) const {
   VectorXf xi(kNumXDims);
 
   xi(kPxIdx) = x(kPxIdx);
@@ -151,24 +153,26 @@ inline VectorXf SinglePlayerFlatUnicycle4D::ToLinearSystemState(const VectorXf& 
   return xi;
 }
 
-inline VectorXf SinglePlayerFlatUnicycle4D::FromLinearSystemState(const VectorXf& xi) const{
+inline VectorXf SinglePlayerFlatUnicycle4D::FromLinearSystemState(
+    const VectorXf& xi) const {
   VectorXf x(kNumXDims);
 
   x(kPxIdx) = xi(kPxIdx);
   x(kPyIdx) = xi(kPyIdx);
-  x(kThetaIdx) = std::atan2(xi(kVyIdx),xi(kVxIdx));
-  x(kVIdx) = std::hypot(xi(kVyIdx),xi(kVxIdx));
+  x(kThetaIdx) = std::atan2(xi(kVyIdx), xi(kVxIdx));
+  x(kVIdx) = std::hypot(xi(kVyIdx), xi(kVxIdx));
 
   return x;
 }
 
-inline void SinglePlayerFlatUnicycle4D::Partial(const VectorXf& xi, 
-              std::vector<VectorXf>* grads, std::vector<MatrixXf>* hesses) const {
+inline void SinglePlayerFlatUnicycle4D::Partial(
+    const VectorXf& xi, std::vector<VectorXf>* grads,
+    std::vector<MatrixXf>* hesses) const {
   CHECK_NOTNULL(grads);
   CHECK_NOTNULL(hesses);
 
-  grads->resize(xi.size(),VectorXf::Zero(kNumXDims));
-  hesses->resize(xi.size(),MatrixXf::Zero(kNumXDims,kNumXDims));
+  grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
+  hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
 
   const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
   const float norm = std::sqrt(norm_squared);
@@ -177,22 +181,30 @@ inline void SinglePlayerFlatUnicycle4D::Partial(const VectorXf& xi,
 
   (*grads)[kPxIdx](kPxIdx) = 1.0;
   (*grads)[kPyIdx](kPyIdx) = 1.0;
-  (*grads)[kThetaIdx](kVxIdx) = -xi(kVyIdx)/norm_squared;
-  (*grads)[kThetaIdx](kVyIdx) = xi(kVxIdx)/norm_squared;
-  (*grads)[kVIdx](kVxIdx) = xi(kVxIdx)/norm;
-  (*grads)[kVIdx](kVyIdx) = xi(kVyIdx)/norm;
+  (*grads)[kThetaIdx](kVxIdx) = -xi(kVyIdx) / norm_squared;
+  (*grads)[kThetaIdx](kVyIdx) = xi(kVxIdx) / norm_squared;
+  (*grads)[kVIdx](kVxIdx) = xi(kVxIdx) / norm;
+  (*grads)[kVIdx](kVyIdx) = xi(kVyIdx) / norm;
 
-  (*hesses)[kThetaIdx](kVxIdx, kVxIdx) = 2.0 * xi(kVxIdx) * xi(kVyIdx)/norm_ss;
-  (*hesses)[kThetaIdx](kVxIdx, kVyIdx) = (xi(kVyIdx)*xi(kVyIdx) - xi(kVxIdx)*xi(kVxIdx))/norm_ss;
+  (*hesses)[kThetaIdx](kVxIdx, kVxIdx) =
+      2.0 * xi(kVxIdx) * xi(kVyIdx) / norm_ss;
+  (*hesses)[kThetaIdx](kVxIdx, kVyIdx) =
+      (xi(kVyIdx) * xi(kVyIdx) - xi(kVxIdx) * xi(kVxIdx)) / norm_ss;
   (*hesses)[kThetaIdx](kVyIdx, kVxIdx) = hesses[kThetaIdx](kVxIdx, kVyIdx);
   (*hesses)[kThetaIdx](kVyIdx, kVyIdx) = -hesses[kThetaIdx](kVxIdx, kVxIdx);
-  (*hesses)[kVIdx](kVxIdx, kVxIdx) = (xi(kVyIdx) * xi(kVyIdx))/sqrt_norm_sss;
-  (*hesses)[kVIdx](kVxIdx, kVyIdx) = (-xi(kVxIdx) * xi(kVyIdx))/sqrt_norm_sss;
+  (*hesses)[kVIdx](kVxIdx, kVxIdx) = (xi(kVyIdx) * xi(kVyIdx)) / sqrt_norm_sss;
+  (*hesses)[kVIdx](kVxIdx, kVyIdx) = (-xi(kVxIdx) * xi(kVyIdx)) / sqrt_norm_sss;
   (*hesses)[kVIdx](kVyIdx, kVxIdx) = hesses[kVIdx](kVxIdx, kVyIdx);
-  (*hesses)[kVIdx](kVyIdx, kVyIdx) = (xi(kVxIdx) * xi(kVxIdx))/sqrt_norm_sss;
+  (*hesses)[kVIdx](kVyIdx, kVyIdx) = (xi(kVxIdx) * xi(kVxIdx)) / sqrt_norm_sss;
+}
 
+inline float SinglePlayerFlatUnicycle4D::DistanceBetween(
+    const VectorXf& x0, const VectorXf& x1) const {
+  // Squared distance in position space.
+  const float dx = x0(kPxIdx) - x1(kPxIdx);
+  const float dy = x0(kPyIdx) - x1(kPyIdx);
+  return dx * dx + dy * dy;
 }
 
 }  // namespace ilqgames
 #endif
-

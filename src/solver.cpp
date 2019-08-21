@@ -42,42 +42,87 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_ILQ_SOLVER_H
-#define ILQGAMES_SOLVER_ILQ_SOLVER_H
-
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/solver/solve_lq_game.h>
 #include <ilqgames/solver/solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
-#include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <limits>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-class ILQSolver : public Solver {
- public:
-  virtual ~ILQSolver() {}
-  ILQSolver(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
-            const std::vector<PlayerCost>& player_costs, Time time_horizon,
-            Time time_step)
-      : Solver(dynamics, player_costs, time_horizon, time_step) {}
+void Solver::CurrentOperatingPoint(
+    const OperatingPoint& last_operating_point,
+    const std::vector<Strategy>& current_strategies,
+    OperatingPoint* current_operating_point) const {
+  CHECK_NOTNULL(current_operating_point);
 
-  // Solve this game. Returns true if converged.
-  bool Solve(const VectorXf& x0, const OperatingPoint& initial_operating_point,
-             const std::vector<Strategy>& initial_strategies,
-             OperatingPoint* final_operating_point,
-             std::vector<Strategy>* final_strategies, SolverLog* log = nullptr,
-             Time max_runtime = std::numeric_limits<Time>::infinity());
-};  // class ILQSolver
+  // Integrate dynamics and populate operating point, one time step at a time.
+  VectorXf x(last_operating_point.xs[0]);
+  for (size_t kk = 0; kk < num_time_steps_; kk++) {
+    Time t = ComputeTimeStamp(kk);
+
+    // Unpack.
+    const VectorXf delta_x = x - last_operating_point.xs[kk];
+    const auto& last_us = last_operating_point.us[kk];
+    auto& current_us = current_operating_point->us[kk];
+
+    // Record state.
+    current_operating_point->xs[kk] = x;
+
+    // Compute and record control for each player.
+    for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
+      const auto& strategy = current_strategies[jj];
+      current_us[jj] = strategy(kk, delta_x, last_us[jj]);
+    }
+
+    // Integrate dynamics for one time step.
+    if (kk < num_time_steps_ - 1)
+      x = dynamics_->Integrate(t, time_step_, x, current_us);
+  }
+}
+
+bool Solver::HasConverged(size_t iteration,
+                          const OperatingPoint& last_operating_point,
+                          const OperatingPoint& current_operating_point) const {
+  // As a simple starting point, we'll say that we've converged if it's been
+  // at least 50 iterations or the current operating_point and last operating
+  // point are within 0.1 in every dimension at every time.
+  constexpr size_t kMaxIterations = 100;
+  constexpr float kMaxElementwiseDifference = 1e-1;
+
+  // Check iterations.
+  if (iteration >= kMaxIterations) return true;
+  if (iteration == 0) return false;
+
+  // Check operating points.
+  for (size_t kk = 0; kk < num_time_steps_; kk++) {
+    const VectorXf delta =
+        current_operating_point.xs[kk] - last_operating_point.xs[kk];
+    if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
+  }
+
+  return true;
+}
+
+bool Solver::ModifyLQStrategies(const OperatingPoint& current_operating_point,
+                                std::vector<Strategy>* strategies) const {
+  CHECK_NOTNULL(strategies);
+
+  // As a simple starting point, just scale all the 'alphas' in the strategy to
+  // a fraction of their original value.
+  constexpr float kAlphaScalingFactor = 0.02;
+  for (auto& strategy : *strategies) {
+    for (auto& alpha : strategy.alphas) alpha *= kAlphaScalingFactor;
+  }
+
+  return true;
+}
 
 }  // namespace ilqgames
-
-#endif

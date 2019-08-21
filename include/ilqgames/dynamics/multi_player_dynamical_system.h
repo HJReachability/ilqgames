@@ -44,11 +44,11 @@
 #ifndef ILQGAMES_DYNAMICS_MULTI_PLAYER_DYNAMICAL_SYSTEM_H
 #define ILQGAMES_DYNAMICS_MULTI_PLAYER_DYNAMICAL_SYSTEM_H
 
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
-#include <ilqgames/dynamics/multi_player_integrable_system.h>
 
 #include <vector>
 
@@ -64,25 +64,19 @@ class MultiPlayerDynamicalSystem : public MultiPlayerIntegrableSystem {
 
   // Compute a discrete-time Jacobian linearization.
   virtual LinearDynamicsApproximation Linearize(
-      Time t, const VectorXf& x,
-      const std::vector<VectorXf>& us) const = 0;
+      Time t, const VectorXf& x, const std::vector<VectorXf>& us) const = 0;
 
   // Integrate these dynamics forward in time.
   VectorXf Integrate(Time t0, Time time_interval, const VectorXf& x0,
                      const std::vector<VectorXf>& us) const;
-
-  // Distance metric between two states. By default, just the *squared* 2-norm.
-  virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
-    return (x0 - x1).squaredNorm();
-  }
 
   // Getters.
   virtual Dimension UDim(PlayerIndex player_idx) const = 0;
   virtual PlayerIndex NumPlayers() const = 0;
 
  protected:
-  explicit MultiPlayerDynamicalSystem(Dimension xdim, Time time_step) : 
-    MultiPlayerIntegrableSystem(xdim, time_step) {}
+  explicit MultiPlayerDynamicalSystem(Dimension xdim, Time time_step)
+      : MultiPlayerIntegrableSystem(xdim, time_step) {}
 
 };  //\class MultiPlayerDynamicalSystem
 
