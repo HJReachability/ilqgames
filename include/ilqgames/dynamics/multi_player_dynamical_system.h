@@ -87,6 +87,11 @@ class MultiPlayerDynamicalSystem {
       const OperatingPoint& operating_point,
       const std::vector<Strategy>& strategies) const;
 
+  // Distance metric between two states. By default, just the *squared* 2-norm.
+  virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
+    return (x0 - x1).squaredNorm();
+  }
+
   // Getters.
   Dimension XDim() const { return xdim_; }
   Dimension TotalUDim() const {

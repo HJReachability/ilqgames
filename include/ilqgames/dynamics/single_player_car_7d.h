@@ -74,6 +74,9 @@ class SinglePlayerCar7D : public SinglePlayerDynamicalSystem {
   void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
+  // Distance metric between two states.
+  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
+
   // Constexprs for state indices.
   static constexpr Dimension kNumXDims = 7;
   static constexpr Dimension kPxIdx = 0;
@@ -139,6 +142,14 @@ inline void SinglePlayerCar7D::Linearize(Time t, Time time_step,
   B(kPhiIdx, kOmegaIdx) = time_step;
   B(kVIdx, kAIdx) = time_step;
   B(kKappaIdx, kOmegaIdx) = time_step / (cphi * cphi * inter_axle_distance_);
+}
+
+inline float SinglePlayerCar7D::DistanceBetween(const VectorXf& x0,
+                                                const VectorXf& x1) const {
+  // Squared distance in position space.
+  const float dx = x0(kPxIdx) - x1(kPxIdx);
+  const float dy = x0(kPyIdx) - x1(kPyIdx);
+  return dx * dx + dy * dy;
 }
 
 }  // namespace ilqgames

@@ -48,12 +48,13 @@
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <algorithm>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-std::shared_ptr<SolverLog> Problem::Solve() {
+std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
   CHECK_NOTNULL(solver_.get());
   CHECK_NOTNULL(strategies_.get());
   CHECK_NOTNULL(operating_point_.get());
@@ -65,7 +66,8 @@ std::shared_ptr<SolverLog> Problem::Solve() {
   std::vector<Strategy> final_strategies(*strategies_);
   OperatingPoint final_operating_point(*operating_point_);
   if (!solver_->Solve(x0_, *operating_point_, *strategies_,
-                      &final_operating_point, &final_strategies, log.get())) {
+                      &final_operating_point, &final_strategies, log.get(),
+                      max_runtime)) {
     LOG(WARNING) << "Solver failed.";
     return nullptr;
   }
@@ -109,8 +111,17 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
                          solver_->TimeStep(), x, *operating_point_,
                          *strategies_);
 
+  // Find index of nearest state in the existing plan to this state.
+  const auto nearest_iter =
+      std::min_element(operating_point_->xs.begin(), operating_point_->xs.end(),
+                       [&dynamics, &x](const VectorXf& x1, const VectorXf& x2) {
+                         return dynamics.DistanceBetween(x, x1) <
+                                dynamics.DistanceBetween(x, x2);
+                       });
+
   // Set initial state to this state.
-  x0_ = x;
+  // NOTE: we are currently *not* interpolating when finding the closest point.
+  x0_ = *nearest_iter;
 
   // Set initial time to first timestamp in new problem.
   operating_point_->t0 +=

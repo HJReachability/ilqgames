@@ -84,7 +84,6 @@ int main(int argc, char** argv) {
       ILQGAMES_LOG_DIR + std::string("/three_player_intersection.log");
   google::SetLogDestination(0, log_file.c_str());
   FLAGS_logtostderr = true;
-  FLAGS_minloglevel = 1;
   google::InitGoogleLogging(argv[0]);
 
   // Set up the game.

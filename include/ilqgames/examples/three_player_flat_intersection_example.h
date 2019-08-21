@@ -36,50 +36,33 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Multi-player dynamical system comprised of several single player subsystems.
+// Three player intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_DYNAMICS_CONCATENATED_DYNAMICAL_SYSTEM_H
-#define ILQGAMES_DYNAMICS_CONCATENATED_DYNAMICAL_SYSTEM_H
+#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#define ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/dynamics/single_player_dynamical_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/types.h>
-
-#include <algorithm>
+#include <ilqgames/solver/problem.h>
 
 namespace ilqgames {
 
-class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
+class ThreePlayerIntersectionExample : public Problem {
  public:
-  ~ConcatenatedDynamicalSystem() {}
-  ConcatenatedDynamicalSystem(const SubsystemList& subsystems);
+  ~ThreePlayerIntersectionExample() {}
+  ThreePlayerIntersectionExample();
 
-  // Compute time derivative of state.
-  VectorXf Evaluate(Time t, const VectorXf& x,
-                    const std::vector<VectorXf>& us) const;
-
-  // Compute a discrete-time Jacobian linearization.
-  LinearDynamicsApproximation Linearize(Time t, Time time_step,
-                                        const VectorXf& x,
-                                        const std::vector<VectorXf>& us) const;
-
-  // Distance metric between two states.
-  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
-
-  // Getters.
-  Dimension UDim(PlayerIndex player_idx) const {
-    return subsystems_[player_idx]->UDim();
-  }
-
-  PlayerIndex NumPlayers() const { return subsystems_.size(); }
+  // Accessors.
+  const std::vector<Dimension>& XIdxs() const { return x_idxs_; }
+  const std::vector<Dimension>& YIdxs() const { return y_idxs_; }
+  const std::vector<Dimension>& HeadingIdxs() const { return heading_idxs_; }
 
  private:
-  // List of subsystems, each of which controls the affects of a single player.
-  const SubsystemList subsystems_;
-};  // namespace ilqgames
+  // Indices for x/y/heading.
+  const std::vector<Dimension> x_idxs_;
+  const std::vector<Dimension> y_idxs_;
+  const std::vector<Dimension> heading_idxs_;
+};  // class ThreePlayerIntersectionExample
 
 }  // namespace ilqgames
 
