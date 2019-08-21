@@ -36,23 +36,22 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all multi-player *integrable* dynamical systems. 
+// Base class for all multi-player *integrable* dynamical systems.
 // Supports (discrete-time) linearization and integration.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
-#include <ilqgames/dynamics/multi_player_integrable_system.h>
 
 #include <vector>
 
 namespace ilqgames {
 
 VectorXf MultiPlayerIntegrableSystem::Integrate(
-    Time t0, Time t, const VectorXf& x0,
-    const OperatingPoint& operating_point,
+    Time t0, Time t, const VectorXf& x0, const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   CHECK_GE(t, t0);
   CHECK_GE(t0, operating_point.t0);
@@ -64,7 +63,7 @@ VectorXf MultiPlayerIntegrableSystem::Integrate(
   // 't0' to the next discrete timestep.
   VectorXf x(x0);
   if (t0 > operating_point.t0)
-    x = IntegrateToNextTimeStep(t0, time_step_, x0, operating_point, strategies);
+    x = IntegrateToNextTimeStep(t0, x0, operating_point, strategies);
 
   // Compute current timestep and final timestep.
   const Time relative_t0 = t0 - operating_point.t0;
@@ -74,17 +73,16 @@ VectorXf MultiPlayerIntegrableSystem::Integrate(
   const size_t final_timestep = static_cast<size_t>(relative_t / time_step_);
 
   // Integrate forward step by step up to timestep including t.
-  x = Integrate(current_timestep + 1, final_timestep, time_step_, x,
-                operating_point, strategies);
+  x = Integrate(current_timestep + 1, final_timestep, x, operating_point,
+                strategies);
 
   // Integrate forward from this timestep to t.
-  return IntegrateFromPriorTimeStep(t, time_step_, x, operating_point,
-                                    strategies);
+  return IntegrateFromPriorTimeStep(t, x, operating_point, strategies);
 }
 
 VectorXf MultiPlayerIntegrableSystem::Integrate(
-    size_t initial_timestep, size_t final_timestep,
-    const VectorXf& x0, const OperatingPoint& operating_point,
+    size_t initial_timestep, size_t final_timestep, const VectorXf& x0,
+    const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   VectorXf x(x0);
   std::vector<VectorXf> us(NumPlayers());
@@ -103,8 +101,7 @@ VectorXf MultiPlayerIntegrableSystem::Integrate(
 }
 
 VectorXf MultiPlayerIntegrableSystem::IntegrateToNextTimeStep(
-    Time t0, const VectorXf& x0,
-    const OperatingPoint& operating_point,
+    Time t0, const VectorXf& x0, const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   CHECK_GE(t0, operating_point.t0);
 
@@ -131,13 +128,13 @@ VectorXf MultiPlayerIntegrableSystem::IntegrateToNextTimeStep(
 }
 
 VectorXf MultiPlayerIntegrableSystem::IntegrateFromPriorTimeStep(
-    Time t, const VectorXf& x0,
-    const OperatingPoint& operating_point,
+    Time t, const VectorXf& x0, const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
   // Compute time until next timestep.
   const Time relative_t = t - operating_point.t0;
   const size_t current_timestep = static_cast<size_t>(relative_t / time_step_);
-  const Time remaining_time_until_t = relative_t - time_step_ * current_timestep;
+  const Time remaining_time_until_t =
+      relative_t - time_step_ * current_timestep;
 
   // Populate controls for each player.
   std::vector<VectorXf> us(NumPlayers());

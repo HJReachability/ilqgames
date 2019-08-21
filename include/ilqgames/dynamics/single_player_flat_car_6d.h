@@ -68,8 +68,8 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
   VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const;
 
   // Discrete time approximation of the underlying linearized system.
-  void LinearizedSystem(Time time_step,
-                 Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
+  void LinearizedSystem(Time time_step, Eigen::Ref<MatrixXf> A,
+                        Eigen::Ref<MatrixXf> B) const;
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
@@ -80,8 +80,11 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
 
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
-  void Partial(const VectorXf& xi, std::vector<VectorXf>* grads, 
-              std::vector<MatrixXf>* hesses) const;
+  void Partial(const VectorXf& xi, std::vector<VectorXf>* grads,
+               std::vector<MatrixXf>* hesses) const;
+
+  // Distance metric between two states.
+  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Constexprs for state indices.
   static constexpr Dimension kNumXDims = 6;
@@ -109,7 +112,7 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
 // ----------------------------- IMPLEMENTATION ----------------------------- //
 
 inline VectorXf SinglePlayerFlatCar6D::Evaluate(const VectorXf& x,
-                                            const VectorXf& u) const {
+                                                const VectorXf& u) const {
   VectorXf xdot(xdim_);
   xdot(kPxIdx) = x(kVIdx) * std::cos(x(kThetaIdx));
   xdot(kPyIdx) = x(kVIdx) * std::sin(x(kThetaIdx));
@@ -122,10 +125,7 @@ inline VectorXf SinglePlayerFlatCar6D::Evaluate(const VectorXf& x,
 }
 
 inline void SinglePlayerFlatCar6D::LinearizedSystem(
-                                         Time time_step,
-                                         Eigen::Ref<MatrixXf> A,
-                                         Eigen::Ref<MatrixXf> B) const {
-
+    Time time_step, Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
   A(kPxIdx, kVxIdx) += time_step;
   A(kPyIdx, kVyIdx) += time_step;
   A(kVxIdx, kAxIdx) += time_step;
@@ -135,45 +135,47 @@ inline void SinglePlayerFlatCar6D::LinearizedSystem(
   B(kAyIdx, 1) = time_step;
 }
 
-inline MatrixXf SinglePlayerFlatCar6D::InverseDecouplingMatrix(const VectorXf& x) const{
-  MatrixXf M_inv(kNumUDims,kNumUDims);
+inline MatrixXf SinglePlayerFlatCar6D::InverseDecouplingMatrix(
+    const VectorXf& x) const {
+  MatrixXf M_inv(kNumUDims, kNumUDims);
 
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
-  const float cos_phi_v = std::cos(x(kPhiIdx))/x(kVIdx);
+  const float cos_phi_v = std::cos(x(kPhiIdx)) / x(kVIdx);
   const float scaling = inter_axle_distance_ * cos_phi_v * cos_phi_v;
-   
-  M_inv(0,0) = -scaling * sin_t;
-  M_inv(0,1) =  scaling * cos_t;
-  M_inv(1,0) =  cos_t;
-  M_inv(1,1) =  sin_t;
+
+  M_inv(0, 0) = -scaling * sin_t;
+  M_inv(0, 1) = scaling * cos_t;
+  M_inv(1, 0) = cos_t;
+  M_inv(1, 1) = sin_t;
 
   return M_inv;
 }
 
-inline VectorXf SinglePlayerFlatCar6D::AffineTerm(const VectorXf& x) const{
+inline VectorXf SinglePlayerFlatCar6D::AffineTerm(const VectorXf& x) const {
   VectorXf m = VectorXf::Zero(kNumUDims);
 
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
   const float tan_phi = std::tan(x(kPhiIdx));
-  const float v_over_l = x(kVIdx)/inter_axle_distance_;
+  const float v_over_l = x(kVIdx) / inter_axle_distance_;
 
-  m(0) = -v_over_l * tan_phi * (3.0 * x(kAIdx) * sin_t + 
-                                v_over_l * x(kVIdx) * tan_phi * cos_t);
-  m(1) =  v_over_l * tan_phi * (3.0 * x(kAIdx) * cos_t - 
-                                v_over_l * x(kVIdx) * tan_phi * sin_t); 
+  m(0) = -v_over_l * tan_phi *
+         (3.0 * x(kAIdx) * sin_t + v_over_l * x(kVIdx) * tan_phi * cos_t);
+  m(1) = v_over_l * tan_phi *
+         (3.0 * x(kAIdx) * cos_t - v_over_l * x(kVIdx) * tan_phi * sin_t);
 
   return m;
 }
 
-inline VectorXf SinglePlayerFlatCar6D::ToLinearSystemState(const VectorXf& x) const{
+inline VectorXf SinglePlayerFlatCar6D::ToLinearSystemState(
+    const VectorXf& x) const {
   VectorXf xi(kNumXDims);
 
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
   const float tan_phi = std::tan(x(kPhiIdx));
-  const float vv_over_l = x(kVIdx) * x(kVIdx)/inter_axle_distance_;
+  const float vv_over_l = x(kVIdx) * x(kVIdx) / inter_axle_distance_;
 
   xi(kPxIdx) = x(kPxIdx);
   xi(kPyIdx) = x(kPyIdx);
@@ -185,22 +187,31 @@ inline VectorXf SinglePlayerFlatCar6D::ToLinearSystemState(const VectorXf& x) co
   return xi;
 }
 
-inline VectorXf SinglePlayerFlatCar6D::FromLinearSystemState(const VectorXf& xi) const{
+inline VectorXf SinglePlayerFlatCar6D::FromLinearSystemState(
+    const VectorXf& xi) const {
   VectorXf x(kNumXDims);
 
   x(kPxIdx) = xi(kPxIdx);
   x(kPyIdx) = xi(kPyIdx);
-  x(kThetaIdx) = std::atan2(xi(kVyIdx),xi(kVxIdx));
-  x(kVIdx) = std::hypot(xi(kVyIdx),xi(kVxIdx));
+  x(kThetaIdx) = std::atan2(xi(kVyIdx), xi(kVxIdx));
+  x(kVIdx) = std::hypot(xi(kVyIdx), xi(kVxIdx));
 
   const float cos_t = xi(kVxIdx) / x(kVIdx);
   const float sin_t = xi(kVyIdx) / x(kVIdx);
 
   x(kAIdx) = cos_t * xi(kAxIdx) + sin_t * xi(kAyIdx);
-  x(kPhiIdx) = std::atan((x(kAIdx) * cos_t - xi(kAxIdx)) * 
-                  inter_axle_distance_ / (x(kVIdx) * x(kVIdx) * sin_t));
+  x(kPhiIdx) = std::atan((x(kAIdx) * cos_t - xi(kAxIdx)) *
+                         inter_axle_distance_ / (x(kVIdx) * x(kVIdx) * sin_t));
 
   return x;
+}
+
+inline float SinglePlayerFlatCar6D::DistanceBetween(const VectorXf& x0,
+                                                    const VectorXf& x1) const {
+  // Squared distance in position space.
+  const float dx = x0(kPxIdx) - x1(kPxIdx);
+  const float dy = x0(kPyIdx) - x1(kPyIdx);
+  return dx * dx + dy * dy;
 }
 
 }  // namespace ilqgames

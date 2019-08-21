@@ -49,14 +49,16 @@
 namespace ilqgames {
 
 ConcatenatedDynamicalSystem::ConcatenatedDynamicalSystem(
-    const SubsystemList& subsystems)
-    : MultiPlayerDynamicalSystem(std::accumulate(
-          subsystems.begin(), subsystems.end(), 0,
-          [](Dimension total,
-             const std::shared_ptr<SinglePlayerDynamicalSystem>& subsystem) {
-            CHECK_NOTNULL(subsystem.get());
-            return total + subsystem->XDim();
-          })),
+    const SubsystemList& subsystems, Time time_step)
+    : MultiPlayerDynamicalSystem(
+          std::accumulate(subsystems.begin(), subsystems.end(), 0,
+                          [](Dimension total,
+                             const std::shared_ptr<SinglePlayerDynamicalSystem>&
+                                 subsystem) {
+                            CHECK_NOTNULL(subsystem.get());
+                            return total + subsystem->XDim();
+                          }),
+          time_step),
       subsystems_(subsystems) {}
 
 VectorXf ConcatenatedDynamicalSystem::Evaluate(
@@ -77,8 +79,7 @@ VectorXf ConcatenatedDynamicalSystem::Evaluate(
 }
 
 LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
-    Time t, Time time_step, const VectorXf& x,
-    const std::vector<VectorXf>& us) const {
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   CHECK_EQ(us.size(), NumPlayers());
 
   // Populate a block-diagonal A, as well as Bs.
@@ -90,7 +91,7 @@ LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
     subsystem->Linearize(
-        t, time_step, x.segment(dims_so_far, xdim), us[ii],
+        t, time_step_, x.segment(dims_so_far, xdim), us[ii],
         linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
         linearization.Bs[ii].block(dims_so_far, 0, xdim, udim));
 

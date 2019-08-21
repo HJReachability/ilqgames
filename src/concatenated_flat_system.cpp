@@ -231,10 +231,11 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
   std::vector<std::vector<VectorXf>> first_partials;
   std::vector<std::vector<MatrixXf>> second_partials;
   Dimension xi_dims_so_far = 0;
-  for(size_t ii=0; ii < NumPlayers(); ii++){
+  for (size_t ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem_ii = subsystems_[ii];
     const Dimension xdim = subsystem_ii->XDim();
-    subsystem_ii->Partial(xi.segment(xi_dims_so_far,xdim),&first_partials[ii],&second_partials[ii]);
+    subsystem_ii->Partial(xi.segment(xi_dims_so_far, xdim), &first_partials[ii],
+                          &second_partials[ii]);
     xi_dims_so_far += xdim;
   }
 
@@ -264,7 +265,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
             for (Dimension kk = 0; kk < SubsystemXDim(pp); kk++) {
               if (pp == qq) {
                 xhess(ii_rows, jj_cols) +=
-                    l(kk + rows_so_far) * second_partials[pp][kk](ii,jj);
+                    l(kk + rows_so_far) * second_partials[pp][kk](ii, jj);
               }
 
               float tmp = 0.0;
@@ -273,8 +274,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
                        first_partials[qq][ll](jj);
               }
 
-              xhess(ii_rows, jj_cols) +=
-                  tmp * first_partials[pp][kk](ii);
+              xhess(ii_rows, jj_cols) += tmp * first_partials[pp][kk](ii);
             }
           }
 
@@ -301,9 +301,8 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
       // Iterating over each player's cost.
       for (Dimension jj = 0; jj < SubsystemXDim(pp); jj++) {
-        grad_xs[pp](ii) += l(ii+rows_so_far) * first_partials[pp][jj](ii);
+        grad_xs[pp](ii) += l(ii + rows_so_far) * first_partials[pp][jj](ii);
       }
-
     }
     // Increment rows so far to track next subsystem.
     rows_so_far += SubsystemXDim(pp);
@@ -316,20 +315,37 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
   std::vector<MatrixXf> M_invs(NumPlayers());
 
   Dimension x_dims_so_far = 0;
-  for(size_t ii=0; ii < NumPlayers(); ii++){
+  for (size_t ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem_ii = subsystems_[ii];
     const Dimension xdim = subsystem_ii->XDim();
-    M_invs[ii] = subsystem_ii->InverseDecouplingMatrix(x.segment(x_dims_so_far, xdim));
+    M_invs[ii] =
+        subsystem_ii->InverseDecouplingMatrix(x.segment(x_dims_so_far, xdim));
     x_dims_so_far += xdim;
   }
 
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
     for (auto& element : (*q)[ii].Rs) {
-      element.second =
-        M_invs[element.first].transpose() * element.second * M_invs[element.first]; 
+      element.second = M_invs[element.first].transpose() * element.second *
+                       M_invs[element.first];
     }
   }
+}
 
+float ConcatenatedFlatSystem::DistanceBetween(const VectorXf& x0,
+                                              const VectorXf& x1) const {
+  Dimension dims_so_far = 0;
+  float total = 0.0;
+
+  // Accumulate total across all subsystems.
+  for (const auto& subsystem : subsystems_) {
+    const Dimension xdim = subsystem->XDim();
+    total += subsystem->DistanceBetween(x0.segment(dims_so_far, xdim),
+                                        x1.segment(dims_so_far, xdim));
+
+    dims_so_far += xdim;
+  }
+
+  return total;
 }
 
 }  // namespace ilqgames

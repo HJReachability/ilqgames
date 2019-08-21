@@ -36,7 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all multi-player *integrable* dynamical systems. 
+// Base class for all multi-player *integrable* dynamical systems.
 // Supports (discrete-time) linearization and integration.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,21 +60,18 @@ class MultiPlayerIntegrableSystem {
   // Options include integration for a single timestep, between arbitrary times,
   // and within a single timestep.
   virtual VectorXf Integrate(Time t0, Time time_interval, const VectorXf& x0,
-                     const std::vector<VectorXf>& us) const = 0;
-  VectorXf Integrate(Time t0, Time t const VectorXf& x0,
+                             const std::vector<VectorXf>& us) const = 0;
+  VectorXf Integrate(Time t0, Time t, const VectorXf& x0,
                      const OperatingPoint& operating_point,
                      const std::vector<Strategy>& strategies) const;
   VectorXf Integrate(size_t initial_timestep, size_t final_timestep,
-                     const VectorXf& x0,
-                     const OperatingPoint& operating_point,
+                     const VectorXf& x0, const OperatingPoint& operating_point,
                      const std::vector<Strategy>& strategies) const;
   VectorXf IntegrateToNextTimeStep(
-      Time t0, const VectorXf& x0,
-      const OperatingPoint& operating_point,
+      Time t0, const VectorXf& x0, const OperatingPoint& operating_point,
       const std::vector<Strategy>& strategies) const;
   VectorXf IntegrateFromPriorTimeStep(
-      Time t, const VectorXf& x0,
-      const OperatingPoint& operating_point,
+      Time t, const VectorXf& x0, const OperatingPoint& operating_point,
       const std::vector<Strategy>& strategies) const;
 
   // Getters.
@@ -88,9 +85,14 @@ class MultiPlayerIntegrableSystem {
   virtual Dimension UDim(PlayerIndex player_idx) const = 0;
   virtual PlayerIndex NumPlayers() const = 0;
 
+  // Distance metric between two states. By default, just the *squared* 2-norm.
+  virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
+    return (x0 - x1).squaredNorm();
+  }
+
  protected:
-  MultiPlayerIntegrableSystem(Dimension xdim, Time time_step) 
-        : xdim_(xdim), time_step_(time_step) {}
+  MultiPlayerIntegrableSystem(Dimension xdim, Time time_step)
+      : xdim_(xdim), time_step_(time_step) {}
 
   // State dimension.
   const Dimension xdim_;
