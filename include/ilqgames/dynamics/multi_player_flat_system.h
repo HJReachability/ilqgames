@@ -49,12 +49,13 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 
 #include <vector>
 
 namespace ilqgames {
 
-  class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
+class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
  public:
   virtual ~MultiPlayerFlatSystem() {}
 
@@ -83,31 +84,15 @@ namespace ilqgames {
   // and within a single timestep.
   VectorXf Integrate(Time time_interval, const VectorXf& xi0,
                      const std::vector<VectorXf>& vs) const;
-  VectorXf Integrate(Time t0, Time t, const VectorXf& xi0,
-                     const OperatingPoint& operating_point,
-                     const std::vector<Strategy>& strategies) const;
-  VectorXf Integrate(size_t initial_timestep, size_t final_timestep,
-                     const VectorXf& xi0, const OperatingPoint& operating_point,
-                     const std::vector<Strategy>& strategies) const;
-  VectorXf IntegrateToNextTimeStep(
-      Time t0, const VectorXf& xi0,
-      const OperatingPoint& operating_point,
-      const std::vector<Strategy>& strategies) const;
-  VectorXf IntegrateFromPriorTimeStep(
-      Time t, const VectorXf& xi0,
-      const OperatingPoint& operating_point,
-      const std::vector<Strategy>& strategies) const;
+
+  VectorXf Integrate(Time t0, Time time_interval, const VectorXf& xi0,
+                     const std::vector<VectorXf>& vs) const {
+                     return Integrate(time_interval, xi0, vs); }
 
   // Getters.
   const LinearDynamicsApproximation& LinearizedSystem() const {
     if (!discrete_linear_system_) ComputeLinearizedSystem();
     return *discrete_linear_system_;
-  }
-  Dimension XDim() const { return xdim_; }
-  Dimension TotalUDim() const {
-    Dimension total = 0;
-    for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) total += UDim(ii);
-    return total;
   }
 
   virtual Dimension UDim(PlayerIndex player_idx) const = 0;
@@ -115,20 +100,15 @@ namespace ilqgames {
 
  protected:
   MultiPlayerFlatSystem(Dimension xdim, Time time_step)
-        : xdim_(xdim), time_step_(time_step) {}
+        : MultiPlayerIntegrableSystem(xdim,time_step) {}
 
   // Discrete time approximation of the underlying linearized system.
   virtual void ComputeLinearizedSystem() const = 0;
-
-  // State dimension.
-  const Dimension xdim_;
 
   // Linearized system (discrete and continuous time).
   mutable std::unique_ptr<const LinearDynamicsApproximation> discrete_linear_system_;
   mutable std::unique_ptr<const LinearDynamicsApproximation> continuous_linear_system_;
 
-  // Time step.
-  const Time time_step_;
 };  //\class MultiPlayerFlatSystem
 
 }  // namespace ilqgames
