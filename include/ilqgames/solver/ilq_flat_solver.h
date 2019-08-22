@@ -73,7 +73,8 @@ class ILQFlatSolver : public GameSolver {
   bool Solve(const VectorXf& xi0, const OperatingPoint& initial_operating_point,
              const std::vector<Strategy>& initial_strategies,
              OperatingPoint* final_operating_point,
-             std::vector<Strategy>* final_strategies, SolverLog* log = nullptr);
+             std::vector<Strategy>* final_strategies, SolverLog* log = nullptr,
+             Time max_runtime = std::numeric_limits<Time>::infinity());
 };  // class ILQFlatSolver
 
 }  // namespace ilqgames

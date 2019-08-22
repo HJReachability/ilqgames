@@ -40,17 +40,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
-#define ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_FLAT_INTERSECTION_EXAMPLE_H
+#define ILQGAMES_EXAMPLE_THREE_PLAYER_FLAT_INTERSECTION_EXAMPLE_H
 
 #include <ilqgames/solver/problem.h>
 
 namespace ilqgames {
 
-class ThreePlayerIntersectionExample : public Problem {
+class ThreePlayerFlatIntersectionExample : public Problem {
  public:
-  ~ThreePlayerIntersectionExample() {}
-  ThreePlayerIntersectionExample();
+  ~ThreePlayerFlatIntersectionExample() {}
+  ThreePlayerFlatIntersectionExample();
 
   // Accessors.
   const std::vector<Dimension>& XIdxs() const { return x_idxs_; }
@@ -62,7 +62,7 @@ class ThreePlayerIntersectionExample : public Problem {
   const std::vector<Dimension> x_idxs_;
   const std::vector<Dimension> y_idxs_;
   const std::vector<Dimension> heading_idxs_;
-};  // class ThreePlayerIntersectionExample
+};  // class ThreePlayerFlatIntersectionExample
 
 }  // namespace ilqgames
 
