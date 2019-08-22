@@ -66,7 +66,7 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
   VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const;
 
   // Discrete time approximation of the underlying linearized system.
-  void LinearizeSystem(Time time_step, Eigen::Ref<MatrixXf> A,
+  void LinearizedSystem(Time time_step, Eigen::Ref<MatrixXf> A,
                        Eigen::Ref<MatrixXf> B) const;
 
   // Utilities for feedback linearization.
@@ -190,11 +190,11 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
       2.0 * xi(kVxIdx) * xi(kVyIdx) / norm_ss;
   (*hesses)[kThetaIdx](kVxIdx, kVyIdx) =
       (xi(kVyIdx) * xi(kVyIdx) - xi(kVxIdx) * xi(kVxIdx)) / norm_ss;
-  (*hesses)[kThetaIdx](kVyIdx, kVxIdx) = hesses[kThetaIdx](kVxIdx, kVyIdx);
-  (*hesses)[kThetaIdx](kVyIdx, kVyIdx) = -hesses[kThetaIdx](kVxIdx, kVxIdx);
+  (*hesses)[kThetaIdx](kVyIdx, kVxIdx) = (*hesses)[kThetaIdx](kVxIdx, kVyIdx);
+  (*hesses)[kThetaIdx](kVyIdx, kVyIdx) = -(*hesses)[kThetaIdx](kVxIdx, kVxIdx);
   (*hesses)[kVIdx](kVxIdx, kVxIdx) = (xi(kVyIdx) * xi(kVyIdx)) / sqrt_norm_sss;
   (*hesses)[kVIdx](kVxIdx, kVyIdx) = (-xi(kVxIdx) * xi(kVyIdx)) / sqrt_norm_sss;
-  (*hesses)[kVIdx](kVyIdx, kVxIdx) = hesses[kVIdx](kVxIdx, kVyIdx);
+  (*hesses)[kVIdx](kVyIdx, kVxIdx) = (*hesses)[kVIdx](kVxIdx, kVyIdx);
   (*hesses)[kVIdx](kVyIdx, kVyIdx) = (xi(kVxIdx) * xi(kVxIdx)) / sqrt_norm_sss;
 }
 

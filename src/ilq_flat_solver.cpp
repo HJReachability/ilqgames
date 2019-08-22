@@ -62,7 +62,8 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
                           const std::vector<Strategy>& initial_strategies,
                           OperatingPoint* final_operating_point,
                           std::vector<Strategy>* final_strategies,
-                          SolverLog* log) {
+                          SolverLog* log, 
+                          Time max_runtime) {
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
