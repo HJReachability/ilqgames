@@ -47,7 +47,7 @@
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
-#include <ilqgames/solver/solver.h>
+#include <ilqgames/solver/game_solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -61,13 +61,13 @@
 
 namespace ilqgames {
 
-class ILQFlatSolver : public Solver {
+class ILQFlatSolver : public GameSolver {
  public:
   virtual ~ILQFlatSolver() {}
   ILQFlatSolver(const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics,
                 const std::vector<PlayerCost>& player_costs, Time time_horizon,
                 Time time_step)
-      : Solver(dynamics, player_costs, time_horizon, time_step) {}
+      : GameSolver(dynamics, player_costs, time_horizon, time_step) {}
 
   // Solve this game. Returns true if converged.
   bool Solve(const VectorXf& xi0, const OperatingPoint& initial_operating_point,

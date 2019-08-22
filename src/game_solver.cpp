@@ -43,8 +43,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/player_cost.h>
+#include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/solve_lq_game.h>
-#include <ilqgames/solver/solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -57,7 +57,7 @@
 
 namespace ilqgames {
 
-void Solver::CurrentOperatingPoint(
+void GameSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
     OperatingPoint* current_operating_point) const {
@@ -88,9 +88,9 @@ void Solver::CurrentOperatingPoint(
   }
 }
 
-bool Solver::HasConverged(size_t iteration,
-                          const OperatingPoint& last_operating_point,
-                          const OperatingPoint& current_operating_point) const {
+bool GameSolver::HasConverged(
+    size_t iteration, const OperatingPoint& last_operating_point,
+    const OperatingPoint& current_operating_point) const {
   // As a simple starting point, we'll say that we've converged if it's been
   // at least 50 iterations or the current operating_point and last operating
   // point are within 0.1 in every dimension at every time.
@@ -111,8 +111,9 @@ bool Solver::HasConverged(size_t iteration,
   return true;
 }
 
-bool Solver::ModifyLQStrategies(const OperatingPoint& current_operating_point,
-                                std::vector<Strategy>* strategies) const {
+bool GameSolver::ModifyLQStrategies(
+    const OperatingPoint& current_operating_point,
+    std::vector<Strategy>* strategies) const {
   CHECK_NOTNULL(strategies);
 
   // As a simple starting point, just scale all the 'alphas' in the strategy to

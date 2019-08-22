@@ -42,8 +42,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLVER_H
-#define ILQGAMES_SOLVER_SOLVER_H
+#ifndef ILQGAMES_SOLVER_GAME_SOLVER_H
+#define ILQGAMES_SOLVER_GAME_SOLVER_H
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
@@ -64,9 +64,9 @@ namespace ilqgames {
 
 using clock = std::chrono::system_clock;
 
-class Solver {
+class GameSolver {
  public:
-  virtual ~Solver() {}
+  virtual ~GameSolver() {}
 
   // Solve this game. Returns true if converged.
   virtual bool Solve(
@@ -88,9 +88,9 @@ class Solver {
   }
 
  protected:
-  Solver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-         const std::vector<PlayerCost>& player_costs, Time time_horizon,
-         Time time_step)
+  GameSolver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
+             const std::vector<PlayerCost>& player_costs, Time time_horizon,
+             Time time_step)
       : dynamics_(dynamics),
         player_costs_(player_costs),
         time_horizon_(time_horizon),
@@ -127,7 +127,7 @@ class Solver {
   const Time time_horizon_;
   const Time time_step_;
   const size_t num_time_steps_;
-};  // class ILQSolver
+};  // class GameSolver
 
 }  // namespace ilqgames
 

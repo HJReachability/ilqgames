@@ -64,6 +64,7 @@
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
 
+#include <glog/logging.h>
 #include <vector>
 
 namespace ilqgames {
@@ -207,5 +208,3 @@ std::vector<Strategy> SolveLQGame(
 }
 
 }  // namespace ilqgames
-
-#endif
