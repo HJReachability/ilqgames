@@ -179,7 +179,8 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
       new ConcatenatedDynamicalSystem(
           {std::make_shared<SinglePlayerCar5D>(kInterAxleLength),
            std::make_shared<SinglePlayerCar5D>(kInterAxleLength),
-           std::make_shared<SinglePlayerUnicycle4D>()}));
+           std::make_shared<SinglePlayerUnicycle4D>()},
+          kTimeStep));
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
