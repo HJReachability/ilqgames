@@ -55,6 +55,8 @@
 #include <ilqgames/dynamics/single_player_flat_system.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+
 namespace ilqgames {
 
 class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
