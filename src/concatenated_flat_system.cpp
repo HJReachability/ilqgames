@@ -227,9 +227,11 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
     const VectorXf& xi, const std::vector<VectorXf>& vs,
     std::vector<QuadraticCostApproximation>* q) const {
   CHECK_NOTNULL(q);
-
-  std::vector<std::vector<VectorXf>> first_partials;
-  std::vector<std::vector<MatrixXf>> second_partials;
+  CHECK_EQ(q->size(),NumPlayers());
+  std::cout << "yo 1" << std::endl;
+  // For each player we record dx_i/dxi and d2x_i/dxi2. 
+  std::vector<std::vector<VectorXf>> first_partials(NumPlayers());
+  std::vector<std::vector<MatrixXf>> second_partials(NumPlayers());
   Dimension xi_dims_so_far = 0;
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem_ii = subsystems_[ii];
@@ -287,17 +289,18 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
       rows_so_far += SubsystemXDim(pp);
     }
   }
-
+  std::cout << "yo 2" << std::endl;
   // For loop for gradient.
   // Vector that is going to contain all the cost gradients for each player.
-  std::vector<VectorXf> grad_xs(q->size(), VectorXf::Zero(xdim_));
+  std::vector<VectorXf> grad_xs(NumPlayers(), VectorXf::Zero(xdim_));
   rows_so_far = 0;
 
   // Iterating over primary player indexes.
   for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
     // Iterating over that player's number of dimensions.
     for (Dimension ii = 0; ii < SubsystemXDim(pp); ii++) {
-      const VectorXf& l = (*q)[ii].l;
+      const VectorXf& l = (*q)[pp].l;
+      CHECK_LT(ii + rows_so_far,l.size());
 
       // Iterating over each player's cost.
       for (Dimension jj = 0; jj < SubsystemXDim(pp); jj++) {
@@ -307,7 +310,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
     // Increment rows so far to track next subsystem.
     rows_so_far += SubsystemXDim(pp);
   }
-
+  std::cout << "yo 3" << std::endl;
   // Now modify the cost hessians, i.e. 'Rs'.
   // NOTE: this depends only on the decoupling matrix.
   const VectorXf x = FromLinearSystemState(xi);

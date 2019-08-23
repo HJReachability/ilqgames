@@ -45,72 +45,18 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_DYNAMICS_SINGLE_PLAYER_DUBINS_CAR_H
-#define ILQGAMES_DYNAMICS_SINGLE_PLAYER_DUBINS_CAR_H
-
-#include <ilqgames/dynamics/single_player_dynamical_system.h>
-#include <ilqgames/utils/types.h>
-
-#include <glog/logging.h>
+#include <ilqgames/dynamics/single_player_dubins_car.h>
 
 namespace ilqgames {
 
-class SinglePlayerDubinsCar : public SinglePlayerDynamicalSystem {
- public:
-  ~SinglePlayerDubinsCar() {}
-  SinglePlayerDubinsCar(float v)
-      : SinglePlayerDynamicalSystem(kNumXDims, kNumUDims), v_(v) {
-    CHECK_GT(v_, 0.0);
-  }
+// Constexprs for state indices.
+const Dimension SinglePlayerDubinsCar::kNumXDims = 3;
+const Dimension SinglePlayerDubinsCar::kPxIdx = 0;
+const Dimension SinglePlayerDubinsCar::kPyIdx = 1;
+const Dimension SinglePlayerDubinsCar::kThetaIdx = 2;
 
-  // Compute time derivative of state.
-  VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
+// Constexprs for control indices.
+const Dimension SinglePlayerDubinsCar::kNumUDims = 1;
+const Dimension SinglePlayerDubinsCar::kOmegaIdx = 0;
 
-  // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
-                 Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
-
-  // Constexprs for state indices.
-  static const Dimension kNumXDims;
-  static const Dimension kPxIdx;
-  static const Dimension kPyIdx;
-  static const Dimension kThetaIdx;
-
-  // Constexprs for control indices.
-  static const Dimension kNumUDims;
-  static const Dimension kOmegaIdx;
-
- private:
-  // Constant speed of the car.
-  const float v_;
-};  //\class SinglePlayerDubinsCar
-
-// ----------------------------- IMPLEMENTATION ----------------------------- //
-
-inline VectorXf SinglePlayerDubinsCar::Evaluate(Time t, const VectorXf& x,
-                                                const VectorXf& u) const {
-  VectorXf xdot(xdim_);
-  xdot(kPxIdx) = v_ * std::cos(x(kThetaIdx));
-  xdot(kPyIdx) = v_ * std::sin(x(kThetaIdx));
-  xdot(kThetaIdx) = u(kOmegaIdx);
-
-  return xdot;
 }
-
-inline void SinglePlayerDubinsCar::Linearize(Time t, Time time_step,
-                                             const VectorXf& x,
-                                             const VectorXf& u,
-                                             Eigen::Ref<MatrixXf> A,
-                                             Eigen::Ref<MatrixXf> B) const {
-  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
-  const float stheta = std::sin(x(kThetaIdx)) * time_step;
-
-  A(kPxIdx, kThetaIdx) += -v_ * stheta;
-  A(kPyIdx, kThetaIdx) += v_ * ctheta;
-
-  B(kThetaIdx, kOmegaIdx) = time_step;
-}
-
-}  // namespace ilqgames
-
-#endif

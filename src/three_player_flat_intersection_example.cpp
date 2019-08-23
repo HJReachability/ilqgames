@@ -142,29 +142,29 @@ using P1 = SinglePlayerFlatCar6D;
 using P2 = SinglePlayerFlatCar6D;
 using P3 = SinglePlayerFlatUnicycle4D;
 
-static constexpr Dimension kP1XIdx = P1::kPxIdx;
-static constexpr Dimension kP1YIdx = P1::kPyIdx;
-static constexpr Dimension kP1HeadingIdx = P1::kThetaIdx;
-static constexpr Dimension kP1VIdx = P1::kVIdx;
+static const Dimension kP1XIdx = P1::kPxIdx;
+static const Dimension kP1YIdx = P1::kPyIdx;
+static const Dimension kP1HeadingIdx = P1::kThetaIdx;
+static const Dimension kP1VIdx = P1::kVIdx;
 
-static constexpr Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
-static constexpr Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
-static constexpr Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
-static constexpr Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
+static const Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
+static const Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
+static const Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
+static const Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
 
-static constexpr Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
-static constexpr Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
-static constexpr Dimension kP3HeadingIdx =
+static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
+static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
+static const Dimension kP3HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
-static constexpr Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
+static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
 
 // Control dimensions.
-static constexpr Dimension kP1OmegaIdx = 0;
-static constexpr Dimension kP1AIdx = 1;
-static constexpr Dimension kP2OmegaIdx = 0;
-static constexpr Dimension kP2AIdx = 1;
-static constexpr Dimension kP3OmegaIdx = 0;
-static constexpr Dimension kP3AIdx = 1;
+static const Dimension kP1OmegaIdx = 0;
+static const Dimension kP1AIdx = 1;
+static const Dimension kP2OmegaIdx = 0;
+static const Dimension kP2AIdx = 1;
+static const Dimension kP3OmegaIdx = 0;
+static const Dimension kP3AIdx = 1;
 }  // anonymous namespace
 
 ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {

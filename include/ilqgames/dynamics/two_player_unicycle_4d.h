@@ -80,22 +80,22 @@ class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
   PlayerIndex NumPlayers() const { return kNumPlayers; }
 
   // Constexprs for state indices.
-  static constexpr Dimension kNumXDims = 4;
-  static constexpr Dimension kPxIdx = 0;
-  static constexpr Dimension kPyIdx = 1;
-  static constexpr Dimension kThetaIdx = 2;
-  static constexpr Dimension kVIdx = 3;
+  static const Dimension kNumXDims;
+  static const Dimension kPxIdx;
+  static const Dimension kPyIdx;
+  static const Dimension kThetaIdx;
+  static const Dimension kVIdx;
 
   // Constexprs for control indices.
-  static constexpr PlayerIndex kNumPlayers = 2;
+  static const PlayerIndex kNumPlayers;
 
-  static constexpr Dimension kNumU1Dims = 2;
-  static constexpr Dimension kOmegaIdx = 0;
-  static constexpr Dimension kAIdx = 1;
+  static const Dimension kNumU1Dims;
+  static const Dimension kOmegaIdx;
+  static const Dimension kAIdx;
 
-  static constexpr Dimension kNumU2Dims = 2;
-  static constexpr Dimension kDxIdx = 0;
-  static constexpr Dimension kDyIdx = 1;
+  static const Dimension kNumU2Dims;
+  static const Dimension kDxIdx;
+  static const Dimension kDyIdx;
 };  //\class TwoPlayerUnicycle4D
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //
