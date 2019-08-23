@@ -170,10 +170,7 @@ static constexpr Dimension kP3OmegaIdx = 0;
 static constexpr Dimension kP3AIdx = 1;
 }  // anonymous namespace
 
-ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
-    : x_idxs_({kP1XIdx, kP2XIdx, kP3XIdx}),
-      y_idxs_({kP1YIdx, kP2YIdx, kP3YIdx}),
-      heading_idxs_({kP1HeadingIdx, kP2HeadingIdx, kP3HeadingIdx}) {
+ThreePlayerIntersectionExample::ThreePlayerIntersectionExample() {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
@@ -400,6 +397,21 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample()
   // Set up solver.
   solver_.reset(new LinesearchingILQSolver(
       dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon, kTimeStep));
+}
+
+inline std::vector<float> ThreePlayerIntersectionExample::Xs(
+    const VectorXf& x) const {
+  return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx)};
+}
+
+inline std::vector<float> ThreePlayerIntersectionExample::Ys(
+    const VectorXf& x) const {
+  return {x(kP1YIdx), x(kP2YIdx), x(kP3YIdx)};
+}
+
+inline std::vector<float> ThreePlayerIntersectionExample::Thetas(
+    const VectorXf& x) const {
+  return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx)};
 }
 
 }  // namespace ilqgames

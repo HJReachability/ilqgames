@@ -88,20 +88,19 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
 
   // Set up the game.
-  ilqgames::ThreePlayerIntersectionExample problem;
+  auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
 
   // Solve the game in a receding horizon.
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
   constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
-      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &problem);
+      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get());
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
-  ilqgames::TopDownRenderer top_down_renderer(
-      sliders, logs, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
+  ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
   ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem.Solver().PlayerCosts());
+                                         problem->Solver().PlayerCosts());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

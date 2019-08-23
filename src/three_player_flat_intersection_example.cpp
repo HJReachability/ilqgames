@@ -167,10 +167,7 @@ static constexpr Dimension kP3OmegaIdx = 0;
 static constexpr Dimension kP3AIdx = 1;
 }  // anonymous namespace
 
-ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample()
-    : x_idxs_({kP1XIdx, kP2XIdx, kP3XIdx}),
-      y_idxs_({kP1YIdx, kP2YIdx, kP3YIdx}),
-      heading_idxs_({kP1HeadingIdx, kP2HeadingIdx, kP3HeadingIdx}) {
+ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedFlatSystem> dynamics(
       new ConcatenatedFlatSystem(
@@ -397,8 +394,27 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample()
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new ILQFlatSolver(
-      dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon, kTimeStep));
+  solver_.reset(new ILQFlatSolver(dynamics, {p1_cost, p2_cost, p3_cost},
+                                  kTimeHorizon, kTimeStep));
+}
+
+inline std::vector<float> ThreePlayerFlatIntersectionExample::Xs(
+    const VectorXf& xi) const {
+  return {xi(kP1XIdx), xi(kP2XIdx), xi(kP3XIdx)};
+}
+
+inline std::vector<float> ThreePlayerFlatIntersectionExample::Ys(
+    const VectorXf& xi) const {
+  return {xi(kP1YIdx), xi(kP2YIdx), xi(kP3YIdx)};
+}
+
+inline std::vector<float> ThreePlayerFlatIntersectionExample::Thetas(
+    const VectorXf& xi) const {
+  const auto* dynamics =
+      static_cast<const MultiPlayerFlatSystem*>(&solver_->Dynamics());
+
+  const VectorXf x = dynamics->FromLinearSystemState(xi);
+  return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx)};
 }
 
 }  // namespace ilqgames

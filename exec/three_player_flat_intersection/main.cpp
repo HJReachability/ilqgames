@@ -87,18 +87,18 @@ int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
 
   // Set up the game.
-  ilqgames::ThreePlayerFlatIntersectionExample problem;
+  auto problem =
+      std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>();
 
   // Solve the game.
-  std::shared_ptr<const ilqgames::SolverLog> log = problem.Solve();
+  std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
-  ilqgames::TopDownRenderer top_down_renderer(
-      sliders, logs, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
+  ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
   ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem.Solver().PlayerCosts());
+                                         problem->Solver().PlayerCosts());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
