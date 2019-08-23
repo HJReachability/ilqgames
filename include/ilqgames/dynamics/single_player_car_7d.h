@@ -78,19 +78,19 @@ class SinglePlayerCar7D : public SinglePlayerDynamicalSystem {
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Constexprs for state indices.
-  static constexpr Dimension kNumXDims = 7;
-  static constexpr Dimension kPxIdx = 0;
-  static constexpr Dimension kPyIdx = 1;
-  static constexpr Dimension kThetaIdx = 2;
-  static constexpr Dimension kPhiIdx = 3;
-  static constexpr Dimension kVIdx = 4;
-  static constexpr Dimension kKappaIdx = 5;
-  static constexpr Dimension kSIdx = 6;
+  static const Dimension kNumXDims;
+  static const Dimension kPxIdx;
+  static const Dimension kPyIdx;
+  static const Dimension kThetaIdx;
+  static const Dimension kPhiIdx;
+  static const Dimension kVIdx;
+  static const Dimension kKappaIdx;
+  static const Dimension kSIdx;
 
   // Constexprs for control indices.
-  static constexpr Dimension kNumUDims = 2;
-  static constexpr Dimension kOmegaIdx = 0;
-  static constexpr Dimension kAIdx = 1;
+  static const Dimension kNumUDims;
+  static const Dimension kOmegaIdx;
+  static const Dimension kAIdx;
 
  private:
   // Inter-axle distance. Determines turning radius.

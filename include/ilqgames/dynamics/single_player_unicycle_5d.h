@@ -71,17 +71,17 @@ class SinglePlayerUnicycle5D : public SinglePlayerDynamicalSystem {
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Constexprs for state indices.
-  static constexpr Dimension kNumXDims = 5;
-  static constexpr Dimension kPxIdx = 0;
-  static constexpr Dimension kPyIdx = 1;
-  static constexpr Dimension kThetaIdx = 2;
-  static constexpr Dimension kVIdx = 3;
-  static constexpr Dimension kSIdx = 4;
+  static const Dimension kNumXDims;
+  static const Dimension kPxIdx;
+  static const Dimension kPyIdx;
+  static const Dimension kThetaIdx;
+  static const Dimension kVIdx;
+  static const Dimension kSIdx;
 
   // Constexprs for control indices.
-  static constexpr Dimension kNumUDims = 2;
-  static constexpr Dimension kOmegaIdx = 0;
-  static constexpr Dimension kAIdx = 1;
+  static const Dimension kNumUDims;
+  static const Dimension kOmegaIdx;
+  static const Dimension kAIdx;
 };  //\class SinglePlayerUnicycle5D
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //

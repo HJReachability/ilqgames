@@ -90,22 +90,22 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Constexprs for state indices.
-  static constexpr Dimension kNumXDims = 6;
-  static constexpr Dimension kPxIdx = 0;
-  static constexpr Dimension kPyIdx = 1;
-  static constexpr Dimension kThetaIdx = 2;
-  static constexpr Dimension kPhiIdx = 3;
-  static constexpr Dimension kVIdx = 4;
-  static constexpr Dimension kAIdx = 5;
-  static constexpr Dimension kVxIdx = 2;
-  static constexpr Dimension kVyIdx = 3;
-  static constexpr Dimension kAxIdx = 4;
-  static constexpr Dimension kAyIdx = 5;
+  static const Dimension kNumXDims;
+  static const Dimension kPxIdx;
+  static const Dimension kPyIdx;
+  static const Dimension kThetaIdx;
+  static const Dimension kPhiIdx;
+  static const Dimension kVIdx;
+  static const Dimension kAIdx;
+  static const Dimension kVxIdx;
+  static const Dimension kVyIdx;
+  static const Dimension kAxIdx;
+  static const Dimension kAyIdx;
 
   // Constexprs for control indices.
-  static constexpr Dimension kNumUDims = 2;
-  static constexpr Dimension kOmegaIdx = 0;
-  static constexpr Dimension kJerkIdx = 1;
+  static const Dimension kNumUDims;
+  static const Dimension kOmegaIdx;
+  static const Dimension kJerkIdx;
 
  private:
   // Inter-axle distance. Determines turning radius.

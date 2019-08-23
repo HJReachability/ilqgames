@@ -57,6 +57,24 @@
 
 namespace ilqgames {
 
+// Constexprs for state indices.
+const Dimension SinglePlayerFlatCar6D::kNumXDims = 6;
+const Dimension SinglePlayerFlatCar6D::kPxIdx = 0;
+const Dimension SinglePlayerFlatCar6D::kPyIdx = 1;
+const Dimension SinglePlayerFlatCar6D::kThetaIdx = 2;
+const Dimension SinglePlayerFlatCar6D::kPhiIdx = 3;
+const Dimension SinglePlayerFlatCar6D::kVIdx = 4;
+const Dimension SinglePlayerFlatCar6D::kAIdx = 5;
+const Dimension SinglePlayerFlatCar6D::kVxIdx = 2;
+const Dimension SinglePlayerFlatCar6D::kVyIdx = 3;
+const Dimension SinglePlayerFlatCar6D::kAxIdx = 4;
+const Dimension SinglePlayerFlatCar6D::kAyIdx = 5;
+
+// Constexprs for control indices.
+const Dimension SinglePlayerFlatCar6D::kNumUDims = 2;
+const Dimension SinglePlayerFlatCar6D::kOmegaIdx = 0;
+const Dimension SinglePlayerFlatCar6D::kJerkIdx = 1;
+
 void SinglePlayerFlatCar6D::Partial(const VectorXf& xi, 
               std::vector<VectorXf>* grads, std::vector<MatrixXf>* hesses) const {
   CHECK_NOTNULL(grads);
