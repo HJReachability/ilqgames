@@ -64,7 +64,7 @@ void TopDownRenderer::Render() {
 
   // Do nothing if no iterates yet.
   if (log->NumIterates() == 0) return;
-  const size_t num_agents = x_idxs_.size();
+  const size_t num_agents = problem_->Solver().Dynamics().NumPlayers();
 
   // Set up main top-down viewer window.
   ImGui::Begin("Top-Down View");
@@ -111,15 +111,14 @@ void TopDownRenderer::Render() {
   std::vector<ImVec2> points(log->NumTimeSteps());
   for (size_t ii = 0; ii < num_agents; ii++) {
     for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-      points[kk] = PositionToWindowCoordinates(
-          log->State(sliders_->SolverIterate(), kk, x_idxs_[ii]),
-          log->State(sliders_->SolverIterate(), kk, y_idxs_[ii]));
+      const VectorXf x = log->State(sliders_->SolverIterate(), kk);
+      points[kk] =
+          PositionToWindowCoordinates(problem_->Xs(x)[ii], problem_->Ys(x)[ii]);
     }
 
     constexpr bool kPolylineIsClosed = false;
-    draw_list->AddPolyline(points.data(), log->NumTimeSteps(),
-                           trajectory_color, kPolylineIsClosed,
-                           trajectory_thickness);
+    draw_list->AddPolyline(points.data(), log->NumTimeSteps(), trajectory_color,
+                           kPolylineIsClosed, trajectory_thickness);
   }
 
   // Agent colors will all be greenish. Also specify circle radius and triangle
@@ -131,19 +130,19 @@ void TopDownRenderer::Render() {
 
   // Draw each position as either an isosceles triangle (if heading idx is
   // >= 0) or a circle (if heading idx < 0).
+  const VectorXf current_x = log->InterpolateState(
+      sliders_->SolverIterate(), sliders_->InterpolationTime());
+  const std::vector<float> current_pxs = problem_->Xs(current_x);
+  const std::vector<float> current_pys = problem_->Ys(current_x);
+  const std::vector<float> current_thetas = problem_->Thetas(current_x);
   for (size_t ii = 0; ii < num_agents; ii++) {
-    const ImVec2 p = PositionToWindowCoordinates(
-        log->InterpolateState(sliders_->SolverIterate(),
-                              sliders_->InterpolationTime(), x_idxs_[ii]),
-        log->InterpolateState(sliders_->SolverIterate(),
-                              sliders_->InterpolationTime(), y_idxs_[ii]));
+    const ImVec2 p =
+        PositionToWindowCoordinates(current_pxs[ii], current_pys[ii]);
 
-    if (heading_idxs_[ii] < 0)
+    if (ii >= current_thetas.size())
       draw_list->AddCircleFilled(p, agent_radius, agent_color);
     else {
-      const float heading = HeadingToWindowCoordinates(log->InterpolateState(
-          sliders_->SolverIterate(), sliders_->InterpolationTime(),
-          heading_idxs_[ii]));
+      const float heading = HeadingToWindowCoordinates(current_thetas[ii]);
       const float cheading = std::cos(heading);
       const float sheading = std::sin(heading);
 

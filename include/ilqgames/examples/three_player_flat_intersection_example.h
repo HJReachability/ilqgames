@@ -44,24 +44,20 @@
 #define ILQGAMES_EXAMPLE_THREE_PLAYER_FLAT_INTERSECTION_EXAMPLE_H
 
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-class ThreePlayerFlatIntersectionExample : public Problem {
+class ThreePlayerFlatIntersectionExample : public TopDownRenderableProblem {
  public:
   ~ThreePlayerFlatIntersectionExample() {}
   ThreePlayerFlatIntersectionExample();
 
-  // Accessors.
-  const std::vector<Dimension>& XIdxs() const { return x_idxs_; }
-  const std::vector<Dimension>& YIdxs() const { return y_idxs_; }
-  const std::vector<Dimension>& HeadingIdxs() const { return heading_idxs_; }
-
- private:
-  // Indices for x/y/heading.
-  const std::vector<Dimension> x_idxs_;
-  const std::vector<Dimension> y_idxs_;
-  const std::vector<Dimension> heading_idxs_;
+  // Unpack x, y, heading (for each player, potentially) from a given linear
+  // system state.
+  std::vector<float> Xs(const VectorXf& xi) const;
+  std::vector<float> Ys(const VectorXf& xi) const;
+  std::vector<float> Thetas(const VectorXf& xi) const;
 };  // class ThreePlayerFlatIntersectionExample
 
 }  // namespace ilqgames
