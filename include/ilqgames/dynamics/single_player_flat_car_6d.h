@@ -37,12 +37,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Single player dynamics modeling a car. 5 states and 2 control inputs.
-// State is [x, y, theta, phi, v], control is [omega, a], and dynamics are:
+// State is [x, y, theta, phi, v, a], control is [omega, j], and dynamics are:
 //                     \dot px    = v cos theta
 //                     \dot py    = v sin theta
 //                     \dot theta = (v / L) * tan phi
 //                     \dot phi   = omega
 //                     \dot v     = a
+//                     \dot a     = j
 // Please refer to
 // https://www.sciencedirect.com/science/article/pii/S2405896316301215
 // for further details.
@@ -54,6 +55,8 @@
 
 #include <ilqgames/dynamics/single_player_flat_system.h>
 #include <ilqgames/utils/types.h>
+
+#include <glog/logging.h>
 
 namespace ilqgames {
 
@@ -107,7 +110,7 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
  private:
   // Inter-axle distance. Determines turning radius.
   const float inter_axle_distance_;
-};  //\class SinglePlayerCar5D
+};  //\class SinglePlayerCar6D
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //
 

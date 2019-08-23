@@ -16,8 +16,8 @@ include(cmake/Utils.cmake)
 # Add dependencies.
 include(cmake/Dependencies.cmake)
 
-# Check for C++11 features and enable.
-ilqgames_enable_cpp11()
+# Check for C++17 features and enable.
+ilqgames_enable_cpp17()
 
 # Set the build type. Default to Release mode.
 if(NOT CMAKE_BUILD_TYPE)
