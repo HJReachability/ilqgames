@@ -43,6 +43,7 @@
 #ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_FLAT_INTERSECTION_EXAMPLE_H
 #define ILQGAMES_EXAMPLE_THREE_PLAYER_FLAT_INTERSECTION_EXAMPLE_H
 
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 
@@ -58,6 +59,15 @@ class ThreePlayerFlatIntersectionExample : public TopDownRenderableProblem {
   std::vector<float> Xs(const VectorXf& xi) const;
   std::vector<float> Ys(const VectorXf& xi) const;
   std::vector<float> Thetas(const VectorXf& xi) const;
+
+  // Dynamics as shared ptr.
+  std::shared_ptr<const MultiPlayerFlatSystem> Dynamics() const {
+    return dynamics_;
+  }
+
+ private:
+  // Dynamics as shared ptr.
+  std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
 };  // class ThreePlayerFlatIntersectionExample
 
 }  // namespace ilqgames

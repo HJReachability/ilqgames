@@ -87,24 +87,24 @@ void SinglePlayerFlatCar6D::Partial(const VectorXf& xi,
   // hesses->clear();
   // hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
 
-  // if (grads->size() != xi.size())
-  //   grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
-  // else {
-  //   for (auto& grad : *grads) {
-  //     DCHECK_EQ(grad.size(), xi.size());
-  //     grad.setZero();
-  //   }
-  // }
+  if (grads->size() != xi.size())
+    grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
+  else {
+    for (auto& grad : *grads) {
+      DCHECK_EQ(grad.size(), xi.size());
+      grad.setZero();
+    }
+  }
 
-  // if (hesses->size() != xi.size())
-  //   hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
-  // else {
-  //   for (auto& hess : *hesses) {
-  //     DCHECK_EQ(hess.rows(), xi.size());
-  //     DCHECK_EQ(hess.cols(), xi.size());
-  //     hess.setZero();
-  //   }
-  // }
+  if (hesses->size() != xi.size())
+    hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
+  else {
+    for (auto& hess : *hesses) {
+      DCHECK_EQ(hess.rows(), xi.size());
+      DCHECK_EQ(hess.cols(), xi.size());
+      hess.setZero();
+    }
+  }
 
   const float vx = xi(kVxIdx);
   const float vy = xi(kVyIdx);

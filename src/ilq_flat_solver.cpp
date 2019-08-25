@@ -113,7 +113,8 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   size_t num_iterations = 0;
 
   // Log initial iterate.
-  if (log) log->AddSolverIterate(initial_operating_point, initial_strategies);
+  //  if (log) log->AddSolverIterate(initial_operating_point,
+  //  initial_strategies);
 
   // Keep iterating until convergence.
   auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
@@ -129,8 +130,6 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
     // New iteration.
     num_iterations++;
 
-    std::cout << "iteration " << num_iterations << std::endl;
-
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
     CurrentOperatingPoint(last_operating_point, current_strategies,
@@ -144,8 +143,7 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
       const auto& vs = current_operating_point.us[kk];
 
       const VectorXf x = dyn->FromLinearSystemState(xi);
-      for (PlayerIndex ii = 0; ii < dyn->NumPlayers(); ii++)
-        us[ii] = dyn->LinearizingControl(x, vs[ii]);
+      us = dyn->LinearizingControls(x, vs);
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
@@ -154,33 +152,20 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
                        return cost.Quadraticize(t, x, us);
                      });
 
-      std::cout << "changing cost coordinates at time " << t << "..."
-                << std::flush;
-      dyn->ChangeCostCoordinates(xi, vs, &quadraticization[kk]);
-      std::cout << "done." << std::endl << std::flush;
+      dyn->ChangeCostCoordinates(xi, &quadraticization[kk]);
     }
-
-    std::cout << "about to solve lq game..." << std::flush;
 
     // Solve LQ game.
     current_strategies =
         SolveLQGame(*dynamics_, linearization, quadraticization);
 
-    std::cout << "done." << std::endl << std::flush;
-
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))
       return false;
 
-    std::cout << "modified lq" << std::endl;
-
     // Log current iterate.
     if (log) log->AddSolverIterate(current_operating_point, current_strategies);
-
-    std::cout << "added iterate to log" << std::endl;
   }
-
-  std::cout << "swapping" << std::endl;
 
   // Set final strategies and operating point.
   final_strategies->swap(current_strategies);

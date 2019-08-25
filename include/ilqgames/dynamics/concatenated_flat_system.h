@@ -66,14 +66,14 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
 
   VectorXf AffineTerm(const VectorXf& x) const;
 
-  VectorXf LinearizingControl(const VectorXf& x, const VectorXf& v) const;
+  std::vector<VectorXf> LinearizingControls(
+      const VectorXf& x, const std::vector<VectorXf>& vs) const;
 
   VectorXf ToLinearSystemState(const VectorXf& x) const;
 
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
 
   void ChangeCostCoordinates(const VectorXf& xi,
-                             const std::vector<VectorXf>& vs,
                              std::vector<QuadraticCostApproximation>* q) const;
 
   // Distance metric between two states.

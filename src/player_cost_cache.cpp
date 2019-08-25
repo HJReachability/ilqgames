@@ -41,6 +41,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/player_cost_cache.h>
 #include <ilqgames/utils/solver_log.h>
@@ -53,8 +54,10 @@
 
 namespace ilqgames {
 
-PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
-                                 const std::vector<PlayerCost>& player_costs)
+PlayerCostCache::PlayerCostCache(
+    const std::shared_ptr<const SolverLog>& log,
+    const std::vector<PlayerCost>& player_costs,
+    const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics)
     : log_(log) {
   CHECK_NOTNULL(log.get());
 
@@ -79,8 +82,12 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         entry[jj].resize(log->NumTimeSteps());
 
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-          entry[jj][kk] =
-              cost->Evaluate(log->IndexToTime(kk), log->State(jj, kk));
+          // Maybe transform to nonlinear system state first.
+          const VectorXf x =
+              (dynamics.get())
+                  ? dynamics->FromLinearSystemState(log->State(jj, kk))
+                  : log->State(jj, kk);
+          entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk), x);
         }
       }
     }
@@ -101,8 +108,21 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         entry[jj].resize(log->NumTimeSteps());
 
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-          entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk),
-                                         log->Control(jj, kk, other_player));
+          if (dynamics.get()) {
+            // Compute actual controls for all players.
+            std::vector<VectorXf> vs(dynamics->NumPlayers());
+            for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
+              vs[ii] = log->Control(jj, kk, ii);
+
+            const VectorXf x =
+                dynamics->FromLinearSystemState(log->State(jj, kk));
+            const VectorXf u =
+                dynamics->LinearizingControls(x, vs)[other_player];
+            entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk), u);
+          } else {
+            entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk),
+                                           log->Control(jj, kk, other_player));
+          }
         }
       }
     }

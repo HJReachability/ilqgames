@@ -40,6 +40,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/concatenated_flat_system.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/examples/three_player_flat_intersection_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
@@ -97,8 +99,8 @@ int main(int argc, char** argv) {
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
   ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
-  ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem->Solver().PlayerCosts());
+  ilqgames::CostInspector cost_inspector(
+      sliders, logs, problem->Solver().PlayerCosts(), problem->Dynamics());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
