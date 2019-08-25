@@ -81,8 +81,8 @@ static constexpr float kACostWeight = 5.0;
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kCurvatureCostWeight = 0.0;
 
-static constexpr float kMaxVCostWeight = 100.0;
-static constexpr float kNominalVCostWeight = 0.0;
+static constexpr float kMaxVCostWeight = 1000.0;
+static constexpr float kNominalVCostWeight = 0.1;
 
 static constexpr float kSCostWeight = 0.0;
 static constexpr float kGoalCostWeight = 10.0;
@@ -169,15 +169,14 @@ static const Dimension kP3AIdx = 1;
 
 ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   // Create dynamics.
-  const std::shared_ptr<const ConcatenatedFlatSystem> dynamics(
-      new ConcatenatedFlatSystem(
-          {std::make_shared<SinglePlayerFlatCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerFlatCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerFlatUnicycle4D>()},
-          kTimeStep));
+  dynamics_.reset(new ConcatenatedFlatSystem(
+      {std::make_shared<SinglePlayerFlatCar6D>(kInterAxleLength),
+       std::make_shared<SinglePlayerFlatCar6D>(kInterAxleLength),
+       std::make_shared<SinglePlayerFlatUnicycle4D>()},
+      kTimeStep));
 
   // Set up initial state.
-  VectorXf x0 = VectorXf::Zero(dynamics->XDim());
+  VectorXf x0 = VectorXf::Zero(dynamics_->XDim());
   x0(kP1XIdx) = kP1InitialX;
   x0(kP1YIdx) = kP1InitialY;
   x0(kP1HeadingIdx) = kP1InitialHeading;
@@ -191,16 +190,16 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   x0(kP3HeadingIdx) = kP3InitialHeading;
   x0(kP3VIdx) = kP3InitialSpeed;
 
-  x0_ = dynamics->ToLinearSystemState(x0);
+  x0_ = dynamics_->ToLinearSystemState(x0);
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+    strategies_->emplace_back(kNumTimeSteps, dynamics_->XDim(),
+                              dynamics_->UDim(ii));
 
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
+  operating_point_.reset(new OperatingPoint(
+      kNumTimeSteps, dynamics_->NumPlayers(), 0.0, dynamics_));
 
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost;
@@ -394,7 +393,7 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new ILQFlatSolver(dynamics, {p1_cost, p2_cost, p3_cost},
+  solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
                                   kTimeHorizon, kTimeStep));
 }
 
@@ -410,10 +409,7 @@ inline std::vector<float> ThreePlayerFlatIntersectionExample::Ys(
 
 inline std::vector<float> ThreePlayerFlatIntersectionExample::Thetas(
     const VectorXf& xi) const {
-  const auto* dynamics =
-      static_cast<const MultiPlayerFlatSystem*>(&solver_->Dynamics());
-
-  const VectorXf x = dynamics->FromLinearSystemState(xi);
+  const VectorXf x = dynamics_->FromLinearSystemState(xi);
   return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx)};
 }
 

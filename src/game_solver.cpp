@@ -118,7 +118,7 @@ bool GameSolver::ModifyLQStrategies(
 
   // As a simple starting point, just scale all the 'alphas' in the strategy to
   // a fraction of their original value.
-  constexpr float kAlphaScalingFactor = 0.02;
+  constexpr float kAlphaScalingFactor = 0.1;
   for (auto& strategy : *strategies) {
     for (auto& alpha : strategy.alphas) alpha *= kAlphaScalingFactor;
   }

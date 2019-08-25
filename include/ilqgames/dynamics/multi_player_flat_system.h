@@ -44,12 +44,12 @@
 #ifndef ILQGAMES_DYNAMICS_MULTI_PLAYER_FLAT_SYSTEM_H
 #define ILQGAMES_DYNAMICS_MULTI_PLAYER_FLAT_SYSTEM_H
 
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
-#include <ilqgames/utils/quadratic_cost_approximation.h>
-#include <ilqgames/dynamics/multi_player_integrable_system.h>
 
 #include <vector>
 
@@ -68,16 +68,16 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
 
   virtual VectorXf AffineTerm(const VectorXf& x) const = 0;
 
-  virtual VectorXf LinearizingControl(const VectorXf& x,
-                                      const VectorXf& v) const = 0;
+  virtual std::vector<VectorXf> LinearizingControls(
+      const VectorXf& x, const std::vector<VectorXf>& vs) const = 0;
 
   virtual VectorXf ToLinearSystemState(const VectorXf& x) const = 0;
 
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
 
   // Gradient and hessian of map from xi to x.
-  virtual void ChangeCostCoordinates(const VectorXf& xi, const std::vector<VectorXf>& vs,
-                                     std::vector<QuadraticCostApproximation>* q) const = 0;
+  virtual void ChangeCostCoordinates(
+      const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const = 0;
 
   // Integrate these dynamics forward in time.
   // Options include integration for a single timestep, between arbitrary times,
@@ -87,7 +87,8 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
 
   VectorXf Integrate(Time t0, Time time_interval, const VectorXf& xi0,
                      const std::vector<VectorXf>& vs) const {
-                     return Integrate(time_interval, xi0, vs); }
+    return Integrate(time_interval, xi0, vs);
+  }
 
   // Getters.
   const LinearDynamicsApproximation& LinearizedSystem() const {
@@ -100,14 +101,16 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
 
  protected:
   MultiPlayerFlatSystem(Dimension xdim, Time time_step)
-        : MultiPlayerIntegrableSystem(xdim,time_step) {}
+      : MultiPlayerIntegrableSystem(xdim, time_step) {}
 
   // Discrete time approximation of the underlying linearized system.
   virtual void ComputeLinearizedSystem() const = 0;
 
   // Linearized system (discrete and continuous time).
-  mutable std::unique_ptr<const LinearDynamicsApproximation> discrete_linear_system_;
-  mutable std::unique_ptr<const LinearDynamicsApproximation> continuous_linear_system_;
+  mutable std::unique_ptr<const LinearDynamicsApproximation>
+      discrete_linear_system_;
+  mutable std::unique_ptr<const LinearDynamicsApproximation>
+      continuous_linear_system_;
 
 };  //\class MultiPlayerFlatSystem
 

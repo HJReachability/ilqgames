@@ -175,26 +175,24 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
   CHECK_NOTNULL(grads);
   CHECK_NOTNULL(hesses);
 
+  if (grads->size() != xi.size())
+    grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
+  else {
+    for (auto& grad : *grads) {
+      DCHECK_EQ(grad.size(), xi.size());
+      grad.setZero();
+    }
+  }
 
-  // if (grads->size() != xi.size())
-  //   grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
-  // else {
-  //   for (auto& grad : *grads) {
-  //     DCHECK_EQ(grad.size(), xi.size());
-  //     grad.setZero();
-  //   }
-  // }
-
-  // if (hesses->size() != xi.size())
-  //   hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
-  // else {
-  //   for (auto& hess : *hesses) {
-  //     DCHECK_EQ(hess.rows(), xi.size());
-  //     DCHECK_EQ(hess.cols(), xi.size());
-  //     hess.setZero();
-  //   }
-  // }
-
+  if (hesses->size() != xi.size())
+    hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
+  else {
+    for (auto& hess : *hesses) {
+      DCHECK_EQ(hess.rows(), xi.size());
+      DCHECK_EQ(hess.cols(), xi.size());
+      hess.setZero();
+    }
+  }
 
   // grads->clear();
   // grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
@@ -203,7 +201,6 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
   // hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
 
   CHECK_GT(std::hypot(xi(kVxIdx), xi(kVyIdx)), 1e-2);
-
 
   const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
   const float norm = std::sqrt(norm_squared);
@@ -217,8 +214,6 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
   (*grads)[kVIdx](kVxIdx) = xi(kVxIdx) / norm;
   (*grads)[kVIdx](kVyIdx) = xi(kVyIdx) / norm;
 
-  std::cout << "set grads" << std::endl << std::flush;
-
   (*hesses)[kThetaIdx](kVxIdx, kVxIdx) =
       2.0 * xi(kVxIdx) * xi(kVyIdx) / norm_ss;
   (*hesses)[kThetaIdx](kVxIdx, kVyIdx) =
@@ -229,7 +224,6 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
   (*hesses)[kVIdx](kVxIdx, kVyIdx) = (-xi(kVxIdx) * xi(kVyIdx)) / sqrt_norm_sss;
   (*hesses)[kVIdx](kVyIdx, kVxIdx) = (*hesses)[kVIdx](kVxIdx, kVyIdx);
   (*hesses)[kVIdx](kVyIdx, kVyIdx) = (xi(kVxIdx) * xi(kVxIdx)) / sqrt_norm_sss;
-  std::cout << "set hesses" << std::endl << std::flush;
 }
 
 inline float SinglePlayerFlatUnicycle4D::DistanceBetween(

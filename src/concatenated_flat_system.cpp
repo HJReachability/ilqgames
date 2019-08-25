@@ -146,24 +146,21 @@ VectorXf ConcatenatedFlatSystem::AffineTerm(const VectorXf& x) const {
   return m;
 }
 
-VectorXf ConcatenatedFlatSystem::LinearizingControl(const VectorXf& x,
-                                                    const VectorXf& v) const {
-  VectorXf u(TotalUDim());
+std::vector<VectorXf> ConcatenatedFlatSystem::LinearizingControls(
+    const VectorXf& x, const std::vector<VectorXf>& vs) const {
+  std::vector<VectorXf> us(NumPlayers());
 
   Dimension x_dims_so_far = 0;
-  Dimension u_dims_so_far = 0;
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
     const auto& subsystem = subsystems_[ii];
     const Dimension xdim = subsystem->XDim();
-    const Dimension udim = subsystem->UDim();
-    u.segment(u_dims_so_far, udim) = subsystem->LinearizingControl(
-        x.segment(x_dims_so_far, xdim), v.segment(u_dims_so_far, udim));
+    us[ii] =
+        subsystem->LinearizingControl(x.segment(x_dims_so_far, xdim), vs[ii]);
 
     x_dims_so_far += xdim;
-    u_dims_so_far += udim;
   }
 
-  return u;
+  return us;
 }
 
 VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const {
@@ -200,8 +197,7 @@ VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
 }
 
 void ConcatenatedFlatSystem::ChangeCostCoordinates(
-    const VectorXf& xi, const std::vector<VectorXf>& vs,
-    std::vector<QuadraticCostApproximation>* q) const {
+    const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const {
   CHECK_NOTNULL(q);
   CHECK_EQ(q->size(), NumPlayers());
 
@@ -213,15 +209,11 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
     const auto& subsystem_ii = subsystems_[ii];
     const Dimension xdim = subsystem_ii->XDim();
 
-    std::cout << "ii = " << ii << ", xdim is " << xdim << std::endl;
     first_partials[ii] = std::vector<VectorXf>(xdim, VectorXf::Zero(xdim));
     second_partials[ii] =
         std::vector<MatrixXf>(xdim, MatrixXf::Zero(xdim, xdim));
 
     DCHECK_LT(xi_dims_so_far + xdim, xi.size());
-    std::cout << "seg: " << xi.segment(xi_dims_so_far, xdim).transpose()
-              << std::endl;
-
     subsystem_ii->Partial(xi.segment(xi_dims_so_far, xdim), &first_partials[ii],
                           &second_partials[ii]);
     xi_dims_so_far += xdim;
@@ -247,10 +239,8 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
           // Iterating over each player's cost.
           for (PlayerIndex rr = 0; rr < NumPlayers(); rr++) {
-            // const MatrixXf& Q = (*q)[rr].Q;
-            // const VectorXf& l = (*q)[rr].l;
-            const MatrixXf Q = MatrixXf::Identity(xdim_, xdim_);
-            const VectorXf l = VectorXf::Zero(xdim_);
+            const MatrixXf& Q = (*q)[rr].Q;
+            const VectorXf& l = (*q)[rr].l;
             MatrixXf& xhess = hess_xs[rr];
             for (Dimension kk = 0; kk < SubsystemXDim(pp); kk++) {
               float total = 0.0;
@@ -266,8 +256,9 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
               }
 
               total += temp * first_partials[pp][kk](ii);
-              CHECK_LT(ii_rows, xdim_);
-              CHECK_LT(jj_cols, xdim_);
+
+              DCHECK_LT(ii_rows, xdim_);
+              DCHECK_LT(jj_cols, xdim_);
               xhess(ii_rows, jj_cols) += total;
               xhess(jj_cols, ii_rows) += total;
             }
@@ -284,8 +275,11 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
   }
 
   // Update Qs to match these hessians.
-  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++)
+  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
+    //    std::cout << "pp: " << pp << "\n" << hess_xs[pp] << std::endl <<
+    //    "-----------------\n";
     (*q)[pp].Q.swap(hess_xs[pp]);
+  }
 
   // For loop for gradient.
   // Vector that is going to contain all the cost gradients for each player.
