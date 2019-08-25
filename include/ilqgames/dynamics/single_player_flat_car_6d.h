@@ -165,8 +165,6 @@ inline VectorXf SinglePlayerFlatCar6D::AffineTerm(const VectorXf& x) const {
   const float tan_phi = std::tan(x(kPhiIdx));
   const float v_over_l = x(kVIdx) / inter_axle_distance_;
 
-  CHECK_GT(std::abs(x(kVIdx)), 1e-2);
-
   m(0) = -v_over_l * tan_phi *
          (3.0 * x(kAIdx) * sin_t + v_over_l * x(kVIdx) * tan_phi * cos_t);
   m(1) = v_over_l * tan_phi *
@@ -183,8 +181,6 @@ inline VectorXf SinglePlayerFlatCar6D::ToLinearSystemState(
   const float cos_t = std::cos(x(kThetaIdx));
   const float tan_phi = std::tan(x(kPhiIdx));
   const float vv_over_l = x(kVIdx) * x(kVIdx) / inter_axle_distance_;
-
-  CHECK_GT(std::abs(x(kVIdx)), 1e-2);
 
   xi(kPxIdx) = x(kPxIdx);
   xi(kPyIdx) = x(kPyIdx);
@@ -204,8 +200,6 @@ inline VectorXf SinglePlayerFlatCar6D::FromLinearSystemState(
   x(kPyIdx) = xi(kPyIdx);
   x(kThetaIdx) = std::atan2(xi(kVyIdx), xi(kVxIdx));
   x(kVIdx) = std::hypot(xi(kVyIdx), xi(kVxIdx));
-
-  CHECK_GT(std::abs(x(kVIdx)), 1e-2);
 
   const float cos_t = xi(kVxIdx) / x(kVIdx);
   const float sin_t = xi(kVyIdx) / x(kVIdx);

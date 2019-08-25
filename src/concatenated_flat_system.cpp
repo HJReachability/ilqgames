@@ -219,7 +219,8 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
         std::vector<MatrixXf>(xdim, MatrixXf::Zero(xdim, xdim));
 
     DCHECK_LT(xi_dims_so_far + xdim, xi.size());
-    std::cout << "seg: " << xi.segment(xi_dims_so_far, xdim).transpose() << std::endl;
+    std::cout << "seg: " << xi.segment(xi_dims_so_far, xdim).transpose()
+              << std::endl;
 
     subsystem_ii->Partial(xi.segment(xi_dims_so_far, xdim), &first_partials[ii],
                           &second_partials[ii]);
@@ -228,17 +229,17 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
   // For loop for hessian.
   // Vector that is going to contain all the cost hessians for each player.
-  std::vector<MatrixXf> hess_xs(q->size(), MatrixXf::Zero(xdim_, xdim_));
+  std::vector<MatrixXf> hess_xs(NumPlayers(), MatrixXf::Zero(xdim_, xdim_));
   Dimension rows_so_far = 0;
 
   // Iterating over primary player indexes.
   for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
-    Dimension cols_so_far = rows_so_far;
     // Iterating over that player's number of dimensions.
     for (Dimension ii = 0; ii < SubsystemXDim(pp); ii++) {
       const Dimension ii_rows = ii + rows_so_far;
 
       // Iterating over secondary player indexes.
+      Dimension cols_so_far = rows_so_far;
       for (PlayerIndex qq = pp; qq < NumPlayers(); qq++) {
         // Iterating over that player's number of dimensions.
         for (Dimension jj = 0; jj < SubsystemXDim(qq); jj++) {
@@ -246,34 +247,45 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
           // Iterating over each player's cost.
           for (PlayerIndex rr = 0; rr < NumPlayers(); rr++) {
-            const MatrixXf& Q = (*q)[rr].Q;
-            const VectorXf& l = (*q)[rr].l;
+            // const MatrixXf& Q = (*q)[rr].Q;
+            // const VectorXf& l = (*q)[rr].l;
+            const MatrixXf Q = MatrixXf::Identity(xdim_, xdim_);
+            const VectorXf l = VectorXf::Zero(xdim_);
             MatrixXf& xhess = hess_xs[rr];
             for (Dimension kk = 0; kk < SubsystemXDim(pp); kk++) {
+              float total = 0.0;
+
               if (pp == qq) {
-                xhess(ii_rows, jj_cols) +=
-                    l(kk + rows_so_far);  // * second_partials[pp][kk](ii, jj);
+                total += l(kk + rows_so_far) * second_partials[pp][kk](ii, jj);
               }
 
-              float tmp = 0.0;
+              float temp = 0.0;
               for (Dimension ll = 0; ll < SubsystemXDim(qq); ll++) {
-                tmp += Q(kk + rows_so_far, ll + cols_so_far);  // *
-                //                first_partials[qq][ll](jj);
+                temp += Q(kk + rows_so_far, ll + cols_so_far) *
+                        first_partials[qq][ll](jj);
               }
 
-              xhess(ii_rows, jj_cols) += tmp * first_partials[pp][kk](ii);
+              total += temp * first_partials[pp][kk](ii);
+              CHECK_LT(ii_rows, xdim_);
+              CHECK_LT(jj_cols, xdim_);
+              xhess(ii_rows, jj_cols) += total;
+              xhess(jj_cols, ii_rows) += total;
             }
           }
-
-          // Increment columns so far to track next subsystem.
-          cols_so_far += SubsystemXDim(qq);
         }
-      }
 
-      // Increment rows so far to track next subsystem.
-      rows_so_far += SubsystemXDim(pp);
+        // Increment columns so far to track next subsystem.
+        cols_so_far += SubsystemXDim(qq);
+      }
     }
+
+    // Increment rows so far to track next subsystem.
+    rows_so_far += SubsystemXDim(pp);
   }
+
+  // Update Qs to match these hessians.
+  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++)
+    (*q)[pp].Q.swap(hess_xs[pp]);
 
   // For loop for gradient.
   // Vector that is going to contain all the cost gradients for each player.
@@ -292,9 +304,14 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
         grad_xs[pp](ii) += l(ii + rows_so_far) * first_partials[pp][jj](ii);
       }
     }
+
     // Increment rows so far to track next subsystem.
     rows_so_far += SubsystemXDim(pp);
   }
+
+  // Update ls to match these gradients.
+  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++)
+    (*q)[pp].l.swap(grad_xs[pp]);
 
   // Now modify the cost hessians, i.e. 'Rs'.
   // NOTE: this depends only on the decoupling matrix.
