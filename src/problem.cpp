@@ -63,8 +63,8 @@ std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
   std::shared_ptr<SolverLog> log = CreateNewLog();
 
   // Solver the problem.
-  std::vector<Strategy> final_strategies(*strategies_);
   OperatingPoint final_operating_point(*operating_point_);
+  std::vector<Strategy> final_strategies(*strategies_);
   if (!solver_->Solve(x0_, *operating_point_, *strategies_,
                       &final_operating_point, &final_strategies, log.get(),
                       max_runtime)) {

@@ -62,8 +62,11 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
                           const std::vector<Strategy>& initial_strategies,
                           OperatingPoint* final_operating_point,
                           std::vector<Strategy>* final_strategies,
-                          SolverLog* log, 
-                          Time max_runtime) {
+                          SolverLog* log, Time max_runtime) {
+  // Start a stopwatch.
+  const auto solver_call_time = clock::now();
+
+  // Chech return pointers not null.
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
@@ -113,9 +116,20 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   if (log) log->AddSolverIterate(initial_operating_point, initial_strategies);
 
   // Keep iterating until convergence.
-  while (!HasConverged(num_iterations, last_operating_point,
+  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
+    return std::chrono::duration<Time>(clock::now() - start).count();
+  };  // elapsed_time
+
+  // Keep iterating until convergence.
+  constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
+  while (elapsed_time(solver_call_time) <
+             max_runtime - kMaxIterationRuntimeGuess &&
+         !HasConverged(num_iterations, last_operating_point,
                        current_operating_point)) {
+    // New iteration.
     num_iterations++;
+
+    std::cout << "iteration " << num_iterations << std::endl;
 
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
@@ -125,36 +139,48 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point.
     for (size_t kk = 0; kk < num_time_steps_; kk++) {
-      const Time t = ComputeTimeStamp(kk);
+      const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
       const auto& xi = current_operating_point.xs[kk];
       const auto& vs = current_operating_point.us[kk];
+
+      const VectorXf x = dyn->FromLinearSystemState(xi);
+      for (PlayerIndex ii = 0; ii < dyn->NumPlayers(); ii++)
+        us[ii] = dyn->LinearizingControl(x, vs[ii]);
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
                      quadraticization[kk].begin(),
-                     [&t, &xi, &vs, &us, &dyn](const PlayerCost& cost) {
-                       const VectorXf x = dyn->FromLinearSystemState(xi);
-                       for (PlayerIndex ii = 0; ii < dyn->NumPlayers(); ii++)
-                         us[ii] = dyn->LinearizingControl(x, vs[ii]);
-                       QuadraticCostApproximation q =
-                           cost.Quadraticize(t, x, us);
-                       return q;
+                     [&t, &x, &us](const PlayerCost& cost) {
+                       return cost.Quadraticize(t, x, us);
                      });
 
+      std::cout << "changing cost coordinates at time " << t << "..."
+                << std::flush;
       dyn->ChangeCostCoordinates(xi, vs, &quadraticization[kk]);
+      std::cout << "done." << std::endl << std::flush;
     }
+
+    std::cout << "about to solve lq game..." << std::flush;
 
     // Solve LQ game.
     current_strategies =
         SolveLQGame(*dynamics_, linearization, quadraticization);
 
+    std::cout << "done." << std::endl << std::flush;
+
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))
       return false;
 
+    std::cout << "modified lq" << std::endl;
+
     // Log current iterate.
     if (log) log->AddSolverIterate(current_operating_point, current_strategies);
+
+    std::cout << "added iterate to log" << std::endl;
   }
+
+  std::cout << "swapping" << std::endl;
 
   // Set final strategies and operating point.
   final_strategies->swap(current_strategies);
