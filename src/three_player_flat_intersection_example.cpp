@@ -114,7 +114,7 @@ static constexpr float kP3GoalY = 16.0;  // m
 static constexpr float kP1MaxV = 12.0;  // m/s
 static constexpr float kP2MaxV = 12.0;  // m/s
 static constexpr float kP3MaxV = 1.5;   // m/s
-static constexpr float kMinV = 0.1;     // m/s
+static constexpr float kMinV = 0.5;     // m/s
 
 static constexpr float kP1NominalV = 8.0;  // m/s
 static constexpr float kP2NominalV = 5.0;  // m/s

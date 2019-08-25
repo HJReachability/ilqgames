@@ -69,7 +69,7 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
 
   // Discrete time approximation of the underlying linearized system.
   void LinearizedSystem(Time time_step, Eigen::Ref<MatrixXf> A,
-                       Eigen::Ref<MatrixXf> B) const;
+                        Eigen::Ref<MatrixXf> B) const;
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
@@ -130,6 +130,8 @@ inline MatrixXf SinglePlayerFlatUnicycle4D::InverseDecouplingMatrix(
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
 
+  CHECK_GT(std::abs(x(kVIdx)), 1e-2);
+
   M_inv(0, 0) = cos_t;
   M_inv(0, 1) = sin_t;
   M_inv(1, 0) = -sin_t / x(kVIdx);
@@ -173,8 +175,35 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
   CHECK_NOTNULL(grads);
   CHECK_NOTNULL(hesses);
 
-  grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
-  hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
+
+  // if (grads->size() != xi.size())
+  //   grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
+  // else {
+  //   for (auto& grad : *grads) {
+  //     DCHECK_EQ(grad.size(), xi.size());
+  //     grad.setZero();
+  //   }
+  // }
+
+  // if (hesses->size() != xi.size())
+  //   hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
+  // else {
+  //   for (auto& hess : *hesses) {
+  //     DCHECK_EQ(hess.rows(), xi.size());
+  //     DCHECK_EQ(hess.cols(), xi.size());
+  //     hess.setZero();
+  //   }
+  // }
+
+
+  // grads->clear();
+  // grads->resize(xi.size(), VectorXf::Zero(kNumXDims));
+
+  // hesses->clear();
+  // hesses->resize(xi.size(), MatrixXf::Zero(kNumXDims, kNumXDims));
+
+  CHECK_GT(std::hypot(xi(kVxIdx), xi(kVyIdx)), 1e-2);
+
 
   const float norm_squared = xi(kVxIdx) * xi(kVxIdx) + xi(kVyIdx) * xi(kVyIdx);
   const float norm = std::sqrt(norm_squared);
@@ -188,6 +217,8 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
   (*grads)[kVIdx](kVxIdx) = xi(kVxIdx) / norm;
   (*grads)[kVIdx](kVyIdx) = xi(kVyIdx) / norm;
 
+  std::cout << "set grads" << std::endl << std::flush;
+
   (*hesses)[kThetaIdx](kVxIdx, kVxIdx) =
       2.0 * xi(kVxIdx) * xi(kVyIdx) / norm_ss;
   (*hesses)[kThetaIdx](kVxIdx, kVyIdx) =
@@ -198,6 +229,7 @@ inline void SinglePlayerFlatUnicycle4D::Partial(
   (*hesses)[kVIdx](kVxIdx, kVyIdx) = (-xi(kVxIdx) * xi(kVyIdx)) / sqrt_norm_sss;
   (*hesses)[kVIdx](kVyIdx, kVxIdx) = (*hesses)[kVIdx](kVxIdx, kVyIdx);
   (*hesses)[kVIdx](kVyIdx, kVyIdx) = (xi(kVxIdx) * xi(kVxIdx)) / sqrt_norm_sss;
+  std::cout << "set hesses" << std::endl << std::flush;
 }
 
 inline float SinglePlayerFlatUnicycle4D::DistanceBetween(

@@ -131,7 +131,7 @@ bool ILQSolver::Solve(const VectorXf& x0,
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point.
     for (size_t kk = 0; kk < num_time_steps_; kk++) {
-      const Time t = ComputeTimeStamp(kk);
+      const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
       const auto& x = current_operating_point.xs[kk];
       const auto& us = current_operating_point.us[kk];
 
