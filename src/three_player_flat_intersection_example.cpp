@@ -79,12 +79,10 @@ static constexpr float kInterAxleLength = 4.0;  // m
 // Cost weights.
 static constexpr float kACostWeight = 5.0;
 static constexpr float kOmegaCostWeight = 50.0;
-static constexpr float kCurvatureCostWeight = 0.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 0.1;
 
-static constexpr float kSCostWeight = 0.0;
 static constexpr float kGoalCostWeight = 10.0;
 
 static constexpr float kLaneCostWeight = 25.0;
@@ -139,7 +137,7 @@ static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerFlatCar6D;
-using P2 = SinglePlayerFlatCar6D;
+using P2 = SinglePlayerFlatUnicycle4D;
 using P3 = SinglePlayerFlatUnicycle4D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
@@ -170,9 +168,9 @@ static const Dimension kP3AIdx = 1;
 ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   // Create dynamics.
   dynamics_.reset(new ConcatenatedFlatSystem(
-      {std::make_shared<SinglePlayerFlatCar6D>(kInterAxleLength),
-       std::make_shared<SinglePlayerFlatCar6D>(kInterAxleLength),
-       std::make_shared<SinglePlayerFlatUnicycle4D>()},
+      {std::make_shared<P1>(kInterAxleLength),
+       std::make_shared<P2>(),
+       std::make_shared<P3>()},
       kTimeStep));
 
   // Set up initial state.
@@ -291,15 +289,6 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   p3_cost.AddStateCost(p3_max_v_cost);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
-  // // Curvature costs for P1 and P2.
-  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP1KappaIdx, 0.0, "Curvature");
-  // p1_cost.AddStateCost(p1_curvature_cost);
-
-  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP2KappaIdx, 0.0, "Curvature");
-  // p2_cost.AddStateCost(p2_curvature_cost);
-
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
@@ -321,19 +310,6 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
                                                          0.0, "Acceleration");
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
-
-  // // Path lenth costs.
-  // const auto p1_s_cost = std::make_shared<NominalPathLengthCost>(
-  //     kSCostWeight, kP1SIdx, kP1NominalV, "PathLength");
-  // p1_cost.AddStateCost(p1_s_cost);
-
-  // const auto p2_s_cost = std::make_shared<NominalPathLengthCost>(
-  //     kSCostWeight, kP2SIdx, kP2NominalV, "PathLenth");
-  // p2_cost.AddStateCost(p2_s_cost);
-
-  // const auto p3_s_cost = std::make_shared<NominalPathLengthCost>(
-  //     kSCostWeight, kP3SIdx, kP3NominalV, "PathLength");
-  // p3_cost.AddStateCost(p3_s_cost);
 
   // Goal costs.
   constexpr float kFinalTimeWindow = 0.5;  // s
