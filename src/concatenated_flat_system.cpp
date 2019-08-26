@@ -278,6 +278,11 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
   for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
     //    std::cout << "pp: " << pp << "\n" << hess_xs[pp] << std::endl <<
     //    "-----------------\n";
+    // if (pp == 1) {
+    //   std::cout << "pp: " << pp << "\n"
+    //             << hess_xs[pp] << std::endl
+    //             << "-----------------\n";
+    // }
     (*q)[pp].Q.swap(hess_xs[pp]);
   }
 
@@ -288,14 +293,14 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
   // Iterating over primary player indexes.
   for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
+    const VectorXf& l = (*q)[pp].l;
+
     // Iterating over that player's number of dimensions.
     for (Dimension ii = 0; ii < SubsystemXDim(pp); ii++) {
-      const VectorXf& l = (*q)[pp].l;
-      DCHECK_LT(ii + rows_so_far, l.size());
-
       // Iterating over each player's cost.
       for (Dimension jj = 0; jj < SubsystemXDim(pp); jj++) {
-        grad_xs[pp](ii) += l(ii + rows_so_far) * first_partials[pp][jj](ii);
+        DCHECK_LT(jj + rows_so_far, l.size());
+        grad_xs[pp](ii + rows_so_far) += l(jj + rows_so_far) * first_partials[pp][jj](ii);
       }
     }
 
@@ -304,8 +309,20 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
   }
 
   // Update ls to match these gradients.
-  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++)
+  for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
+    // if (pp == 1) {
+    //   std::cout << "pp: " << pp << "computed" <<  "\n"
+    //             << grad_xs[pp] << std::endl
+    //             << "-----------------\n";
+    //   std::cout << "pp: " << pp << "original \n"
+    //             << (*q)[pp].l << std::endl
+    //             << "-----------------\n";
+    // }
+    // CHECK_LT(std::abs(grad_xs[pp](0) - (*q)[pp].l(0)), 1e-4);
+    // CHECK_LT(std::abs(grad_xs[pp](1) - (*q)[pp].l(1)), 1e-4);
+
     (*q)[pp].l.swap(grad_xs[pp]);
+  }
 
   // Now modify the cost hessians, i.e. 'Rs'.
   // NOTE: this depends only on the decoupling matrix.
