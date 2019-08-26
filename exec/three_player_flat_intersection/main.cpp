@@ -52,6 +52,7 @@
 #include <gflags/gflags.h>
 #include <glog/logging.h>
 #include <stdio.h>
+#include <chrono>
 #include <iostream>
 #include <memory>
 
@@ -93,7 +94,14 @@ int main(int argc, char** argv) {
       std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>();
 
   // Solve the game.
+  const auto start = std::chrono::system_clock::now();
   std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
+  LOG(INFO) << "Solver completed in "
+            << std::chrono::duration<ilqgames::Time>(
+                   std::chrono::system_clock::now() - start)
+                   .count()
+            << " seconds.";
+
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
   // Create a top-down renderer, control sliders, and cost inspector.
