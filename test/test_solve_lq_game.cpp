@@ -186,7 +186,7 @@ class SolveLQGameTest : public ::testing::Test {
     player_costs_.push_back(player1_cost);
 
     PlayerCost player2_cost;
-    player2_cost.AddStateCost(std::make_shared<QuadraticCost>(-1.0, -1));
+    player2_cost.AddStateCost(std::make_shared<QuadraticCost>(0.1, -1));
     player2_cost.AddControlCost(0, std::make_shared<QuadraticCost>(0.0, -1));
     player2_cost.AddControlCost(1, std::make_shared<QuadraticCost>(1.0, -1));
     player_costs_.push_back(player2_cost);
@@ -261,7 +261,10 @@ TEST_F(SolveLQGameTest, LocalNashEquilibrium) {
 
   constexpr float kMaxPerturbation = 0.1;
   constexpr size_t kNumPerturbationsPerPlayer = 100;
-  EXPECT_TRUE(CheckLocalNashEquilibrium(
+  EXPECT_TRUE(RandomCheckLocalNashEquilibrium(
       player_costs_, lq_solution_, operating_point, *dynamics_, x0, kTimeStep,
       kMaxPerturbation, kNumPerturbationsPerPlayer));
+
+  EXPECT_TRUE(CheckSufficientLocalNashEquilibrium(player_costs_,
+                                                  operating_point, kTimeStep));
 }
