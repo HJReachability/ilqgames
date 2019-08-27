@@ -47,6 +47,7 @@
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
@@ -102,6 +103,16 @@ int main(int argc, char** argv) {
                    .count()
             << " seconds.";
 
+  // Check if solution satisfies sufficient conditions for being a local Nash.
+  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
+      problem->Solver().PlayerCosts(), problem->CurrentOperatingPoint(),
+      problem->Dynamics()->TimeStep(), problem->Dynamics());
+  if (is_local_nash)
+    LOG(INFO) << "Solution is a local Nash.";
+  else
+    LOG(INFO) << "Solution may not be a local Nash.";
+
+  // Create log list.
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
   // Create a top-down renderer, control sliders, and cost inspector.

@@ -75,6 +75,7 @@ class MultiPlayerIntegrableSystem {
       const std::vector<Strategy>& strategies) const;
 
   // Getters.
+  Time TimeStep() const { return time_step_; }
   Dimension XDim() const { return xdim_; }
   Dimension TotalUDim() const {
     Dimension total = 0;
