@@ -7,6 +7,9 @@ cscope*
 # Binaries.
 bin/
 
+# IMGUI stuff.
+imgui.ini
+
 # Logs.
 logs/
 python/logs/

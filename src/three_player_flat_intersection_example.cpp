@@ -88,7 +88,7 @@ static constexpr float kGoalCostWeight = 10.0;
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kMinProximity = 4.0;
+static constexpr float kMinProximity = 6.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
@@ -137,7 +137,7 @@ static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerFlatCar6D;
-using P2 = SinglePlayerFlatUnicycle4D;
+using P2 = SinglePlayerFlatCar6D;
 using P3 = SinglePlayerFlatUnicycle4D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
@@ -169,8 +169,7 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   // Create dynamics.
   dynamics_.reset(new ConcatenatedFlatSystem(
       {std::make_shared<P1>(kInterAxleLength),
-       std::make_shared<P2>(),
-       std::make_shared<P3>()},
+       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
       kTimeStep));
 
   // Set up initial state.

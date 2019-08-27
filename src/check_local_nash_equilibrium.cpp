@@ -37,19 +37,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Check whether or not a particular set of strategies is a local Nash
-// equilibrium. Since we do not have easy access to gradients and Hessians of
-// each players' total cost with respect to Ps and alphas (though we do have
-// such information at each time step), we shall resort to random sampling.
+// equilibrium.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <Eigen/Dense>
 #include <random>
 #include <vector>
 
@@ -61,7 +62,7 @@ std::vector<float> ComputeStrategyCosts(
     const std::vector<PlayerCost>& player_costs,
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
-    const MultiPlayerDynamicalSystem& dynamics, const VectorXf& x0,
+    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
     float time_step) {
   // Start at the initial state.
   VectorXf x(x0);
@@ -92,13 +93,13 @@ std::vector<float> ComputeStrategyCosts(
 
 }  // anonymous namespace
 
-bool CheckLocalNashEquilibrium(const std::vector<PlayerCost>& player_costs,
-                               const std::vector<Strategy>& strategies,
-                               const OperatingPoint& operating_point,
-                               const MultiPlayerDynamicalSystem& dynamics,
-                               const VectorXf& x0, float time_step,
-                               float max_perturbation,
-                               size_t num_perturbations_per_player) {
+bool RandomCheckLocalNashEquilibrium(
+    const std::vector<PlayerCost>& player_costs,
+    const std::vector<Strategy>& strategies,
+    const OperatingPoint& operating_point,
+    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
+    Time time_step, float max_perturbation,
+    size_t num_perturbations_per_player) {
   CHECK_EQ(strategies.size(), player_costs.size());
   CHECK_EQ(strategies.size(), dynamics.NumPlayers());
   CHECK_EQ(x0.size(), dynamics.XDim());
@@ -133,6 +134,56 @@ bool CheckLocalNashEquilibrium(const std::vector<PlayerCost>& player_costs,
 
       // Reset player ii's strategy.
       perturbed_strategies[ii] = strategies[ii];
+    }
+  }
+
+  return true;
+}
+
+bool CheckSufficientLocalNashEquilibrium(
+    const std::vector<PlayerCost>& player_costs,
+    const OperatingPoint& operating_point, Time time_step,
+    const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics) {
+  // Unpack number of players and number of time steps.
+  const PlayerIndex num_players = player_costs.size();
+  const size_t num_time_steps = operating_point.xs.size();
+  const Dimension xdim = operating_point.xs[0].size();
+
+  // Set up quadratic cost approximations.
+  std::vector<QuadraticCostApproximation> quadraticization(
+      num_players, QuadraticCostApproximation(xdim));
+
+  // Quadraticize costs and check PSD conditions.
+  for (size_t kk = 0; kk < num_time_steps; kk++) {
+    const Time t = operating_point.t0 + static_cast<Time>(kk) * time_step;
+    VectorXf x = operating_point.xs[kk];
+    std::vector<VectorXf> us = operating_point.us[kk];
+
+    if (dynamics.get()) {
+      // Previous x, us are actually xi, vs.
+      x = dynamics->FromLinearSystemState(x.eval());
+      us = dynamics->LinearizingControls(x, std::vector<VectorXf>(us));
+    }
+
+    std::transform(player_costs.begin(), player_costs.end(),
+                   quadraticization.begin(),
+                   [&t, &x, &us](const PlayerCost& cost) {
+                     return cost.Quadraticize(t, x, us);
+                   });
+
+    if (dynamics.get()) dynamics->ChangeCostCoordinates(x, &quadraticization);
+
+    // Cholesky decomposition to check if Q, Rs PSD.
+    for (const auto& q : quadraticization) {
+      const auto chol_Q = q.Q.ldlt();
+      if (chol_Q.info() == Eigen::NumericalIssue) return false;
+      if (!chol_Q.isPositive()) return false;
+
+      for (const auto& entry : q.Rs) {
+        const auto chol_R = entry.second.ldlt();
+        if (chol_R.info() == Eigen::NumericalIssue) return false;
+        if (!chol_R.isPositive()) return false;
+      }
     }
   }
 
