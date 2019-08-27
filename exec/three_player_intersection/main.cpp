@@ -45,6 +45,7 @@
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
@@ -90,8 +91,23 @@ int main(int argc, char** argv) {
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
 
   // Solve the game.
+  const auto start = std::chrono::system_clock::now();
   std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
+  LOG(INFO) << "Solver completed in "
+            << std::chrono::duration<ilqgames::Time>(
+                   std::chrono::system_clock::now() - start)
+                   .count()
+            << " seconds.";
+
+  // Check if solution satisfies sufficient conditions for being a local Nash.
+  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
+      problem->Solver().PlayerCosts(), problem->CurrentOperatingPoint(),
+      problem->Solver().TimeStep());
+  if (is_local_nash)
+    LOG(INFO) << "Solution is a local Nash.";
+  else
+    LOG(INFO) << "Solution may not be a local Nash.";
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);

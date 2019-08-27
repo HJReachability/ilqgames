@@ -94,9 +94,9 @@ static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 6.0;
-static constexpr float kP1ProximityCostWeight = 100.0;
-static constexpr float kP2ProximityCostWeight = 100.0;
-static constexpr float kP3ProximityCostWeight = 10.0;
+static constexpr float kP1ProximityCostWeight = 10.0;  // 100.0;
+static constexpr float kP2ProximityCostWeight = 0.0;  // 100.0;
+static constexpr float kP3ProximityCostWeight = 0.0;  // 10.0;
 
 static constexpr bool kOrientedRight = true;
 
