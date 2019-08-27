@@ -173,16 +173,22 @@ bool CheckSufficientLocalNashEquilibrium(
 
     if (dynamics.get()) dynamics->ChangeCostCoordinates(x, &quadraticization);
 
-    // Cholesky decomposition to check if Q, Rs PSD.
+    // Check if Q, Rs PSD.
+    constexpr float kErrorMargin = 1e-4;
     for (const auto& q : quadraticization) {
-      const auto chol_Q = q.Q.ldlt();
-      if (chol_Q.info() == Eigen::NumericalIssue) return false;
-      if (!chol_Q.isPositive()) return false;
+      const auto eig_Q = Eigen::SelfAdjointEigenSolver<MatrixXf>(q.Q);
+      if (eig_Q.eigenvalues().minCoeff() < -kErrorMargin) {
+        std::cout << "Failed at timestep " << kk << std::endl;
+        std::cout << "Q is: \n" << q.Q << std::endl;
+        std::cout << "Q evals are: " << eig_Q.eigenvalues().transpose()
+                  << std::endl;
+        return false;
+      }
 
       for (const auto& entry : q.Rs) {
-        const auto chol_R = entry.second.ldlt();
-        if (chol_R.info() == Eigen::NumericalIssue) return false;
-        if (!chol_R.isPositive()) return false;
+        const auto eig_R =
+            Eigen::SelfAdjointEigenSolver<MatrixXf>(entry.second);
+        if (eig_R.eigenvalues().minCoeff() < -kErrorMargin) return false;
       }
     }
   }
