@@ -171,17 +171,21 @@ bool CheckSufficientLocalNashEquilibrium(
                      return cost.Quadraticize(t, x, us);
                    });
 
-    if (dynamics.get()) dynamics->ChangeCostCoordinates(x, &quadraticization);
+    // NOTE: we do *not* want to change cost coordinates back to xi, vs because
+    // we're interested in whether the operating point is a local Nash for x, us
+    // (the original problem).
+    // if (dynamics.get()) dynamics->ChangeCostCoordinates(x,
+    // &quadraticization);
 
     // Check if Q, Rs PSD.
     constexpr float kErrorMargin = 1e-4;
     for (const auto& q : quadraticization) {
       const auto eig_Q = Eigen::SelfAdjointEigenSolver<MatrixXf>(q.Q);
       if (eig_Q.eigenvalues().minCoeff() < -kErrorMargin) {
-        std::cout << "Failed at timestep " << kk << std::endl;
-        std::cout << "Q is: \n" << q.Q << std::endl;
-        std::cout << "Q evals are: " << eig_Q.eigenvalues().transpose()
-                  << std::endl;
+        // std::cout << "Failed at timestep " << kk << std::endl;
+        // std::cout << "Q is: \n" << q.Q << std::endl;
+        // std::cout << "Q evals are: " << eig_Q.eigenvalues().transpose()
+        //           << std::endl;
         return false;
       }
 
