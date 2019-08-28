@@ -44,7 +44,6 @@
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
-#include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
@@ -87,14 +86,14 @@ static constexpr float kNominalVCostWeight = 0.1;
 
 static constexpr float kGoalCostWeight = 10.0;
 
-static constexpr float kLaneCostWeight = 100.0;
-static constexpr float kLaneBoundaryCostWeight = 1000.0;
+static constexpr float kLaneCostWeight = 25.0;
+static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 6.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
-using ProxCost = WeightedConvexProximityCost;
+using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
 
@@ -114,8 +113,8 @@ static constexpr float kP3GoalY = 16.0;  // m
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0;  // m/s
 static constexpr float kP2MaxV = 12.0;  // m/s
-static constexpr float kP3MaxV = 1.5;   // m/s
-static constexpr float kMinV = 0.5;     // m/s
+static constexpr float kP3MaxV = 2.0;   // m/s
+static constexpr float kMinV = 1.0;     // m/s
 
 static constexpr float kP1NominalV = 8.0;  // m/s
 static constexpr float kP2NominalV = 5.0;  // m/s
@@ -345,28 +344,28 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP2XIdx, kP2YIdx}, kP1VIdx, kP2VIdx, kMinProximity, "ProximityP2"));
+                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   const std::shared_ptr<ProxCost> p1p3_proximity_cost(
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP3XIdx, kP3YIdx}, kP1VIdx, kP3VIdx, kMinProximity, "ProximityP3"));
+                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p1_cost.AddStateCost(p1p2_proximity_cost);
   p1_cost.AddStateCost(p1p3_proximity_cost);
 
   const std::shared_ptr<ProxCost> p2p1_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP1XIdx, kP1YIdx}, kP2VIdx, kP1VIdx, kMinProximity, "ProximityP1"));
+                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP3XIdx, kP3YIdx}, kP2VIdx, kP3VIdx, kMinProximity, "ProximityP3"));
+                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p2_cost.AddStateCost(p2p1_proximity_cost);
   p2_cost.AddStateCost(p2p3_proximity_cost);
 
   const std::shared_ptr<ProxCost> p3p1_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP1XIdx, kP1YIdx}, kP3VIdx, kP1VIdx, kMinProximity, "ProximityP1"));
+                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP2XIdx, kP2YIdx}, kP3VIdx, kP2VIdx, kMinProximity, "ProximityP2"));
+                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   p3_cost.AddStateCost(p3p1_proximity_cost);
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
