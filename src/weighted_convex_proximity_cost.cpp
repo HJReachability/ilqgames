@@ -41,25 +41,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/locally_convex_proximity_cost.h>
+#include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 
 namespace ilqgames {
 
-float LocallyConvexProximityCost::Evaluate(const VectorXf& input) const {
+float WeightedConvexProximityCost::Evaluate(const VectorXf& input) const {
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
+  const float vv = input(vidx1_) * input(vidx1_) + input(vidx2_) * input(vidx2_);
 
   if (dx * dx >= threshold_sq_ || dy * dy >= threshold_sq_) return 0.0;
 
-  const float delta_x = threshold_ - std::abs(dx);
-  const float delta_y = threshold_ - std::abs(dy);
-  return 0.5 * weight_ * std::min(delta_x * delta_x, delta_y * delta_y);
+  const float delta_x = (threshold_ - std::abs(dx));
+  const float delta_y = (threshold_ - std::abs(dy));
+  return 0.5 * weight_ * vv * std::min(delta_x * delta_x, delta_y * delta_y);
 }
 
-void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
+void WeightedConvexProximityCost::Quadraticize(const VectorXf& input,
                                               MatrixXf* hess,
                                               VectorXf* grad) const {
   CHECK_NOTNULL(hess);
@@ -73,6 +74,7 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
   // Compute Hessian and gradient.
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
+  const float vv = input(vidx1_) * input(vidx1_) + input(vidx2_) * input(vidx2_);
 
   if (dx * dx >= threshold_sq_ || dy * dy >= threshold_sq_) return;
 
@@ -83,11 +85,46 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
   const bool is_x_active = delta_x * delta_x < delta_y * delta_y;
 
   if (is_x_active) {
+    const float hess_v1v1 = weight_ * delta_x * delta_x;
+    (*hess)(vidx1_, vidx1_) += hess_v1v1;
+    (*hess)(vidx2_, vidx2_) += hess_v1v1;
+
+    const float hess_x1v1 = -2.0 * weight_ * input(vidx1_) * sgn(dx);
+    const float hess_x1v2 = -2.0 * weight_ * input(vidx2_) * sgn(dx);
+    const float hess_x2v1 = 2.0 * weight_ * input(vidx1_) * sgn(dx);
+    const float hess_x2v2 = 2.0 * weight_ * input(vidx2_) * sgn(dx);
+    (*hess)(xidx1_, vidx1_) += hess_x1v1;
+    (*hess)(xidx1_, vidx2_) += hess_x1v2;
+    (*hess)(xidx2_, vidx1_) += hess_x2v1;
+    (*hess)(xidx2_, vidx2_) += hess_x2v2;
+    (*hess)(vidx1_, xidx1_) += (*hess)(xidx1_, vidx1_);
+    (*hess)(vidx1_, xidx2_) += (*hess)(xidx2_, vidx1_);
+    (*hess)(vidx2_, xidx1_) += (*hess)(xidx1_, vidx2_);
+    (*hess)(vidx2_, xidx2_) += (*hess)(xidx2_, vidx2_);
+
+
     (*hess)(xidx1_, xidx1_) += weight_;
     (*hess)(xidx1_, xidx2_) -= weight_;
     (*hess)(xidx2_, xidx1_) -= weight_;
     (*hess)(xidx2_, xidx2_) += weight_;
   } else {
+    const float hess_v1v1 = weight_ * delta_y * delta_y;
+    (*hess)(vidx1_, vidx1_) += hess_v1v1;
+    (*hess)(vidx2_, vidx2_) += hess_v1v1;
+
+    const float hess_y1v1 = -2.0 * weight_ * input(vidx1_) * sgn(dy);
+    const float hess_y1v2 = -2.0 * weight_ * input(vidx2_) * sgn(dy);
+    const float hess_y2v1 = 2.0 * weight_ * input(vidx1_) * sgn(dy);
+    const float hess_y2v2 = 2.0 * weight_ * input(vidx2_) * sgn(dy);
+    (*hess)(yidx1_, vidx1_) += hess_y1v1;
+    (*hess)(yidx1_, vidx2_) += hess_y1v2;
+    (*hess)(yidx2_, vidx1_) += hess_y2v1;
+    (*hess)(yidx2_, vidx2_) += hess_y2v2;
+    (*hess)(vidx1_, yidx1_) += (*hess)(yidx1_, vidx1_);
+    (*hess)(vidx1_, yidx2_) += (*hess)(yidx2_, vidx1_);
+    (*hess)(vidx2_, yidx1_) += (*hess)(yidx1_, vidx2_);
+    (*hess)(vidx2_, yidx2_) += (*hess)(yidx2_, vidx2_);
+
     (*hess)(yidx1_, yidx1_) += weight_;
     (*hess)(yidx1_, yidx2_) -= weight_;
     (*hess)(yidx2_, yidx1_) -= weight_;
@@ -96,13 +133,21 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
 
   if (grad) {
     if (is_x_active) {
-      const float ddx1 = -weight_ * delta_x;
+      const float ddx1 = -weight_ * delta_x * vv;      
       (*grad)(xidx1_) += ddx1;
       (*grad)(xidx2_) -= ddx1;
+      const float ddv1 = weight_ * input(vidx1_) * delta_x * delta_x;
+      const float ddv2 = weight_ * input(vidx2_) * delta_x * delta_x;
+      (*grad)(vidx1_) += ddv1;
+      (*grad)(vidx2_) += ddv2;
     } else {
-      const float ddy1 = -weight_ * delta_y;
+      const float ddy1 = -weight_ * delta_y * vv;
       (*grad)(yidx1_) += ddy1;
       (*grad)(yidx2_) -= ddy1;
+      const float ddv1 = weight_ * input(vidx1_) * delta_y * delta_y;
+      const float ddv2 = weight_ * input(vidx2_) * delta_y * delta_y;
+      (*grad)(vidx1_) += ddv1;
+      (*grad)(vidx2_) += ddv2;
     }
   }
 }

@@ -42,6 +42,7 @@
 
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
+#include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/proximity_barrier_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
@@ -61,10 +62,10 @@ using namespace ilqgames;
 namespace {
 // Cost weight and dimension.
 static constexpr float kCostWeight = 1.0;
-static constexpr Dimension kInputDimension = 5;
+static constexpr Dimension kInputDimension = 10;
 
 // Step size for forward differences.
-static constexpr float kGradForwardStep = 1e-4;
+static constexpr float kGradForwardStep = 1e-3;
 static constexpr float kHessForwardStep = 2e-3;
 static constexpr float kNumericalPrecision = 1e-1;
 
@@ -204,5 +205,10 @@ TEST(ProximityBarrierCostTest, QuadraticizesCorrectly) {
 
 TEST(LocallyConvexProximityCostTest, QuadraticizesCorrectly) {
   LocallyConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
+  WeightedConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 4, 5, 0.0);
   CheckQuadraticization(cost);
 }

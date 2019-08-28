@@ -94,7 +94,7 @@ bool GameSolver::HasConverged(
   // As a simple starting point, we'll say that we've converged if it's been
   // at least 50 iterations or the current operating_point and last operating
   // point are within 0.1 in every dimension at every time.
-  constexpr size_t kMaxIterations = 100;
+  constexpr size_t kMaxIterations = 1000;
   constexpr float kMaxElementwiseDifference = 1e-1;
 
   // Check iterations.
