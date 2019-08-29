@@ -137,6 +137,9 @@ class SolverLog : private Uncopyable {
     return InitialTime() + time_step_ * static_cast<Time>(idx);
   }
 
+  // Save to disk.
+  bool Save() const;
+
  private:
   // Time discretization.
   const Time time_step_;

@@ -115,6 +115,9 @@ int main(int argc, char** argv) {
   // Create log list.
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
+  // Dump the logs.
+  CHECK(log->Save());
+
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
   ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);

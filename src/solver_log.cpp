@@ -49,6 +49,13 @@
 #include <glog/logging.h>
 #include <vector>
 
+#include <fstream> 
+#include <iostream> 
+#include <sys/stat.h> 
+#include <sys/types.h>
+#include <chrono>
+#include <ctime> 
+
 namespace ilqgames {
 
 VectorXf SolverLog::InterpolateState(size_t iterate, Time t) const {
@@ -99,6 +106,55 @@ float SolverLog::InterpolateControl(size_t iterate, Time t, PlayerIndex player,
   // Fraction of the way between lo and hi.
   const float frac = (t - IndexToTime(lo)) / time_step_;
   return (1.0 - frac) * op.us[lo][player](dim) + frac * op.us[hi][player](dim);
+}
+
+bool SolverLog::Save() const {
+  auto make_directory = [](const std::string& directory_name) {
+    if (mkdir(directory_name.c_str(), 0777) == -1) {
+      LOG(ERROR) << "Could not create directory " << directory_name 
+                 << ". Error msg: "<< std::strerror(errno);
+      return false;
+    }
+    return true;
+  }; // make_directory
+
+  // Making top-level directory
+  const auto date = std::chrono::system_clock::to_time_t(
+                        std::chrono::system_clock::now());
+  const std::string dir_name = std::string(ILQGAMES_LOG_DIR) + "/" + std::string(std::ctime(&date));
+
+  if(!make_directory(dir_name)) return false;
+
+  for(size_t ii=0; ii < operating_points_.size(); ii++) {
+    const auto& op = operating_points_[ii];
+    const std::string sub_dir_name = dir_name + "/" + std::to_string(ii);
+    if(!make_directory(sub_dir_name)) return false;
+
+    // Dump xs.
+    std::ofstream file;
+    file.open(sub_dir_name + "/xs.txt");
+    for(const auto& x : op.xs) {
+      file << x.transpose() << std::endl;
+    }
+    file.close();
+
+    // Dump us.
+    std::vector<std::ofstream> files(NumPlayers());
+    for (size_t jj=0; jj < files.size(); jj++) {
+      files[jj].open(sub_dir_name + "/u" + std::to_string(jj) +".txt");
+    }
+    for (size_t kk=0; kk < op.us.size(); kk++) {
+      CHECK_EQ(files.size(),op.us[kk].size());
+      for (size_t jj=0; jj < files.size(); jj++) {
+        files[jj] << op.us[kk][jj].transpose() << std::endl;
+      }
+    }
+    for (size_t jj=0; jj < files.size(); jj++) {
+      files[jj].close();
+    }
+  }
+
+  return true;
 }
 
 inline std::vector<MatrixXf> SolverLog::Ps(size_t iterate, size_t time_index) const {
