@@ -55,6 +55,7 @@
 #include <sys/types.h>
 #include <chrono>
 #include <ctime> 
+#include <regex>
 
 namespace ilqgames {
 
@@ -121,7 +122,15 @@ bool SolverLog::Save() const {
   // Making top-level directory
   const auto date = std::chrono::system_clock::to_time_t(
                         std::chrono::system_clock::now());
-  const std::string dir_name = std::string(ILQGAMES_LOG_DIR) + "/" + std::string(std::ctime(&date));
+  std::string name = std::string(std::ctime(&date));
+  std::transform(name.begin(), name.end(), name.begin(), [](char ch) {
+    return (ch == ' ' || ch == ':')  ? '_' : ch;
+  });
+  name = std::regex_replace(name, std::regex("( |\n)+$"), "");
+
+  std::cout << name << std::endl;
+
+  const std::string dir_name = std::string(ILQGAMES_LOG_DIR) + "/" + name;
 
   if(!make_directory(dir_name)) return false;
 
