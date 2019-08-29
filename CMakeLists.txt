@@ -19,6 +19,9 @@ include(cmake/Dependencies.cmake)
 # Check for C++17 features and enable.
 ilqgames_enable_cpp17()
 
+# Set compiler constants.
+add_definitions(-DILQGAMES_LOG_DIR="${CMAKE_SOURCE_DIR}/logs")
+
 # Set the build type. Default to Release mode.
 if(NOT CMAKE_BUILD_TYPE)
   message("Defaulting to building targets in Release mode.")
