@@ -194,9 +194,15 @@ void ILQSolver::CurrentOperatingPoint(
       current_us[jj] = strategy(kk, delta_x, last_us[jj]);
     }
 
+    VectorXf old_x(x);
+
     // Integrate dynamics for one time step.
     if (kk < num_time_steps_ - 1)
       x = dynamics_->Integrate(t, time_step_, x, current_us);
+
+    std::cout << "old x: " << old_x.transpose() << ", new x: " << x.transpose()
+              << ", u: ",
+        current_us[0] << std::endl;
   }
 }
 
