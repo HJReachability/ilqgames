@@ -126,12 +126,6 @@ bool ILQSolver::Solve(const VectorXf& x0,
     CurrentOperatingPoint(last_operating_point, current_strategies,
                           &current_operating_point);
 
-    for (size_t kk = 0; kk < current_operating_point.xs.size(); kk++) {
-      std::cout << "before: " << last_operating_point.xs[kk].transpose();
-      std::cout << ", after: " << current_operating_point.xs[kk].transpose()
-                << std::endl;
-    }
-
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point.
     for (size_t kk = 0; kk < num_time_steps_; kk++) {
@@ -194,16 +188,9 @@ void ILQSolver::CurrentOperatingPoint(
       current_us[jj] = strategy(kk, delta_x, last_us[jj]);
     }
 
-    VectorXf old_x(x);
-
     // Integrate dynamics for one time step.
     if (kk < num_time_steps_ - 1)
       x = dynamics_->Integrate(t, time_step_, x, current_us);
-
-    std::cout << "old x: " << old_x.transpose() << ", new x: " << x.transpose()
-              << ", u: " << current_us[0].transpose()
-              << ", xdot: " << dynamics_->Evaluate(t, old_x, current_us).transpose()
-              << std::endl;
   }
 }
 
