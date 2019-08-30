@@ -70,6 +70,8 @@ VectorXf ConcatenatedDynamicalSystem::Evaluate(
     const auto& subsystem = subsystems_[ii];
     xdot.segment(dims_so_far, subsystem->XDim()) = subsystem->Evaluate(
         t, x.segment(dims_so_far, subsystem->XDim()), us[ii]);
+
+    std::cout << "ii = " << ii << ": xdot = " << xdot.transpose() << std::endl;
     dims_so_far += subsystem->XDim();
   }
 
