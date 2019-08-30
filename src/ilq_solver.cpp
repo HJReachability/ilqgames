@@ -201,8 +201,7 @@ void ILQSolver::CurrentOperatingPoint(
       x = dynamics_->Integrate(t, time_step_, x, current_us);
 
     std::cout << "old x: " << old_x.transpose() << ", new x: " << x.transpose()
-              << ", u: ",
-        current_us[0] << std::endl;
+              << ", u: " << current_us[0] << std::endl;
   }
 }
 
