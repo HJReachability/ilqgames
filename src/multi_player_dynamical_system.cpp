@@ -57,7 +57,7 @@ VectorXf MultiPlayerDynamicalSystem::Integrate(
   // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods for
   // further details.
   VectorXf x(x0);
-  for (Time t = t0; t < t0 + time_step; t += dt) {
+  for (Time t = t0; t < t0 + time_step - 0.5 * dt; t += dt) {
     const VectorXf k1 = dt * Evaluate(t, x, us);
     const VectorXf k2 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k1, us);
     const VectorXf k3 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k2, us);
