@@ -57,6 +57,34 @@
 
 namespace ilqgames {
 
+namespace {
+// Check if the maximum elementwise state difference between two
+// operating points is small (according to a hard-coded constant).
+bool AreOperatingPointsClose(const OperatingPoint& op1,
+                             const OperatingPoint& op2) {
+  CHECK_EQ(op1.xs.size(), op2.xs.size());
+
+  constexpr float kMaxElementwiseDifference = 10.0;
+  for (size_t kk = 0; kk < op1.xs.size(); kk++) {
+    if ((op1.xs[kk] - op2.xs[kk]).cwiseAbs().maxCoeff() >
+        kMaxElementwiseDifference)
+      return false;
+  }
+
+  return true;
+}
+
+// Multiply all alphas in a set of strategies by the given constant.
+void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
+  CHECK_NOTNULL(strategies);
+
+  for (auto& strategy : *strategies) {
+    for (auto& alpha : strategy.alphas) alpha *= scaling;
+  }
+}
+
+}  // anonymous namespace
+
 void GameSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
@@ -114,16 +142,31 @@ bool GameSolver::HasConverged(
 bool GameSolver::ModifyLQStrategies(
     const OperatingPoint& current_operating_point,
     std::vector<Strategy>* strategies) const {
-  CHECK_NOTNULL(strategies);
+  // Compute next operating point.
+  OperatingPoint next_operating_point(num_time_steps_, dynamics_->NumPlayers(),
+                                      current_operating_point.t0);
+  CurrentOperatingPoint(current_operating_point, *strategies,
+                        &next_operating_point);
 
-  // As a simple starting point, just scale all the 'alphas' in the strategy to
-  // a fraction of their original value.
-  constexpr float kAlphaScalingFactor = 0.15;
-  for (auto& strategy : *strategies) {
-    for (auto& alpha : strategy.alphas) alpha *= kAlphaScalingFactor;
+  // Initially scale alphas by a fixed amount to avoid unnecessary backtracking.
+  constexpr float kInitialAlphaScaling = 0.75;
+  ScaleAlphas(kInitialAlphaScaling, strategies);
+
+  // Keep halving alphas until the maximum elementwise state difference is above
+  // a threshold.
+  constexpr float kGeometricAlphaScaling = 0.5;
+  constexpr size_t kMaxBacktrackingSteps = 100;
+  for (size_t ii = 0; ii < kMaxBacktrackingSteps; ii++) {
+    if (AreOperatingPointsClose(current_operating_point, next_operating_point))
+      return true;
+
+    ScaleAlphas(kGeometricAlphaScaling, strategies);
+    CurrentOperatingPoint(current_operating_point, *strategies,
+                          &next_operating_point);
   }
 
-  return true;
+  LOG(WARNING) << "Exceeded maximum number of backtracking steps.";
+  return false;
 }
 
 }  // namespace ilqgames

@@ -59,7 +59,6 @@
 #include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
-#include <ilqgames/solver/linesearching_ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -398,7 +397,7 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample() {
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new LinesearchingILQSolver(
+  solver_.reset(new ILQSolver(
       dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon, kTimeStep));
 }
 
