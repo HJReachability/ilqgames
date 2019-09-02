@@ -138,6 +138,8 @@ bool GameSolver::ModifyLQStrategies(
   // Initially scale alphas by a fixed amount to avoid unnecessary backtracking.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
 
+  if (!params_.linesearch) return true;
+
   // Keep reducing alphas until the maximum elementwise state difference is
   // above a threshold.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
