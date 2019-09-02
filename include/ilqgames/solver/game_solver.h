@@ -47,6 +47,7 @@
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -90,14 +91,14 @@ class GameSolver {
  protected:
   GameSolver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
              const std::vector<PlayerCost>& player_costs, Time time_horizon,
-             Time time_step)
+             const SolverParams& params = SolverParams())
       : dynamics_(dynamics),
         player_costs_(player_costs),
         time_horizon_(time_horizon),
-        time_step_(time_step),
-        num_time_steps_(static_cast<size_t>(time_horizon / time_step)) {
+        time_step_(dynamics->TimeStep()),
+        num_time_steps_(static_cast<size_t>(time_horizon / time_step_)),
+        params_(params) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
-    CHECK_NOTNULL(dynamics_.get());
   }
 
   // Modify LQ strategies to improve convergence properties.
@@ -110,6 +111,11 @@ class GameSolver {
   virtual bool HasConverged(
       size_t iteration, const OperatingPoint& last_operating_point,
       const OperatingPoint& current_operating_point) const;
+
+  // Check if operating points are close to one another in the infinity norm.
+  virtual bool AreOperatingPointsClose(const OperatingPoint& op1,
+                                       const OperatingPoint& op2,
+                                       float threshold) const;
 
   // Compute the current operating point based on the current set of strategies
   // and the last operating point.
@@ -127,6 +133,9 @@ class GameSolver {
   const Time time_horizon_;
   const Time time_step_;
   const size_t num_time_steps_;
+
+  // Solver parameters.
+  const SolverParams params_;
 };  // class GameSolver
 
 }  // namespace ilqgames

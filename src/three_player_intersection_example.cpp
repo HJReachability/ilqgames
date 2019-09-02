@@ -44,13 +44,13 @@
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
-#include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
+#include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
@@ -60,6 +60,7 @@
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -397,8 +398,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample() {
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new ILQSolver(
-      dynamics, {p1_cost, p2_cost, p3_cost}, kTimeHorizon, kTimeStep));
+  SolverParams params;
+  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
+                              kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerIntersectionExample::Xs(
