@@ -42,6 +42,7 @@
 
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
+#include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
@@ -203,6 +204,12 @@ TEST(SinglePlayerUnicycle5DTest, LinearizesCorrectly) {
 TEST(SinglePlayerCar5DTest, LinearizesCorrectly) {
   constexpr float kInterAxleLength = 4.0;  // m
   const SinglePlayerCar5D system(kInterAxleLength);
+  CheckLinearization(system);
+}
+
+TEST(SinglePlayerCar6DTest, LinearizesCorrectly) {
+  constexpr float kInterAxleLength = 4.0;  // m
+  const SinglePlayerCar6D system(kInterAxleLength);
   CheckLinearization(system);
 }
 
