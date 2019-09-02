@@ -60,9 +60,11 @@ class SolverLog : private Uncopyable {
 
   // Add a new solver iterate.
   void AddSolverIterate(const OperatingPoint& operating_point,
-                        const std::vector<Strategy>& strategies) {
+                        const std::vector<Strategy>& strategies,
+                        Time cumulative_runtime) {
     operating_points_.push_back(operating_point);
     strategies_.push_back(strategies);
+    cumulative_runtimes_.push_back(cumulative_runtime);
   }
 
   // Accessors.
@@ -144,9 +146,11 @@ class SolverLog : private Uncopyable {
   // Time discretization.
   const Time time_step_;
 
-  // Operating points and strategies indexed by solver iterate.
+  // Operating points, strategies, and cumulative runtime indexed by solver
+  // iterate.
   std::vector<OperatingPoint> operating_points_;
   std::vector<std::vector<Strategy>> strategies_;
+  std::vector<Time> cumulative_runtimes_;
 };  // class SolverLog
 
 }  // namespace ilqgames
