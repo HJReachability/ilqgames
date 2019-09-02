@@ -58,21 +58,6 @@
 namespace ilqgames {
 
 namespace {
-// Check if the maximum elementwise state difference between two
-// operating points is small (according to a hard-coded constant).
-bool AreOperatingPointsClose(const OperatingPoint& op1,
-                             const OperatingPoint& op2) {
-  CHECK_EQ(op1.xs.size(), op2.xs.size());
-
-  constexpr float kMaxElementwiseDifference = 10.0;
-  for (size_t kk = 0; kk < op1.xs.size(); kk++) {
-    if ((op1.xs[kk] - op2.xs[kk]).cwiseAbs().maxCoeff() >
-        kMaxElementwiseDifference)
-      return false;
-  }
-
-  return true;
-}
 
 // Multiply all alphas in a set of strategies by the given constant.
 void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
@@ -119,21 +104,23 @@ void GameSolver::CurrentOperatingPoint(
 bool GameSolver::HasConverged(
     size_t iteration, const OperatingPoint& last_operating_point,
     const OperatingPoint& current_operating_point) const {
-  // As a simple starting point, we'll say that we've converged if it's been
-  // at least 50 iterations or the current operating_point and last operating
-  // point are within 0.1 in every dimension at every time.
-  constexpr size_t kMaxIterations = 1000;
-  constexpr float kMaxElementwiseDifference = 1e-1;
-
   // Check iterations.
-  if (iteration >= kMaxIterations) return true;
+  if (iteration >= params_.max_solver_iters) return true;
   if (iteration == 0) return false;
 
   // Check operating points.
-  for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    const VectorXf delta =
-        current_operating_point.xs[kk] - last_operating_point.xs[kk];
-    if (delta.cwiseAbs().maxCoeff() > kMaxElementwiseDifference) return false;
+  return AreOperatingPointsClose(last_operating_point, current_operating_point,
+                                 params_.convergence_tolerance);
+}
+
+bool GameSolver::AreOperatingPointsClose(const OperatingPoint& op1,
+                                         const OperatingPoint& op2,
+                                         float threshold) const {
+  CHECK_EQ(op1.xs.size(), op2.xs.size());
+
+  for (size_t kk = 0; kk < op1.xs.size(); kk++) {
+    if ((op1.xs[kk] - op2.xs[kk]).cwiseAbs().maxCoeff() > threshold)
+      return false;
   }
 
   return true;
@@ -149,18 +136,16 @@ bool GameSolver::ModifyLQStrategies(
                         &next_operating_point);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary backtracking.
-  constexpr float kInitialAlphaScaling = 0.75;
-  ScaleAlphas(kInitialAlphaScaling, strategies);
+  ScaleAlphas(params_.initial_alpha_scaling, strategies);
 
-  // Keep halving alphas until the maximum elementwise state difference is above
-  // a threshold.
-  constexpr float kGeometricAlphaScaling = 0.5;
-  constexpr size_t kMaxBacktrackingSteps = 100;
-  for (size_t ii = 0; ii < kMaxBacktrackingSteps; ii++) {
-    if (AreOperatingPointsClose(current_operating_point, next_operating_point))
+  // Keep reducing alphas until the maximum elementwise state difference is
+  // above a threshold.
+  for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
+    if (AreOperatingPointsClose(current_operating_point, next_operating_point,
+                                params_.trust_region_size))
       return true;
 
-    ScaleAlphas(kGeometricAlphaScaling, strategies);
+    ScaleAlphas(params_.geometric_alpha_scaling, strategies);
     CurrentOperatingPoint(current_operating_point, *strategies,
                           &next_operating_point);
   }
