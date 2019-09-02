@@ -61,6 +61,9 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+// Optional log saving.
+DEFINE_bool(save, true, "Optionally save solver logs to disk.");
+
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
 // libraries are often used for this purpose! Here we are supporting a few
@@ -87,8 +90,9 @@ int main(int argc, char** argv) {
   const std::string log_file =
       ILQGAMES_LOG_DIR + std::string("/three_player_flat_intersection.log");
   google::SetLogDestination(0, log_file.c_str());
-  FLAGS_logtostderr = true;
   google::InitGoogleLogging(argv[0]);
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  FLAGS_logtostderr = true;
 
   // Set up the game.
   auto problem =
@@ -116,7 +120,7 @@ int main(int argc, char** argv) {
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
   // Dump the logs.
-  CHECK(log->Save());
+  if (FLAGS_save) CHECK(log->Save());
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);

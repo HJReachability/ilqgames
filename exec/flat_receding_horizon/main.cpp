@@ -84,11 +84,12 @@ int main(int argc, char** argv) {
   const std::string log_file =
       ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
   google::SetLogDestination(0, log_file.c_str());
-  FLAGS_logtostderr = true;
   google::InitGoogleLogging(argv[0]);
+  FLAGS_logtostderr = true;
 
   // Set up the game.
-  auto problem = std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>();
+  auto problem =
+      std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>();
 
   // Solve the game in a receding horizon.
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
