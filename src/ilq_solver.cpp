@@ -67,6 +67,11 @@ bool ILQSolver::Solve(const VectorXf& x0,
   // Start a stopwatch.
   const auto solver_call_time = clock::now();
 
+  // Keep iterating until convergence.
+  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
+    return std::chrono::duration<Time>(clock::now() - start).count();
+  };  // elapsed_time
+
   // Chech return pointers not null.
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
@@ -108,12 +113,10 @@ bool ILQSolver::Solve(const VectorXf& x0,
   size_t num_iterations = 0;
 
   // Log initial iterate.
-  if (log) log->AddSolverIterate(current_operating_point, current_strategies);
-
-  // Keep iterating until convergence.
-  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
-    return std::chrono::duration<Time>(clock::now() - start).count();
-  };  // elapsed_time
+  // if (log) {
+  //   log->AddSolverIterate(current_operating_point, current_strategies,
+  //                         elapsed_time(solver_call_time));
+  // }
 
   constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
   while (elapsed_time(solver_call_time) <
@@ -155,7 +158,10 @@ bool ILQSolver::Solve(const VectorXf& x0,
       return false;
 
     // Log current iterate.
-    if (log) log->AddSolverIterate(current_operating_point, current_strategies);
+    if (log) {
+      log->AddSolverIterate(current_operating_point, current_strategies,
+                            elapsed_time(solver_call_time));
+    }
   }
 
   // Set final strategies and operating point.

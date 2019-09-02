@@ -66,6 +66,11 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   // Start a stopwatch.
   const auto solver_call_time = clock::now();
 
+  // Keep iterating until convergence.
+  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
+    return std::chrono::duration<Time>(clock::now() - start).count();
+  };  // elapsed_time
+
   // Chech return pointers not null.
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
@@ -114,12 +119,7 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
 
   // Log initial iterate.
   //  if (log) log->AddSolverIterate(initial_operating_point,
-  //  initial_strategies);
-
-  // Keep iterating until convergence.
-  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
-    return std::chrono::duration<Time>(clock::now() - start).count();
-  };  // elapsed_time
+  //  initial_strategies, elapsed_time(solver_call_time));
 
   // Keep iterating until convergence.
   constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
@@ -164,7 +164,10 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
       return false;
 
     // Log current iterate.
-    if (log) log->AddSolverIterate(current_operating_point, current_strategies);
+    if (log) {
+      log->AddSolverIterate(current_operating_point, current_strategies,
+                            elapsed_time(solver_call_time));
+    }
   }
 
   // Set final strategies and operating point.
