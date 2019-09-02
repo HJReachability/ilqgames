@@ -108,12 +108,12 @@ static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Goal points.
 static constexpr float kP1GoalX = -6.0;  // m
-static constexpr float kP1GoalY = 60.0;  // m
+static constexpr float kP1GoalY = 600.0;  // m
 
-static constexpr float kP2GoalX = 50.0;  // m
+static constexpr float kP2GoalX = 500.0;  // m
 static constexpr float kP2GoalY = 12.0;  // m
 
-static constexpr float kP3GoalX = 10.0;  // m
+static constexpr float kP3GoalX = 100.0;  // m
 static constexpr float kP3GoalY = 16.0;  // m
 
 // Nominal and max speed.
@@ -211,14 +211,14 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample() {
 
   // Stay in lanes.
   const Polyline2 lane1(
-      {Point2(kP1InitialX, -100.0), Point2(kP1InitialX, 100.0)});
-  const Polyline2 lane2({Point2(kP2InitialX, 100.0), Point2(kP2InitialX, 18.0),
+      {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
+  const Polyline2 lane2({Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 18.0),
                          Point2(kP2InitialX + 0.5, 15.0),
                          Point2(kP2InitialX + 1.0, 14.0),
                          Point2(kP2InitialX + 3.0, 12.5),
-                         Point2(kP2InitialX + 6.0, 12.0), Point2(100.0, 12.0)});
+                         Point2(kP2InitialX + 6.0, 12.0), Point2(1000.0, 12.0)});
   const Polyline2 lane3(
-      {Point2(-100.0, kP3InitialY), Point2(100.0, kP3InitialY)});
+      {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
