@@ -395,6 +395,7 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
 
   // Set up solver.
   SolverParams params;
+  params.initial_alpha_scaling = 0.9;
   solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
                                   kTimeHorizon, params));
 }
