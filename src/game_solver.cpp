@@ -143,8 +143,7 @@ bool GameSolver::ModifyLQStrategies(
   // Keep reducing alphas until the maximum elementwise state difference is
   // above a threshold.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
-    if (AreOperatingPointsClose(current_operating_point, next_operating_point,
-                                params_.trust_region_size))
+    if (SatisfiesTrustRegion(current_operating_point, next_operating_point))
       return true;
 
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);

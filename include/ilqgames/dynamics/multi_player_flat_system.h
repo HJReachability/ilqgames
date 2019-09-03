@@ -65,26 +65,24 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
 
   // Utilities for feedback linearization.
   virtual MatrixXf InverseDecouplingMatrix(const VectorXf& x) const = 0;
-
   virtual VectorXf AffineTerm(const VectorXf& x) const = 0;
-
   virtual std::vector<VectorXf> LinearizingControls(
       const VectorXf& x, const std::vector<VectorXf>& vs) const = 0;
-
   virtual VectorXf ToLinearSystemState(const VectorXf& x) const = 0;
-
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
 
   // Gradient and hessian of map from xi to x.
   virtual void ChangeCostCoordinates(
       const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const = 0;
 
+  // Check if a state is singular.
+  virtual bool IsLinearSystemStateSingular(const VectorXf& xi) const = 0;
+
   // Integrate these dynamics forward in time.
   // Options include integration for a single timestep, between arbitrary times,
   // and within a single timestep.
   VectorXf Integrate(Time time_interval, const VectorXf& xi0,
                      const std::vector<VectorXf>& vs) const;
-
   VectorXf Integrate(Time t0, Time time_interval, const VectorXf& xi0,
                      const std::vector<VectorXf>& vs) const {
     return Integrate(time_interval, xi0, vs);

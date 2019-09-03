@@ -61,16 +61,13 @@ class SinglePlayerFlatSystem {
 
   // Utilities for feedback linearization.
   virtual MatrixXf InverseDecouplingMatrix(const VectorXf& x) const = 0;
-
   virtual VectorXf AffineTerm(const VectorXf& x) const = 0;
-
   VectorXf LinearizingControl(const VectorXf& x, const VectorXf& v) const {
     return InverseDecouplingMatrix(x) * (v - AffineTerm(x));
   }
-
   virtual VectorXf ToLinearSystemState(const VectorXf& x) const = 0;
-
   virtual VectorXf FromLinearSystemState(const VectorXf& xi) const = 0;
+  virtual bool IsLinearSystemStateSingular(const VectorXf& xi) const = 0;
 
   // Partial derivatives of map from xi to x.
   virtual void Partial(const VectorXf& xi, std::vector<VectorXf>* grads,

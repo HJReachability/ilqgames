@@ -196,6 +196,20 @@ VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
   return x;
 }
 
+bool ConcatenatedFlatSystem::IsLinearSystemStateSingular(
+    const VectorXf& xi) const {
+  Dimension x_dims_so_far = 0;
+  for (size_t ii = 0; ii < NumPlayers(); ii++) {
+    const auto& subsystem = subsystems_[ii];
+    const Dimension xdim = subsystem->XDim();
+    if (subsystem->IsLinearSystemStateSingular(xi.segment(x_dims_so_far, xdim)))
+      return true;
+    x_dims_so_far += xdim;
+  }
+
+  return false;
+}
+
 void ConcatenatedFlatSystem::ChangeCostCoordinates(
     const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const {
   CHECK_NOTNULL(q);
@@ -300,7 +314,8 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
       // Iterating over each player's cost.
       for (Dimension jj = 0; jj < SubsystemXDim(pp); jj++) {
         DCHECK_LT(jj + rows_so_far, l.size());
-        grad_xs[pp](ii + rows_so_far) += l(jj + rows_so_far) * first_partials[pp][jj](ii);
+        grad_xs[pp](ii + rows_so_far) +=
+            l(jj + rows_so_far) * first_partials[pp][jj](ii);
       }
     }
 

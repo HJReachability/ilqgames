@@ -177,4 +177,20 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   return true;
 }
 
+bool ILQFlatSolver::SatisfiesTrustRegion(
+    const OperatingPoint& last_operating_point,
+    const OperatingPoint& current_operating_point) const {
+  // Check if all states are far from singularity.
+  const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
+  for (size_t ii = 0; ii < current_operating_point.xs.size(); ii++) {
+    if (dyn.IsLinearSystemStateSingular(current_operating_point.xs[ii])) {
+      return false;
+    }
+  }
+
+  // Are the operating points close.
+  return AreOperatingPointsClose(last_operating_point, current_operating_point,
+                                 params_.trust_region_size);
+}
+
 }  // namespace ilqgames

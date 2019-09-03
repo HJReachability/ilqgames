@@ -73,15 +73,12 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
-
   VectorXf AffineTerm(const VectorXf& x) const;
-
   VectorXf ToLinearSystemState(const VectorXf& x) const;
-
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
-
   void Partial(const VectorXf& xi, std::vector<VectorXf>* grads,
                std::vector<MatrixXf>* hesses) const;
+  bool IsLinearSystemStateSingular(const VectorXf& xi) const;
 
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
@@ -130,7 +127,7 @@ inline MatrixXf SinglePlayerFlatUnicycle4D::InverseDecouplingMatrix(
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
 
-  CHECK_GT(std::abs(x(kVIdx)), 1e-2);
+  CHECK_GT(std::abs(x(kVIdx)), 1e-3);
 
   M_inv(0, 0) = cos_t;
   M_inv(0, 1) = sin_t;
@@ -167,6 +164,14 @@ inline VectorXf SinglePlayerFlatUnicycle4D::FromLinearSystemState(
   x(kVIdx) = std::hypot(xi(kVyIdx), xi(kVxIdx));
 
   return x;
+}
+
+inline bool SinglePlayerFlatUnicycle4D::IsLinearSystemStateSingular(
+    const VectorXf& xi) const {
+  constexpr float kTolerance = 1e-2;
+  return (std::isnan(xi(kVxIdx)) || std::isnan(xi(kVyIdx))) ||
+         (std::abs(xi(kVxIdx)) < kTolerance &&
+          std::abs(xi(kVyIdx)) < kTolerance);
 }
 
 inline void SinglePlayerFlatUnicycle4D::Partial(

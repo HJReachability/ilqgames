@@ -76,15 +76,12 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
-
   VectorXf AffineTerm(const VectorXf& x) const;
-
   VectorXf ToLinearSystemState(const VectorXf& x) const;
-
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
-
   void Partial(const VectorXf& xi, std::vector<VectorXf>* grads,
                std::vector<MatrixXf>* hesses) const;
+  bool IsLinearSystemStateSingular(const VectorXf& xi) const;
 
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
@@ -147,7 +144,7 @@ inline MatrixXf SinglePlayerFlatCar6D::InverseDecouplingMatrix(
   const float cos_phi_v = std::cos(x(kPhiIdx)) / x(kVIdx);
   const float scaling = inter_axle_distance_ * cos_phi_v * cos_phi_v;
 
-  CHECK_GT(std::abs(x(kVIdx)), 1e-2);
+  CHECK_GT(std::abs(x(kVIdx)), 1e-3);
 
   M_inv(0, 0) = -scaling * sin_t;
   M_inv(0, 1) = scaling * cos_t;
@@ -209,6 +206,14 @@ inline VectorXf SinglePlayerFlatCar6D::FromLinearSystemState(
                          inter_axle_distance_ / (x(kVIdx) * x(kVIdx) * sin_t));
 
   return x;
+}
+
+inline bool SinglePlayerFlatCar6D::IsLinearSystemStateSingular(
+    const VectorXf& xi) const {
+  constexpr float kTolerance = 1e-2;
+  return (std::isnan(xi(kVxIdx)) || std::isnan(xi(kVyIdx))) ||
+         (std::abs(xi(kVxIdx)) < kTolerance &&
+          std::abs(xi(kVyIdx)) < kTolerance);
 }
 
 inline float SinglePlayerFlatCar6D::DistanceBetween(const VectorXf& x0,
