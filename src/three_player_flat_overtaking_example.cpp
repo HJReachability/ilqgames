@@ -100,7 +100,7 @@ static constexpr float kP3ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kNominalHeadingCostWeight = 50.0;
+static constexpr float kNominalHeadingCostWeight = 60.0;
 
 static constexpr bool kOrientedRight = true;
 
@@ -131,7 +131,7 @@ static constexpr float kP3NominalV = 2.0;  // m/s
 static constexpr float kP1NominalHeading = M_PI_2;  // rad
 
 // Initial state.
-static constexpr float kP1InitialX = -2.4;   // m
+static constexpr float kP1InitialX = -3.0;   // m
 static constexpr float kP1InitialY = -30.0;  // m
 
 static constexpr float kP2InitialX = -10.0;  // m
@@ -364,7 +364,7 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample() {
   const std::shared_ptr<ProxCost> p1p3_proximity_cost(
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  //p1_cost.AddStateCost(p1p2_proximity_cost);
+  p1_cost.AddStateCost(p1p2_proximity_cost);
   p1_cost.AddStateCost(p1p3_proximity_cost);
 
   const std::shared_ptr<ProxCost> p2p1_proximity_cost(
@@ -373,7 +373,7 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample() {
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  //p2_cost.AddStateCost(p2p1_proximity_cost);
+  p2_cost.AddStateCost(p2p1_proximity_cost);
   p2_cost.AddStateCost(p2p3_proximity_cost);
 
   const std::shared_ptr<ProxCost> p3p1_proximity_cost(
