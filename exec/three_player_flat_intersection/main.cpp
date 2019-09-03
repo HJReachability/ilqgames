@@ -62,7 +62,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 // Optional log saving.
-DEFINE_bool(save, true, "Optionally save solver logs to disk.");
+DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper

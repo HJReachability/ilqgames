@@ -76,6 +76,13 @@ class ILQFlatSolver : public GameSolver {
              OperatingPoint* final_operating_point,
              std::vector<Strategy>* final_strategies, SolverLog* log = nullptr,
              Time max_runtime = std::numeric_limits<Time>::infinity());
+
+ protected:
+  // Check trust region constraint. By default, this just checks if the current
+  // and previous operating points are close to each other.
+  virtual bool SatisfiesTrustRegion(
+      const OperatingPoint& last_operating_point,
+      const OperatingPoint& current_operating_point) const;
 };  // class ILQFlatSolver
 
 }  // namespace ilqgames
