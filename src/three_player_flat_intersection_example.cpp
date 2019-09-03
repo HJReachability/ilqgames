@@ -79,14 +79,15 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
-static constexpr float kACostWeight = 5.0;
 static constexpr float kOmegaCostWeight = 50.0;
+static constexpr float kJerkCostWeight = 5.0;
 
+static constexpr float kACostWeight = 5.0;
+static constexpr float kCurvatureCostWeight = 10.0;
 static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 0.1;
+static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kGoalCostWeight = 0.1;
-
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
@@ -102,14 +103,14 @@ static constexpr bool kOrientedRight = true;
 static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Goal points.
-static constexpr float kP1GoalX = -6.0;  // m
+static constexpr float kP1GoalX = -6.0;   // m
 static constexpr float kP1GoalY = 600.0;  // m
 
 static constexpr float kP2GoalX = 500.0;  // m
-static constexpr float kP2GoalY = 12.0;  // m
+static constexpr float kP2GoalY = 12.0;   // m
 
 static constexpr float kP3GoalX = 100.0;  // m
-static constexpr float kP3GoalY = 16.0;  // m
+static constexpr float kP3GoalY = 16.0;   // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0;  // m/s
@@ -119,7 +120,7 @@ static constexpr float kMinV = 1.0;     // m/s
 
 static constexpr float kP1NominalV = 8.0;  // m/s
 static constexpr float kP2NominalV = 5.0;  // m/s
-static constexpr float kP3NominalV = 1.0;  // m/s
+static constexpr float kP3NominalV = 1.5;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = -2.0;   // m
@@ -146,12 +147,16 @@ using P3 = SinglePlayerFlatUnicycle4D;
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
 static const Dimension kP1HeadingIdx = P1::kThetaIdx;
+static const Dimension kP1PhiIdx = P1::kPhiIdx;
 static const Dimension kP1VIdx = P1::kVIdx;
+static const Dimension kP1AIdx = P1::kAIdx;
 
 static const Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
 static const Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
 static const Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
+static const Dimension kP2PhiIdx = P1::kNumXDims + P2::kPhiIdx;
 static const Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
+static const Dimension kP2AIdx = P1::kNumXDims + P2::kAIdx;
 
 static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
 static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
@@ -161,9 +166,9 @@ static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
 
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
-static const Dimension kP1AIdx = 1;
+static const Dimension kP1JerkIdx = 1;
 static const Dimension kP2OmegaIdx = 0;
-static const Dimension kP2AIdx = 1;
+static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
 }  // anonymous namespace
@@ -207,11 +212,11 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   // Stay in lanes.
   const Polyline2 lane1(
       {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
-  const Polyline2 lane2({Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 18.0),
-                         Point2(kP2InitialX + 0.5, 15.0),
-                         Point2(kP2InitialX + 1.0, 14.0),
-                         Point2(kP2InitialX + 3.0, 12.5),
-                         Point2(kP2InitialX + 6.0, 12.0), Point2(1000.0, 12.0)});
+  const Polyline2 lane2(
+      {Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 18.0),
+       Point2(kP2InitialX + 0.5, 15.0), Point2(kP2InitialX + 1.0, 14.0),
+       Point2(kP2InitialX + 3.0, 12.5), Point2(kP2InitialX + 6.0, 12.0),
+       Point2(1000.0, 12.0)});
   const Polyline2 lane3(
       {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
 
@@ -291,20 +296,38 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   p3_cost.AddStateCost(p3_max_v_cost);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
+  // Curvature costs for P1 and P2.
+  const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
+      kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
+  p1_cost.AddStateCost(p1_curvature_cost);
+
+  const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
+      kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
+  p2_cost.AddStateCost(p2_curvature_cost);
+
+  // Penalize acceleration for cars.
+  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
+                                                         0.0, "Acceleration");
+  p1_cost.AddStateCost(p1_a_cost);
+
+  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
+                                                         0.0, "Acceleration");
+  p2_cost.AddStateCost(p2_a_cost);
+
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
+  const auto p1_jerk_cost =
+      std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
   p1_cost.AddControlCost(0, p1_omega_cost);
-  p1_cost.AddControlCost(0, p1_a_cost);
+  p1_cost.AddControlCost(0, p1_jerk_cost);
 
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
-                                                         0.0, "Acceleration");
+  const auto p2_jerk_cost =
+      std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
   p2_cost.AddControlCost(1, p2_omega_cost);
-  p2_cost.AddControlCost(1, p2_a_cost);
+  p2_cost.AddControlCost(1, p2_jerk_cost);
 
   const auto p3_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
