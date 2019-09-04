@@ -63,6 +63,13 @@
 
 // Optional log saving.
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
+DEFINE_bool(viz, true, "Visualize results in a GUI.");
+
+// Linesearch parameters.
+DEFINE_bool(linesearch, true, "Should the solver linesearch?");
+DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
+DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
+DEFINE_double(convergence_tolerance, 0.5, "L_inf tolerance for convergence.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -95,8 +102,14 @@ int main(int argc, char** argv) {
   FLAGS_logtostderr = true;
 
   // Set up the game.
+  ilqgames::SolverParams params;
+  params.max_backtracking_steps = 100;
+  params.linesearch = FLAGS_linesearch;
+  params.trust_region_size = FLAGS_trust_region_size;
+  params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
+  params.convergence_tolerance = FLAGS_convergence_tolerance;
   auto problem =
-      std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>();
+      std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>(params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
@@ -119,8 +132,9 @@ int main(int argc, char** argv) {
   // Create log list.
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
-  // Dump the logs.
+  // Dump the logs and/or exit.
   if (FLAGS_save) CHECK(log->Save());
+  if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);

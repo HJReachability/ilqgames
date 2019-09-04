@@ -185,7 +185,8 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
 }  // anonymous namespace
 
-ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
+ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
+    const SolverParams& params) {
   // Create dynamics.
   dynamics_.reset(new ConcatenatedFlatSystem(
       {std::make_shared<P1>(kInterAxleLength),
@@ -415,12 +416,6 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  SolverParams params;
-  params.max_backtracking_steps = 100;
-  params.initial_alpha_scaling = 0.25;
-  params.trust_region_size = 10.0;
-  params.convergence_tolerance = 0.5;
-  params.linesearch = true;
   solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
                                   kTimeHorizon, params));
 }

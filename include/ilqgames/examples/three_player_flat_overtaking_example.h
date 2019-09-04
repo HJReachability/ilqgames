@@ -45,6 +45,7 @@
 
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
@@ -52,7 +53,7 @@ namespace ilqgames {
 class ThreePlayerFlatOvertakingExample : public TopDownRenderableProblem {
  public:
   ~ThreePlayerFlatOvertakingExample() {}
-  ThreePlayerFlatOvertakingExample();
+  ThreePlayerFlatOvertakingExample(const SolverParams& params);
 
   // Unpack x, y, heading (for each player, potentially) from a given linear
   // system state.

@@ -59,6 +59,16 @@
 
 namespace ilqgames {
 
+// Convert current time into a default experiment name for unique log saving.
+std::string SolverLog::DefaultExperimentName() {
+  const auto date =
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  std::string name = std::string(std::ctime(&date));
+  std::transform(name.begin(), name.end(), name.begin(),
+                 [](char ch) { return (ch == ' ' || ch == ':') ? '_' : ch; });
+  return std::regex_replace(name, std::regex("( |\n)+$"), "");
+}
+
 VectorXf SolverLog::InterpolateState(size_t iterate, Time t) const {
   const OperatingPoint& op = operating_points_[iterate];
 
@@ -109,7 +119,7 @@ float SolverLog::InterpolateControl(size_t iterate, Time t, PlayerIndex player,
   return (1.0 - frac) * op.us[lo][player](dim) + frac * op.us[hi][player](dim);
 }
 
-bool SolverLog::Save() const {
+bool SolverLog::Save(const std::string& experiment_name) const {
   auto make_directory = [](const std::string& directory_name) {
     if (mkdir(directory_name.c_str(), 0777) == -1) {
       LOG(ERROR) << "Could not create directory " << directory_name
@@ -120,14 +130,9 @@ bool SolverLog::Save() const {
   };  // make_directory
 
   // Making top-level directory
-  const auto date =
-      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-  std::string name = std::string(std::ctime(&date));
-  std::transform(name.begin(), name.end(), name.begin(),
-                 [](char ch) { return (ch == ' ' || ch == ':') ? '_' : ch; });
-  name = std::regex_replace(name, std::regex("( |\n)+$"), "");
 
-  const std::string dir_name = std::string(ILQGAMES_LOG_DIR) + "/" + name;
+  const std::string dir_name =
+      std::string(ILQGAMES_LOG_DIR) + "/" + experiment_name;
   if (!make_directory(dir_name)) return false;
   LOG(INFO) << "Saving to directory: " << dir_name;
 

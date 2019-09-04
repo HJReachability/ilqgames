@@ -58,6 +58,12 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+// Linesearch parameters.
+DEFINE_bool(linesearch, true, "Should the solver linesearch?");
+DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
+DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
+DEFINE_double(convergence_tolerance, 0.5, "L_inf tolerance for convergence.");
+
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
 // libraries are often used for this purpose! Here we are supporting a few
@@ -85,10 +91,18 @@ int main(int argc, char** argv) {
       ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
   google::SetLogDestination(0, log_file.c_str());
   google::InitGoogleLogging(argv[0]);
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_logtostderr = true;
 
   // Set up the game.
-  auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  ilqgames::SolverParams params;
+  params.max_backtracking_steps = 100;
+  params.linesearch = FLAGS_linesearch;
+  params.trust_region_size = FLAGS_trust_region_size;
+  params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
+  params.convergence_tolerance = FLAGS_convergence_tolerance;
+  auto problem =
+      std::make_shared<ilqgames::ThreePlayerIntersectionExample>(params);
 
   // Solve the game in a receding horizon.
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
