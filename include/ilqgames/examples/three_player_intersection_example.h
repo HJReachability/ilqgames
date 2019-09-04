@@ -44,6 +44,7 @@
 #define ILQGAMES_EXAMPLE_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
@@ -51,7 +52,7 @@ namespace ilqgames {
 class ThreePlayerIntersectionExample : public TopDownRenderableProblem {
  public:
   ~ThreePlayerIntersectionExample() {}
-  ThreePlayerIntersectionExample();
+  ThreePlayerIntersectionExample(const SolverParams& params);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;

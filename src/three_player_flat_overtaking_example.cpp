@@ -41,8 +41,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//todo{vrubies}: 1.) Add cost for the wheel angle.
-//               2.) Make center lane cost semi-quadratic. 
+// todo{vrubies}: 1.) Add cost for the wheel angle.
+//               2.) Make center lane cost semi-quadratic.
 
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
@@ -108,14 +108,14 @@ static constexpr bool kOrientedRight = true;
 static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Goal points.
-static constexpr float kP1GoalX = -6.0;  // m
+static constexpr float kP1GoalX = -6.0;   // m
 static constexpr float kP1GoalY = 600.0;  // m
 
 static constexpr float kP2GoalX = 500.0;  // m
-static constexpr float kP2GoalY = 12.0;  // m
+static constexpr float kP2GoalY = 12.0;   // m
 
 static constexpr float kP3GoalX = 100.0;  // m
-static constexpr float kP3GoalY = 16.0;  // m
+static constexpr float kP3GoalY = 16.0;   // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 20.0;  // m/s
@@ -124,8 +124,8 @@ static constexpr float kP3MaxV = 5.0;   // m/s
 static constexpr float kMinV = 1.0;     // m/s
 
 static constexpr float kP1NominalV = 10.0;  // m/s
-static constexpr float kP2NominalV = 5.0;  // m/s
-static constexpr float kP3NominalV = 2.0;  // m/s
+static constexpr float kP2NominalV = 5.0;   // m/s
+static constexpr float kP3NominalV = 2.0;   // m/s
 
 // Nominal heading
 static constexpr float kP1NominalHeading = M_PI_2;  // rad
@@ -137,12 +137,12 @@ static constexpr float kP1InitialY = -30.0;  // m
 static constexpr float kP2InitialX = -10.0;  // m
 static constexpr float kP2InitialY = 45.0;   // m
 
-static constexpr float kP3InitialX = -2.0;  // m
-static constexpr float kP3InitialY = -20.0;   // m
+static constexpr float kP3InitialX = -2.0;   // m
+static constexpr float kP3InitialY = -20.0;  // m
 
 static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
-static constexpr float kP3InitialHeading = M_PI_2;      // rad
+static constexpr float kP3InitialHeading = M_PI_2;   // rad
 
 static constexpr float kP1InitialSpeed = 5.0;   // m/s
 static constexpr float kP2InitialSpeed = 5.0;   // m/s
@@ -178,7 +178,8 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
 }  // anonymous namespace
 
-ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample() {
+ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
+    const SolverParams& params) {
   // Create dynamics.
   dynamics_.reset(new ConcatenatedFlatSystem(
       {std::make_shared<P1>(kInterAxleLength),
@@ -217,17 +218,20 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample() {
   // Stay in lanes.
   const Polyline2 lane1(
       {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
-  const Polyline2 lane2({Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, -1000.0)});//,
-                         // Point2(kP2InitialX + 0.5, 15.0),
-                         // Point2(kP2InitialX + 1.0, 14.0),
-                         // Point2(kP2InitialX + 3.0, 12.5),
-                         // Point2(kP2InitialX + 6.0, 12.0), Point2(1000.0, 12.0)});
+  const Polyline2 lane2(
+      {Point2(kP2InitialX, 1000.0),
+       Point2(kP2InitialX, -1000.0)});  //,
+                                        // Point2(kP2InitialX + 0.5, 15.0),
+                                        // Point2(kP2InitialX + 1.0, 14.0),
+                                        // Point2(kP2InitialX + 3.0, 12.5),
+                                        // Point2(kP2InitialX + 6.0, 12.0),
+                                        // Point2(1000.0, 12.0)});
   const Polyline2 lane3(
       {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
-      new QuadraticPolyline2Cost(0.01 * kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
-                                 "LaneCenter"));
+      new QuadraticPolyline2Cost(0.01 * kLaneCostWeight, lane1,
+                                 {kP1XIdx, kP1YIdx}, "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
@@ -271,8 +275,9 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample() {
   p3_cost.AddStateCost(p3_lane_l_cost);
 
   // Rotation cost
-  const auto p1_nominal_heading = std::make_shared<QuadraticCost>(
-    kNominalHeadingCostWeight, kP1HeadingIdx, kP1NominalHeading, "NominalHeading");
+  const auto p1_nominal_heading =
+      std::make_shared<QuadraticCost>(kNominalHeadingCostWeight, kP1HeadingIdx,
+                                      kP1NominalHeading, "NominalHeading");
   p1_cost.AddStateCost(p1_nominal_heading);
 
   // Max/min/nominal speed costs.
@@ -386,7 +391,6 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample() {
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  SolverParams params;
   solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
                                   kTimeHorizon, params));
 }

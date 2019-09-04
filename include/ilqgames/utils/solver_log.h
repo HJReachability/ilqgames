@@ -140,9 +140,12 @@ class SolverLog : private Uncopyable {
   }
 
   // Save to disk.
-  bool Save() const;
+  bool Save(const std::string& experiment_name = DefaultExperimentName()) const;
 
  private:
+  // Convert current time into a default experiment name for unique log saving.
+  static std::string DefaultExperimentName();
+
   // Time discretization.
   const Time time_step_;
 
