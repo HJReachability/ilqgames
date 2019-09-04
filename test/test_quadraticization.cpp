@@ -42,14 +42,16 @@
 
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
-#include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/proximity_barrier_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
+#include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
+#include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
@@ -165,8 +167,18 @@ TEST(QuadraticCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(QuadraticNormCostTest, QuadraticizesCorrectly) {
+  QuadraticNormCost cost(kCostWeight, {1, 2}, 1.0);
+  CheckQuadraticization(cost);
+}
+
 TEST(SemiquadraticCostTest, QuadraticizesCorrectly) {
   SemiquadraticCost cost(kCostWeight, 0, 0.0, true);
+  CheckQuadraticization(cost);
+}
+
+TEST(SemiquadraticNormCostTest, QuadraticizesCorrectly) {
+  SemiquadraticNormCost cost(kCostWeight, {1, 2}, 1.0, true);
   CheckQuadraticization(cost);
 }
 

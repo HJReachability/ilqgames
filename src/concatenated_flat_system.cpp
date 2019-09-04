@@ -341,6 +341,14 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
   // Now modify the cost hessians, i.e. 'Rs'.
   // NOTE: this depends only on the decoupling matrix.
+  ChangeControlCostCoordinates(xi, q);
+}
+
+void ConcatenatedFlatSystem::ChangeControlCostCoordinates(
+    const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const {
+  CHECK_NOTNULL(q);
+
+  // Get nonlinear system state and all decoupling matrices.
   const VectorXf x = FromLinearSystemState(xi);
   std::vector<MatrixXf> M_invs(NumPlayers());
 
@@ -353,6 +361,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
     x_dims_so_far += xdim;
   }
 
+  // Convert Rs.
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
     for (auto& element : (*q)[ii].Rs) {
       element.second = M_invs[element.first].transpose() * element.second *

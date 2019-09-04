@@ -36,62 +36,54 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Multi-player dynamical system comprised of several single player subsystems.
+// Quadratic cost function of the norm of two states (difference from some
+// nominal norm value), i.e. 0.5 * w * (||(x, y)|| - nominal)^2.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_DYNAMICS_CONCATENATED_FLAT_SYSTEM_H
-#define ILQGAMES_DYNAMICS_CONCATENATED_FLAT_SYSTEM_H
-
-#include <ilqgames/dynamics/multi_player_flat_system.h>
-#include <ilqgames/dynamics/single_player_flat_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/utils/types.h>
+
+#include <glog/logging.h>
 
 namespace ilqgames {
 
-class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
- public:
-  ~ConcatenatedFlatSystem() {}
-  ConcatenatedFlatSystem(const FlatSubsystemList& subsystems, Time time_step);
+float QuadraticNormCost::Evaluate(const VectorXf& input) const {
+  CHECK_LT(dim1_, input.size());
+  CHECK_LT(dim2_, input.size());
 
-  // Compute time derivative of state.
-  VectorXf Evaluate(const VectorXf& x, const std::vector<VectorXf>& us) const;
+  // Otherwise, cost is squared 2-norm of entire input.
+  const float diff = std::hypot(input(dim1_), input(dim2_)) - nominal_;
+  return 0.5 * weight_ * diff * diff;
+}
 
-  // Discrete time approximation of the underlying linearized system.
-  void ComputeLinearizedSystem() const;
+void QuadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
+                                     VectorXf* grad) const {
+  CHECK_LT(dim1_, input.size());
+  CHECK_LT(dim2_, input.size());
+  CHECK_NOTNULL(hess);
 
-  // Utilities for feedback linearization.
-  MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
-  VectorXf AffineTerm(const VectorXf& x) const;
-  std::vector<VectorXf> LinearizingControls(
-      const VectorXf& x, const std::vector<VectorXf>& vs) const;
-  VectorXf ToLinearSystemState(const VectorXf& x) const;
-  VectorXf FromLinearSystemState(const VectorXf& xi) const;
-  void ChangeCostCoordinates(const VectorXf& xi,
-                             std::vector<QuadraticCostApproximation>* q) const;
-  void ChangeControlCostCoordinates(
-      const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const;
-  bool IsLinearSystemStateSingular(const VectorXf& xi) const;
+  // Check dimensions.
+  CHECK_EQ(input.size(), hess->rows());
+  CHECK_EQ(input.size(), hess->cols());
 
-  // Distance metric between two states.
-  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
+  if (grad) CHECK_EQ(input.size(), grad->size());
 
-  // Getters.
-  Dimension SubsystemXDim(PlayerIndex player_idx) const {
-    return subsystems_[player_idx]->XDim();
+  // Populate hessian and, optionally, gradient.
+  const float norm = std::hypot(input(dim1_), input(dim2_));
+  const float norm_3 = norm * norm * norm;
+  (*hess)(dim1_, dim1_) =
+      weight_ - (nominal_ * input(dim2_) * input(dim2_) * weight_) / norm_3;
+  (*hess)(dim2_, dim2_) =
+      weight_ - (nominal_ * input(dim1_) * input(dim1_) * weight_) / norm_3;
+  (*hess)(dim1_, dim2_) =
+      nominal_ * input(dim1_) * input(dim2_) * weight_ / norm_3;
+  (*hess)(dim2_, dim1_) = (*hess)(dim1_, dim2_);
+
+  if (grad) {
+    (*grad)(dim1_) = -weight_ * input(dim1_) * (-1.0 + nominal_ / norm);
+    (*grad)(dim2_) = -weight_ * input(dim2_) * (-1.0 + nominal_ / norm);
   }
-  Dimension UDim(PlayerIndex player_idx) const {
-    return subsystems_[player_idx]->UDim();
-  }
-
-  PlayerIndex NumPlayers() const { return subsystems_.size(); }
-
- private:
-  // List of subsystems, each of which controls the affects of a single player.
-  const FlatSubsystemList subsystems_;
-};  // namespace ilqgames
+}
 
 }  // namespace ilqgames
-
-#endif

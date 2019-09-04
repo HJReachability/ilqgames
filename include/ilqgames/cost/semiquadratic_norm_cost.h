@@ -36,61 +36,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Multi-player dynamical system comprised of several single player subsystems.
+// Semiquadratic cost function of the norm of two states (difference from some
+// nominal norm value), i.e. 0.5 * w * (||(x, y)|| - nominal)^2 if ||(x, y)|| >
+// nominal (or optionally <).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_DYNAMICS_CONCATENATED_FLAT_SYSTEM_H
-#define ILQGAMES_DYNAMICS_CONCATENATED_FLAT_SYSTEM_H
+#ifndef ILQGAMES_COST_SEMIQUADRATIC_NORM_COST_H
+#define ILQGAMES_COST_SEMIQUADRATIC_NORM_COST_H
 
-#include <ilqgames/dynamics/multi_player_flat_system.h>
-#include <ilqgames/dynamics/single_player_flat_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
+
+#include <glog/logging.h>
+#include <string>
+#include <utility>
 
 namespace ilqgames {
 
-class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
+class SemiquadraticNormCost : public TimeInvariantCost {
  public:
-  ~ConcatenatedFlatSystem() {}
-  ConcatenatedFlatSystem(const FlatSubsystemList& subsystems, Time time_step);
-
-  // Compute time derivative of state.
-  VectorXf Evaluate(const VectorXf& x, const std::vector<VectorXf>& us) const;
-
-  // Discrete time approximation of the underlying linearized system.
-  void ComputeLinearizedSystem() const;
-
-  // Utilities for feedback linearization.
-  MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
-  VectorXf AffineTerm(const VectorXf& x) const;
-  std::vector<VectorXf> LinearizingControls(
-      const VectorXf& x, const std::vector<VectorXf>& vs) const;
-  VectorXf ToLinearSystemState(const VectorXf& x) const;
-  VectorXf FromLinearSystemState(const VectorXf& xi) const;
-  void ChangeCostCoordinates(const VectorXf& xi,
-                             std::vector<QuadraticCostApproximation>* q) const;
-  void ChangeControlCostCoordinates(
-      const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const;
-  bool IsLinearSystemStateSingular(const VectorXf& xi) const;
-
-  // Distance metric between two states.
-  float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
-
-  // Getters.
-  Dimension SubsystemXDim(PlayerIndex player_idx) const {
-    return subsystems_[player_idx]->XDim();
-  }
-  Dimension UDim(PlayerIndex player_idx) const {
-    return subsystems_[player_idx]->UDim();
+  // Construct from a multiplicative weight, the dimensions in which to apply
+  // the semiquadratic cost, a threshold, and a flag for which side to apply it.
+  SemiquadraticNormCost(float weight,
+                        const std::pair<Dimension, Dimension>& dims,
+                        float threshold, bool oriented_right,
+                        const std::string& name = "")
+      : TimeInvariantCost(weight, name),
+        dim1_(dims.first),
+        dim2_(dims.second),
+        threshold_(threshold),
+        oriented_right_(oriented_right) {
+    CHECK_GE(dim1_, 0);
+    CHECK_GE(dim2_, 0);
   }
 
-  PlayerIndex NumPlayers() const { return subsystems_.size(); }
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
+
+  // Quadraticize this cost at the given input, and add to the running
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
 
  private:
-  // List of subsystems, each of which controls the affects of a single player.
-  const FlatSubsystemList subsystems_;
-};  // namespace ilqgames
+  // Dimensions in which to apply the quadratic cost.
+  const Dimension dim1_, dim2_;
+
+  // Threshold and which side to apply it to.
+  const float threshold_;
+  const bool oriented_right_;
+};  //\class SemiquadraticNormCost
 
 }  // namespace ilqgames
 

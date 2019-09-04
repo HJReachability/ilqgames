@@ -148,11 +148,11 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
                      quadraticization[kk].begin(),
-                     [&t, &x, &us](const PlayerCost& cost) {
-                       return cost.Quadraticize(t, x, us);
+                     [&t, &xi, &us](const PlayerCost& cost) {
+                       return cost.Quadraticize(t, xi, us);
                      });
 
-      dyn->ChangeCostCoordinates(xi, &quadraticization[kk]);
+      dyn->ChangeControlCostCoordinates(xi, &quadraticization[kk]);
     }
 
     // Solve LQ game.
