@@ -419,6 +419,7 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   params.max_backtracking_steps = 100;
   params.initial_alpha_scaling = 0.25;
   params.trust_region_size = 10.0;
+  params.convergence_tolerance = 0.5;
   params.linesearch = true;
   solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
                                   kTimeHorizon, params));
