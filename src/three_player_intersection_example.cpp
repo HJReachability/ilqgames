@@ -297,23 +297,23 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample() {
   p3_cost.AddStateCost(p3_max_v_cost);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
-  // Curvature costs for P1 and P2.
-  const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
-  p1_cost.AddStateCost(p1_curvature_cost);
+  // // Curvature costs for P1 and P2.
+  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
+  // p1_cost.AddStateCost(p1_curvature_cost);
 
-  const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
-  p2_cost.AddStateCost(p2_curvature_cost);
+  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
+  // p2_cost.AddStateCost(p2_curvature_cost);
 
-  // Penalize acceleration for cars.
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p1_cost.AddStateCost(p1_a_cost);
+  // // Penalize acceleration for cars.
+  // const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
+  //                                                        0.0, "Acceleration");
+  // p1_cost.AddStateCost(p1_a_cost);
 
-  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
-                                                         0.0, "Acceleration");
-  p2_cost.AddStateCost(p2_a_cost);
+  // const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
+  //                                                        0.0, "Acceleration");
+  // p2_cost.AddStateCost(p2_a_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
@@ -398,7 +398,7 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample() {
   SolverParams params;
   params.max_backtracking_steps = 100;
   params.initial_alpha_scaling = 0.25;
-  params.trust_region_size = 20.0;
+  params.trust_region_size = 10.0;
   params.linesearch = true;
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
                               kTimeHorizon, params));

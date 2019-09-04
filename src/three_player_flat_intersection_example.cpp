@@ -47,8 +47,10 @@
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
+#include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
 #include <ilqgames/dynamics/concatenated_flat_system.h>
 #include <ilqgames/dynamics/single_player_flat_car_6d.h>
@@ -82,7 +84,7 @@ static constexpr float kInterAxleLength = 4.0;  // m
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
-static constexpr float kACostWeight = 50.0;
+static constexpr float kACostWeight = 5.0;
 static constexpr float kCurvatureCostWeight = 10.0;
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 10.0;
@@ -150,6 +152,10 @@ static const Dimension kP1HeadingIdx = P1::kThetaIdx;
 static const Dimension kP1PhiIdx = P1::kPhiIdx;
 static const Dimension kP1VIdx = P1::kVIdx;
 static const Dimension kP1AIdx = P1::kAIdx;
+static const Dimension kP1VxIdx = P1::kVxIdx;
+static const Dimension kP1VyIdx = P1::kVyIdx;
+static const Dimension kP1AxIdx = P1::kAxIdx;
+static const Dimension kP1AyIdx = P1::kAyIdx;
 
 static const Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
 static const Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
@@ -157,12 +163,18 @@ static const Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
 static const Dimension kP2PhiIdx = P1::kNumXDims + P2::kPhiIdx;
 static const Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
 static const Dimension kP2AIdx = P1::kNumXDims + P2::kAIdx;
+static const Dimension kP2VxIdx = P1::kNumXDims + P2::kVxIdx;
+static const Dimension kP2VyIdx = P1::kNumXDims + P2::kVyIdx;
+static const Dimension kP2AxIdx = P1::kNumXDims + P2::kAxIdx;
+static const Dimension kP2AyIdx = P1::kNumXDims + P2::kAyIdx;
 
 static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
 static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
 static const Dimension kP3HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
 static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
+static const Dimension kP3VxIdx = P1::kNumXDims + P2::kNumXDims + P3::kVxIdx;
+static const Dimension kP3VyIdx = P1::kNumXDims + P2::kNumXDims + P3::kVyIdx;
 
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
@@ -266,53 +278,62 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   p3_cost.AddStateCost(p3_lane_l_cost);
 
   // Max/min/nominal speed costs.
-  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
-  const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
+  const std::shared_ptr<SemiquadraticNormCost> p1_min_v_cost(
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx}, kMinV,
+                                !kOrientedRight, "MinV"));
+  const std::shared_ptr<SemiquadraticNormCost> p1_max_v_cost(
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx}, kP1MaxV,
+                                kOrientedRight, "MaxV"));
+  const std::shared_ptr<QuadraticNormCost> p1_nominal_v_cost(
+      new QuadraticNormCost(kNominalVCostWeight, {kP1VxIdx, kP1VyIdx},
+                            kP1NominalV, "NominalV"));
   p1_cost.AddStateCost(p1_min_v_cost);
   p1_cost.AddStateCost(p1_max_v_cost);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
-  const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
-  const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
+  const std::shared_ptr<SemiquadraticNormCost> p2_min_v_cost(
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP2VxIdx, kP2VyIdx}, kMinV,
+                                !kOrientedRight, "MinV"));
+  const std::shared_ptr<SemiquadraticNormCost> p2_max_v_cost(
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP2VxIdx, kP2VyIdx}, kP2MaxV,
+                                kOrientedRight, "MaxV"));
+  const std::shared_ptr<QuadraticNormCost> p2_nominal_v_cost(
+      new QuadraticNormCost(kNominalVCostWeight, {kP2VxIdx, kP2VyIdx},
+                            kP2NominalV, "NominalV"));
   p2_cost.AddStateCost(p2_min_v_cost);
   p2_cost.AddStateCost(p2_max_v_cost);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
-  const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight, "MaxV");
-  const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
+  const std::shared_ptr<SemiquadraticNormCost> p3_min_v_cost(
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP3VxIdx, kP3VyIdx}, kMinV,
+                                !kOrientedRight, "MinV"));
+  const std::shared_ptr<SemiquadraticNormCost> p3_max_v_cost(
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP3VxIdx, kP3VyIdx}, kP3MaxV,
+                                kOrientedRight, "MaxV"));
+  const std::shared_ptr<QuadraticNormCost> p3_nominal_v_cost(
+      new QuadraticNormCost(kNominalVCostWeight, {kP3VxIdx, kP3VyIdx},
+                            kP3NominalV, "NominalV"));
   p3_cost.AddStateCost(p3_min_v_cost);
   p3_cost.AddStateCost(p3_max_v_cost);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // Curvature costs for P1 and P2.
-  const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
-  p1_cost.AddStateCost(p1_curvature_cost);
+  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
+  // p1_cost.AddStateCost(p1_curvature_cost);
 
-  const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
-  p2_cost.AddStateCost(p2_curvature_cost);
+  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
+  // p2_cost.AddStateCost(p2_curvature_cost);
 
-  // Penalize acceleration for cars.
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p1_cost.AddStateCost(p1_a_cost);
+  // // Penalize acceleration for cars.
+  // const std::shared_ptr<QuadraticNormCost> p1_a_cost(new QuadraticNormCost(
+  //     kACostWeight, {kP1AxIdx, kP1AyIdx}, 0.0, "Acceleration"));
+  // p1_cost.AddStateCost(p1_a_cost);
 
-  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
-                                                         0.0, "Acceleration");
-  p2_cost.AddStateCost(p2_a_cost);
+  // const std::shared_ptr<QuadraticNormCost> p2_a_cost(new QuadraticNormCost(
+  //     kACostWeight, {kP2AxIdx, kP2AyIdx}, 0.0, "Acceleration"));
+  // p2_cost.AddStateCost(p2_a_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
@@ -397,7 +418,7 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample() {
   SolverParams params;
   params.max_backtracking_steps = 100;
   params.initial_alpha_scaling = 0.25;
-  params.trust_region_size = 20.0;
+  params.trust_region_size = 10.0;
   params.linesearch = true;
   solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
                                   kTimeHorizon, params));

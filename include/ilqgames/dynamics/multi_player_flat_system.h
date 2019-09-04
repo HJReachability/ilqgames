@@ -74,6 +74,8 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
   // Gradient and hessian of map from xi to x.
   virtual void ChangeCostCoordinates(
       const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const = 0;
+  virtual void ChangeControlCostCoordinates(
+      const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const = 0;
 
   // Check if a state is singular.
   virtual bool IsLinearSystemStateSingular(const VectorXf& xi) const = 0;

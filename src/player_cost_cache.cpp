@@ -83,10 +83,7 @@ PlayerCostCache::PlayerCostCache(
 
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
           // Maybe transform to nonlinear system state first.
-          const VectorXf x =
-              (dynamics.get())
-                  ? dynamics->FromLinearSystemState(log->State(jj, kk))
-                  : log->State(jj, kk);
+          const VectorXf x = log->State(jj, kk);
           entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk), x);
         }
       }
