@@ -61,11 +61,11 @@ void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
   CHECK_GT(current_time, operating_point_.t0);
 
   // (1) Identify current timestep and first timestep of new solution.
-  const size_t current_timestep = static_cast<size_t>(
-      (current_time - operating_point_.t0) / log.TimeStep());
-  // const size_t first_timestep_new_solution = static_cast<size_t>(
-  //     (log.InitialTime() - operating_point_.t0) / log.TimeStep());
-  const size_t first_timestep_new_solution = current_timestep;
+  // const size_t current_timestep = static_cast<size_t>(
+  //     (current_time - operating_point_.t0) / log.TimeStep());
+  const size_t first_timestep_new_solution = static_cast<size_t>(
+      (log.InitialTime() - operating_point_.t0) / log.TimeStep());
+  const size_t current_timestep = first_timestep_new_solution;
 
   // Resize to be the appropriate length.
   const size_t num_spliced_timesteps =
