@@ -104,14 +104,14 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   const size_t first_timestep_in_new_problem =
       current_timestep + 1 + num_steps_to_integrate;
 
-  VectorXf x = dynamics.IntegrateToNextTimeStep(
-      t0, solver_->TimeStep(), x0, *operating_point_, *strategies_);
-  x = dynamics.Integrate(current_timestep + 1, first_timestep_in_new_problem,
-                         solver_->TimeStep(), x, *operating_point_,
-                         *strategies_);
+  // VectorXf x = dynamics.IntegrateToNextTimeStep(
+  //     t0, solver_->TimeStep(), x0, *operating_point_, *strategies_);
+  // x = dynamics.Integrate(current_timestep + 1, first_timestep_in_new_problem,
+  //                        solver_->TimeStep(), x, *operating_point_,
+  //                        *strategies_);
 
   // Set initial state to this state.
-  x0_ = x;
+  x0_ = operating_point_->xs[first_timestep_in_new_problem];
 
   // Set initial time to first timestamp in new problem.
   operating_point_->t0 +=
