@@ -65,6 +65,7 @@ class Problem {
 
   // Reset the initial time and change nothing else.
   void ResetInitialTime(Time t0) { operating_point_->t0 = t0; }
+  void ResetInitialState(const VectorXf& x0) { x0_ = x0; }
 
   // Update initial state and modify previous strategies and operating
   // points to start at the specified runtime after the current time t0.
