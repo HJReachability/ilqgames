@@ -95,21 +95,21 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // integrate for an integer number of discrete timesteps until at least
   // 'planner_runtime' has elapsed.
   const Time relative_t0 = t0 - operating_point_->t0;
-  const size_t current_timestep =
+  const size_t first_integration_timestep =
       static_cast<size_t>(relative_t0 / solver_->TimeStep());
   const Time remaining_time_this_step =
-      solver_->TimeStep() * (current_timestep + 1) - relative_t0;
+      solver_->TimeStep() * (first_integration_timestep + 1) - relative_t0;
   const size_t num_steps_to_integrate =
       1 + static_cast<size_t>((planner_runtime - remaining_time_this_step) /
                               solver_->TimeStep());
-  const size_t first_timestep_in_new_problem =
-      current_timestep + 1 + num_steps_to_integrate;
+  const size_t last_integration_timestep =
+      first_integration_timestep + 1 + num_steps_to_integrate;
 
   VectorXf x = dynamics.IntegrateToNextTimeStep(
       t0, solver_->TimeStep(), x0, *operating_point_, *strategies_);
-  x = dynamics.Integrate(current_timestep + 1, first_timestep_in_new_problem,
-                         solver_->TimeStep(), x, *operating_point_,
-                         *strategies_);
+  x = dynamics.Integrate(first_integration_timestep + 1,
+                         last_integration_timestep, solver_->TimeStep(), x,
+                         *operating_point_, *strategies_);
 
   // Find index of nearest state in the existing plan to this state.
   const auto nearest_iter =
@@ -124,8 +124,10 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   x0_ = *nearest_iter;
 
   // Set initial time to first timestamp in new problem.
-  operating_point_->t0 +=
-      solver_->ComputeTimeStamp(first_timestep_in_new_problem);
+  const size_t first_timestep_in_new_problem =
+      std::distance(operating_point_->xs.begin(), nearest_iter);
+  operating_point_->t0 = t0 + remaining_time_this_step +
+                         solver_->TimeStep() * num_steps_to_integrate;
 
   // NOTE: when we call 'solve' on this new operating point it will
   // automatically end up starting at 'x0', so there is no need to enforce that
