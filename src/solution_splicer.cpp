@@ -67,29 +67,29 @@ void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
       (log.InitialTime() - operating_point_.t0) / log.TimeStep());
   const size_t current_timestep = first_timestep_new_solution;
 
-  // Resize to be the appropriate length.
-  const size_t num_spliced_timesteps =
-      first_timestep_new_solution - current_timestep + log.NumTimeSteps();
-  operating_point_.xs.resize(num_spliced_timesteps);
-  operating_point_.us.resize(num_spliced_timesteps);
-  operating_point_.t0 += current_timestep * log.TimeStep();
+  // // Resize to be the appropriate length.
+  // const size_t num_spliced_timesteps =
+  //     first_timestep_new_solution - current_timestep + log.NumTimeSteps();
+  // operating_point_.xs.resize(num_spliced_timesteps);
+  // operating_point_.us.resize(num_spliced_timesteps);
+  // operating_point_.t0 += current_timestep * log.TimeStep();
 
-  for (auto& strategy : strategies_) {
-    strategy.Ps.resize(num_spliced_timesteps);
-    strategy.alphas.resize(num_spliced_timesteps);
-  }
+  // for (auto& strategy : strategies_) {
+  //   strategy.Ps.resize(num_spliced_timesteps);
+  //   strategy.alphas.resize(num_spliced_timesteps);
+  // }
 
-  // (2) Prune old part of existing plan.
-  for (size_t kk = current_timestep; kk < first_timestep_new_solution; kk++) {
-    const size_t kk_new_solution = kk - current_timestep;
-    operating_point_.xs[kk_new_solution] = operating_point_.xs[kk];
-    operating_point_.us[kk_new_solution] = operating_point_.us[kk];
+  // // (2) Prune old part of existing plan.
+  // for (size_t kk = current_timestep; kk < first_timestep_new_solution; kk++) {
+  //   const size_t kk_new_solution = kk - current_timestep;
+  //   operating_point_.xs[kk_new_solution] = operating_point_.xs[kk];
+  //   operating_point_.us[kk_new_solution] = operating_point_.us[kk];
 
-    for (auto& strategy : strategies_) {
-      strategy.Ps[kk_new_solution] = strategy.Ps[kk];
-      strategy.alphas[kk_new_solution] = strategy.alphas[kk];
-    }
-  }
+  //   for (auto& strategy : strategies_) {
+  //     strategy.Ps[kk_new_solution] = strategy.Ps[kk];
+  //     strategy.alphas[kk_new_solution] = strategy.alphas[kk];
+  //   }
+  // }
 
   // (3) Copy over new solution to overwrite existing log after first timestep.
   CHECK_EQ(first_timestep_new_solution - current_timestep + log.NumTimeSteps(),
