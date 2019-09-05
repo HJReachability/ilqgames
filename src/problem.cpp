@@ -100,7 +100,6 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   const Time remaining_time_this_step =
       solver_->TimeStep() * (first_integration_timestep + 1) - relative_t0;
   const size_t num_steps_to_integrate =
-      1 +
       static_cast<size_t>(std::max(planner_runtime - remaining_time_this_step,
                                    static_cast<Time>(0.0)) /
                           solver_->TimeStep());
