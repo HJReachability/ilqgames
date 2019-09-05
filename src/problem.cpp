@@ -111,7 +111,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   //                        *strategies_);
 
   // Set initial state to this state.
-  x0_ = operating_point_->xs[first_timestep_in_new_problem];
+  x0_ = x0;//operating_point_->xs[first_timestep_in_new_problem];
 
   // Set initial time to first timestamp in new problem.
   operating_point_->t0 +=
