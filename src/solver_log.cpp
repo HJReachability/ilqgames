@@ -119,7 +119,8 @@ float SolverLog::InterpolateControl(size_t iterate, Time t, PlayerIndex player,
   return (1.0 - frac) * op.us[lo][player](dim) + frac * op.us[hi][player](dim);
 }
 
-bool SolverLog::Save(const std::string& experiment_name) const {
+bool SolverLog::Save(const bool only_last_trajectory,
+                     const std::string& experiment_name) const {
   auto make_directory = [](const std::string& directory_name) {
     if (mkdir(directory_name.c_str(), 0777) == -1) {
       LOG(ERROR) << "Could not create directory " << directory_name
@@ -136,7 +137,10 @@ bool SolverLog::Save(const std::string& experiment_name) const {
   if (!make_directory(dir_name)) return false;
   LOG(INFO) << "Saving to directory: " << dir_name;
 
-  for (size_t ii = 0; ii < operating_points_.size(); ii++) {
+  size_t start = 0;
+  if (only_last_trajectory) start = operating_points_.size() - 1;
+
+  for (size_t ii = start; ii < operating_points_.size(); ii++) {
     const auto& op = operating_points_[ii];
     const std::string sub_dir_name = dir_name + "/" + std::to_string(ii);
     if (!make_directory(sub_dir_name)) return false;

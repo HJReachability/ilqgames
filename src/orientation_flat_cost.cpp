@@ -74,11 +74,15 @@ void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float norm2 = norm * norm;
   const float theta = std::atan2(input(dim2_), input(dim1_));
   (*hess)(dim1_, dim1_) =
-      (input(dim2_)*input(dim2_)*weight_ - input(dim1_)*input(dim2_)*weight_*(2*nominal_ - 2*theta))/(norm2 * norm2);
+      (input(dim2_)*input(dim2_)*weight_ - 
+        input(dim1_)*input(dim2_)*weight_*(2*nominal_ - 2*theta))/(norm2 * norm2);
   (*hess)(dim1_, dim2_) =
-      -(input(dim1_)*input(dim2_)*weight_ - input(dim1_)*input(dim1_)*weight_*(nominal_ - theta) + input(dim2_)*input(dim2_)*weight_*(nominal_ - theta))/(norm2 * norm2);
+      -(input(dim1_)*input(dim2_)*weight_ - 
+        input(dim1_)*input(dim1_)*weight_*(nominal_ - theta) + 
+        input(dim2_)*input(dim2_)*weight_*(nominal_ - theta))/(norm2 * norm2);
   (*hess)(dim2_, dim2_) =
-      (input(dim1_)*input(dim1_)*weight_ + input(dim1_)*input(dim2_)*weight_*(2*nominal_ - 2*theta))/(norm2 * norm2);
+      (input(dim1_)*input(dim1_)*weight_ + 
+        input(dim1_)*input(dim2_)*weight_*(2*nominal_ - 2*theta))/(norm2 * norm2);
   (*hess)(dim2_, dim1_) = (*hess)(dim1_, dim2_);
 
   if (grad) {
