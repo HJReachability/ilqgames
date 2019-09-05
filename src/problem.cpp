@@ -85,7 +85,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   CHECK_NOTNULL(operating_point_.get());
   CHECK_GT(planner_runtime, 0.0);
   CHECK_LT(planner_runtime + t0, operating_point_->t0 + solver_->TimeHorizon());
-  CHECK_GE(t0, operating_point_->t0);
+  //  CHECK_GE(t0, operating_point_->t0);
 
   const MultiPlayerDynamicalSystem& dynamics = solver_->Dynamics();
 
@@ -95,14 +95,17 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // 'planner_runtime' has elapsed.
   const Time relative_t0 = t0 - operating_point_->t0;
   const size_t current_timestep =
-      static_cast<size_t>(relative_t0 / solver_->TimeStep());
+      (relative_t0 > 0.0)
+          ? static_cast<size_t>(relative_t0 / solver_->TimeStep())
+          : 0;
   const Time remaining_time_this_step =
       solver_->TimeStep() * (current_timestep + 1) - relative_t0;
   const size_t num_steps_to_integrate =
       1 + static_cast<size_t>((planner_runtime - remaining_time_this_step) /
                               solver_->TimeStep());
   const size_t first_timestep_in_new_problem =
-      current_timestep + 1 + num_steps_to_integrate;
+      (relative_t0 > 0.0) ? current_timestep + 1 + num_steps_to_integrate
+                          : current_timestep;
 
   // VectorXf x = dynamics.IntegrateToNextTimeStep(
   //     t0, solver_->TimeStep(), x0, *operating_point_, *strategies_);
@@ -111,7 +114,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   //                        *strategies_);
 
   // Set initial state to this state.
-  x0_ = x0;//operating_point_->xs[first_timestep_in_new_problem];
+  x0_ = x0;  // operating_point_->xs[first_timestep_in_new_problem];
 
   // Set initial time to first timestamp in new problem.
   operating_point_->t0 +=
