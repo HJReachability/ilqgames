@@ -114,7 +114,9 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   //                        *strategies_);
 
   // Set initial state to this state.
-  x0_ = operating_point_->xs[first_timestep_in_new_problem];
+  const auto& existing_waypoint =
+      operating_point_->xs[first_timestep_in_new_problem];
+  x0_ = ((existing_waypoint - x0).norm() > 1.0) ? x0 : existing_waypoint;
 
   // Set initial time to first timestamp in new problem.
   operating_point_->t0 +=
