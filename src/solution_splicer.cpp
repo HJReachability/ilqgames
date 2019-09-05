@@ -57,8 +57,8 @@ SolutionSplicer::SolutionSplicer(const SolverLog& log)
       operating_point_(log.FinalOperatingPoint()) {}
 
 void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
-  CHECK_LT(current_time, log.InitialTime());
-  CHECK_GT(current_time, operating_point_.t0);
+  // CHECK_LT(current_time, log.InitialTime());
+  // CHECK_GT(current_time, operating_point_.t0);
 
   // (1) Identify current timestep and first timestep of new solution.
   // const size_t current_timestep = static_cast<size_t>(
