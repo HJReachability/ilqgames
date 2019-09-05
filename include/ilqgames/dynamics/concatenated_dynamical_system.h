@@ -69,6 +69,19 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
+  // Stitch between two states of the system. Interprets the first one as best
+  // for ego and the second as best for other players.
+  VectorXf Stitch(const VectorXf& x_ego, const VectorXf& x_others) const {
+    VectorXf x(x_ego.size());
+
+    const Dimension ego_state_dim = subsystems_[0]->XDim();
+    x.head(ego_state_dim) = x_ego.head(ego_state_dim);
+    x.tail(x_others.size() - ego_state_dim) =
+        x_others.tail(x_others.size() - ego_state_dim);
+
+    return x;
+  }
+
   // Getters.
   Dimension UDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->UDim();

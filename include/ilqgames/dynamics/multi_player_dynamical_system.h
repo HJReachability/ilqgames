@@ -92,6 +92,13 @@ class MultiPlayerDynamicalSystem {
     return (x0 - x1).squaredNorm();
   }
 
+  // Stitch between two states of the system. By default, just takes the first
+  // one but concatenated systems, e.g., can interpret the first one as best for
+  // ego and the second as best for other players.
+  virtual VectorXf Stitch(const VectorXf& x_ego, const VectorXf& x_others) const {
+    return x_ego;
+  }
+
   // Getters.
   Dimension XDim() const { return xdim_; }
   Dimension TotalUDim() const {
