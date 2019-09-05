@@ -64,6 +64,7 @@
 // Optional log saving and visualization.
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
+DEFINE_bool(last_traj, false, "Should the solver only dump the last trajectory?");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
@@ -133,7 +134,7 @@ int main(int argc, char** argv) {
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
   // Maybe dump logs and/or exit.
-  if (FLAGS_save) CHECK(log->Save());
+  if (FLAGS_save) CHECK(log->Save(FLAGS_last_traj));
   if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
