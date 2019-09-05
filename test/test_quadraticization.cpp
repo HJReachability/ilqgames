@@ -52,6 +52,7 @@
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
 #include <ilqgames/cost/weighted_convex_proximity_cost.h>
+#include <ilqgames/cost/orientation_flat_cost.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
@@ -222,5 +223,10 @@ TEST(LocallyConvexProximityCostTest, QuadraticizesCorrectly) {
 
 TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
   WeightedConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 4, 5, 0.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(OrientationFlatCostTest, QuadraticizesCorrectly) {
+  OrientationFlatCost cost(kCostWeight, {1, 2}, 1.0);
   CheckQuadraticization(cost);
 }
