@@ -122,7 +122,14 @@ void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
 void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
                              const MultiPlayerDynamicalSystem& dynamics) {
   // (1) Identify current timestep and first timestep of new solution.
-  const auto nearest_iter =
+  const VectorXf& new_x0 = log.FinalOperatingPoint().xs[0];
+  const auto nearest_iter_new_x0 = std::min_element(
+      operating_point_.xs.begin(), operating_point_.xs.end(),
+      [&dynamics, &new_x0](const VectorXf& x1, const VectorXf& x2) {
+        return dynamics.DistanceBetween(new_x0, x1) <
+               dynamics.DistanceBetween(new_x0, x2);
+      });
+  const auto nearest_iter_x =
       std::min_element(operating_point_.xs.begin(), operating_point_.xs.end(),
                        [&dynamics, &x](const VectorXf& x1, const VectorXf& x2) {
                          return dynamics.DistanceBetween(x, x1) <
@@ -130,11 +137,10 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
                        });
 
   const size_t current_timestep =
-      std::distance(operating_point_.xs.begin(), nearest_iter);
-  const size_t first_timestep_new_solution =
-      std::max(current_timestep,
-               static_cast<size_t>((log.InitialTime() - operating_point_.t0) /
-                                   log.TimeStep()));
+      std::distance(operating_point_.xs.begin(), nearest_iter_x);
+  const size_t first_timestep_new_solution = std::max<size_t>(
+      current_timestep,
+      std::distance(operating_point_.xs.begin(), nearest_iter_new_x0));
 
   // Resize to be the appropriate length.
   const size_t num_spliced_timesteps =
@@ -160,7 +166,8 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
     }
   }
 
-  // (3) Copy over new solution to overwrite existing log after first timestep.
+  // (3) Copy over new solution to overwrite existing log after first
+  // timestep.
   CHECK_EQ(first_timestep_new_solution - current_timestep + log.NumTimeSteps(),
            operating_point_.xs.size());
   for (size_t kk = 0; kk < log.NumTimeSteps(); kk++) {
