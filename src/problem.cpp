@@ -122,7 +122,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
 
   // Set initial state to this state.
   // NOTE: we are currently *not* interpolating when finding the closest point.
-  x0_ = *nearest_iter;
+  x0_ = dynamics.Stitch(*nearest_iter, x);
 
   // Set initial time to first timestamp in new problem.
   const size_t first_timestep_in_new_problem =
