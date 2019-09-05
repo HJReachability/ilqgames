@@ -149,7 +149,8 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
       first_timestep_new_solution - current_timestep + log.NumTimeSteps();
   operating_point_.xs.resize(num_spliced_timesteps);
   operating_point_.us.resize(num_spliced_timesteps);
-  operating_point_.t0 += current_timestep * log.TimeStep();
+  operating_point_.t0 = log.FinalOperatingPoint().t0 -
+                        first_timestep_new_solution * log.TimeStep();
 
   for (auto& strategy : strategies_) {
     strategy.Ps.resize(num_spliced_timesteps);
