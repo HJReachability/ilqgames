@@ -136,8 +136,8 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
                                 dynamics.DistanceBetween(x, x2);
                        });
 
-  const size_t current_timestep =
-      std::distance(operating_point_.xs.begin(), nearest_iter_x);
+  const size_t current_timestep = std::max<size_t>(
+      0, std::distance(operating_point_.xs.begin(), nearest_iter_x) - 1);
   const size_t first_timestep_new_solution = std::max<size_t>(
       current_timestep,
       std::distance(operating_point_.xs.begin(), nearest_iter_new_x0));
