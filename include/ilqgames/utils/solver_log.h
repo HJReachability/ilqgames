@@ -61,9 +61,11 @@ class SolverLog : private Uncopyable {
   // Add a new solver iterate.
   void AddSolverIterate(const OperatingPoint& operating_point,
                         const std::vector<Strategy>& strategies,
+                        const std::vector<float>& total_costs,
                         Time cumulative_runtime) {
     operating_points_.push_back(operating_point);
     strategies_.push_back(strategies);
+    total_player_costs_.push_back(total_costs);
     cumulative_runtimes_.push_back(cumulative_runtime);
   }
 
@@ -150,10 +152,11 @@ class SolverLog : private Uncopyable {
   // Time discretization.
   const Time time_step_;
 
-  // Operating points, strategies, and cumulative runtime indexed by solver
-  // iterate.
+  // Operating points, strategies, total costs, and cumulative runtime indexed
+  // by solver iterate.
   std::vector<OperatingPoint> operating_points_;
   std::vector<std::vector<Strategy>> strategies_;
+  std::vector<std::vector<float>> total_player_costs_;
   std::vector<Time> cumulative_runtimes_;
 };  // class SolverLog
 

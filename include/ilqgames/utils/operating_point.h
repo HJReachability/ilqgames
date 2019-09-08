@@ -46,12 +46,11 @@
 
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <memory>
 #include <vector>
-#include <glog/logging.h>
 
 namespace ilqgames {
-
 
 struct OperatingPoint {
   // Time-indexed list of states.
@@ -72,9 +71,8 @@ struct OperatingPoint {
   template <typename MultiPlayerSystemType>
   OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
                  Time initial_time,
-                 const std::shared_ptr<const MultiPlayerSystemType>&
-                     dynamics)
-  : OperatingPoint(num_time_steps, num_players, initial_time) {
+                 const std::shared_ptr<const MultiPlayerSystemType>& dynamics)
+      : OperatingPoint(num_time_steps, num_players, initial_time) {
     CHECK_NOTNULL(dynamics.get());
     for (size_t kk = 0; kk < num_time_steps; kk++) {
       xs[kk] = VectorXf::Zero(dynamics->XDim());

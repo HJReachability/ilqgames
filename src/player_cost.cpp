@@ -43,6 +43,7 @@
 
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/cost/player_cost.h>
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
 
@@ -74,6 +75,16 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
   }
 
   return total_cost;
+}
+
+float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
+  float cost = 0.0;
+  for (size_t kk = 0; kk < op.xs.size(); kk++) {
+    const Time t = op.t0 + time_step * static_cast<float>(kk);
+    cost += Evaluate(t, op.xs[kk], op.us[kk]);
+  }
+
+  return cost;
 }
 
 // Quadraticize this cost at the given time, state, and controls.

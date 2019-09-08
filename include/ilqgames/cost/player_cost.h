@@ -45,6 +45,7 @@
 #define ILQGAMES_COST_PLAYER_COST_H
 
 #include <ilqgames/cost/cost.h>
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
 
@@ -58,9 +59,11 @@ class PlayerCost {
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
 
-  // Evaluate this cost at the current time, state, and controls.
+  // Evaluate this cost at the current time, state, and controls, or integrate
+  // over an entire trajectory.
   float Evaluate(Time t, const VectorXf& x,
                  const std::vector<VectorXf>& us) const;
+  float Evaluate(const OperatingPoint& op, Time time_step) const;
 
   // Quadraticize this cost at the given time, state, and controls.
   QuadraticCostApproximation Quadraticize(

@@ -133,6 +133,9 @@ class GameSolver {
                              const std::vector<Strategy>& current_strategies,
                              OperatingPoint* current_operating_point) const;
 
+  // Evaluate all player costs.
+  std::vector<float> EvaluateCosts(const OperatingPoint& op) const;
+
   // Dynamical system.
   const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
 
