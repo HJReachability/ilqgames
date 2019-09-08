@@ -101,6 +101,14 @@ void GameSolver::CurrentOperatingPoint(
   }
 }
 
+std::vector<float> GameSolver::EvaluateCosts(const OperatingPoint& op) const {
+  std::vector<float> costs(player_costs_.size());
+  for (PlayerIndex ii = 0; ii < costs.size(); ii++)
+    costs[ii] = player_costs_[ii].Evaluate(op, time_step_);
+
+  return costs;
+}
+
 bool GameSolver::HasConverged(
     size_t iteration, const OperatingPoint& last_operating_point,
     const OperatingPoint& current_operating_point) const {

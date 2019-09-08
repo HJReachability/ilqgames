@@ -160,6 +160,7 @@ bool ILQSolver::Solve(const VectorXf& x0,
     // Log current iterate.
     if (log) {
       log->AddSolverIterate(current_operating_point, current_strategies,
+                            EvaluateCosts(current_operating_point),
                             elapsed_time(solver_call_time));
     }
   }

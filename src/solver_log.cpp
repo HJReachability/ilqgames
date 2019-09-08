@@ -153,6 +153,13 @@ bool SolverLog::Save(const bool only_last_trajectory,
     }
     file.close();
 
+    // Dump total costs.
+    file.open(sub_dir_name + "/costs.txt");
+    for (const auto& c : total_player_costs_[ii]) {
+      file << c << std::endl;
+    }
+    file.close();
+
     // Dump cumulative runtimes.
     file.open(sub_dir_name + "/runtimes.txt");
     file << cumulative_runtimes_[ii] << std::endl;
