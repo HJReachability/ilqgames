@@ -36,58 +36,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost function of the norm of two states (difference from some
-// nominal norm value), i.e. 0.5 * weight_ * (||(x, y)|| - nominal)^2.
+// Three player overtaking example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/orientation_flat_cost.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_OVERTAKING_EXAMPLE_H
+#define ILQGAMES_EXAMPLE_THREE_PLAYER_OVERTAKING_EXAMPLE_H
 
-#include <glog/logging.h>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
+#include <ilqgames/solver/solver_params.h>
 
 namespace ilqgames {
 
-float OrientationFlatCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
+class ThreePlayerOvertakingExample : public TopDownRenderableProblem {
+ public:
+  ~ThreePlayerOvertakingExample() {}
+  ThreePlayerOvertakingExample(const SolverParams& params);
 
-  const float diff = std::atan2(input(dim2_), input(dim1_)) - nominal_;
-  return 0.5 * weight_ * diff * diff;
-}
-
-void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                     VectorXf* grad) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
-  CHECK_NOTNULL(hess);
-
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Populate hessian and, optionally, gradient.
-  const float norm = std::hypot(input(dim1_), input(dim2_));
-  const float norm2 = norm * norm;
-  const float theta = std::atan2(input(dim2_), input(dim1_));
-  (*hess)(dim1_, dim1_) =
-      (input(dim2_)*input(dim2_)*weight_ - 
-        input(dim1_)*input(dim2_)*weight_*(2*nominal_ - 2*theta))/(norm2 * norm2);
-  (*hess)(dim1_, dim2_) =
-      -(input(dim1_)*input(dim2_)*weight_ - 
-        input(dim1_)*input(dim1_)*weight_*(nominal_ - theta) + 
-        input(dim2_)*input(dim2_)*weight_*(nominal_ - theta))/(norm2 * norm2);
-  (*hess)(dim2_, dim2_) =
-      (input(dim1_)*input(dim1_)*weight_ + 
-        input(dim1_)*input(dim2_)*weight_*(2*nominal_ - 2*theta))/(norm2 * norm2);
-  (*hess)(dim2_, dim1_) = (*hess)(dim1_, dim2_);
-
-  if (grad) {
-    (*grad)(dim1_) =  (input(dim2_)*weight_*(nominal_ - theta))/norm2;
-    (*grad)(dim2_) = -(input(dim1_)*weight_*(nominal_ - theta))/norm2;
-  }
-}
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class ThreePlayerOvertakingIntersectionExample
 
 }  // namespace ilqgames
+
+#endif

@@ -126,13 +126,15 @@ inline MatrixXf SinglePlayerFlatUnicycle4D::InverseDecouplingMatrix(
 
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
+  // HACK! KSmallOffset should realy be 0...
+  const float kSmallOffset = sgn(x(kVIdx)) * 0.00011;
 
-  CHECK_GT(std::abs(x(kVIdx)), 1e-3);
+  CHECK_GT(std::abs(x(kVIdx) + kSmallOffset), 1e-4);
 
   M_inv(0, 0) = cos_t;
   M_inv(0, 1) = sin_t;
-  M_inv(1, 0) = -sin_t / x(kVIdx);
-  M_inv(1, 1) = cos_t / x(kVIdx);
+  M_inv(1, 0) = -sin_t / (x(kVIdx) + kSmallOffset);
+  M_inv(1, 1) = cos_t / (x(kVIdx) + kSmallOffset);
 
   return M_inv;
 }
