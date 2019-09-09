@@ -36,33 +36,36 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost function of the norm of two states (difference from some
-// nominal norm value), i.e. 0.5 * weight_ * (||(x, y)|| - nominal)^2.
+// Orientation cost: agent vs nominal heading.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/orientation_flat_cost.h>
+#include <ilqgames/cost/orientation_cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <math.h>
 #include <glog/logging.h>
 
 namespace ilqgames {
 
-float OrientationFlatCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
+float OrientationCost::Evaluate(const VectorXf& input) const {
+  CHECK_LT(dim_, input.size());
 
-  const float rotated_vx =  input(dim1_) * std::cos(nominal_) + input(dim2_) * std::sin(nominal_);
-  const float rotated_vy = -input(dim1_) * std::sin(nominal_) + input(dim2_) * std::cos(nominal_);
+  // Map heading to x,y coordinates in unit circle.
+  // const float heading_x = std::cos(input(dim_));
+  // const float heading_y = std::sin(input(dim_));
+  // const float heading_nom_x = std::cos(nominal_);
+  // const float heading_nom_y = std::sin(nominal_);
 
-  const float diff = std::atan2(rotated_vy, rotated_vx);
-  return 0.5 * weight_ * diff * diff;
+  // const float inner_product = heading_nom_x * heading_x + heading_nom_y * heading_y; 
+  const float angle_diff = std::fmod(input(dim_) - nominal_ + M_PI, M_PI*2.0) - M_PI;
+
+  return 0.5 * weight_ * angle_diff * angle_diff;
 }
 
-void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
+void OrientationCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
                                      VectorXf* grad) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
+  CHECK_LT(dim_, input.size());
   CHECK_NOTNULL(hess);
 
   // Check dimensions.
@@ -72,22 +75,12 @@ void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   if (grad) CHECK_EQ(input.size(), grad->size());
 
   // Populate hessian and, optionally, gradient.
-  const float vx = input(dim1_);
-  const float vy = input(dim2_);
-  const float cos_tn = std::cos(nominal_);
-  const float sin_tn = std::sin(nominal_);
-  const float angle = std::atan2(vy * cos_tn - vx * sin_tn, vx * cos_tn + vy * sin_tn);
-  const float norm = std::hypot(input(dim1_), input(dim2_));
-  const float norm2 = norm * norm;
-  const float theta = std::atan2(input(dim2_), input(dim1_));
-  (*hess)(dim1_, dim1_) +=  (vy * weight_ * (vy + 2*vx*angle)) / (norm2 * norm2);
-  (*hess)(dim1_, dim2_) += -(weight_ * (vx * vx * angle - vy * vy * angle + vx * vy))/(norm2 * norm2);
-  (*hess)(dim2_, dim2_) +=  (vx * weight_ * (vx - 2*vy*angle)) / (norm2 * norm2);
-  (*hess)(dim2_, dim1_) +=  (*hess)(dim1_, dim2_);
+  (*hess)(dim_, dim_) += weight_;
 
   if (grad) {
-    (*grad)(dim1_) +=  -(vy*weight_*angle)/norm2;
-    (*grad)(dim2_) +=   (vx*weight_*angle)/norm2;
+    (*grad)(dim_) += weight_ *  (std::fmod(input(dim_) - nominal_ + M_PI,M_PI*2.0) - M_PI);
+    //(weight_*std::sin(input(dim_) - nominal_)*std::acos(std::cos(input(dim_) - nominal_)))
+    //                  /std::sqrt(1.0 - std::cos(input(dim_) - nominal_)*std::cos(input(dim_) - nominal_));
   }
 }
 

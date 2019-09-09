@@ -1,5 +1,5 @@
 % Test region size vs. alpha scaling
-test_region_size_vs_alpha_scaling('three_player_intersection',5,5);
+test_region_size_vs_alpha_scaling('three_player_flat_intersection',5,5);
 
 % Plotting convergence of two different experiments
 % plot_convergence('Sat_Sep__7_15_37_49_2019');

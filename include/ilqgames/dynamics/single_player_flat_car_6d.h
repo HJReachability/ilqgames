@@ -142,7 +142,7 @@ inline MatrixXf SinglePlayerFlatCar6D::InverseDecouplingMatrix(
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
   // HACK! KSmallOffset should realy be 0...
-  const float kSmallOffset = sgn(x(kVIdx)) * 0.00011;
+  const float kSmallOffset = sgn(x(kVIdx) + 0.0000001) * 0.00011;
   const float cos_phi_v = std::cos(x(kPhiIdx)) / (x(kVIdx) + kSmallOffset);
   const float scaling = inter_axle_distance_ * cos_phi_v * cos_phi_v;
 

@@ -36,59 +36,50 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost function of the norm of two states (difference from some
-// nominal norm value), i.e. 0.5 * weight_ * (||(x, y)|| - nominal)^2.
+// Orientation cost: agent vs nominal heading.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/orientation_flat_cost.h>
+#ifndef ILQGAMES_COST_ORIENTATION_COST_H
+#define ILQGAMES_COST_ORIENTATION_COST_H
+
+#include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <string>
+#include <utility>
 
 namespace ilqgames {
 
-float OrientationFlatCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
-
-  const float rotated_vx =  input(dim1_) * std::cos(nominal_) + input(dim2_) * std::sin(nominal_);
-  const float rotated_vy = -input(dim1_) * std::sin(nominal_) + input(dim2_) * std::cos(nominal_);
-
-  const float diff = std::atan2(rotated_vy, rotated_vx);
-  return 0.5 * weight_ * diff * diff;
-}
-
-void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                     VectorXf* grad) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
-  CHECK_NOTNULL(hess);
-
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Populate hessian and, optionally, gradient.
-  const float vx = input(dim1_);
-  const float vy = input(dim2_);
-  const float cos_tn = std::cos(nominal_);
-  const float sin_tn = std::sin(nominal_);
-  const float angle = std::atan2(vy * cos_tn - vx * sin_tn, vx * cos_tn + vy * sin_tn);
-  const float norm = std::hypot(input(dim1_), input(dim2_));
-  const float norm2 = norm * norm;
-  const float theta = std::atan2(input(dim2_), input(dim1_));
-  (*hess)(dim1_, dim1_) +=  (vy * weight_ * (vy + 2*vx*angle)) / (norm2 * norm2);
-  (*hess)(dim1_, dim2_) += -(weight_ * (vx * vx * angle - vy * vy * angle + vx * vy))/(norm2 * norm2);
-  (*hess)(dim2_, dim2_) +=  (vx * weight_ * (vx - 2*vy*angle)) / (norm2 * norm2);
-  (*hess)(dim2_, dim1_) +=  (*hess)(dim1_, dim2_);
-
-  if (grad) {
-    (*grad)(dim1_) +=  -(vy*weight_*angle)/norm2;
-    (*grad)(dim2_) +=   (vx*weight_*angle)/norm2;
+class OrientationCost : public TimeInvariantCost {
+ public:
+  // Construct from a multiplicative weight, the dimensions in which to apply
+  // the quadratic cost, a threshold, and a flag for which side to apply it.
+  OrientationCost(float weight, Dimension dim, float nominal = 0.0,
+                      const std::string& name = "")
+      : TimeInvariantCost(weight, name),
+        dim_(dim),
+        nominal_(nominal) {
+    CHECK_GE(dim_, 0);
   }
-}
+
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
+
+  // Quadraticize this cost at the given input, and add to the running
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
+
+ private:
+  // Dimensions in which to apply the quadratic cost.
+  const Dimension dim_;
+
+  // Nominal value in this (or all) dimensions.
+  const float nominal_;
+};  //\class OrientationCost
 
 }  // namespace ilqgames
+
+#endif

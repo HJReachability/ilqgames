@@ -42,13 +42,37 @@
 % q_cost = (M_inv)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Gradient and Hessians for orientation cost in terms of x{theta}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% syms('t','tn','w',"real")
+% 
+% heading_x = cos(t);
+% heading_y = sin(t);
+% nom_headx = cos(tn);
+% nom_heady = sin(tn);
+% 
+% inner_prod= heading_x * nom_headx + heading_y * nom_heady;
+% angle_diff = acos(inner_prod);
+% 
+% q_cost_t = 0.5 * w * angle_diff^2;
+% 
+% dc_dt = simplify(diff(q_cost_t, t, 1),'Steps', 50)
+% dc_dt2 = simplify(diff(dc_dt, t, 1), 'Steps', 50)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Gradient and Hessians for orientation cost in terms of Xi{vx,vy}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-syms('vx','vy','w','tn',"real")
-tan_inv = atan(vy/vx);
+syms('vx','vy','w','h',"real")
 
-q_cost_t = 0.5 * w * (tan_inv - tn)^2;
+Inv_rot = [cos(h),sin(h);-sin(h),cos(h)];
+vel_vec = [vx;vy];
+new_vec = Inv_rot * vel_vec;
+
+angle_diff = atan(new_vec(2)/new_vec(1));
+
+q_cost_t = 0.5 * w * angle_diff^2;
 
 dc_dvx = simplify(diff(q_cost_t, vx, 1))
 dc_dvy = simplify(diff(q_cost_t, vy, 1))

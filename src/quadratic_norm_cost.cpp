@@ -72,17 +72,17 @@ void QuadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   // Populate hessian and, optionally, gradient.
   const float norm = std::hypot(input(dim1_), input(dim2_));
   const float norm_3 = norm * norm * norm;
-  (*hess)(dim1_, dim1_) =
+  (*hess)(dim1_, dim1_) +=
       weight_ - (nominal_ * input(dim2_) * input(dim2_) * weight_) / norm_3;
-  (*hess)(dim2_, dim2_) =
+  (*hess)(dim2_, dim2_) +=
       weight_ - (nominal_ * input(dim1_) * input(dim1_) * weight_) / norm_3;
-  (*hess)(dim1_, dim2_) =
+  (*hess)(dim1_, dim2_) +=
       nominal_ * input(dim1_) * input(dim2_) * weight_ / norm_3;
-  (*hess)(dim2_, dim1_) = (*hess)(dim1_, dim2_);
+  (*hess)(dim2_, dim1_) += (*hess)(dim1_, dim2_);
 
   if (grad) {
-    (*grad)(dim1_) = -weight_ * input(dim1_) * (-1.0 + nominal_ / norm);
-    (*grad)(dim2_) = -weight_ * input(dim2_) * (-1.0 + nominal_ / norm);
+    (*grad)(dim1_) += -weight_ * input(dim1_) * (-1.0 + nominal_ / norm);
+    (*grad)(dim2_) += -weight_ * input(dim2_) * (-1.0 + nominal_ / norm);
   }
 }
 

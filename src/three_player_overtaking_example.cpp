@@ -45,6 +45,7 @@
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
+#include <ilqgames/cost/orientation_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
@@ -219,7 +220,7 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   PlayerCost p1_cost, p2_cost, p3_cost;
 
   // Orientation cost
-  const auto p1_nominal_orientation_cost = std::make_shared<QuadraticCost>(
+  const auto p1_nominal_orientation_cost = std::make_shared<OrientationCost>(
       kNominalHeadingCostWeight, kP1HeadingIdx, kP1NominalHeading, "NominalHeading");
   p1_cost.AddStateCost(p1_nominal_orientation_cost);
 
@@ -308,22 +309,22 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // Curvature costs for P1 and P2.
-  const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
-  p1_cost.AddStateCost(p1_curvature_cost);
+  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
+  // p1_cost.AddStateCost(p1_curvature_cost);
 
-  const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-      kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
-  p2_cost.AddStateCost(p2_curvature_cost);
+  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
+  //     kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
+  // p2_cost.AddStateCost(p2_curvature_cost);
 
-  // Penalize acceleration for cars.
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p1_cost.AddStateCost(p1_a_cost);
+  // // Penalize acceleration for cars.
+  // const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
+  //                                                        0.0, "Acceleration");
+  // p1_cost.AddStateCost(p1_a_cost);
 
-  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
-                                                         0.0, "Acceleration");
-  p2_cost.AddStateCost(p2_a_cost);
+  // const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
+  //                                                        0.0, "Acceleration");
+  // p2_cost.AddStateCost(p2_a_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
