@@ -127,7 +127,7 @@ inline MatrixXf SinglePlayerFlatUnicycle4D::InverseDecouplingMatrix(
   const float sin_t = std::sin(x(kThetaIdx));
   const float cos_t = std::cos(x(kThetaIdx));
   // HACK! KSmallOffset should realy be 0...
-  const float kSmallOffset = sgn(x(kVIdx)) * 0.00011;
+  const float kSmallOffset = sgn(x(kVIdx) + 0.0000001) * 0.00011;
 
   CHECK_GT(std::abs(x(kVIdx) + kSmallOffset), 1e-4);
 

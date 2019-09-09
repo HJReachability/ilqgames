@@ -43,6 +43,7 @@
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
+#include <ilqgames/cost/orientation_cost.h>
 #include <ilqgames/cost/proximity_barrier_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
@@ -228,5 +229,10 @@ TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
 
 TEST(OrientationFlatCostTest, QuadraticizesCorrectly) {
   OrientationFlatCost cost(kCostWeight, {1, 2}, 1.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(OrientationCostTest, QuadraticizesCorrectly) {
+  OrientationCost cost(kCostWeight, 1, M_PI_2);
   CheckQuadraticization(cost);
 }

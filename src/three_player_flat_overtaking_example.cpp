@@ -84,7 +84,7 @@ static constexpr float kInterAxleLength = 4.0;  // m
 // Cost weights.
 static constexpr float kACostWeight = 5.0;
 static constexpr float kOmegaCostWeight = 50.0;
-static constexpr float kJerkCostWeight = 0.1;
+static constexpr float kJerkCostWeight = 10.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 4.0;
@@ -101,7 +101,7 @@ static constexpr float kP3ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kNominalHeadingCostWeight = 150.0;
+static constexpr float kNominalHeadingCostWeight = 100.0;
 
 static constexpr bool kOrientedRight = true;
 
