@@ -62,10 +62,10 @@ struct SolverParams {
   size_t max_backtracking_steps = 10;
 
   // Maximum absolute difference between states in the given dimension to
-  // satisfy trust region. Only active if linesearching is on. If dimension < 0
-  // then applies in all dimensions.
+  // satisfy trust region. Only active if linesearching is on. If dimensions
+  // empty then applies in all dimensions.
   float trust_region_size = 10.0;
-  Dimension trust_region_dimension = -1;
+  std::vector<Dimension> trust_region_dimensions;
 };  // struct SolverParams
 
 }  // namespace ilqgames
