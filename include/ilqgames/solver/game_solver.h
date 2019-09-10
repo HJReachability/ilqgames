@@ -112,10 +112,12 @@ class GameSolver {
       size_t iteration, const OperatingPoint& last_operating_point,
       const OperatingPoint& current_operating_point) const;
 
-  // Check if operating points are close to one another in the infinity norm.
+  // Check if operating points are close to one another in the given dimension.
+  // If dimension < 0, checks all dimensions.
   virtual bool AreOperatingPointsClose(const OperatingPoint& op1,
                                        const OperatingPoint& op2,
-                                       float threshold) const;
+                                       float threshold,
+                                       Dimension dimension) const;
 
   // Check trust region constraint. By default, this just checks if the current
   // and previous operating points are close to each other.
@@ -124,7 +126,8 @@ class GameSolver {
       const OperatingPoint& current_operating_point) const {
     return AreOperatingPointsClose(last_operating_point,
                                    current_operating_point,
-                                   params_.trust_region_size);
+                                   params_.trust_region_size,
+                                   params_.trust_region_dimension);
   }
 
   // Compute the current operating point based on the current set of strategies

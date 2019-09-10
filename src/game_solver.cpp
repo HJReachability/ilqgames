@@ -117,17 +117,24 @@ bool GameSolver::HasConverged(
   if (iteration == 0) return false;
 
   // Check operating points.
+  constexpr Dimension kCheckAllDimensions = -1;
   return AreOperatingPointsClose(last_operating_point, current_operating_point,
-                                 params_.convergence_tolerance);
+                                 params_.convergence_tolerance,
+                                 kCheckAllDimensions);
 }
 
 bool GameSolver::AreOperatingPointsClose(const OperatingPoint& op1,
                                          const OperatingPoint& op2,
-                                         float threshold) const {
+                                         float threshold,
+                                         Dimension dimension) const {
   CHECK_EQ(op1.xs.size(), op2.xs.size());
 
   for (size_t kk = 0; kk < op1.xs.size(); kk++) {
-    if ((op1.xs[kk] - op2.xs[kk]).cwiseAbs().maxCoeff() > threshold)
+    if (dimension >= 0 &&
+        std::abs(op1.xs[kk](dimension) - op2.xs[kk](dimension)) > threshold)
+      return false;
+    else if (dimension < 0 &&
+             (op1.xs[kk] - op2.xs[kk]).cwiseAbs().maxCoeff() > threshold)
       return false;
   }
 

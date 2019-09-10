@@ -83,6 +83,15 @@ class ILQFlatSolver : public GameSolver {
   virtual bool SatisfiesTrustRegion(
       const OperatingPoint& last_operating_point,
       const OperatingPoint& current_operating_point) const;
+
+  // Check if operating points (with states transformed into nonlinear system
+  // states) are close to one another in the given dimension. If dimension < 0,
+  // checks all dimensions.
+  virtual bool AreOperatingPointsClose(const OperatingPoint& op1,
+                                       const OperatingPoint& op2,
+                                       float threshold,
+                                       Dimension dimension) const;
+
 };  // class ILQFlatSolver
 
 }  // namespace ilqgames

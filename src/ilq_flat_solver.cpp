@@ -191,7 +191,27 @@ bool ILQFlatSolver::SatisfiesTrustRegion(
 
   // Are the operating points close.
   return AreOperatingPointsClose(last_operating_point, current_operating_point,
-                                 params_.trust_region_size);
+                                 params_.trust_region_size,
+                                 params_.trust_region_dimension);
+}
+
+bool ILQFlatSolver::AreOperatingPointsClose(const OperatingPoint& op1,
+                                            const OperatingPoint& op2,
+                                            float threshold,
+                                            Dimension dimension) const {
+  CHECK_EQ(op1.xs.size(), op2.xs.size());
+  const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
+
+  for (size_t kk = 0; kk < op1.xs.size(); kk++) {
+    const VectorXf x1 = dyn.FromLinearSystemState(op1.xs[kk]);
+    const VectorXf x2 = dyn.FromLinearSystemState(op2.xs[kk]);
+    if (dimension >= 0 && std::abs(x1(dimension) - x2(dimension)) > threshold)
+      return false;
+    else if (dimension < 0 && (x1 - x2).cwiseAbs().maxCoeff() > threshold)
+      return false;
+  }
+
+  return true;
 }
 
 }  // namespace ilqgames
