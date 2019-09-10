@@ -85,8 +85,8 @@ static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
 static constexpr float kACostWeight = 5.0;
-static constexpr float kCurvatureCostWeight = 10.0;
-static constexpr float kMaxVCostWeight = 1000.0;
+static constexpr float kCurvatureCostWeight = 1.0;
+static constexpr float kMaxVCostWeight = 10.0;
 static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kGoalCostWeight = 0.1;

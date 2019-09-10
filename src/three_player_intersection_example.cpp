@@ -83,7 +83,7 @@ static constexpr float kInterAxleLength = 4.0;  // m
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
-static constexpr float kACostWeight = 50.0;
+static constexpr float kACostWeight = 5.0;
 static constexpr float kCurvatureCostWeight = 1.0;
 static constexpr float kMaxVCostWeight = 10.0;
 static constexpr float kNominalVCostWeight = 10.0;
