@@ -84,13 +84,13 @@ static constexpr float kInterAxleLength = 4.0;  // m
 // Cost weights.
 static constexpr float kACostWeight = 5.0;
 static constexpr float kOmegaCostWeight = 50.0;
-static constexpr float kJerkCostWeight = 10.0;
+static constexpr float kJerkCostWeight = 5.0;
 
+static constexpr float kCurvatureCostWeight = 10.0;
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 4.0;
 
 static constexpr float kGoalCostWeight = 0.1;
-
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
@@ -101,7 +101,7 @@ static constexpr float kP3ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kNominalHeadingCostWeight = 100.0;
+static constexpr float kNominalHeadingCostWeight = 60.0;
 
 static constexpr bool kOrientedRight = true;
 
@@ -233,8 +233,13 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
   // Orientation cost
   const std::shared_ptr<OrientationFlatCost> p1_nominal_heading(
       new OrientationFlatCost(kNominalHeadingCostWeight, {kP1VxIdx, kP1VyIdx},
-                                kP1NominalHeading, "NominalHeading"));
+                                kP1NominalHeading, "NominalHeadingP1"));
   p1_cost.AddStateCost(p1_nominal_heading);
+
+  const std::shared_ptr<OrientationFlatCost> p3_nominal_heading(
+      new OrientationFlatCost(0.15 * kNominalHeadingCostWeight, {kP3VxIdx, kP3VyIdx},
+                                kP1NominalHeading, "NominalHeadingP3"));
+  p3_cost.AddStateCost(p3_nominal_heading);
 
   // Stay in lanes.
   const Polyline2 lane1(

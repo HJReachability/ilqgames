@@ -81,10 +81,10 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
+static constexpr float kACostWeight = 5.0;
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 5.0;
 
-static constexpr float kACostWeight = 5.0;
 static constexpr float kCurvatureCostWeight = 10.0;
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 4.0;
@@ -127,6 +127,9 @@ static constexpr float kP1NominalV = 10.0;  // m/s
 static constexpr float kP2NominalV = 5.0;   // m/s
 static constexpr float kP3NominalV = 2.0;   // m/s
 
+// Nominal heading
+static constexpr float kP1NominalHeading = M_PI_2;  // rad
+
 // Initial state.
 static constexpr float kP1InitialX = -3.0;   // m
 static constexpr float kP1InitialY = -30.0;  // m
@@ -137,12 +140,9 @@ static constexpr float kP2InitialY = 45.0;   // m
 static constexpr float kP3InitialX = -2.0;   // m
 static constexpr float kP3InitialY = -20.0;  // m
 
-// Nominal heading
-static constexpr float kP1NominalHeading = M_PI_2;  // rad
-
 static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
-static constexpr float kP3InitialHeading = M_PI_2;      // rad
+static constexpr float kP3InitialHeading = M_PI_2;   // rad
 
 static constexpr float kP1InitialSpeed = 5.0;   // m/s
 static constexpr float kP2InitialSpeed = 5.0;   // m/s
@@ -221,8 +221,12 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
 
   // Orientation cost
   const auto p1_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP1HeadingIdx, kP1NominalHeading, "NominalHeading");
+      kNominalHeadingCostWeight, kP1HeadingIdx, kP1NominalHeading, "NominalHeadingP1");
   p1_cost.AddStateCost(p1_nominal_orientation_cost);
+
+  const auto p3_nominal_orientation_cost = std::make_shared<OrientationCost>(
+      0.1*kNominalHeadingCostWeight, kP3HeadingIdx, kP1NominalHeading, "NominalHeadingP3");
+  p3_cost.AddStateCost(p3_nominal_orientation_cost);
 
   // Stay in lanes.
   const Polyline2 lane1(

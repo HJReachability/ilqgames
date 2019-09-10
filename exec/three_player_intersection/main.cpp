@@ -69,7 +69,7 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
 DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.5, "L_inf tolerance for convergence.");
+DEFINE_double(convergence_tolerance, 0.45, "L_inf tolerance for convergence.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
