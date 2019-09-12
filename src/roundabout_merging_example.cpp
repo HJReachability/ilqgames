@@ -80,7 +80,7 @@ static constexpr float kOmegaCostWeight = 500.0;
 static constexpr float kACostWeight = 5.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 10.0;
+static constexpr float kNominalVCostWeight = 1.0;
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
