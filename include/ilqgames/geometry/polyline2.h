@@ -70,6 +70,9 @@ class Polyline2 {
                       LineSegment2* segment = nullptr,
                       float* signed_squared_distance = nullptr) const;
 
+  // Access line segments.
+  const std::vector<LineSegment2>& Segments() const { return segments_; }
+
  private:
   std::vector<LineSegment2> segments_;
   float length_;
