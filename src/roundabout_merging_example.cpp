@@ -77,7 +77,7 @@ static constexpr size_t kNumTimeSteps =
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 500.0;
-static constexpr float kACostWeight = 5.0;
+static constexpr float kACostWeight = 500.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 1.0;
