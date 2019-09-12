@@ -78,8 +78,8 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 50000.0;
-static constexpr float kACostWeight = 50.0;
+static constexpr float kOmegaCostWeight = 500.0;
+static constexpr float kACostWeight = 500.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 1.0;
@@ -88,14 +88,10 @@ static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 6.0;
-// static constexpr float kP1ProximityCostWeight = 100.0;
-// static constexpr float kP2ProximityCostWeight = 100.0;
-// static constexpr float kP3ProximityCostWeight = 100.0;
-// static constexpr float kP4ProximityCostWeight = 100.0;
-static constexpr float kP1ProximityCostWeight = 0.0;
-static constexpr float kP2ProximityCostWeight = 0.0;
-static constexpr float kP3ProximityCostWeight = 0.0;
-static constexpr float kP4ProximityCostWeight = 0.0;
+static constexpr float kP1ProximityCostWeight = 100.0;
+static constexpr float kP2ProximityCostWeight = 100.0;
+static constexpr float kP3ProximityCostWeight = 100.0;
+static constexpr float kP4ProximityCostWeight = 100.0;
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
@@ -196,7 +192,7 @@ PointList2 RoundaboutLaneCenter(float angle, float distance_from_roundabout) {
 
   // Rest of the points in the roundabout. Note that this will wrap around and
   // repeat the first point on the roundabout.
-  constexpr size_t kNumPointsInRoundabout = 60;
+  constexpr size_t kNumPointsInRoundabout = 10;
   for (size_t ii = 1; ii <= kNumPointsInRoundabout; ii++) {
     const float next_angle =
         angle + 2.0 * M_PI * static_cast<float>(ii) / kNumPointsInRoundabout;
