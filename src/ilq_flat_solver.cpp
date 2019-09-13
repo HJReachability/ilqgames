@@ -109,10 +109,10 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   for (auto& quads : quadraticization)
     quads.resize(dyn->NumPlayers(), QuadraticCostApproximation(dyn->XDim()));
 
-  // Preallocate vector of non-linear system controls.
-  std::vector<VectorXf> us(dyn->NumPlayers());
-  for (PlayerIndex ii = 0; ii < dyn->NumPlayers(); ii++)
-    us[ii].resize(dyn->UDim(ii));
+  // // Preallocate vector of non-linear system controls.
+  // std::vector<VectorXf> us(dyn->NumPlayers());
+  // for (PlayerIndex ii = 0; ii < dyn->NumPlayers(); ii++)
+  //   us[ii].resize(dyn->UDim(ii));
 
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;
@@ -142,17 +142,17 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
       const auto& xi = current_operating_point.xs[kk];
       const auto& vs = current_operating_point.us[kk];
 
-      const VectorXf x = dyn->FromLinearSystemState(xi);
-      us = dyn->LinearizingControls(x, vs);
+      // const VectorXf x = dyn->FromLinearSystemState(xi);
+      // us = dyn->LinearizingControls(x, vs);
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
                      quadraticization[kk].begin(),
-                     [&t, &xi, &us](const PlayerCost& cost) {
-                       return cost.Quadraticize(t, xi, us);
+                     [&t, &xi, &vs](const PlayerCost& cost) {
+                       return cost.Quadraticize(t, xi, vs);
                      });
 
-      dyn->ChangeControlCostCoordinates(xi, &quadraticization[kk]);
+      // dyn->ChangeControlCostCoordinates(xi, &quadraticization[kk]);
     }
 
     // Solve LQ game.

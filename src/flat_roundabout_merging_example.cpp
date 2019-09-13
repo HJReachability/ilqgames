@@ -83,16 +83,16 @@ static constexpr float kOmegaCostWeight = 500.0;
 static constexpr float kACostWeight = 500.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 1.0;
+static constexpr float kNominalVCostWeight = 2.0;
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 6.0;
-static constexpr float kP1ProximityCostWeight = 100.0;
-static constexpr float kP2ProximityCostWeight = 100.0;
-static constexpr float kP3ProximityCostWeight = 100.0;
-static constexpr float kP4ProximityCostWeight = 100.0;
+static constexpr float kP1ProximityCostWeight = 0.0;
+static constexpr float kP2ProximityCostWeight = 0.0;
+static constexpr float kP3ProximityCostWeight = 0.0;
+static constexpr float kP4ProximityCostWeight = 0.0;
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
