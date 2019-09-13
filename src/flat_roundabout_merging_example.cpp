@@ -45,6 +45,7 @@
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
+#include <ilqgames/cost/quadratic_control_cost_flat_unicycle_4d.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
@@ -78,8 +79,8 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 50000.0;
-static constexpr float kACostWeight = 50.0;
+static constexpr float kOmegaCostWeight = 500.0;
+static constexpr float kACostWeight = 500.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 1.0;
@@ -389,33 +390,73 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   p4_cost.AddStateCost(p4_nominal_v_cost);
 
   // Penalize control effort.
-  const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p1_cost.AddControlCost(0, p1_omega_cost);
-  p1_cost.AddControlCost(0, p1_a_cost);
+  const auto p1_omega_cost =
+      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+          kOmegaCostWeight, dynamics_, 0, kP1OmegaIdx, 0.0, "Steering");
+  const auto p1_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+      kACostWeight, dynamics_, 0, kP1AIdx, 0.0, "Acceleration");
+  p1_cost.AddGeneralizedControlCost(0, p1_omega_cost);
+  p1_cost.AddGeneralizedControlCost(0, p1_a_cost);
 
-  const auto p2_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
-                                                         0.0, "Acceleration");
-  p2_cost.AddControlCost(1, p2_omega_cost);
-  p2_cost.AddControlCost(1, p2_a_cost);
+  const auto p2_omega_cost =
+      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+          kOmegaCostWeight, dynamics_, 1, kP2OmegaIdx, 0.0, "Steering");
+  const auto p2_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+      kACostWeight, dynamics_, 1, kP2AIdx, 0.0, "Acceleration");
+  p2_cost.AddGeneralizedControlCost(1, p2_omega_cost);
+  p2_cost.AddGeneralizedControlCost(1, p2_a_cost);
 
-  const auto p3_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP3AIdx,
-                                                         0.0, "Acceleration");
-  p3_cost.AddControlCost(2, p3_omega_cost);
-  p3_cost.AddControlCost(2, p3_a_cost);
+  const auto p3_omega_cost =
+      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+          kOmegaCostWeight, dynamics_, 2, kP3OmegaIdx, 0.0, "Steering");
+  const auto p3_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+      kACostWeight, dynamics_, 2, kP3AIdx, 0.0, "Acceleration");
+  p3_cost.AddGeneralizedControlCost(2, p3_omega_cost);
+  p3_cost.AddGeneralizedControlCost(2, p3_a_cost);
 
-  const auto p4_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
-  const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP4AIdx,
-                                                         0.0, "Acceleration");
-  p4_cost.AddControlCost(3, p4_omega_cost);
-  p4_cost.AddControlCost(3, p4_a_cost);
+  const auto p4_omega_cost =
+      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+          kOmegaCostWeight, dynamics_, 3, kP4OmegaIdx, 0.0, "Steering");
+  const auto p4_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
+      kACostWeight, dynamics_, 3, kP4AIdx, 0.0, "Acceleration");
+  p4_cost.AddGeneralizedControlCost(3, p4_omega_cost);
+  p4_cost.AddGeneralizedControlCost(3, p4_a_cost);
+
+  // const auto p1_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
+  // const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
+  // kP1AIdx,
+  //                                                        0.0,
+  //                                                        "Acceleration");
+  // p1_cost.AddControlCost(0, p1_omega_cost);
+  // p1_cost.AddControlCost(0, p1_a_cost);
+
+  // const auto p2_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
+  // const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
+  // kP2AIdx,
+  //                                                        0.0,
+  //                                                        "Acceleration");
+  // p2_cost.AddControlCost(1, p2_omega_cost);
+  // p2_cost.AddControlCost(1, p2_a_cost);
+
+  // const auto p3_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
+  // const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
+  // kP3AIdx,
+  //                                                        0.0,
+  //                                                        "Acceleration");
+  // p3_cost.AddControlCost(2, p3_omega_cost);
+  // p3_cost.AddControlCost(2, p3_a_cost);
+
+  // const auto p4_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
+  // const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
+  // kP4AIdx,
+  //                                                        0.0,
+  //                                                        "Acceleration");
+  // p4_cost.AddControlCost(3, p4_omega_cost);
+  // p4_cost.AddControlCost(3, p4_a_cost);
 
   // // Goal costs.
   // constexpr float kFinalTimeWindow = 0.5;  // s

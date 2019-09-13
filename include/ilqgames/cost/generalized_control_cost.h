@@ -36,15 +36,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all cost functions. All costs must support evaluation and
-// quadraticization. By default, cost functions are of only state or control.
-// The GeneralizedControlCost and its descendants, however, allow for
+// The GeneralizedControlCost and its descendants allow for
 // state-dependent control costs as one encounters in feedback linearization.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_COST_H
-#define ILQGAMES_COST_COST_H
+#ifndef ILQGAMES_COST_GENERALIZED_CONTROL_COST_H
+#define ILQGAMES_COST_GENERALIZED_CONTROL_COST_H
 
 #include <ilqgames/utils/types.h>
 
@@ -52,23 +50,25 @@
 
 namespace ilqgames {
 
-class Cost {
+class GeneralizedControlCost {
  public:
-  virtual ~Cost() {}
+  virtual ~GeneralizedControlCost() {}
 
-  // Evaluate this cost at the current time and input.
-  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
+  // Evaluate this cost at the current time and inputs.
+  virtual float Evaluate(Time t, const VectorXf& x,
+                         const VectorXf& u) const = 0;
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians (if non-null).
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad = nullptr) const = 0;
+  // Quadraticize this cost at the given time and inputs, and add to the running
+  // sum of state gradients and state/control Hessians (if non-null).
+  virtual void Quadraticize(Time t, const VectorXf& x, const VectorXf& u,
+                            MatrixXf* hess_u, MatrixXf* hess_x,
+                            VectorXf* grad_x) const = 0;
 
   // Access the name of this cost.
   const std::string& Name() const { return name_; }
 
  protected:
-  explicit Cost(float weight, const std::string& name = "")
+  explicit GeneralizedControlCost(float weight, const std::string& name = "")
       : weight_(weight), name_(name) {}
 
   // Multiplicative weight associated to this cost.
@@ -76,7 +76,7 @@ class Cost {
 
   // Name associated to every cost.
   const std::string name_;
-};  //\class Cost
+};  //\class GeneralizedControlCost
 
 }  // namespace ilqgames
 

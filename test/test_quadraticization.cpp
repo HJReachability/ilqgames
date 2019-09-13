@@ -41,11 +41,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/curvature_cost.h>
+#include <ilqgames/cost/generalized_control_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
+#include <ilqgames/cost/orientation_flat_cost.h>
 #include <ilqgames/cost/proximity_barrier_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
+#include <ilqgames/cost/quadratic_control_cost_flat_unicycle_4d.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
@@ -53,7 +56,8 @@
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
 #include <ilqgames/cost/weighted_convex_proximity_cost.h>
-#include <ilqgames/cost/orientation_flat_cost.h>
+#include <ilqgames/dynamics/concatenated_flat_system.h>
+#include <ilqgames/dynamics/single_player_flat_unicycle_4d.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
@@ -93,6 +97,26 @@ VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
   return grad;
 }
 
+VectorXf NumericalStateGradient(const GeneralizedControlCost& cost, Time t,
+                                const VectorXf& xi, const VectorXf& v) {
+  VectorXf grad(xi.size());
+
+  // Central differences.
+  VectorXf query(xi);
+  for (size_t ii = 0; ii < xi.size(); ii++) {
+    query(ii) += kGradForwardStep;
+    const float hi = cost.Evaluate(t, query, v);
+
+    query(ii) = xi(ii) - kGradForwardStep;
+    const float lo = cost.Evaluate(t, query, v);
+
+    grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
+    query(ii) = xi(ii);
+  }
+
+  return grad;
+}
+
 // Function to compute numerical Hessian of a cost.
 MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
   MatrixXf hess(input.size(), input.size());
@@ -113,6 +137,32 @@ MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
     hess.col(ii) =
         0.5 * (grad_analytic_hi - grad_analytic_lo) / kHessForwardStep;
     query(ii) = input(ii);
+  }
+
+  return hess;
+}
+
+MatrixXf NumericalStateHessian(const GeneralizedControlCost& cost, Time t,
+                               const VectorXf& xi, const VectorXf& v) {
+  MatrixXf hess(xi.size(), xi.size());
+
+  // Central differences on analytic gradients (otherwise things get too noisy).
+  MatrixXf hess_v(v.size(), v.size());
+  MatrixXf hess_analytic(xi.size(), xi.size());
+  VectorXf query(xi);
+  for (size_t ii = 0; ii < xi.size(); ii++) {
+    VectorXf grad_analytic_hi = VectorXf::Zero(xi.size());
+    VectorXf grad_analytic_lo = VectorXf::Zero(xi.size());
+
+    query(ii) += kHessForwardStep;
+    cost.Quadraticize(t, query, v, &hess_v, &hess_analytic, &grad_analytic_hi);
+
+    query(ii) = xi(ii) - kHessForwardStep;
+    cost.Quadraticize(t, query, v, &hess_v, &hess_analytic, &grad_analytic_lo);
+
+    hess.col(ii) =
+        0.5 * (grad_analytic_hi - grad_analytic_lo) / kHessForwardStep;
+    query(ii) = xi(ii);
   }
 
   return hess;
@@ -143,6 +193,57 @@ void CheckQuadraticization(const Cost& cost) {
 
     MatrixXf hess_numerical = NumericalHessian(cost, t, input);
     VectorXf grad_numerical = NumericalGradient(cost, t, input);
+
+#if 0
+    if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
+        kNumericalPrecision) {
+      std::cout << "input: " << input.transpose() << std::endl;
+      std::cout << "numeric hess: \n" << hess_numerical << std::endl;
+      std::cout << "analytic hess: \n" << hess_analytic << std::endl;
+      std::cout << "numeric grad: \n" << grad_numerical << std::endl;
+      std::cout << "analytic grad: \n" << grad_analytic << std::endl;
+    }
+#endif
+
+    EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
+              kNumericalPrecision);
+    EXPECT_LT((grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
+              kNumericalPrecision);
+  }
+}
+
+void CheckStateQuadraticization(const GeneralizedControlCost& cost,
+                                Dimension xdim, Dimension udim) {
+  // Random number generator to make random timestamps.
+  std::default_random_engine rng(0);
+  std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
+  std::bernoulli_distribution sign_distribution;
+  std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
+
+  // Try a bunch of random points.
+  constexpr size_t kNumRandomPoints = 20;
+  for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
+    VectorXf xi(xdim);
+    for (size_t jj = 0; jj < xdim; jj++) {
+      const float s = sign_distribution(rng);
+      xi(jj) = (1.0 - 2.0 * s) * entry_distribution(rng);
+    }
+
+    VectorXf v(udim);
+    for (size_t jj = 0; jj < udim; jj++) {
+      const float s = sign_distribution(rng);
+      v(jj) = (1.0 - 2.0 * s) * entry_distribution(rng);
+    }
+
+    const Time t = time_distribution(rng);
+
+    MatrixXf hess_v(udim, udim);
+    MatrixXf hess_analytic(MatrixXf::Zero(xdim, xdim));
+    VectorXf grad_analytic(VectorXf::Zero(xdim));
+    cost.Quadraticize(t, xi, v, &hess_v, &hess_analytic, &grad_analytic);
+
+    MatrixXf hess_numerical = NumericalStateHessian(cost, t, xi, v);
+    VectorXf grad_numerical = NumericalStateGradient(cost, t, xi, v);
 
 #if 0
     if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
@@ -235,4 +336,17 @@ TEST(OrientationFlatCostTest, QuadraticizesCorrectly) {
 TEST(OrientationCostTest, QuadraticizesCorrectly) {
   OrientationCost cost(kCostWeight, 1, M_PI_2);
   CheckQuadraticization(cost);
+}
+
+TEST(QuadraticControlCostFlatUnicycle4DTest, QuadraticizesCorrectly) {
+  const std::shared_ptr<ConcatenatedFlatSystem> dynamics(
+      new ConcatenatedFlatSystem(
+          {std::make_shared<SinglePlayerFlatUnicycle4D>()}, 0.1));
+  QuadraticControlCostFlatUnicycle4D omega_cost(kCostWeight, dynamics, 0, 0,
+                                                0.0);
+  QuadraticControlCostFlatUnicycle4D a_cost(kCostWeight, dynamics, 0, 1, 0.0);
+  CheckStateQuadraticization(omega_cost, dynamics->XDim(),
+                             SinglePlayerFlatUnicycle4D::kNumUDims);
+  CheckStateQuadraticization(a_cost, dynamics->XDim(),
+                             SinglePlayerFlatUnicycle4D::kNumUDims);
 }
