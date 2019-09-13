@@ -36,47 +36,50 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all cost functions. All costs must support evaluation and
-// quadraticization. By default, cost functions are of only state or control.
-// The GeneralizedControlCost and its descendants, however, allow for
-// state-dependent control costs as one encounters in feedback linearization.
+// Quadratic generalized control cost for the flat 4D unicycle dynamics.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_COST_H
-#define ILQGAMES_COST_COST_H
+#ifndef ILQGAMES_COST_QUADRATIC_CONTROL_COST_FLAT_UNICYCLE_4D_H
+#define ILQGAMES_COST_QUADRATIC_CONTROL_COST_FLAT_UNICYCLE_4D_H
 
+#include <ilqgames/cost/concatenated_flat_control_cost.h>
+#include <ilqgames/dynamics/concatenated_flat_system.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
 
 namespace ilqgames {
 
-class Cost {
+class QuadraticControlCostFlatUnicycle4D : public ConcatenatedFlatControlCost {
  public:
-  virtual ~Cost() {}
+  // Construct from a multiplicative weight and the dimension in which to apply
+  // the quadratic cost (difference from nominal). If dimension < 0, then
+  // applies to all dimensions (i.e. ||input - nominal * ones()||^2).
+  QuadraticControlCostFlatUnicycle4D(
+      float weight,
+      const std::shared_ptr<const ConcatenatedFlatSystem>& dynamics,
+      PlayerIndex subsystem_idx, Dimension dim = -1, float nominal = 0.0,
+      const std::string& name = "")
+      : ConcatenatedFlatControlCost(weight, dynamics, subsystem_idx, name),
+        dimension_(dim),
+        nominal_(nominal) {}
 
-  // Evaluate this cost at the current time and input.
-  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
+  // Evaluate this cost at the current inputs.
+  float Evaluate(const VectorXf& xi, const VectorXf& v) const;
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians (if non-null).
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad = nullptr) const = 0;
+  // Quadraticize this cost at the given inputs, and add to the running
+  // sum of state gradients and state/control Hessians (if non-null).
+  void Quadraticize(const VectorXf& xi, const VectorXf& v, MatrixXf* hess_v,
+                    MatrixXf* hess_xi, VectorXf* grad_xi) const;
 
-  // Access the name of this cost.
-  const std::string& Name() const { return name_; }
+ private:
+  // Dimension in which to apply the quadratic cost.
+  const Dimension dimension_;
 
- protected:
-  explicit Cost(float weight, const std::string& name = "")
-      : weight_(weight), name_(name) {}
-
-  // Multiplicative weight associated to this cost.
-  const float weight_;
-
-  // Name associated to every cost.
-  const std::string name_;
-};  //\class Cost
+  // Nominal value in this (or all) dimensions.
+  const float nominal_;
+};  //\class QuadraticControlCostFlatUnicycle4D
 
 }  // namespace ilqgames
 
