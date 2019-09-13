@@ -231,8 +231,7 @@ void CheckStateQuadraticization(const GeneralizedControlCost& cost,
 
     VectorXf v(udim);
     for (size_t jj = 0; jj < udim; jj++) {
-      const float s = sign_distribution(rng);
-      v(jj) = (1.0 - 2.0 * s) * entry_distribution(rng);
+      v(jj) = entry_distribution(rng);
     }
 
     const Time t = time_distribution(rng);
