@@ -51,7 +51,7 @@ PointList2 RoundaboutLaneCenter(float entrance_angle, float exit_angle,
                                 float distance_from_roundabout) {
   // Radius of roundabout and lane half width.
   constexpr float kRoundaboutRadius = 12.0;  // m
-  constexpr float kLaneHalfWidth = 2.5;     // m
+  constexpr float kLaneHalfWidth = 2.5;      // m
 
   // Beginning of small 90 degree arc onto roundabout.
   const Point2 entry_arc_center(
@@ -98,7 +98,7 @@ PointList2 RoundaboutLaneCenter(float entrance_angle, float exit_angle,
   }
 
   // Final point.
-  constexpr float kFarAway = 30.0;  // m
+  constexpr float kFarAway = 1e4;  // m
   points.emplace_back(kFarAway * std::cos(exit_angle),
                       kFarAway * std::sin(exit_angle));
 

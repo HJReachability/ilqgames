@@ -49,6 +49,7 @@
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/route_progress_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
@@ -80,14 +81,14 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
-static constexpr float kAuxCostWeight = 1.0;
+static constexpr float kAuxCostWeight = 4.0;
 static constexpr float kGoalCostWeight = 10.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 10.0;
 
-static constexpr float kLaneCostWeight = 100.0;
-static constexpr float kLaneBoundaryCostWeight = 1000.0;
+static constexpr float kLaneCostWeight = 25.0;
+static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 6.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
@@ -293,7 +294,27 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   p4_cost.AddStateCost(p4_lane_r_cost);
   p4_cost.AddStateCost(p4_lane_l_cost);
 
-  // // Max/min/nominal speed costs.
+  // Max/min/nominal speed costs.
+  const std::shared_ptr<RouteProgressCost> p1_progress_cost(
+      new RouteProgressCost(kNominalVCostWeight, kP1NominalV, lane1_polyline,
+                            {kP1XIdx, kP1YIdx}, "RouteProgress"));
+  p1_cost.AddStateCost(p1_progress_cost);
+
+  const std::shared_ptr<RouteProgressCost> p2_progress_cost(
+      new RouteProgressCost(kNominalVCostWeight, kP2NominalV, lane2_polyline,
+                            {kP2XIdx, kP2YIdx}, "RouteProgress"));
+  p2_cost.AddStateCost(p2_progress_cost);
+
+  const std::shared_ptr<RouteProgressCost> p3_progress_cost(
+      new RouteProgressCost(kNominalVCostWeight, kP3NominalV, lane3_polyline,
+                            {kP3XIdx, kP3YIdx}, "RouteProgress"));
+  p3_cost.AddStateCost(p3_progress_cost);
+
+  const std::shared_ptr<RouteProgressCost> p4_progress_cost(
+      new RouteProgressCost(kNominalVCostWeight, kP4NominalV, lane4_polyline,
+                            {kP4XIdx, kP4YIdx}, "RouteProgress"));
+  p4_cost.AddStateCost(p4_progress_cost);
+
   // const std::shared_ptr<SemiquadraticNormCost> p1_min_v_cost(
   //     new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx}, kMinV,
   //                               !kOrientedRight, "MinV"));
