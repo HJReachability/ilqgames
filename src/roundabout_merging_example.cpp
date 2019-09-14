@@ -78,7 +78,8 @@ static constexpr size_t kNumTimeSteps =
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 500.0;
-static constexpr float kACostWeight = 500.0;
+static constexpr float kACostWeight = 50.0;
+static constexpr float kJerkCostWeight = 5.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 10.0;
@@ -116,32 +117,36 @@ static constexpr float kP2InitialDistanceToRoundabout = 10.0;  // m
 static constexpr float kP3InitialDistanceToRoundabout = 25.0;  // m
 static constexpr float kP4InitialDistanceToRoundabout = 10.0;  // m
 
-static constexpr float kP1InitialSpeed = 3.0;  // m/s
-static constexpr float kP2InitialSpeed = 3.0;  // m/s
-static constexpr float kP3InitialSpeed = 3.0;  // m/s
-static constexpr float kP4InitialSpeed = 3.0;  // m/s
+static constexpr float kP1InitialSpeed = 2.0;  // m/s
+static constexpr float kP2InitialSpeed = 2.0;  // m/s
+static constexpr float kP3InitialSpeed = 2.0;  // m/s
+static constexpr float kP4InitialSpeed = 2.0;  // m/s
 
 // State dimensions.
-using P1 = SinglePlayerUnicycle4D;
-using P2 = SinglePlayerUnicycle4D;
-using P3 = SinglePlayerUnicycle4D;
-using P4 = SinglePlayerUnicycle4D;
+static constexpr float kInterAxleDistance = 4.0;  // m
+using P1 = SinglePlayerCar6D;
+using P2 = SinglePlayerCar6D;
+using P3 = SinglePlayerCar6D;
+using P4 = SinglePlayerCar6D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
 static const Dimension kP1HeadingIdx = P1::kThetaIdx;
 static const Dimension kP1VIdx = P1::kVIdx;
+static const Dimension kP1AIdx = P1::kAIdx;
 
 static const Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
 static const Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
 static const Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
 static const Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
+static const Dimension kP2AIdx = P1::kNumXDims + P2::kAIdx;
 
 static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
 static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
 static const Dimension kP3HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
 static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
+static const Dimension kP3AIdx = P1::kNumXDims + P2::kNumXDims + P3::kAIdx;
 
 static const Dimension kP4XIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kPxIdx;
@@ -151,16 +156,17 @@ static const Dimension kP4HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kThetaIdx;
 static const Dimension kP4VIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kVIdx;
-
+static const Dimension kP4AIdx = 
+    P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kAIdx;
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
-static const Dimension kP1AIdx = 1;
+static const Dimension kP1JerkIdx = 1;
 static const Dimension kP2OmegaIdx = 0;
-static const Dimension kP2AIdx = 1;
+static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
-static const Dimension kP3AIdx = 1;
+static const Dimension kP3JerkIdx = 1;
 static const Dimension kP4OmegaIdx = 0;
-static const Dimension kP4AIdx = 1;
+static const Dimension kP4JerkIdx = 1;
 
 }  // anonymous namespace
 
@@ -168,8 +174,10 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(), std::make_shared<P2>(),
-           std::make_shared<P3>(), std::make_shared<P4>()},
+          {std::make_shared<P1>(kInterAxleDistance), 
+           std::make_shared<P2>(kInterAxleDistance),
+           std::make_shared<P3>(kInterAxleDistance), 
+           std::make_shared<P4>(kInterAxleDistance)},
           kTimeStep));
 
   // Set up initial strategies and operating point.
@@ -326,34 +334,48 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   p4_cost.AddStateCost(p4_max_v_cost);
   p4_cost.AddStateCost(p4_nominal_v_cost);
 
+  // Penalize acceleration.
+  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
+                                                         0.0, "Acceleration");
+  p1_cost.AddStateCost(p1_a_cost);
+  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
+                                                         0.0, "Acceleration");
+  p2_cost.AddStateCost(p2_a_cost);
+  const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
+                                                         0.0, "Acceleration");
+  p3_cost.AddStateCost(p3_a_cost);
+  const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
+                                                         0.0, "Acceleration");
+  p4_cost.AddStateCost(p4_a_cost);
+
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
+  const auto p1_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx,
+                                                         0.0, "Jerk");
   p1_cost.AddControlCost(0, p1_omega_cost);
-  p1_cost.AddControlCost(0, p1_a_cost);
+  p1_cost.AddControlCost(0, p1_j_cost);
 
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP2AIdx,
-                                                         0.0, "Acceleration");
+  const auto p2_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx,
+                                                         0.0, "Jerk");
   p2_cost.AddControlCost(1, p2_omega_cost);
-  p2_cost.AddControlCost(1, p2_a_cost);
+  p2_cost.AddControlCost(1, p2_j_cost);
 
   const auto p3_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP3AIdx,
-                                                         0.0, "Acceleration");
+  const auto p3_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx,
+                                                         0.0, "Jerk");
   p3_cost.AddControlCost(2, p3_omega_cost);
-  p3_cost.AddControlCost(2, p3_a_cost);
+  p3_cost.AddControlCost(2, p3_j_cost);
 
   const auto p4_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
-  const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP4AIdx,
-                                                         0.0, "Acceleration");
+  const auto p4_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP4JerkIdx,
+                                                         0.0, "Jerk");
   p4_cost.AddControlCost(3, p4_omega_cost);
-  p4_cost.AddControlCost(3, p4_a_cost);
+  p4_cost.AddControlCost(3, p4_j_cost);
 
   // // Goal costs.
   // constexpr float kFinalTimeWindow = 0.5;  // s
