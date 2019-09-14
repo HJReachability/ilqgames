@@ -53,6 +53,7 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
+#include <ilqgames/examples/roundabout_lane_center.h>
 #include <ilqgames/examples/roundabout_merging_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
@@ -80,7 +81,7 @@ static constexpr float kOmegaCostWeight = 500.0;
 static constexpr float kACostWeight = 500.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 1.0;
+static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
@@ -161,39 +162,6 @@ static const Dimension kP3AIdx = 1;
 static const Dimension kP4OmegaIdx = 0;
 static const Dimension kP4AIdx = 1;
 
-// Utility to generate a lane center for the roundabout, starting at the given
-// angle and distance from the roundabout. To make directionality clear, we
-// make all entry line segments tangent to the roundabout in the direction of
-// desired motion.
-PointList2 RoundaboutLaneCenter(float angle, float distance_from_roundabout) {
-  // Radius of roundabout.
-  constexpr float kRoundaboutRadius = 10.0;  // m
-
-  // Initial point and first point on roundabout.
-  const Point2 first_point_on_roundabout(kRoundaboutRadius * std::cos(angle),
-                                         kRoundaboutRadius * std::sin(angle));
-  PointList2 points;
-  points.push_back(first_point_on_roundabout -
-                   distance_from_roundabout *
-                       Point2(-std::sin(angle), std::cos(angle)));
-  points.push_back(first_point_on_roundabout);
-
-  // Rest of the points in the roundabout. Note that this will wrap around and
-  // repeat the first point on the roundabout.
-  constexpr size_t kNumPointsInRoundabout = 10;
-  for (size_t ii = 1; ii <= kNumPointsInRoundabout; ii++) {
-    const float next_angle =
-        angle + 2.0 * M_PI * static_cast<float>(ii) / kNumPointsInRoundabout;
-    points.emplace_back(kRoundaboutRadius * std::cos(next_angle),
-                        kRoundaboutRadius * std::sin(next_angle));
-  }
-
-  CHECK_LT((first_point_on_roundabout - points.back()).norm(),
-           constants::kSmallNumber);
-
-  return points;
-}
-
 }  // anonymous namespace
 
 RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
@@ -215,18 +183,19 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
 
   // Set up lanes for each player.
   constexpr float kAngleOffset = M_PI_2 * 0.5;
+  constexpr float kWedgeSize = M_PI;
   const std::vector<float> angles = {kAngleOffset,
                                      kAngleOffset + 2.0 * M_PI / 4.0,
                                      kAngleOffset + 2.0 * 2.0 * M_PI / 4.0,
                                      kAngleOffset + 3.0 * 2.0 * M_PI / 4.0};
-  const PointList2 lane1 =
-      RoundaboutLaneCenter(angles[0], kP1InitialDistanceToRoundabout);
-  const PointList2 lane2 =
-      RoundaboutLaneCenter(angles[1], kP2InitialDistanceToRoundabout);
-  const PointList2 lane3 =
-      RoundaboutLaneCenter(angles[2], kP3InitialDistanceToRoundabout);
-  const PointList2 lane4 =
-      RoundaboutLaneCenter(angles[3], kP4InitialDistanceToRoundabout);
+  const PointList2 lane1 = RoundaboutLaneCenter(
+      angles[0], angles[0] + kWedgeSize, kP1InitialDistanceToRoundabout);
+  const PointList2 lane2 = RoundaboutLaneCenter(
+      angles[1], angles[1] + kWedgeSize, kP2InitialDistanceToRoundabout);
+  const PointList2 lane3 = RoundaboutLaneCenter(
+      angles[2], angles[2] + kWedgeSize, kP3InitialDistanceToRoundabout);
+  const PointList2 lane4 = RoundaboutLaneCenter(
+      angles[3], angles[3] + kWedgeSize, kP4InitialDistanceToRoundabout);
 
   const Polyline2 lane1_polyline(lane1);
   const Polyline2 lane2_polyline(lane2);
@@ -426,7 +395,7 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
                    {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
   p1_cost.AddStateCost(p1p2_proximity_cost);
-  p1_cost.AddStateCost(p1p3_proximity_cost);
+  //  p1_cost.AddStateCost(p1p3_proximity_cost);
   p1_cost.AddStateCost(p1p4_proximity_cost);
 
   const std::shared_ptr<ProxCost> p2p1_proximity_cost(
@@ -440,7 +409,7 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
                    {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
   p2_cost.AddStateCost(p2p1_proximity_cost);
   p2_cost.AddStateCost(p2p3_proximity_cost);
-  p2_cost.AddStateCost(p2p4_proximity_cost);
+  //  p2_cost.AddStateCost(p2p4_proximity_cost);
 
   const std::shared_ptr<ProxCost> p3p1_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
@@ -451,7 +420,7 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   const std::shared_ptr<ProxCost> p3p4_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
-  p3_cost.AddStateCost(p3p1_proximity_cost);
+  //  p3_cost.AddStateCost(p3p1_proximity_cost);
   p3_cost.AddStateCost(p3p2_proximity_cost);
   p3_cost.AddStateCost(p3p4_proximity_cost);
 
@@ -465,7 +434,7 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
       new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p4_cost.AddStateCost(p4p1_proximity_cost);
-  p4_cost.AddStateCost(p4p2_proximity_cost);
+  //  p4_cost.AddStateCost(p4p2_proximity_cost);
   p4_cost.AddStateCost(p4p3_proximity_cost);
 
   // Set up solver.

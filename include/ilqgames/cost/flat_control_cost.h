@@ -36,47 +36,52 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all cost functions. All costs must support evaluation and
-// quadraticization. By default, cost functions are of only state or control.
-// The GeneralizedControlCost and its descendants, however, allow for
-// state-dependent control costs as one encounters in feedback linearization.
+// Specialization of generalized control costs for flat systems.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_COST_H
-#define ILQGAMES_COST_COST_H
+#ifndef ILQGAMES_COST_FLAT_CONTROL_COST_H
+#define ILQGAMES_COST_FLAT_CONTROL_COST_H
 
+#include <ilqgames/cost/generalized_control_cost.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
 
 namespace ilqgames {
 
-class Cost {
+class FlatControlCost : public GeneralizedControlCost {
  public:
-  virtual ~Cost() {}
+  virtual ~FlatControlCost() {}
 
-  // Evaluate this cost at the current time and input.
-  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
+  // Evaluate this cost at the current time and inputs.
+  virtual float Evaluate(const VectorXf& xi, const VectorXf& v) const = 0;
+  float Evaluate(Time t, const VectorXf& xi, const VectorXf& v) const {
+    return Evaluate(xi, v);
+  }
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians (if non-null).
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad = nullptr) const = 0;
-
-  // Access the name of this cost.
-  const std::string& Name() const { return name_; }
+  // Quadraticize this cost at the given time and inputs, and add to the running
+  // sum of state gradients and state/control Hessians (if non-null).
+  virtual void Quadraticize(const VectorXf& xi, const VectorXf& v,
+                            MatrixXf* hess_v, MatrixXf* hess_xi,
+                            VectorXf* grad_xi) const = 0;
+  void Quadraticize(Time t, const VectorXf& xi, const VectorXf& v,
+                    MatrixXf* hess_v, MatrixXf* hess_xi,
+                    VectorXf* grad_xi) const {
+    Quadraticize(xi, v, hess_v, hess_xi, grad_xi);
+  }
 
  protected:
-  explicit Cost(float weight, const std::string& name = "")
-      : weight_(weight), name_(name) {}
+  // Accepts weight and name like usual, but also pointer to flat dynamics.
+  FlatControlCost(float weight,
+                  const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics,
+                  const std::string& name = "")
+      : GeneralizedControlCost(weight, name), dynamics_(dynamics) {}
 
-  // Multiplicative weight associated to this cost.
-  const float weight_;
-
-  // Name associated to every cost.
-  const std::string name_;
-};  //\class Cost
+  // Dynamics. Used for inverse decoupling matrix, parameter access, etc.
+  const std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
+};  //\class FlatControlCost
 
 }  // namespace ilqgames
 
