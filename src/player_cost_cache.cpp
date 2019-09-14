@@ -109,7 +109,7 @@ PlayerCostCache::PlayerCostCache(
           // generalized control costs. Should also change the interface back so
           // we don't need to have dynamics in here.
           if (dynamics.get()) {
-            CHECK(false) << "Using deprecated costs.";
+            LOG(WARNING) << "Using deprecated cost: " << cost->Name();
             // Compute actual controls for all players.
             std::vector<VectorXf> vs(dynamics->NumPlayers());
             for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
