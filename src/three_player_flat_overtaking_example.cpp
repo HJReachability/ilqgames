@@ -82,26 +82,26 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
-static constexpr float kACostWeight = 5.0;
 static constexpr float kOmegaCostWeight = 50.0;
-static constexpr float kJerkCostWeight = 5.0;
+static constexpr float kJerkCostWeight = 50.0;
 
-static constexpr float kCurvatureCostWeight = 10.0;
-static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 4.0;
+static constexpr float kACostWeight = 50.0;
+static constexpr float kCurvatureCostWeight = 1.0;
+static constexpr float kMaxVCostWeight = 10.0;
+static constexpr float kNominalVCostWeight = 10.0;
 
-static constexpr float kGoalCostWeight = 0.1;
+static constexpr float kGoalCostWeight = 1.0;
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kMinProximity = 6.0;
-static constexpr float kP1ProximityCostWeight = 10.0;
-static constexpr float kP2ProximityCostWeight = 10.0;
-static constexpr float kP3ProximityCostWeight = 10.0;
+static constexpr float kMinProximity = 5.0;
+static constexpr float kP1ProximityCostWeight = 100.0;
+static constexpr float kP2ProximityCostWeight = 100.0;
+static constexpr float kP3ProximityCostWeight = 100.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kNominalHeadingCostWeight = 60.0;
+static constexpr float kNominalHeadingCostWeight = 150.0;
 
 static constexpr bool kOrientedRight = true;
 
@@ -109,14 +109,14 @@ static constexpr bool kOrientedRight = true;
 static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Goal points.
-static constexpr float kP1GoalX = -6.0;   // m
+static constexpr float kP1GoalX = 2.5;   // m
 static constexpr float kP1GoalY = 600.0;  // m
 
-static constexpr float kP2GoalX = 500.0;  // m
-static constexpr float kP2GoalY = 12.0;   // m
+static constexpr float kP2GoalX = -1.0;   // m
+static constexpr float kP2GoalY = 600.0;   // m
 
-static constexpr float kP3GoalX = 100.0;  // m
-static constexpr float kP3GoalY = 16.0;   // m
+static constexpr float kP3GoalX = 2.5;  // m
+static constexpr float kP3GoalY = 600.0;   // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 20.0;  // m/s
@@ -125,24 +125,24 @@ static constexpr float kP3MaxV = 5.0;   // m/s
 static constexpr float kMinV = 1.0;     // m/s
 
 static constexpr float kP1NominalV = 10.0;  // m/s
-static constexpr float kP2NominalV = 5.0;   // m/s
+static constexpr float kP2NominalV = 2.0;   // m/s
 static constexpr float kP3NominalV = 2.0;   // m/s
 
 // Nominal heading
 static constexpr float kP1NominalHeading = M_PI_2;  // rad
 
 // Initial state.
-static constexpr float kP1InitialX = -3.0;   // m
-static constexpr float kP1InitialY = -30.0;  // m
+static constexpr float kP1InitialX = 2.5;   // m
+static constexpr float kP1InitialY = -10.0;  // m
 
-static constexpr float kP2InitialX = -10.0;  // m
-static constexpr float kP2InitialY = 45.0;   // m
+static constexpr float kP2InitialX = -1.0;  // m
+static constexpr float kP2InitialY = -20.0;   // m
 
-static constexpr float kP3InitialX = -2.0;   // m
-static constexpr float kP3InitialY = -20.0;  // m
+static constexpr float kP3InitialX = 2.5;   // m
+static constexpr float kP3InitialY = 10.0;  // m
 
 static constexpr float kP1InitialHeading = M_PI_2;   // rad
-static constexpr float kP2InitialHeading = -M_PI_2;  // rad
+static constexpr float kP2InitialHeading = M_PI_2;  // rad
 static constexpr float kP3InitialHeading = M_PI_2;   // rad
 
 static constexpr float kP1InitialSpeed = 5.0;   // m/s
@@ -234,31 +234,31 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
   const std::shared_ptr<OrientationFlatCost> p1_nominal_heading(
       new OrientationFlatCost(kNominalHeadingCostWeight, {kP1VxIdx, kP1VyIdx},
                               kP1NominalHeading, "NominalHeadingP1"));
-  p1_cost.AddStateCost(p1_nominal_heading);
-
+  //p1_cost.AddStateCost(p1_nominal_heading);
+  const std::shared_ptr<OrientationFlatCost> p2_nominal_heading(
+      new OrientationFlatCost(kNominalHeadingCostWeight, {kP2VxIdx, kP2VyIdx}, 
+                              kP1NominalHeading, "NominalHeadingP2"));
+  //p2_cost.AddStateCost(p2_nominal_heading);
   const std::shared_ptr<OrientationFlatCost> p3_nominal_heading(
-      new OrientationFlatCost(0.15 * kNominalHeadingCostWeight,
-                              {kP3VxIdx, kP3VyIdx}, kP1NominalHeading,
-                              "NominalHeadingP3"));
-  p3_cost.AddStateCost(p3_nominal_heading);
+      new OrientationFlatCost(kNominalHeadingCostWeight, {kP3VxIdx, kP3VyIdx},
+                              kP1NominalHeading,"NominalHeadingP3"));
+  //p3_cost.AddStateCost(p3_nominal_heading);
 
   // Stay in lanes.
   const Polyline2 lane1(
-      {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
+      {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
   const Polyline2 lane2(
-      {Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, -1000.0)});
-  const Polyline2 lane3(
       {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
-      new QuadraticPolyline2Cost(0.01 * kLaneCostWeight, lane1,
-                                 {kP1XIdx, kP1YIdx}, "LaneCenter"));
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
+                                 "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
                                      kOrientedRight, "LaneRightBoundary"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_l_cost(
-      new SemiquadraticPolyline2Cost(0.01 * kLaneBoundaryCostWeight, lane1,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
@@ -266,14 +266,14 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
   p1_cost.AddStateCost(p1_lane_l_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
                                      kOrientedRight, "LaneRightBoundary"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
@@ -281,14 +281,14 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
   p2_cost.AddStateCost(p2_lane_l_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
                                      {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
                                      kOrientedRight, "LaneRightBoundary"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
                                      {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
@@ -376,33 +376,33 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
   p3_cost.AddControlCost(2, p3_a_cost);
 
   // Goal costs.
-  // constexpr float kFinalTimeWindow = 0.5;  // s
-  // const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p1_cost.AddStateCost(p1_goalx_cost);
-  // p1_cost.AddStateCost(p1_goaly_cost);
+  constexpr float kFinalTimeWindow = 0.5;  // s
+  const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
+      kTimeHorizon - kFinalTimeWindow, "GoalX");
+  const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
+      kTimeHorizon - kFinalTimeWindow, "GoalY");
+  p1_cost.AddStateCost(p1_goalx_cost);
+  p1_cost.AddStateCost(p1_goaly_cost);
 
-  // const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p2_cost.AddStateCost(p2_goalx_cost);
-  // p2_cost.AddStateCost(p2_goaly_cost);
+  const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
+      kTimeHorizon - kFinalTimeWindow, "GoalX");
+  const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
+      kTimeHorizon - kFinalTimeWindow, "GoalY");
+  p2_cost.AddStateCost(p2_goalx_cost);
+  p2_cost.AddStateCost(p2_goaly_cost);
 
-  // const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p3_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p3_cost.AddStateCost(p3_goalx_cost);
-  // p3_cost.AddStateCost(p3_goaly_cost);
+  const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX),
+      kTimeHorizon - kFinalTimeWindow, "GoalX");
+  const auto p3_goaly_cost = std::make_shared<FinalTimeCost>(
+      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY),
+      kTimeHorizon - kFinalTimeWindow, "GoalY");
+  p3_cost.AddStateCost(p3_goalx_cost);
+  p3_cost.AddStateCost(p3_goaly_cost);
 
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
@@ -429,8 +429,8 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  p3_cost.AddStateCost(p3p1_proximity_cost);
-  p3_cost.AddStateCost(p3p2_proximity_cost);
+  //p3_cost.AddStateCost(p3p1_proximity_cost);
+  //p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
   solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
