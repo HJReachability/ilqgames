@@ -52,6 +52,7 @@
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/route_progress_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
@@ -311,6 +312,13 @@ TEST(SemiquadraticNormCostTest, QuadraticizesCorrectly) {
 TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   QuadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1});
+  CheckQuadraticization(cost);
+}
+
+TEST(RouteProgressCostTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  constexpr float kNominalSpeed = 0.1;
+  RouteProgressCost cost(kCostWeight, kNominalSpeed, polyline, {0, 1});
   CheckQuadraticization(cost);
 }
 

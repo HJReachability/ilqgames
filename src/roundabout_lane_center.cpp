@@ -98,7 +98,7 @@ PointList2 RoundaboutLaneCenter(float entrance_angle, float exit_angle,
   }
 
   // Final point.
-  constexpr float kFarAway = 1e4;  // m
+  constexpr float kFarAway = 30.0;  // m
   points.emplace_back(kFarAway * std::cos(exit_angle),
                       kFarAway * std::sin(exit_angle));
 
