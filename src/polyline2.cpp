@@ -50,17 +50,47 @@ namespace ilqgames {
 
 Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
   CHECK_GT(points.size(), 1);
+  cumulative_lengths_.push_back(length_);
 
   // Parse into list of line segents.
   for (size_t ii = 1; ii < points.size(); ii++) {
     segments_.emplace_back(points[ii - 1], points[ii]);
     length_ += segments_.back().Length();
+    cumulative_lengths_.push_back(length_);
   }
 }
 
 void Polyline2::AddPoint(const Point2& point) {
   segments_.emplace_back(segments_.back().SecondPoint(), point);
   length_ += segments_.back().Length();
+}
+
+Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
+                          LineSegment2* segment) const {
+  auto upper = std::upper_bound(cumulative_lengths_.begin(),
+                                cumulative_lengths_.end(), route_pos);
+  if (upper == cumulative_lengths_.end()) {
+    LOG(WARNING) << "Route position " << route_pos
+                 << " was off the end of the route.";
+    upper--;
+  }
+
+  // Find the index of the line segment which contains this route position.
+  upper--;
+  const size_t idx = std::distance(cumulative_lengths_.begin(), upper);
+  if (segment) *segment = segments_[idx];
+
+  // Walk along this line segment the remaining distance.
+  const float remaining = route_pos - cumulative_lengths_[idx];
+  CHECK_GE(remaining, 0.0);
+
+  if (is_vertex) {
+    *is_vertex = remaining < constants::kSmallNumber ||
+                 remaining > segments_[idx].Length();
+  }
+
+  return segments_[idx].FirstPoint() +
+         remaining * segments_[idx].UnitDirection();
 }
 
 Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,

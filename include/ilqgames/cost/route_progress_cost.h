@@ -36,54 +36,63 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Polyline2 class for piecewise linear paths in 2D.
+// Quadratic penalty on distance from where we should be along a given polyline
+// if we were traveling at the given nominal speed.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GEOMETRY_POLYLINE2_H
-#define ILQGAMES_GEOMETRY_POLYLINE2_H
+#ifndef ILQGAMES_COST_ROUTE_PROGRESS_COST_H
+#define ILQGAMES_COST_ROUTE_PROGRESS_COST_H
 
-#include <ilqgames/geometry/line_segment2.h>
+#include <ilqgames/cost/cost.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
-#include <math.h>
+#include <string>
+#include <tuple>
 
 namespace ilqgames {
 
-class Polyline2 {
+class RouteProgressCost : public Cost {
  public:
-  // Construct from a list of points. This list must contain at least 2 points!
-  Polyline2(const PointList2& points);
-  ~Polyline2() {}
+  // Construct from a multiplicative weight and the input dimensions
+  // corresponding to (x, y)-position.
+  RouteProgressCost(float weight, float nominal_speed,
+                    const Polyline2& polyline,
+                    const std::pair<Dimension, Dimension>& position_idxs,
+                    const std::string& name = "", float initial_route_pos = 0.0,
+                    Time initial_time = 0.0)
+      : Cost(weight, name),
+        nominal_speed_(nominal_speed),
+        polyline_(polyline),
+        xidx_(position_idxs.first),
+        yidx_(position_idxs.second),
+        initial_route_pos_(initial_route_pos),
+        initial_time_(initial_time) {}
 
-  // Add a new point to the end of the polyline.
-  void AddPoint(const Point2& point);
+  // Evaluate this cost at the current input.
+  float Evaluate(Time t, const VectorXf& input) const;
 
-  // Compute length.
-  float Length() const { return length_; }
-
-  // Find closest point on this line segment to a given point, and optionally
-  // the line segment that point belongs to (and flag for whether it is a
-  // vertex), and the signed squared distance, where right is positive.
-  Point2 ClosestPoint(const Point2& query, bool* is_vertex = nullptr,
-                      LineSegment2* segment = nullptr,
-                      float* signed_squared_distance = nullptr) const;
-
-  // Find the point the given distance from the start of the polyline.
-  // Optionally returns whether this is a vertex and the line segment which the
-  // point belongs to.
-  Point2 PointAt(float route_pos, bool* is_vertex = nullptr,
-                 LineSegment2* segment = nullptr) const;
-
-  // Access line segments.
-  const std::vector<LineSegment2>& Segments() const { return segments_; }
+  // Quadraticize this cost at the given input, and add to the running=
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
 
  private:
-  std::vector<LineSegment2> segments_;
-  std::vector<float> cumulative_lengths_;
-  float length_;
-};  // struct Polyline2
+  // Nominal speed.
+  const float nominal_speed_;
+
+  // Polyline to compute distances from.
+  const Polyline2 polyline_;
+
+  // Dimensions of input corresponding to (x, y)-position.
+  const Dimension xidx_;
+  const Dimension yidx_;
+
+  // Initial route position and time.
+  const float initial_route_pos_;
+  const Time initial_time_;
+};  //\class RouteProgressCost
 
 }  // namespace ilqgames
 
