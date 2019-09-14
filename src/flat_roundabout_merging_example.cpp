@@ -80,11 +80,10 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 500.0;
-static constexpr float kACostWeight = 500.0;
+static constexpr float kAuxCostWeight = 10.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 1.0;
+static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
@@ -125,10 +124,11 @@ static constexpr float kP3InitialSpeed = 3.0;  // m/s
 static constexpr float kP4InitialSpeed = 3.0;  // m/s
 
 // State dimensions.
-using P1 = SinglePlayerFlatUnicycle4D;
-using P2 = SinglePlayerFlatUnicycle4D;
-using P3 = SinglePlayerFlatUnicycle4D;
-using P4 = SinglePlayerFlatUnicycle4D;
+static constexpr float kInterAxleDistance = 4.0;  // m
+using P1 = SinglePlayerFlatCar6D;
+using P2 = SinglePlayerFlatCar6D;
+using P3 = SinglePlayerFlatCar6D;
+using P4 = SinglePlayerFlatCar6D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
@@ -167,23 +167,25 @@ static const Dimension kP4VyIdx =
 
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
-static const Dimension kP1AIdx = 1;
+static const Dimension kP1JerkIdx = 1;
 static const Dimension kP2OmegaIdx = 0;
-static const Dimension kP2AIdx = 1;
+static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
-static const Dimension kP3AIdx = 1;
+static const Dimension kP3JerkIdx = 1;
 static const Dimension kP4OmegaIdx = 0;
-static const Dimension kP4AIdx = 1;
+static const Dimension kP4JerkIdx = 1;
 
 }  // anonymous namespace
 
 FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
     const SolverParams& params) {
   // Create dynamics.
-  dynamics_.reset(new ConcatenatedFlatSystem(
-      {std::make_shared<P1>(), std::make_shared<P2>(), std::make_shared<P3>(),
-       std::make_shared<P4>()},
-      kTimeStep));
+  dynamics_.reset(
+      new ConcatenatedFlatSystem({std::make_shared<P1>(kInterAxleDistance),
+                                  std::make_shared<P2>(kInterAxleDistance),
+                                  std::make_shared<P3>(kInterAxleDistance),
+                                  std::make_shared<P4>(kInterAxleDistance)},
+                                 kTimeStep));
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
@@ -196,7 +198,7 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
 
   // Set up lanes for each player.
   constexpr float kAngleOffset = M_PI_2 * 0.5;
-  constexpr float kWedgeSize = M_PI_2;
+  constexpr float kWedgeSize = M_PI;
   const std::vector<float> angles = {kAngleOffset,
                                      kAngleOffset + 2.0 * M_PI / 4.0,
                                      kAngleOffset + 2.0 * 2.0 * M_PI / 4.0,
@@ -306,7 +308,8 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
       new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx}, kMinV,
                                 !kOrientedRight, "MinV"));
   const std::shared_ptr<SemiquadraticNormCost> p1_max_v_cost(
-      new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx}, kP1MaxV,
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx},
+      kP1MaxV,
                                 kOrientedRight, "MaxV"));
   const std::shared_ptr<QuadraticNormCost> p1_nominal_v_cost(
       new QuadraticNormCost(kNominalVCostWeight, {kP1VxIdx, kP1VyIdx},
@@ -319,7 +322,8 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
       new SemiquadraticNormCost(kMaxVCostWeight, {kP2VxIdx, kP2VyIdx}, kMinV,
                                 !kOrientedRight, "MinV"));
   const std::shared_ptr<SemiquadraticNormCost> p2_max_v_cost(
-      new SemiquadraticNormCost(kMaxVCostWeight, {kP2VxIdx, kP2VyIdx}, kP2MaxV,
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP2VxIdx, kP2VyIdx},
+      kP2MaxV,
                                 kOrientedRight, "MaxV"));
   const std::shared_ptr<QuadraticNormCost> p2_nominal_v_cost(
       new QuadraticNormCost(kNominalVCostWeight, {kP2VxIdx, kP2VyIdx},
@@ -332,7 +336,8 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
       new SemiquadraticNormCost(kMaxVCostWeight, {kP3VxIdx, kP3VyIdx}, kMinV,
                                 !kOrientedRight, "MinV"));
   const std::shared_ptr<SemiquadraticNormCost> p3_max_v_cost(
-      new SemiquadraticNormCost(kMaxVCostWeight, {kP3VxIdx, kP3VyIdx}, kP3MaxV,
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP3VxIdx, kP3VyIdx},
+      kP3MaxV,
                                 kOrientedRight, "MaxV"));
   const std::shared_ptr<QuadraticNormCost> p3_nominal_v_cost(
       new QuadraticNormCost(kNominalVCostWeight, {kP3VxIdx, kP3VyIdx},
@@ -345,7 +350,8 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
       new SemiquadraticNormCost(kMaxVCostWeight, {kP4VxIdx, kP4VyIdx}, kMinV,
                                 !kOrientedRight, "MinV"));
   const std::shared_ptr<SemiquadraticNormCost> p4_max_v_cost(
-      new SemiquadraticNormCost(kMaxVCostWeight, {kP4VxIdx, kP4VyIdx}, kP4MaxV,
+      new SemiquadraticNormCost(kMaxVCostWeight, {kP4VxIdx, kP4VyIdx},
+      kP4MaxV,
                                 kOrientedRight, "MaxV"));
   const std::shared_ptr<QuadraticNormCost> p4_nominal_v_cost(
       new QuadraticNormCost(kNominalVCostWeight, {kP4VxIdx, kP4VyIdx},
@@ -355,81 +361,21 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   p4_cost.AddStateCost(p4_nominal_v_cost);
 
   // Penalize control effort.
-  const auto p1_omega_cost =
-      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-          kOmegaCostWeight, dynamics_, 0, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-      kACostWeight, dynamics_, 0, kP1AIdx, 0.0, "Acceleration");
-  p1_cost.AddGeneralizedControlCost(0, p1_omega_cost);
-  p1_cost.AddGeneralizedControlCost(0, p1_a_cost);
-
-  const auto p2_omega_cost =
-      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-          kOmegaCostWeight, dynamics_, 1, kP2OmegaIdx, 0.0, "Steering");
-  const auto p2_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-      kACostWeight, dynamics_, 1, kP2AIdx, 0.0, "Acceleration");
-  p2_cost.AddGeneralizedControlCost(1, p2_omega_cost);
-  p2_cost.AddGeneralizedControlCost(1, p2_a_cost);
-
-  const auto p3_omega_cost =
-      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-          kOmegaCostWeight, dynamics_, 2, kP3OmegaIdx, 0.0, "Steering");
-  const auto p3_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-      kACostWeight, dynamics_, 2, kP3AIdx, 0.0, "Acceleration");
-  p3_cost.AddGeneralizedControlCost(2, p3_omega_cost);
-  p3_cost.AddGeneralizedControlCost(2, p3_a_cost);
-
-  const auto p4_omega_cost =
-      std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-          kOmegaCostWeight, dynamics_, 3, kP4OmegaIdx, 0.0, "Steering");
-  const auto p4_a_cost = std::make_shared<QuadraticControlCostFlatUnicycle4D>(
-      kACostWeight, dynamics_, 3, kP4AIdx, 0.0, "Acceleration");
-  p4_cost.AddGeneralizedControlCost(3, p4_omega_cost);
-  p4_cost.AddGeneralizedControlCost(3, p4_a_cost);
-
-  // const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  // const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP1AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p1_cost.AddControlCost(0, p1_omega_cost);
-  // p1_cost.AddControlCost(0, p1_a_cost);
-
-  // const auto p2_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  // const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP2AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p2_cost.AddControlCost(1, p2_omega_cost);
-  // p2_cost.AddControlCost(1, p2_a_cost);
-
-  // const auto p3_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  // const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP3AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p3_cost.AddControlCost(2, p3_omega_cost);
-  // p3_cost.AddControlCost(2, p3_a_cost);
-
-  // const auto p4_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
-  // const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP4AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p4_cost.AddControlCost(3, p4_omega_cost);
-  // p4_cost.AddControlCost(3, p4_a_cost);
+  constexpr Dimension kApplyInAllDimensions = -1;
+  const auto aux_cost = std::make_shared<QuadraticCost>(
+      kAuxCostWeight, kApplyInAllDimensions, 0.0, "Auxiliary Input");
+  p1_cost.AddControlCost(0, aux_cost);
+  p2_cost.AddControlCost(1, aux_cost);
+  p3_cost.AddControlCost(2, aux_cost);
+  p4_cost.AddControlCost(3, aux_cost);
 
   // // Goal costs.
   // constexpr float kFinalTimeWindow = 0.5;  // s
   // const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
+  //     std::make_shared<QuadraticCost>(1.0, kP1XIdx, lane1.back().x()),
   //     kTimeHorizon - kFinalTimeWindow, "GoalX");
   // const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
+  //     std::make_shared<QuadraticCost>(1.0, kP1YIdx, lane1.back().y()),
   //     kTimeHorizon - kFinalTimeWindow, "GoalY");
   // p1_cost.AddStateCost(p1_goalx_cost);
   // p1_cost.AddStateCost(p1_goaly_cost);

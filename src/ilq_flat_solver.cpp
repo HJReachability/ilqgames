@@ -130,6 +130,17 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
     // New iteration.
     num_iterations++;
 
+    // auto print_ops = [&last_operating_point,
+    //                   &current_operating_point](const std::string& msg) {
+    //   std::cout << msg << std::endl;
+    //   for (size_t kk = 0; kk < last_operating_point.xs.size(); kk++) {
+    //     std::cout << kk
+    //               << " last x = " << last_operating_point.xs[kk].transpose()
+    //               << "\n current x = "
+    //               << current_operating_point.xs[kk].transpose() << std::endl;
+    //   }
+    // };
+
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
     CurrentOperatingPoint(last_operating_point, current_strategies,
@@ -202,8 +213,15 @@ bool ILQFlatSolver::AreOperatingPointsClose(
   const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
 
   for (size_t kk = 0; kk < op1.xs.size(); kk++) {
-    const VectorXf x1 = dyn.FromLinearSystemState(op1.xs[kk]);
-    const VectorXf x2 = dyn.FromLinearSystemState(op2.xs[kk]);
+    VectorXf x1 = op1.xs[kk];
+    VectorXf x2 = op2.xs[kk];
+
+    // If not singular, use nonlinear system states.
+    if (!dyn.IsLinearSystemStateSingular(x1))
+      x1 = dyn.FromLinearSystemState(x1);
+    if (!dyn.IsLinearSystemStateSingular(x2))
+      x2 = dyn.FromLinearSystemState(x2);
+
     if (dims.empty() && (x1 - x2).cwiseAbs().maxCoeff() > threshold)
       return false;
     else if (!dims.empty()) {
