@@ -64,7 +64,8 @@
 // Optional log saving and visualization.
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
-DEFINE_bool(last_traj, false, "Should the solver only dump the last trajectory?");
+DEFINE_bool(last_traj, false,
+            "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
@@ -135,12 +136,11 @@ int main(int argc, char** argv) {
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
   // Dump the logs and/or exit.
-  if (FLAGS_save) { 
-    if (FLAGS_experiment_name == "") { 
-          CHECK(log->Save(FLAGS_last_traj)); 
-    }
-    else { 
-      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name)); 
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(log->Save(FLAGS_last_traj));
+    } else {
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
     }
   }
   if (!FLAGS_viz) return 0;
@@ -148,8 +148,8 @@ int main(int argc, char** argv) {
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
   ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
-  ilqgames::CostInspector cost_inspector(
-      sliders, logs, problem->Solver().PlayerCosts(), problem->Dynamics());
+  ilqgames::CostInspector cost_inspector(sliders, logs,
+                                         problem->Solver().PlayerCosts());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
