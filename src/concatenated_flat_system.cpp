@@ -170,6 +170,13 @@ std::vector<VectorXf> ConcatenatedFlatSystem::LinearizingControls(
   return us;
 }
 
+VectorXf ConcatenatedFlatSystem::LinearizingControl(const VectorXf& x,
+                                                    const VectorXf& v,
+                                                    PlayerIndex player) const {
+  return subsystems_[player]->LinearizingControl(
+      x.segment(subsystem_start_dims_[player], SubsystemXDim(player)), v);
+}
+
 VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const {
   VectorXf xi(xdim_);
 

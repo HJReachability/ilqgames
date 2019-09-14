@@ -110,7 +110,7 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
 
   // Accumulate control costs.
   for (const auto& pair : control_costs_) {
-    const PlayerIndex& player = pair.first;
+    const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
 
     // If we haven't seen this player yet, initialize R to zero.
@@ -132,7 +132,7 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
 
   // Accumulate generalized control costs.
   for (const auto& pair : generalized_control_costs_) {
-    const PlayerIndex& player = pair.first;
+    const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
 
     // If we haven't seen this player yet, initialize R to zero.

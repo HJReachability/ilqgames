@@ -66,6 +66,8 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
   // Utilities for feedback linearization.
   virtual MatrixXf InverseDecouplingMatrix(const VectorXf& x) const = 0;
   virtual VectorXf AffineTerm(const VectorXf& x) const = 0;
+  virtual VectorXf LinearizingControl(const VectorXf& x, const VectorXf& v,
+                                      PlayerIndex player) const = 0;
   virtual std::vector<VectorXf> LinearizingControls(
       const VectorXf& x, const std::vector<VectorXf>& vs) const = 0;
   virtual VectorXf ToLinearSystemState(const VectorXf& x) const = 0;
