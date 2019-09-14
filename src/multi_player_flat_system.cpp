@@ -59,16 +59,16 @@ VectorXf MultiPlayerFlatSystem::Integrate(
   CHECK_NOTNULL(continuous_linear_system_.get());
   auto xi_dot = [this, &vs](const VectorXf& xi) {
     VectorXf deriv = this->continuous_linear_system_->A * xi;
-    for (size_t ii=0; ii < NumPlayers(); ii++)
+    for (size_t ii = 0; ii < NumPlayers(); ii++)
       deriv += this->continuous_linear_system_->Bs[ii] * vs[ii];
 
     return deriv;
-  }; // xi_dot
+  };  // xi_dot
 
   // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods for
   // further details.
   VectorXf xi(xi0);
-  for (Time t = 0.0; t < time_interval - 0.5*dt; t += dt) {
+  for (Time t = 0.0; t < time_interval - 0.5 * dt; t += dt) {
     const VectorXf k1 = dt * xi_dot(xi);
     const VectorXf k2 = dt * xi_dot(xi + 0.5 * k1);
     const VectorXf k3 = dt * xi_dot(xi + 0.5 * k2);
