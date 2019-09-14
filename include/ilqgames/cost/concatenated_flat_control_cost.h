@@ -36,47 +36,46 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all cost functions. All costs must support evaluation and
-// quadraticization. By default, cost functions are of only state or control.
-// The GeneralizedControlCost and its descendants, however, allow for
-// state-dependent control costs as one encounters in feedback linearization.
+// Specialization of generalized control costs for flat systems.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_COST_H
-#define ILQGAMES_COST_COST_H
+#ifndef ILQGAMES_COST_CONCATENATED_FLAT_CONTROL_COST_H
+#define ILQGAMES_COST_CONCATENATED_FLAT_CONTROL_COST_H
 
+#include <ilqgames/cost/flat_control_cost.h>
+#include <ilqgames/dynamics/concatenated_flat_system.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
 
 namespace ilqgames {
 
-class Cost {
+class ConcatenatedFlatControlCost : public FlatControlCost {
  public:
-  virtual ~Cost() {}
+  virtual ~ConcatenatedFlatControlCost() {}
 
-  // Evaluate this cost at the current time and input.
-  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
+  // Evaluate this cost at the current time and inputs.
+  virtual float Evaluate(const VectorXf& xi, const VectorXf& v) const = 0;
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians (if non-null).
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad = nullptr) const = 0;
-
-  // Access the name of this cost.
-  const std::string& Name() const { return name_; }
+  // Quadraticize this cost at the given time and inputs, and add to the running
+  // sum of state gradients and state/control Hessians (if non-null).
+  virtual void Quadraticize(const VectorXf& xi, const VectorXf& v,
+                            MatrixXf* hess_v, MatrixXf* hess_xi,
+                            VectorXf* grad_xi) const = 0;
 
  protected:
-  explicit Cost(float weight, const std::string& name = "")
-      : weight_(weight), name_(name) {}
+  // Accepts weight and name like usual, but also pointer to flat dynamics.
+  // Also records which subsystem's control the cost will correspond to.
+  ConcatenatedFlatControlCost(
+      float weight, const std::shared_ptr<const ConcatenatedFlatSystem>& dynamics,
+      PlayerIndex subsystem_idx, const std::string& name = "")
+      : FlatControlCost(weight, dynamics, name),
+        subsystem_idx_(subsystem_idx) {}
 
-  // Multiplicative weight associated to this cost.
-  const float weight_;
-
-  // Name associated to every cost.
-  const std::string name_;
-};  //\class Cost
+  // Index of subsystem whose input this cost corresponds to.
+  const PlayerIndex subsystem_idx_;
+};  //\class ConcatenatedFlatControlCost
 
 }  // namespace ilqgames
 

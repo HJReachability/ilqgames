@@ -59,7 +59,14 @@ ConcatenatedFlatSystem::ConcatenatedFlatSystem(
                 return total + subsystem->XDim();
               }),
           time_step),
-      subsystems_(subsystems) {}
+      subsystems_(subsystems) {
+  // Populate subsystem start dimensions.
+  subsystem_start_dims_.push_back(0);
+  for (const auto& subsystem : subsystems_) {
+    subsystem_start_dims_.push_back(subsystem_start_dims_.back() +
+                                    subsystem->XDim());
+  }
+}
 
 VectorXf ConcatenatedFlatSystem::Evaluate(
     const VectorXf& x, const std::vector<VectorXf>& us) const {
@@ -163,6 +170,13 @@ std::vector<VectorXf> ConcatenatedFlatSystem::LinearizingControls(
   return us;
 }
 
+VectorXf ConcatenatedFlatSystem::LinearizingControl(const VectorXf& x,
+                                                    const VectorXf& v,
+                                                    PlayerIndex player) const {
+  return subsystems_[player]->LinearizingControl(
+      x.segment(subsystem_start_dims_[player], SubsystemXDim(player)), v);
+}
+
 VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const {
   VectorXf xi(xdim_);
 
@@ -177,6 +191,13 @@ VectorXf ConcatenatedFlatSystem::ToLinearSystemState(const VectorXf& x) const {
   }
 
   return xi;
+}
+
+VectorXf ConcatenatedFlatSystem::ToLinearSystemState(
+    const VectorXf& x, PlayerIndex subsystem_idx) const {
+  CHECK_LT(subsystem_idx, subsystems_.size());
+  return subsystems_[subsystem_idx]->ToLinearSystemState(x.segment(
+      subsystem_start_dims_[subsystem_idx], SubsystemXDim(subsystem_idx)));
 }
 
 VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
@@ -194,6 +215,20 @@ VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
   }
 
   return x;
+}
+
+VectorXf ConcatenatedFlatSystem::FromLinearSystemState(
+    const VectorXf& xi, PlayerIndex subsystem_idx) const {
+  CHECK_LT(subsystem_idx, subsystems_.size());
+  return subsystems_[subsystem_idx]->FromLinearSystemState(xi.segment(
+      subsystem_start_dims_[subsystem_idx], SubsystemXDim(subsystem_idx)));
+}
+
+VectorXf ConcatenatedFlatSystem::SubsystemStates(
+    const VectorXf& x, PlayerIndex subsystem_idx) const {
+  CHECK_LT(subsystem_idx, subsystems_.size());
+  return x.segment(subsystem_start_dims_[subsystem_idx],
+                   SubsystemXDim(subsystem_idx));
 }
 
 bool ConcatenatedFlatSystem::IsLinearSystemStateSingular(

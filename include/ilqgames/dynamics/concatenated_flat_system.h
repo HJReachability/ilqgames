@@ -64,32 +64,49 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
   VectorXf AffineTerm(const VectorXf& x) const;
+  VectorXf LinearizingControl(const VectorXf& x, const VectorXf& v,
+                              PlayerIndex player) const;
   std::vector<VectorXf> LinearizingControls(
       const VectorXf& x, const std::vector<VectorXf>& vs) const;
   VectorXf ToLinearSystemState(const VectorXf& x) const;
+  VectorXf ToLinearSystemState(const VectorXf& x,
+                               PlayerIndex subsystem_idx) const;
   VectorXf FromLinearSystemState(const VectorXf& xi) const;
+  VectorXf FromLinearSystemState(const VectorXf& xi,
+                                 PlayerIndex subsystem_idx) const;
+  bool IsLinearSystemStateSingular(const VectorXf& xi) const;
+
+  // Get the subset of this full state corresponding to the given subsystem.
+  VectorXf SubsystemStates(const VectorXf& x, PlayerIndex subsystem_idx) const;
+
+  // Deprecated utilities for changing cost coordinates.
   void ChangeCostCoordinates(const VectorXf& xi,
                              std::vector<QuadraticCostApproximation>* q) const;
   void ChangeControlCostCoordinates(
       const VectorXf& xi, std::vector<QuadraticCostApproximation>* q) const;
-  bool IsLinearSystemStateSingular(const VectorXf& xi) const;
 
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
   // Getters.
+  const FlatSubsystemList& Subsystems() const { return subsystems_; }
+  PlayerIndex NumPlayers() const { return subsystems_.size(); }
   Dimension SubsystemXDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->XDim();
+  }
+  Dimension SubsystemStartDim(PlayerIndex player_idx) const {
+    return subsystem_start_dims_[player_idx];
   }
   Dimension UDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->UDim();
   }
 
-  PlayerIndex NumPlayers() const { return subsystems_.size(); }
-
  private:
   // List of subsystems, each of which controls the affects of a single player.
   const FlatSubsystemList subsystems_;
+
+  // Cumulative sum of dimensions of each subsystem.
+  std::vector<Dimension> subsystem_start_dims_;
 };  // namespace ilqgames
 
 }  // namespace ilqgames

@@ -44,6 +44,7 @@
 #define ILQGAMES_EXAMPLE_ROUNDABOUT_MERGING_EXAMPLE_H
 
 #include <ilqgames/dynamics/multi_player_flat_system.h>
+#include <ilqgames/dynamics/concatenated_flat_system.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
@@ -61,13 +62,13 @@ class FlatRoundaboutMergingExample : public TopDownRenderableProblem {
   std::vector<float> Thetas(const VectorXf& xi) const;
 
   // Dynamics as shared ptr.
-  std::shared_ptr<const MultiPlayerFlatSystem> Dynamics() const {
+  std::shared_ptr<const ConcatenatedFlatSystem> Dynamics() const {
     return dynamics_;
   }
 
  private:
   // Dynamics as shared ptr.
-  std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
+  std::shared_ptr<const ConcatenatedFlatSystem> dynamics_;
 };  // class FlatRoundaboutMergingExample
 
 }  // namespace ilqgames
