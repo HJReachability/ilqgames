@@ -57,6 +57,7 @@
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
 #include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/dynamics/concatenated_flat_system.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/single_player_flat_unicycle_4d.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
@@ -212,8 +213,14 @@ void CheckQuadraticization(const Cost& cost) {
   }
 }
 
-void CheckStateQuadraticization(const GeneralizedControlCost& cost,
-                                Dimension xdim, Dimension udim) {
+void CheckQuadraticization(const GeneralizedControlCost& cost,
+                           const Cost& corresponding_cost,
+                           const ConcatenatedFlatSystem& dynamics,
+                           PlayerIndex player) {
+  // State and control dimension.
+  const Dimension xdim = dynamics.XDim();
+  const Dimension udim = dynamics.UDim(player);
+
   // Random number generator to make random timestamps.
   std::default_random_engine rng(0);
   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
@@ -236,28 +243,45 @@ void CheckStateQuadraticization(const GeneralizedControlCost& cost,
 
     const Time t = time_distribution(rng);
 
-    MatrixXf hess_v(udim, udim);
-    MatrixXf hess_analytic(MatrixXf::Zero(xdim, xdim));
-    VectorXf grad_analytic(VectorXf::Zero(xdim));
-    cost.Quadraticize(t, xi, v, &hess_v, &hess_analytic, &grad_analytic);
+    // Compute all the analytic Hessians and gradient.
+    MatrixXf hess_v_analytic(MatrixXf::Zero(udim, udim));
+    MatrixXf hess_xi_analytic(MatrixXf::Zero(xdim, xdim));
+    VectorXf grad_xi_analytic(VectorXf::Zero(xdim));
+    cost.Quadraticize(t, xi, v, &hess_v_analytic, &hess_xi_analytic,
+                      &grad_xi_analytic);
 
-    MatrixXf hess_numerical = NumericalStateHessian(cost, t, xi, v);
-    VectorXf grad_numerical = NumericalStateGradient(cost, t, xi, v);
+    // Numerical xi derivatives.
+    const MatrixXf hess_xi_numerical = NumericalStateHessian(cost, t, xi, v);
+    const VectorXf grad_xi_numerical = NumericalStateGradient(cost, t, xi, v);
+
+    // Numerical v Hessian based on corresponding cost transformed by the
+    // inverse decoupling matrix.
+    const auto& subsystem = *dynamics.Subsystems()[player];
+    const VectorXf x = dynamics.FromLinearSystemState(xi, player);
+    const VectorXf u = subsystem.LinearizingControl(x, v);
+    MatrixXf hess_u(MatrixXf::Zero(udim, udim));
+    corresponding_cost.Quadraticize(t, u, &hess_u, nullptr);
+
+    const MatrixXf M_inv = subsystem.InverseDecouplingMatrix(x);
+    const MatrixXf hess_v_numerical = M_inv.transpose() * hess_u * M_inv;
 
 #if 0
-    if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
+    if ((grad_xi_analytic - grad_xi_numerical).lpNorm<Eigen::Infinity>() >=
         kNumericalPrecision) {
-      std::cout << "input: " << input.transpose() << std::endl;
-      std::cout << "numeric hess: \n" << hess_numerical << std::endl;
-      std::cout << "analytic hess: \n" << hess_analytic << std::endl;
-      std::cout << "numeric grad: \n" << grad_numerical << std::endl;
-      std::cout << "analytic grad: \n" << grad_analytic << std::endl;
+      std::cout << "xi: " << xi.transpose() << std::endl;
+      std::cout << "v: " << v.transpose() << std::endl;
+      std::cout << "numeric hess: \n" << hess_xi_numerical << std::endl;
+      std::cout << "analytic hess: \n" << hess_xi_analytic << std::endl;
+      std::cout << "numeric grad: \n" << grad_xi_numerical << std::endl;
+      std::cout << "analytic grad: \n" << grad_xi_analytic << std::endl;
     }
 #endif
 
-    EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
+    EXPECT_LT((hess_v_analytic - hess_v_numerical).lpNorm<Eigen::Infinity>(),
               kNumericalPrecision);
-    EXPECT_LT((grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
+    EXPECT_LT((hess_xi_analytic - hess_xi_numerical).lpNorm<Eigen::Infinity>(),
+              kNumericalPrecision);
+    EXPECT_LT((grad_xi_analytic - grad_xi_numerical).lpNorm<Eigen::Infinity>(),
               kNumericalPrecision);
   }
 }
@@ -340,12 +364,26 @@ TEST(OrientationCostTest, QuadraticizesCorrectly) {
 TEST(QuadraticControlCostFlatUnicycle4DTest, QuadraticizesCorrectly) {
   const std::shared_ptr<ConcatenatedFlatSystem> dynamics(
       new ConcatenatedFlatSystem(
-          {std::make_shared<SinglePlayerFlatUnicycle4D>()}, 0.1));
-  QuadraticControlCostFlatUnicycle4D omega_cost(kCostWeight, dynamics, 0, 0,
-                                                0.0);
-  QuadraticControlCostFlatUnicycle4D a_cost(kCostWeight, dynamics, 0, 1, 0.0);
-  CheckStateQuadraticization(omega_cost, dynamics->XDim(),
-                             SinglePlayerFlatUnicycle4D::kNumUDims);
-  CheckStateQuadraticization(a_cost, dynamics->XDim(),
-                             SinglePlayerFlatUnicycle4D::kNumUDims);
+          {std::make_shared<SinglePlayerFlatUnicycle4D>(),
+           std::make_shared<SinglePlayerFlatUnicycle4D>()},
+          0.1));
+
+  // Omega cost and corresponding cost in nonlinear system.
+  constexpr PlayerIndex kPlayerIdx = 1;
+  QuadraticControlCostFlatUnicycle4D omega_cost(
+      kCostWeight, dynamics, kPlayerIdx, SinglePlayerFlatUnicycle4D::kOmegaIdx,
+      0.0);
+  QuadraticCost corresponding_omega_cost(
+      kCostWeight, SinglePlayerFlatUnicycle4D::kOmegaIdx, 0.0);
+
+  // Acceleration cost and corresponding cost in nonlinear system.
+  QuadraticControlCostFlatUnicycle4D a_cost(kCostWeight, dynamics, kPlayerIdx,
+                                            SinglePlayerFlatUnicycle4D::kAIdx,
+                                            0.0);
+  QuadraticCost corresponding_a_cost(kCostWeight,
+                                     SinglePlayerFlatUnicycle4D::kAIdx, 0.0);
+
+  CheckQuadraticization(omega_cost, corresponding_omega_cost, *dynamics,
+                        kPlayerIdx);
+  CheckQuadraticization(a_cost, corresponding_a_cost, *dynamics, kPlayerIdx);
 }

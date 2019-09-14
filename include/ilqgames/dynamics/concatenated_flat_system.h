@@ -64,6 +64,8 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
   VectorXf AffineTerm(const VectorXf& x) const;
+  VectorXf LinearizingControl(const VectorXf& x, const VectorXf& v,
+                              PlayerIndex player) const;
   std::vector<VectorXf> LinearizingControls(
       const VectorXf& x, const std::vector<VectorXf>& vs) const;
   VectorXf ToLinearSystemState(const VectorXf& x) const;

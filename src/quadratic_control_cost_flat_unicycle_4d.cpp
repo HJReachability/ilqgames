@@ -218,26 +218,28 @@ void QuadraticControlCostFlatUnicycle4D::Quadraticize(const VectorXf& xi,
   }
 
   // Populate grads and Hessians.
-  (*grad_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVxIdx) += weight_ * ddvx;
-  (*grad_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVyIdx) += weight_ * ddvy;
+  (*grad_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVxIdx) +=
+      0.5 * weight_ * ddvx;
+  (*grad_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVyIdx) +=
+      0.5 * weight_ * ddvy;
 
   (*hess_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVxIdx,
              start_dim + SinglePlayerFlatUnicycle4D::kVxIdx) +=
-      weight_ * d2dvx2;
+      0.5 * weight_ * d2dvx2;
   (*hess_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVxIdx,
              start_dim + SinglePlayerFlatUnicycle4D::kVyIdx) +=
-      weight_ * d2dvxdvy;
+      0.5 * weight_ * d2dvxdvy;
   (*hess_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVyIdx,
              start_dim + SinglePlayerFlatUnicycle4D::kVxIdx) +=
-      weight_ * d2dvxdvy;
+      0.5 * weight_ * d2dvxdvy;
   (*hess_xi)(start_dim + SinglePlayerFlatUnicycle4D::kVyIdx,
              start_dim + SinglePlayerFlatUnicycle4D::kVyIdx) +=
-      weight_ * d2dvy2;
+      0.5 * weight_ * d2dvy2;
 
-  (*hess_v)(0, 0) += weight_ * d2dv12;
-  (*hess_v)(0, 1) += weight_ * d2dv1dv2;
-  (*hess_v)(1, 0) += weight_ * d2dv1dv2;
-  (*hess_v)(1, 1) += weight_ * d2dv22;
+  (*hess_v)(0, 0) += 0.5 * weight_ * d2dv12;
+  (*hess_v)(0, 1) += 0.5 * weight_ * d2dv1dv2;
+  (*hess_v)(1, 0) += 0.5 * weight_ * d2dv1dv2;
+  (*hess_v)(1, 1) += 0.5 * weight_ * d2dv22;
 }
 
 }  // namespace ilqgames
