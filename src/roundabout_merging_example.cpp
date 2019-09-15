@@ -211,15 +211,19 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   const Polyline2 lane3_polyline(lane3);
   const Polyline2 lane4_polyline(lane4);
 
-  // Initialize operating points to follow these lanes at the nominal speed.
-  InitializeAlongRoute(lane1_polyline, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
-                       kTimeStep, operating_point_.get());
-  InitializeAlongRoute(lane2_polyline, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
-                       kTimeStep, operating_point_.get());
-  InitializeAlongRoute(lane3_polyline, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
-                       kTimeStep, operating_point_.get());
-  InitializeAlongRoute(lane4_polyline, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
-                       kTimeStep, operating_point_.get());
+  // // Initialize operating points to follow these lanes at the nominal speed.
+  // InitializeAlongRoute(lane1_polyline, 0.0, kP1InitialSpeed, {kP1XIdx,
+  // kP1YIdx},
+  //                      kTimeStep, operating_point_.get());
+  // InitializeAlongRoute(lane2_polyline, 0.0, kP2InitialSpeed, {kP2XIdx,
+  // kP2YIdx},
+  //                      kTimeStep, operating_point_.get());
+  // InitializeAlongRoute(lane3_polyline, 0.0, kP3InitialSpeed, {kP3XIdx,
+  // kP3YIdx},
+  //                      kTimeStep, operating_point_.get());
+  // InitializeAlongRoute(lane4_polyline, 0.0, kP4InitialSpeed, {kP4XIdx,
+  // kP4YIdx},
+  //                      kTimeStep, operating_point_.get());
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
@@ -471,11 +475,13 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   p4_cost.AddStateCost(p4p3_proximity_cost);
 
   // Set up solver.
-  SolverParams revised_params(params);
-  revised_params.trust_region_dimensions = {kP1XIdx, kP1YIdx, kP2XIdx, kP2YIdx,
-                                            kP3XIdx, kP3YIdx, kP4XIdx, kP4YIdx};
+  // SolverParams revised_params(params);
+  // revised_params.trust_region_dimensions = {kP1XIdx, kP1YIdx, kP2XIdx,
+  // kP2YIdx,
+  //                                           kP3XIdx, kP3YIdx, kP4XIdx,
+  //                                           kP4YIdx};
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost, p4_cost},
-                              kTimeHorizon, revised_params));
+                              kTimeHorizon, params));
 }
 
 inline std::vector<float> RoundaboutMergingExample::Xs(
