@@ -60,6 +60,7 @@
 #include <ilqgames/solver/ilq_flat_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>

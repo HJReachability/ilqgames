@@ -59,6 +59,7 @@
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -117,9 +118,9 @@ static constexpr float kP2InitialDistanceToRoundabout = 10.0;  // m
 static constexpr float kP3InitialDistanceToRoundabout = 25.0;  // m
 static constexpr float kP4InitialDistanceToRoundabout = 10.0;  // m
 
-static constexpr float kP1InitialSpeed = 2.0;  // m/s
+static constexpr float kP1InitialSpeed = 3.0;  // m/s
 static constexpr float kP2InitialSpeed = 2.0;  // m/s
-static constexpr float kP3InitialSpeed = 2.0;  // m/s
+static constexpr float kP3InitialSpeed = 3.0;  // m/s
 static constexpr float kP4InitialSpeed = 2.0;  // m/s
 
 // State dimensions.
@@ -156,7 +157,7 @@ static const Dimension kP4HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kThetaIdx;
 static const Dimension kP4VIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kVIdx;
-static const Dimension kP4AIdx = 
+static const Dimension kP4AIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kAIdx;
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
@@ -174,9 +175,9 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(kInterAxleDistance), 
+          {std::make_shared<P1>(kInterAxleDistance),
            std::make_shared<P2>(kInterAxleDistance),
-           std::make_shared<P3>(kInterAxleDistance), 
+           std::make_shared<P3>(kInterAxleDistance),
            std::make_shared<P4>(kInterAxleDistance)},
           kTimeStep));
 
@@ -209,6 +210,16 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   const Polyline2 lane2_polyline(lane2);
   const Polyline2 lane3_polyline(lane3);
   const Polyline2 lane4_polyline(lane4);
+
+  // Initialize operating points to follow these lanes at the nominal speed.
+  InitializeAlongRoute(lane1_polyline, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
+                       kTimeStep, operating_point_.get());
+  InitializeAlongRoute(lane2_polyline, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
+                       kTimeStep, operating_point_.get());
+  InitializeAlongRoute(lane3_polyline, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
+                       kTimeStep, operating_point_.get());
+  InitializeAlongRoute(lane4_polyline, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
+                       kTimeStep, operating_point_.get());
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
@@ -351,29 +362,29 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx,
-                                                         0.0, "Jerk");
+  const auto p1_j_cost =
+      std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_j_cost);
 
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  const auto p2_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx,
-                                                         0.0, "Jerk");
+  const auto p2_j_cost =
+      std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
   p2_cost.AddControlCost(1, p2_omega_cost);
   p2_cost.AddControlCost(1, p2_j_cost);
 
   const auto p3_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  const auto p3_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx,
-                                                         0.0, "Jerk");
+  const auto p3_j_cost =
+      std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0, "Jerk");
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_j_cost);
 
   const auto p4_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
-  const auto p4_j_cost = std::make_shared<QuadraticCost>(kJerkCostWeight, kP4JerkIdx,
-                                                         0.0, "Jerk");
+  const auto p4_j_cost =
+      std::make_shared<QuadraticCost>(kJerkCostWeight, kP4JerkIdx, 0.0, "Jerk");
   p4_cost.AddControlCost(3, p4_omega_cost);
   p4_cost.AddControlCost(3, p4_j_cost);
 
@@ -460,8 +471,11 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   p4_cost.AddStateCost(p4p3_proximity_cost);
 
   // Set up solver.
+  SolverParams revised_params(params);
+  revised_params.trust_region_dimensions = {kP1XIdx, kP1YIdx, kP2XIdx, kP2YIdx,
+                                            kP3XIdx, kP3YIdx, kP4XIdx, kP4YIdx};
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost, p4_cost},
-                              kTimeHorizon, params));
+                              kTimeHorizon, revised_params));
 }
 
 inline std::vector<float> RoundaboutMergingExample::Xs(
