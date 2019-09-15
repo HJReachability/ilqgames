@@ -63,6 +63,7 @@
 #include <ilqgames/solver/ilq_flat_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -76,7 +77,7 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 12.0;  // s
+static constexpr Time kTimeHorizon = 10.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -120,9 +121,9 @@ static constexpr float kP2InitialDistanceToRoundabout = 10.0;  // m
 static constexpr float kP3InitialDistanceToRoundabout = 25.0;  // m
 static constexpr float kP4InitialDistanceToRoundabout = 10.0;  // m
 
-static constexpr float kP1InitialSpeed = 2.0;  // m/s
+static constexpr float kP1InitialSpeed = 3.0;  // m/s
 static constexpr float kP2InitialSpeed = 2.0;  // m/s
-static constexpr float kP3InitialSpeed = 2.0;  // m/s
+static constexpr float kP3InitialSpeed = 3.0;  // m/s
 static constexpr float kP4InitialSpeed = 2.0;  // m/s
 
 // State dimensions.
@@ -207,6 +208,16 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   const Polyline2 lane2_polyline(lane2);
   const Polyline2 lane3_polyline(lane3);
   const Polyline2 lane4_polyline(lane4);
+
+  // Initialize operating points to follow these lanes at the nominal speed.
+  InitializeAlongRoute(lane1_polyline, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
+                       kTimeStep, operating_point_.get());
+  InitializeAlongRoute(lane2_polyline, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
+                       kTimeStep, operating_point_.get());
+  InitializeAlongRoute(lane3_polyline, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
+                       kTimeStep, operating_point_.get());
+  InitializeAlongRoute(lane4_polyline, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
+                       kTimeStep, operating_point_.get());
 
   // Set up initial state.
   VectorXf x0 = VectorXf::Zero(dynamics_->XDim());
@@ -480,8 +491,12 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   p4_cost.AddStateCost(p4p3_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new ILQFlatSolver(
-      dynamics_, {p1_cost, p2_cost, p3_cost, p4_cost}, kTimeHorizon, params));
+  SolverParams revised_params(params);
+  revised_params.trust_region_dimensions = {kP1XIdx, kP1YIdx, kP2XIdx, kP2YIdx,
+                                            kP3XIdx, kP3YIdx, kP4XIdx, kP4YIdx};
+  solver_.reset(new ILQFlatSolver(dynamics_,
+                                  {p1_cost, p2_cost, p3_cost, p4_cost},
+                                  kTimeHorizon, revised_params));
 }
 
 inline std::vector<float> FlatRoundaboutMergingExample::Xs(
