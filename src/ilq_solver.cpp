@@ -205,11 +205,11 @@ bool ILQSolver::HasConverged(
   // at least 50 iterations or the current operating_point and last operating
   // point are within 0.1 in every dimension at every time.
   constexpr size_t kMaxIterations = 100;
-  constexpr float kMaxElementwiseDifference = 1e-1;
+  constexpr float kMaxElementwiseDifference = 1e-2;
 
   // Check iterations.
   if (iteration >= kMaxIterations) return true;
-  if (iteration == 0) return false;
+  if (iteration <= 5) return false;
 
   // Check operating points.
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
