@@ -121,8 +121,6 @@ bool ILQSolver::Solve(const VectorXf& x0,
     // New iteration.
     num_iterations++;
 
-    std::cout << "iteration " << num_iterations << std::endl;
-
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
     CurrentOperatingPoint(last_operating_point, current_strategies,
@@ -134,8 +132,6 @@ bool ILQSolver::Solve(const VectorXf& x0,
       const Time t = ComputeTimeStamp(kk);
       const auto& x = current_operating_point.xs[kk];
       const auto& us = current_operating_point.us[kk];
-
-      std::cout << "x: " << x.transpose() << std::endl;
 
       // Linearize dynamics.
       linearization[kk] = dynamics_->Linearize(t, time_step_, x, us);
@@ -209,7 +205,7 @@ bool ILQSolver::HasConverged(
 
   // Check iterations.
   if (iteration >= kMaxIterations) return true;
-  if (iteration <= 5) return false;
+  if (iteration <= 1) return false;
 
   // Check operating points.
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
