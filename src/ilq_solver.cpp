@@ -113,6 +113,8 @@ bool ILQSolver::Solve(const VectorXf& x0,
     return std::chrono::duration<Time>(clock::now() - start).count();
   };  // elapsed_time
 
+  std::cout << "about to iterate" << std::endl;
+
   constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
   while (elapsed_time(solver_call_time) <
              max_runtime - kMaxIterationRuntimeGuess &&
@@ -121,10 +123,14 @@ bool ILQSolver::Solve(const VectorXf& x0,
     // New iteration.
     num_iterations++;
 
+    std::cout << "about to iterate: " << num_iterations << std::endl;
+
     // Swap operating points and compute new current operating point.
     last_operating_point.swap(current_operating_point);
     CurrentOperatingPoint(last_operating_point, current_strategies,
                           &current_operating_point);
+
+    std::cout << "got current op" << std::endl;
 
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point.
@@ -144,13 +150,19 @@ bool ILQSolver::Solve(const VectorXf& x0,
                      });
     }
 
+    std::cout << "quadraticized" << std::endl;
+
     // Solve LQ game.
     current_strategies =
         SolveLQGame(*dynamics_, linearization, quadraticization);
 
+    std::cout << "solved lq" << std::endl;
+
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))
       return false;
+
+    std::cout << "linesearched" << std::endl;
 
     // Log current iterate.
     if (log) log->AddSolverIterate(current_operating_point, current_strategies);
