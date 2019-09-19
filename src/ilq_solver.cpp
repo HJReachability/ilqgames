@@ -204,7 +204,7 @@ void ILQSolver::CurrentOperatingPoint(
       current_us[jj] = strategy(kk, delta_x, last_us[jj]);
     }
 
-    std::cout << "got current us" << std::endl
+    std::cout << "got current us" << std::endl;
 
     // Integrate dynamics for one time step.
     if (kk < num_time_steps_ - 1)
