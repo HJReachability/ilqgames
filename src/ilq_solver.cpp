@@ -181,6 +181,8 @@ void ILQSolver::CurrentOperatingPoint(
     OperatingPoint* current_operating_point) const {
   CHECK_NOTNULL(current_operating_point);
 
+  std::cout << "computing current op" << std::endl;
+
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
@@ -191,6 +193,8 @@ void ILQSolver::CurrentOperatingPoint(
     const auto& last_us = last_operating_point.us[kk];
     auto& current_us = current_operating_point->us[kk];
 
+    std::cout << "t = " << t << ", got dx and last us" << std::endl;
+
     // Record state.
     current_operating_point->xs[kk] = x;
 
@@ -200,9 +204,13 @@ void ILQSolver::CurrentOperatingPoint(
       current_us[jj] = strategy(kk, delta_x, last_us[jj]);
     }
 
+    std::cout << "got current us" << std::endl
+
     // Integrate dynamics for one time step.
     if (kk < num_time_steps_ - 1)
       x = dynamics_->Integrate(t, time_step_, x, current_us);
+
+    std::cout << "integrated" << std::endl;
   }
 }
 
