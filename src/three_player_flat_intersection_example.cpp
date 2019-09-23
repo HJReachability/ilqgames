@@ -82,6 +82,8 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
+static constexpr float kUnicycleAuxCostWeight = 500.0;
+static constexpr float kCarAuxCostWeight = 500.0;
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
@@ -338,26 +340,39 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
   // p2_cost.AddStateCost(p2_a_cost);
 
   // Penalize control effort.
-  const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_jerk_cost =
-      std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
-  p1_cost.AddControlCost(0, p1_omega_cost);
-  p1_cost.AddControlCost(0, p1_jerk_cost);
+  constexpr Dimension kApplyInAllDimensions = -1;
+  const auto unicycle_aux_cost = std::make_shared<QuadraticCost>(
+      kUnicycleAuxCostWeight, kApplyInAllDimensions, 0.0, "Auxiliary Input");
+  const auto car_aux_cost = std::make_shared<QuadraticCost>(
+      kCarAuxCostWeight, kApplyInAllDimensions, 0.0, "Auxiliary Input");
+  p1_cost.AddControlCost(0, car_aux_cost);
+  p2_cost.AddControlCost(1, car_aux_cost);
+  p3_cost.AddControlCost(2, unicycle_aux_cost);
 
-  const auto p2_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  const auto p2_jerk_cost =
-      std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
-  p2_cost.AddControlCost(1, p2_omega_cost);
-  p2_cost.AddControlCost(1, p2_jerk_cost);
+  // const auto p1_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
+  // const auto p1_jerk_cost =
+  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0,
+  //     "Jerk");
+  // p1_cost.AddControlCost(0, p1_omega_cost);
+  // p1_cost.AddControlCost(0, p1_jerk_cost);
 
-  const auto p3_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP3AIdx,
-                                                         0.0, "Acceleration");
-  p3_cost.AddControlCost(2, p3_omega_cost);
-  p3_cost.AddControlCost(2, p3_a_cost);
+  // const auto p2_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
+  // const auto p2_jerk_cost =
+  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0,
+  //     "Jerk");
+  // p2_cost.AddControlCost(1, p2_omega_cost);
+  // p2_cost.AddControlCost(1, p2_jerk_cost);
+
+  // const auto p3_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
+  // const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
+  // kP3AIdx,
+  //                                                        0.0,
+  //                                                        "Acceleration");
+  // p3_cost.AddControlCost(2, p3_omega_cost);
+  // p3_cost.AddControlCost(2, p3_a_cost);
 
   // Goal costs.
   constexpr float kFinalTimeWindow = 0.5;  // s
