@@ -93,16 +93,16 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // Integrate x0 forward from t0 by approximately planner_runtime to get
   // actual initial state. Integrate up to the next discrete timestep, then
   // integrate for an integer number of discrete timesteps until at least
-  // 'planner_runtime' has elapsed.
+  // 'planner_runtime' has elapsed (done by rounding).
   const Time relative_t0 = t0 - operating_point_->t0;
   const size_t first_integration_timestep =
       static_cast<size_t>(relative_t0 / solver_->TimeStep());
   const Time remaining_time_this_step =
       solver_->TimeStep() * (first_integration_timestep + 1) - relative_t0;
-  const size_t num_steps_to_integrate =
-      static_cast<size_t>(std::max(planner_runtime - remaining_time_this_step,
-                                   static_cast<Time>(0.0)) /
-                          solver_->TimeStep());
+  const size_t num_steps_to_integrate = static_cast<size_t>(
+      0.5 + std::max(planner_runtime - remaining_time_this_step,
+                     static_cast<Time>(0.0)) /
+                solver_->TimeStep());
   const size_t last_integration_timestep =
       first_integration_timestep + num_steps_to_integrate;
 
@@ -127,7 +127,9 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // Set initial time to first timestamp in new problem.
   const size_t first_timestep_in_new_problem =
       std::distance(operating_point_->xs.begin(), nearest_iter);
-  operating_point_->t0 = t0 + planner_runtime;
+  operating_point_->t0 =
+      t0 + remaining_time_this_step +
+      solver_->TimeStep() * num_steps_to_integrate;  // planner_runtime;
 
   // NOTE: when we call 'solve' on this new operating point it will
   // automatically end up starting at 'x0', so there is no need to enforce that
