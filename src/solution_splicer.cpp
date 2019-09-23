@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/solver/solution_splicer.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/solver_log.h>
@@ -57,8 +58,8 @@ SolutionSplicer::SolutionSplicer(const SolverLog& log)
       operating_point_(log.FinalOperatingPoint()) {}
 
 void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
-  CHECK_LT(current_time, log.InitialTime());
-  CHECK_GT(current_time, operating_point_.t0);
+  CHECK_LE(current_time, log.InitialTime());
+  CHECK_GE(current_time, operating_point_.t0);
 
   // (1) Identify current timestep and first timestep of new solution.
   const size_t current_timestep = static_cast<size_t>(
@@ -91,6 +92,86 @@ void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
   }
 
   // (3) Copy over new solution to overwrite existing log after first timestep.
+  CHECK_EQ(first_timestep_new_solution - current_timestep + log.NumTimeSteps(),
+           operating_point_.xs.size());
+  for (size_t kk = 0; kk < log.NumTimeSteps(); kk++) {
+    const size_t kk_new_solution =
+        kk + first_timestep_new_solution - current_timestep;
+    DCHECK_LT(kk_new_solution, operating_point_.xs.size());
+    DCHECK_LT(kk_new_solution, operating_point_.us.size());
+    DCHECK_LT(kk, log.FinalOperatingPoint().xs.size());
+    DCHECK_LT(kk, log.FinalOperatingPoint().us.size());
+    operating_point_.xs[kk_new_solution] = log.FinalOperatingPoint().xs[kk];
+    operating_point_.us[kk_new_solution] = log.FinalOperatingPoint().us[kk];
+
+    DCHECK_EQ(log.NumPlayers(), strategies_.size());
+    DCHECK_EQ(log.NumPlayers(), log.FinalStrategies().size());
+    for (PlayerIndex ii = 0; ii < log.NumPlayers(); ii++) {
+      DCHECK_LT(kk_new_solution, strategies_[ii].Ps.size());
+      DCHECK_LT(kk_new_solution, strategies_[ii].alphas.size());
+      DCHECK_LT(kk, log.FinalStrategies()[ii].Ps.size());
+      DCHECK_LT(kk, log.FinalStrategies()[ii].alphas.size());
+
+      strategies_[ii].Ps[kk_new_solution] = log.FinalStrategies()[ii].Ps[kk];
+      strategies_[ii].alphas[kk_new_solution] =
+          log.FinalStrategies()[ii].alphas[kk];
+    }
+  }
+}
+
+void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
+                             const MultiPlayerDynamicalSystem& dynamics) {
+  // (1) Identify current timestep and first timestep of new solution.
+  const VectorXf& new_x0 = log.FinalOperatingPoint().xs[0];
+  const auto nearest_iter_new_x0 = std::min_element(
+      operating_point_.xs.begin(), operating_point_.xs.end(),
+      [&dynamics, &new_x0](const VectorXf& x1, const VectorXf& x2) {
+        return dynamics.DistanceBetween(new_x0, x1) <
+               dynamics.DistanceBetween(new_x0, x2);
+      });
+  const auto nearest_iter_x =
+      std::min_element(operating_point_.xs.begin(), operating_point_.xs.end(),
+                       [&dynamics, &x](const VectorXf& x1, const VectorXf& x2) {
+                         return dynamics.DistanceBetween(x, x1) <
+                                dynamics.DistanceBetween(x, x2);
+                       });
+
+  const size_t current_timestep =
+      (nearest_iter_x == operating_point_.xs.begin())
+          ? 0
+          : std::distance(operating_point_.xs.begin(), nearest_iter_x) - 20;
+  const size_t first_timestep_new_solution = std::max<size_t>(
+      current_timestep,
+      std::distance(operating_point_.xs.begin(), nearest_iter_new_x0));
+
+  // Resize to be the appropriate length.
+  const size_t num_spliced_timesteps =
+      first_timestep_new_solution - current_timestep + log.NumTimeSteps();
+  operating_point_.xs.resize(num_spliced_timesteps);
+  operating_point_.us.resize(num_spliced_timesteps);
+  operating_point_.t0 =
+      log.FinalOperatingPoint().t0 -
+      (first_timestep_new_solution - current_timestep) * log.TimeStep();
+
+  for (auto& strategy : strategies_) {
+    strategy.Ps.resize(num_spliced_timesteps);
+    strategy.alphas.resize(num_spliced_timesteps);
+  }
+
+  // (2) Prune old part of existing plan.
+  for (size_t kk = current_timestep; kk < first_timestep_new_solution; kk++) {
+    const size_t kk_new_solution = kk - current_timestep;
+    operating_point_.xs[kk_new_solution] = operating_point_.xs[kk];
+    operating_point_.us[kk_new_solution] = operating_point_.us[kk];
+
+    for (auto& strategy : strategies_) {
+      strategy.Ps[kk_new_solution] = strategy.Ps[kk];
+      strategy.alphas[kk_new_solution] = strategy.alphas[kk];
+    }
+  }
+
+  // (3) Copy over new solution to overwrite existing log after first
+  // timestep.
   CHECK_EQ(first_timestep_new_solution - current_timestep + log.NumTimeSteps(),
            operating_point_.xs.size());
   for (size_t kk = 0; kk < log.NumTimeSteps(); kk++) {

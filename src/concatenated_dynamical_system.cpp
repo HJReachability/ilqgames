@@ -103,19 +103,23 @@ LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
 
 float ConcatenatedDynamicalSystem::DistanceBetween(const VectorXf& x0,
                                                    const VectorXf& x1) const {
-  Dimension dims_so_far = 0;
-  float total = 0.0;
+  // HACK: assumes only first subsystem matters.
+  return subsystems_[0]->DistanceBetween(x0.head(subsystems_[0]->XDim()),
+                                         x1.head(subsystems_[0]->XDim()));
 
-  // Accumulate total across all subsystems.
-  for (const auto& subsystem : subsystems_) {
-    const Dimension xdim = subsystem->XDim();
-    total += subsystem->DistanceBetween(x0.segment(dims_so_far, xdim),
-                                        x1.segment(dims_so_far, xdim));
+  // Dimension dims_so_far = 0;
+  // float total = 0.0;
 
-    dims_so_far += xdim;
-  }
+  // // Accumulate total across all subsystems.
+  // for (const auto& subsystem : subsystems_) {
+  //   const Dimension xdim = subsystem->XDim();
+  //   total += subsystem->DistanceBetween(x0.segment(dims_so_far, xdim),
+  //                                       x1.segment(dims_so_far, xdim));
 
-  return total;
+  //   dims_so_far += xdim;
+  // }
+
+  // return total;
 }
 
 }  // namespace ilqgames
