@@ -54,10 +54,8 @@
 
 namespace ilqgames {
 
-PlayerCostCache::PlayerCostCache(
-    const std::shared_ptr<const SolverLog>& log,
-    const std::vector<PlayerCost>& player_costs,
-    const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics)
+PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
+                                 const std::vector<PlayerCost>& player_costs)
     : log_(log) {
   CHECK_NOTNULL(log.get());
 
@@ -82,7 +80,6 @@ PlayerCostCache::PlayerCostCache(
         entry[jj].resize(log->NumTimeSteps());
 
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-          // Maybe transform to nonlinear system state first.
           const VectorXf x = log->State(jj, kk);
           entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk), x);
         }
@@ -105,25 +102,8 @@ PlayerCostCache::PlayerCostCache(
         entry[jj].resize(log->NumTimeSteps());
 
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-          // HACK! Remove this once we figure out what we're doing with
-          // generalized control costs. Should also change the interface back so
-          // we don't need to have dynamics in here.
-          if (dynamics.get()) {
-            LOG(WARNING) << "Using deprecated cost: " << cost->Name();
-            // Compute actual controls for all players.
-            std::vector<VectorXf> vs(dynamics->NumPlayers());
-            for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-              vs[ii] = log->Control(jj, kk, ii);
-
-            const VectorXf x =
-                dynamics->FromLinearSystemState(log->State(jj, kk));
-            const VectorXf u =
-                dynamics->LinearizingControls(x, vs)[other_player];
-            entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk), u);
-          } else {
-            entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk),
-                                           log->Control(jj, kk, other_player));
-          }
+          entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk),
+                                         log->Control(jj, kk, other_player));
         }
       }
     }

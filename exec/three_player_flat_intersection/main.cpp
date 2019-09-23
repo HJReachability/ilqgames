@@ -135,12 +135,12 @@ int main(int argc, char** argv) {
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
 
   // Dump the logs and/or exit.
-  if (FLAGS_save) { 
-    if (FLAGS_experiment_name == "") { 
-          CHECK(log->Save(FLAGS_last_traj)); 
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+          CHECK(log->Save(FLAGS_last_traj));
     }
-    else { 
-      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name)); 
+    else {
+      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name));
     }
   }
   if (!FLAGS_viz) return 0;
@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
   ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
   ilqgames::CostInspector cost_inspector(
-      sliders, logs, problem->Solver().PlayerCosts(), problem->Dynamics());
+      sliders, logs, problem->Solver().PlayerCosts());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

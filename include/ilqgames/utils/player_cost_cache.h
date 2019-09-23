@@ -59,10 +59,8 @@ namespace ilqgames {
 class PlayerCostCache {
  public:
   ~PlayerCostCache() {}
-  PlayerCostCache(
-      const std::shared_ptr<const SolverLog>& log,
-      const std::vector<PlayerCost>& player_costs,
-      const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics = nullptr);
+  PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
+                  const std::vector<PlayerCost>& player_costs);
 
   // Interpolate the given cost at the specified iterate and time.
   float Interpolate(size_t iterate, Time t, PlayerIndex player,
