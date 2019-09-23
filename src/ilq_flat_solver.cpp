@@ -88,13 +88,22 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   // Cast dynamics.
   const auto dyn = static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
 
+  // Flag for whether or not the initial operating point is all zeros.
+  // If it is all zeros, we will populate it with the initial state unrolled
+  // with the initial strategies in the first iteration of the solver, but
+  // otherwise we will leave it alone.
+  const bool is_initial_operating_point_zero =
+      initial_operating_point.xs[0].squaredNorm() < constants::kSmallNumber;
+
   // Last and current operating points.
-  OperatingPoint last_operating_point(num_time_steps_, dyn->NumPlayers(),
-                                      initial_operating_point.t0);
+  // OperatingPoint last_operating_point(num_time_steps_, dyn->NumPlayers(),
+  //                                     initial_operating_point.t0);
+  OperatingPoint last_operating_point(initial_operating_point);
   OperatingPoint current_operating_point(initial_operating_point);
 
   // Ensure that the current operating point starts at the initial state.
   current_operating_point.xs[0] = xi0;
+  last_operating_point.xs[0] = xi0;
 
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
@@ -118,8 +127,11 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   size_t num_iterations = 0;
 
   // Log initial iterate.
-  //  if (log) log->AddSolverIterate(initial_operating_point,
-  //  initial_strategies, elapsed_time(solver_call_time));
+  if (log) {
+    log->AddSolverIterate(current_operating_point, current_strategies,
+                          EvaluateCosts(current_operating_point),
+                          elapsed_time(solver_call_time));
+  }
 
   // Keep iterating until convergence.
   constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
@@ -142,9 +154,11 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
     // };
 
     // Swap operating points and compute new current operating point.
-    last_operating_point.swap(current_operating_point);
-    CurrentOperatingPoint(last_operating_point, current_strategies,
-                          &current_operating_point);
+    if (num_iterations > 1 || is_initial_operating_point_zero) {
+      last_operating_point.swap(current_operating_point);
+      CurrentOperatingPoint(last_operating_point, current_strategies,
+                            &current_operating_point);
+    }
 
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point.
