@@ -65,18 +65,16 @@ class CostInspector {
 
   // Takes in a log and lists of x/y/heading indices in
   // the state vector.
-  CostInspector(
-      const std::shared_ptr<const ControlSliders>& sliders,
-      const std::vector<std::shared_ptr<const SolverLog>>& logs,
-      const std::vector<PlayerCost>& player_costs,
-      const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics = nullptr)
+  CostInspector(const std::shared_ptr<const ControlSliders>& sliders,
+                const std::vector<std::shared_ptr<const SolverLog>>& logs,
+                const std::vector<PlayerCost>& player_costs)
       : sliders_(sliders),
         selected_player_(0),
         selected_cost_name_("<Please select a cost>") {
     CHECK_NOTNULL(sliders_.get());
 
     for (const auto& log : logs)
-      player_costs_.emplace_back(log, player_costs, dynamics);
+      player_costs_.emplace_back(log, player_costs);
   }
 
   // Render the appropriate costs.
