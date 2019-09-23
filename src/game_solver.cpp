@@ -114,7 +114,7 @@ bool GameSolver::HasConverged(
     const OperatingPoint& current_operating_point) const {
   // Check iterations.
   if (iteration >= params_.max_solver_iters) return true;
-  if (iteration == 0) return false;
+  if (iteration <= 1) return false;
 
   // Check operating points.
   const std::vector<Dimension> kCheckAllDimensions;
