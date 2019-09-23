@@ -37,7 +37,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Base class for all cost functions. All costs must support evaluation and
-// quadraticization.
+// quadraticization. By default, cost functions are of only state or control.
+// The GeneralizedControlCost and its descendants, however, allow for
+// state-dependent control costs as one encounters in feedback linearization.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

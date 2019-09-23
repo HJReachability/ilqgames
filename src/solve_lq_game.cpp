@@ -58,18 +58,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/solve_lq_game.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
 
+#include <glog/logging.h>
 #include <vector>
 
 namespace ilqgames {
 
 std::vector<Strategy> SolveLQGame(
-    const MultiPlayerDynamicalSystem& dynamics,
+    const MultiPlayerIntegrableSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization) {
@@ -161,9 +162,9 @@ std::vector<Strategy> SolveLQGame(
 
       // Set appropriate blocks of Y.
       Y.block(cumulative_udim_row, 0, dynamics.UDim(ii), dynamics.XDim()) =
-        BiZi * lin.A;
+          BiZi * lin.A;
       Y.col(dynamics.XDim()).segment(cumulative_udim_row, dynamics.UDim(ii)) =
-        lin.Bs[ii].transpose() * zetas[ii];
+          lin.Bs[ii].transpose() * zetas[ii];
 
       // Increment cumulative_udim_row.
       cumulative_udim_row += dynamics.UDim(ii);

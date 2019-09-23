@@ -71,14 +71,14 @@ class SinglePlayerDubinsCar : public SinglePlayerDynamicalSystem {
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Constexprs for state indices.
-  static constexpr Dimension kNumXDims = 3;
-  static constexpr Dimension kPxIdx = 0;
-  static constexpr Dimension kPyIdx = 1;
-  static constexpr Dimension kThetaIdx = 2;
+  static const Dimension kNumXDims;
+  static const Dimension kPxIdx;
+  static const Dimension kPyIdx;
+  static const Dimension kThetaIdx;
 
   // Constexprs for control indices.
-  static constexpr Dimension kNumUDims = 1;
-  static constexpr Dimension kOmegaIdx = 0;
+  static const Dimension kNumUDims;
+  static const Dimension kOmegaIdx;
 
  private:
   // Constant speed of the car.

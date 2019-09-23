@@ -107,8 +107,8 @@ void SolveLyapunovIterations(const MatrixXf& A, const MatrixXf& B1,
 class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
  public:
   ~TwoPlayerPointMass1D() {}
-  TwoPlayerPointMass1D()
-      : MultiPlayerDynamicalSystem(2), A_(2, 2), B1_(2), B2_(2) {
+  TwoPlayerPointMass1D(Time time_step)
+      : MultiPlayerDynamicalSystem(2, time_step), A_(2, 2), B1_(2), B2_(2) {
     A_ = MatrixXf::Zero(2, 2);
     A_(0, 1) = 1.0;
 
@@ -130,14 +130,13 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
   }
 
   // Discrete-time Jacobian linearization.
-  LinearDynamicsApproximation Linearize(Time t, Time time_step,
-                                        const VectorXf& x,
+  LinearDynamicsApproximation Linearize(Time t, const VectorXf& x,
                                         const std::vector<VectorXf>& us) const {
     LinearDynamicsApproximation linearization(*this);
 
-    linearization.A += A_ * time_step;
-    linearization.Bs[0] = B1_ * time_step;
-    linearization.Bs[1] = B2_ * time_step;
+    linearization.A += A_ * time_step_;
+    linearization.Bs[0] = B1_ * time_step_;
+    linearization.Bs[1] = B2_ * time_step_;
     return linearization;
   }
 
@@ -152,10 +151,11 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
 class SolveLQGameTest : public ::testing::Test {
  protected:
   void SetUp() {
+    dynamics_.reset(new TwoPlayerPointMass1D(kTimeStep));
+
     // Set linearization and quadraticizations.
-    linearization_ =
-        dynamics_.Linearize(0.0, kTimeStep, VectorXf::Zero(2),
-                            {VectorXf::Zero(1), VectorXf::Zero(1)});
+    linearization_ = dynamics_->Linearize(
+        0.0, VectorXf::Zero(2), {VectorXf::Zero(1), VectorXf::Zero(1)});
 
     const MatrixXf Q1 = MatrixXf::Identity(2, 2);
     const MatrixXf Q2 = -Q1;
@@ -186,14 +186,14 @@ class SolveLQGameTest : public ::testing::Test {
     player_costs_.push_back(player1_cost);
 
     PlayerCost player2_cost;
-    player2_cost.AddStateCost(std::make_shared<QuadraticCost>(-1.0, -1));
+    player2_cost.AddStateCost(std::make_shared<QuadraticCost>(0.1, -1));
     player2_cost.AddControlCost(0, std::make_shared<QuadraticCost>(0.0, -1));
     player2_cost.AddControlCost(1, std::make_shared<QuadraticCost>(1.0, -1));
     player_costs_.push_back(player2_cost);
 
     // Solve LQ game.
     lq_solution_ = SolveLQGame(
-        dynamics_,
+        *dynamics_,
         std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),
         std::vector<std::vector<QuadraticCostApproximation>>(
             kNumTimeSteps, quadraticizations_));
@@ -206,7 +206,7 @@ class SolveLQGameTest : public ::testing::Test {
       static_cast<size_t>(kTimeHorizon / kTimeStep);
 
   // Dynamics.
-  const TwoPlayerPointMass1D dynamics_;
+  std::unique_ptr<TwoPlayerPointMass1D> dynamics_;
 
   // Player costs.
   std::vector<PlayerCost> player_costs_;
@@ -248,19 +248,23 @@ TEST_F(SolveLQGameTest, MatchesLyapunovIterations) {
 
 TEST_F(SolveLQGameTest, LocalNashEquilibrium) {
   // Set a zero operating point.
-  OperatingPoint operating_point(kNumTimeSteps, dynamics_.NumPlayers(), 0.0);
+  OperatingPoint operating_point(kNumTimeSteps, dynamics_->NumPlayers(), 0.0);
   for (size_t kk = 0; kk < kNumTimeSteps; kk++) {
-    operating_point.xs[kk] = MatrixXf::Zero(dynamics_.XDim(), dynamics_.XDim());
-    for (PlayerIndex ii = 0; ii < dynamics_.NumPlayers(); ii++)
-      operating_point.us[kk][ii] = VectorXf::Zero(dynamics_.UDim(ii));
+    operating_point.xs[kk] =
+        MatrixXf::Zero(dynamics_->XDim(), dynamics_->XDim());
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+      operating_point.us[kk][ii] = VectorXf::Zero(dynamics_->UDim(ii));
   }
 
   // Initial state.
-  const VectorXf x0 = VectorXf::Ones(dynamics_.XDim());
+  const VectorXf x0 = VectorXf::Ones(dynamics_->XDim());
 
   constexpr float kMaxPerturbation = 0.1;
   constexpr size_t kNumPerturbationsPerPlayer = 100;
-  EXPECT_TRUE(CheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, operating_point, dynamics_, x0, kTimeStep,
+  EXPECT_TRUE(RandomCheckLocalNashEquilibrium(
+      player_costs_, lq_solution_, operating_point, *dynamics_, x0, kTimeStep,
       kMaxPerturbation, kNumPerturbationsPerPlayer));
+
+  EXPECT_TRUE(CheckSufficientLocalNashEquilibrium(player_costs_,
+                                                  operating_point, kTimeStep));
 }

@@ -70,8 +70,18 @@ class Polyline2 {
                       LineSegment2* segment = nullptr,
                       float* signed_squared_distance = nullptr) const;
 
+  // Find the point the given distance from the start of the polyline.
+  // Optionally returns whether this is a vertex and the line segment which the
+  // point belongs to.
+  Point2 PointAt(float route_pos, bool* is_vertex = nullptr,
+                 LineSegment2* segment = nullptr) const;
+
+  // Access line segments.
+  const std::vector<LineSegment2>& Segments() const { return segments_; }
+
  private:
   std::vector<LineSegment2> segments_;
+  std::vector<float> cumulative_lengths_;
   float length_;
 };  // struct Polyline2
 

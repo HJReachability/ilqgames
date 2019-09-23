@@ -36,45 +36,48 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// More stable version of the ILQSolver class, in which the method
-// 'ModifyLQStrategies' is overridden to implement a simple linesearch based on
-// bounding the change in operating points.
+// Base class for all multi-player flat systems. Supports (discrete-time)
+// linearization and integration.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_LINESEARCHING_ILQ_SOLVER_H
-#define ILQGAMES_SOLVER_LINESEARCHING_ILQ_SOLVER_H
-
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/solver/ilq_solver.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/quadratic_cost_approximation.h>
-#include <ilqgames/utils/strategy.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/types.h>
 
-#include <memory>
-#include <vector>
+#include <glog/logging.h>
 
 namespace ilqgames {
 
-class LinesearchingILQSolver : public ILQSolver {
- public:
-  virtual ~LinesearchingILQSolver() {}
-  LinesearchingILQSolver(
-      const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
-      const std::vector<PlayerCost>& player_costs, Time time_horizon,
-      Time time_step)
-      : ILQSolver(dynamics, player_costs, time_horizon, time_step) {}
+VectorXf MultiPlayerFlatSystem::Integrate(
+    Time time_interval, const VectorXf& xi0,
+    const std::vector<VectorXf>& vs) const {
+  // Number of integration steps and corresponding time step.
+  constexpr size_t kNumIntegrationSteps = 2;
+  const double dt = time_step_ / static_cast<Time>(kNumIntegrationSteps);
 
- protected:
-  // Modify LQ strategies to improve convergence properties.
-  // This function replaces an Armijo linesearch that would take place in ILQR.
-  // Returns true if successful.
-  bool ModifyLQStrategies(const OperatingPoint& current_operating_point,
-                          std::vector<Strategy>* strategies) const;
-};  // class LinesearchingILQSolver
+  CHECK_NOTNULL(continuous_linear_system_.get());
+  auto xi_dot = [this, &vs](const VectorXf& xi) {
+    VectorXf deriv = this->continuous_linear_system_->A * xi;
+    for (size_t ii = 0; ii < NumPlayers(); ii++)
+      deriv += this->continuous_linear_system_->Bs[ii] * vs[ii];
+
+    return deriv;
+  };  // xi_dot
+
+  // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods for
+  // further details.
+  VectorXf xi(xi0);
+  for (Time t = 0.0; t < time_interval - 0.5 * dt; t += dt) {
+    const VectorXf k1 = dt * xi_dot(xi);
+    const VectorXf k2 = dt * xi_dot(xi + 0.5 * k1);
+    const VectorXf k3 = dt * xi_dot(xi + 0.5 * k2);
+    const VectorXf k4 = dt * xi_dot(xi + k3);
+
+    xi += (k1 + 2.0 * (k2 + k3) + k4) / 6.0;
+  }
+
+  return xi;
+}
 
 }  // namespace ilqgames
-
-#endif

@@ -44,7 +44,7 @@
 #ifndef ILQGAMES_SOLVER_PROBLEM_H
 #define ILQGAMES_SOLVER_PROBLEM_H
 
-#include <ilqgames/solver/ilq_solver.h>
+#include <ilqgames/solver/game_solver.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -86,7 +86,7 @@ class Problem {
                          const std::vector<Strategy>& strategies);
 
   // Accessors.
-  const ILQSolver& Solver() const { return *solver_; }
+  const GameSolver& Solver() const { return *solver_; }
   const VectorXf& InitialState() const { return x0_; }
   const OperatingPoint& CurrentOperatingPoint() const {
     return *operating_point_;
@@ -103,7 +103,7 @@ class Problem {
   virtual std::shared_ptr<SolverLog> CreateNewLog() const;
 
   // Solver.
-  std::unique_ptr<ILQSolver> solver_;
+  std::unique_ptr<GameSolver> solver_;
 
   // Initial condition.
   VectorXf x0_;

@@ -47,7 +47,6 @@
 
 namespace ilqgames {
 
-// Evaluate this cost at the current input.
 float QuadraticCost::Evaluate(const VectorXf& input) const {
   CHECK_LT(dimension_, input.size());
 
@@ -62,8 +61,6 @@ float QuadraticCost::Evaluate(const VectorXf& input) const {
          (input - VectorXf::Constant(input.size(), nominal_)).squaredNorm();
 }
 
-// Quadraticize this cost at the given input, and add to the running
-// sum of gradients and Hessians (if non-null).
 void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
                                  VectorXf* grad) const {
   CHECK_LT(dimension_, input.size());

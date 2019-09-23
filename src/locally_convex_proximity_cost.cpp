@@ -84,13 +84,13 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
 
   if (is_x_active) {
     (*hess)(xidx1_, xidx1_) += weight_;
-    (*hess)(xidx1_, xidx2_) -= weight_ * sgn(dx);
-    (*hess)(xidx2_, xidx1_) -= weight_ * sgn(dx);
+    (*hess)(xidx1_, xidx2_) -= weight_;
+    (*hess)(xidx2_, xidx1_) -= weight_;
     (*hess)(xidx2_, xidx2_) += weight_;
   } else {
     (*hess)(yidx1_, yidx1_) += weight_;
-    (*hess)(yidx1_, yidx2_) -= weight_ * sgn(dy);
-    (*hess)(yidx2_, yidx1_) -= weight_ * sgn(dy);
+    (*hess)(yidx1_, yidx2_) -= weight_;
+    (*hess)(yidx2_, yidx1_) -= weight_;
     (*hess)(yidx2_, yidx2_) += weight_;
   }
 
