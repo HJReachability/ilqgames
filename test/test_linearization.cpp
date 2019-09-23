@@ -42,6 +42,7 @@
 
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
+#include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
@@ -58,6 +59,7 @@ namespace {
 // Step size for forward differences.
 static constexpr float kForwardStep = 1e-3;
 static constexpr float kNumericalPrecision = 1e-2;
+static constexpr Time kTimeStep = 0.1;
 
 // Functions to compute numerical Jacobians.
 void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
@@ -132,8 +134,6 @@ LinearDynamicsApproximation NumericalJacobian(
 
 // Test that each system's linearization matches a numerical approximation.
 void CheckLinearization(const SinglePlayerDynamicalSystem& system) {
-  constexpr Time kTimeStep = 0.1;
-
   // Random number generator to make random timestamps.
   std::random_device rd;
   std::default_random_engine rng(rd());
@@ -162,8 +162,6 @@ void CheckLinearization(const SinglePlayerDynamicalSystem& system) {
 }
 
 void CheckLinearization(const MultiPlayerDynamicalSystem& system) {
-  constexpr Time kTimeStep = 0.1;
-
   // Random number generator to make random timestamps.
   std::random_device rd;
   std::default_random_engine rng(rd());
@@ -179,8 +177,7 @@ void CheckLinearization(const MultiPlayerDynamicalSystem& system) {
     for (size_t jj = 0; jj < system.NumPlayers(); jj++)
       us[jj] = VectorXf::Random(system.UDim(jj));
 
-    const LinearDynamicsApproximation analytic =
-        system.Linearize(t, kTimeStep, x, us);
+    const LinearDynamicsApproximation analytic = system.Linearize(t, x, us);
     const LinearDynamicsApproximation numerical =
         NumericalJacobian(system, t, kTimeStep, x, us);
 
@@ -210,6 +207,12 @@ TEST(SinglePlayerCar5DTest, LinearizesCorrectly) {
   CheckLinearization(system);
 }
 
+TEST(SinglePlayerCar6DTest, LinearizesCorrectly) {
+  constexpr float kInterAxleLength = 4.0;  // m
+  const SinglePlayerCar6D system(kInterAxleLength);
+  CheckLinearization(system);
+}
+
 TEST(SinglePlayerCar7DTest, LinearizesCorrectly) {
   constexpr float kInterAxleLength = 4.0;  // m
   const SinglePlayerCar7D system(kInterAxleLength);
@@ -217,7 +220,7 @@ TEST(SinglePlayerCar7DTest, LinearizesCorrectly) {
 }
 
 TEST(TwoPlayerUnicycle4DTest, LinearizesCorrectly) {
-  const TwoPlayerUnicycle4D system;
+  const TwoPlayerUnicycle4D system(kTimeStep);
   CheckLinearization(system);
 }
 
@@ -225,6 +228,7 @@ TEST(ConcatenatedDynamicalSystemTest, LinearizesCorrectly) {
   constexpr float kInterAxleLength = 5.0;  // m
   const ConcatenatedDynamicalSystem system(
       {std::make_shared<SinglePlayerUnicycle4D>(),
-       std::make_shared<SinglePlayerCar5D>(kInterAxleLength)});
+       std::make_shared<SinglePlayerCar5D>(kInterAxleLength)},
+      kTimeStep);
   CheckLinearization(system);
 }

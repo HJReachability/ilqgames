@@ -46,12 +46,11 @@
 
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
-
-class MultiPlayerDynamicalSystem;
 
 struct OperatingPoint {
   // Time-indexed list of states.
@@ -67,9 +66,20 @@ struct OperatingPoint {
   // Construct with empty vectors of the right size, and optionally zero out if
   // dynamics is non-null.
   OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
+                 Time initial_time);
+
+  template <typename MultiPlayerSystemType>
+  OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
                  Time initial_time,
-                 const std::shared_ptr<const MultiPlayerDynamicalSystem>&
-                     dynamics = nullptr);
+                 const std::shared_ptr<const MultiPlayerSystemType>& dynamics)
+      : OperatingPoint(num_time_steps, num_players, initial_time) {
+    CHECK_NOTNULL(dynamics.get());
+    for (size_t kk = 0; kk < num_time_steps; kk++) {
+      xs[kk] = VectorXf::Zero(dynamics->XDim());
+      for (PlayerIndex ii = 0; ii < num_players; ii++)
+        us[kk][ii] = VectorXf::Zero(dynamics->UDim(ii));
+    }
+  }
 
   // Custom swap function.
   void swap(OperatingPoint& other);

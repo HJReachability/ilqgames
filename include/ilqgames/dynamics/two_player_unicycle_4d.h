@@ -58,15 +58,15 @@ namespace ilqgames {
 class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
  public:
   ~TwoPlayerUnicycle4D() {}
-  TwoPlayerUnicycle4D() : MultiPlayerDynamicalSystem(kNumXDims) {}
+  TwoPlayerUnicycle4D(Time time_step)
+      : MultiPlayerDynamicalSystem(kNumXDims, time_step) {}
 
   // Compute time derivative of state.
   VectorXf Evaluate(Time t, const VectorXf& x,
                     const std::vector<VectorXf>& us) const;
 
   // Compute a discrete-time Jacobian linearization.
-  LinearDynamicsApproximation Linearize(Time t, Time time_step,
-                                        const VectorXf& x,
+  LinearDynamicsApproximation Linearize(Time t, const VectorXf& x,
                                         const std::vector<VectorXf>& us) const;
 
   // Distance metric between two states.
@@ -80,22 +80,22 @@ class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
   PlayerIndex NumPlayers() const { return kNumPlayers; }
 
   // Constexprs for state indices.
-  static constexpr Dimension kNumXDims = 4;
-  static constexpr Dimension kPxIdx = 0;
-  static constexpr Dimension kPyIdx = 1;
-  static constexpr Dimension kThetaIdx = 2;
-  static constexpr Dimension kVIdx = 3;
+  static const Dimension kNumXDims;
+  static const Dimension kPxIdx;
+  static const Dimension kPyIdx;
+  static const Dimension kThetaIdx;
+  static const Dimension kVIdx;
 
   // Constexprs for control indices.
-  static constexpr PlayerIndex kNumPlayers = 2;
+  static const PlayerIndex kNumPlayers;
 
-  static constexpr Dimension kNumU1Dims = 2;
-  static constexpr Dimension kOmegaIdx = 0;
-  static constexpr Dimension kAIdx = 1;
+  static const Dimension kNumU1Dims;
+  static const Dimension kOmegaIdx;
+  static const Dimension kAIdx;
 
-  static constexpr Dimension kNumU2Dims = 2;
-  static constexpr Dimension kDxIdx = 0;
-  static constexpr Dimension kDyIdx = 1;
+  static const Dimension kNumU2Dims;
+  static const Dimension kDxIdx;
+  static const Dimension kDyIdx;
 };  //\class TwoPlayerUnicycle4D
 
 // ----------------------------- IMPLEMENTATION ----------------------------- //
@@ -115,12 +115,11 @@ inline VectorXf TwoPlayerUnicycle4D::Evaluate(
 }
 
 inline LinearDynamicsApproximation TwoPlayerUnicycle4D::Linearize(
-    Time t, Time time_step, const VectorXf& x,
-    const std::vector<VectorXf>& us) const {
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   LinearDynamicsApproximation linearization(*this);
 
-  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
-  const float stheta = std::sin(x(kThetaIdx)) * time_step;
+  const float ctheta = std::cos(x(kThetaIdx)) * time_step_;
+  const float stheta = std::sin(x(kThetaIdx)) * time_step_;
 
   linearization.A(kPxIdx, kThetaIdx) += -x(kVIdx) * stheta;
   linearization.A(kPxIdx, kVIdx) += ctheta;
@@ -128,11 +127,11 @@ inline LinearDynamicsApproximation TwoPlayerUnicycle4D::Linearize(
   linearization.A(kPyIdx, kThetaIdx) += x(kVIdx) * ctheta;
   linearization.A(kPyIdx, kVIdx) += stheta;
 
-  linearization.Bs[0](kThetaIdx, kOmegaIdx) = time_step;
-  linearization.Bs[0](kVIdx, kAIdx) = time_step;
+  linearization.Bs[0](kThetaIdx, kOmegaIdx) = time_step_;
+  linearization.Bs[0](kVIdx, kAIdx) = time_step_;
 
-  linearization.Bs[1](kPxIdx, kDxIdx) = time_step;
-  linearization.Bs[1](kPyIdx, kDyIdx) = time_step;
+  linearization.Bs[1](kPxIdx, kDxIdx) = time_step_;
+  linearization.Bs[1](kPyIdx, kDyIdx) = time_step_;
 
   return linearization;
 }

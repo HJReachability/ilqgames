@@ -45,6 +45,7 @@
 #define ILQGAMES_GUI_COST_INSPECTOR_H
 
 #include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/player_cost_cache.h>
@@ -72,7 +73,8 @@ class CostInspector {
         selected_cost_name_("<Please select a cost>") {
     CHECK_NOTNULL(sliders_.get());
 
-    for (const auto& log : logs) player_costs_.emplace_back(log, player_costs);
+    for (const auto& log : logs)
+      player_costs_.emplace_back(log, player_costs);
   }
 
   // Render the appropriate costs.

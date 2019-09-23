@@ -60,9 +60,13 @@ class SolverLog : private Uncopyable {
 
   // Add a new solver iterate.
   void AddSolverIterate(const OperatingPoint& operating_point,
-                        const std::vector<Strategy>& strategies) {
+                        const std::vector<Strategy>& strategies,
+                        const std::vector<float>& total_costs,
+                        Time cumulative_runtime) {
     operating_points_.push_back(operating_point);
     strategies_.push_back(strategies);
+    total_player_costs_.push_back(total_costs);
+    cumulative_runtimes_.push_back(cumulative_runtime);
   }
 
   // Accessors.
@@ -137,13 +141,23 @@ class SolverLog : private Uncopyable {
     return InitialTime() + time_step_ * static_cast<Time>(idx);
   }
 
+  // Save to disk.
+  bool Save(const bool only_last_trajectory = false,
+            const std::string& experiment_name = DefaultExperimentName()) const;
+
  private:
+  // Convert current time into a default experiment name for unique log saving.
+  static std::string DefaultExperimentName();
+
   // Time discretization.
   const Time time_step_;
 
-  // Operating points and strategies indexed by solver iterate.
+  // Operating points, strategies, total costs, and cumulative runtime indexed
+  // by solver iterate.
   std::vector<OperatingPoint> operating_points_;
   std::vector<std::vector<Strategy>> strategies_;
+  std::vector<std::vector<float>> total_player_costs_;
+  std::vector<Time> cumulative_runtimes_;
 };  // class SolverLog
 
 }  // namespace ilqgames

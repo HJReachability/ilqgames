@@ -44,6 +44,7 @@
 #define ILQGAMES_GUI_TOP_DOWN_RENDERER_H
 
 #include <ilqgames/gui/control_sliders.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
@@ -60,22 +61,18 @@ class TopDownRenderer {
 
   // Takes in a log and lists of x/y/heading indices in
   // the state vector.
-  TopDownRenderer(const std::shared_ptr<const ControlSliders>& sliders,
-                  const std::vector<std::shared_ptr<const SolverLog>>& logs,
-                  const std::vector<Dimension>& x_idxs,
-                  const std::vector<Dimension>& y_idxs,
-                  const std::vector<Dimension>& heading_idxs)
+  TopDownRenderer(
+      const std::shared_ptr<const ControlSliders>& sliders,
+      const std::vector<std::shared_ptr<const SolverLog>>& logs,
+      const std::shared_ptr<const TopDownRenderableProblem>& problem)
       : sliders_(sliders),
         logs_(logs),
-        x_idxs_(x_idxs),
-        y_idxs_(y_idxs),
-        heading_idxs_(heading_idxs),
+        problem_(problem),
         center_delta_(0.0, 0.0),
         last_mouse_position_(0.0, 0.0),
         pixel_to_meter_ratio_(5.0) {
     CHECK_NOTNULL(sliders_.get());
-    CHECK_EQ(x_idxs_.size(), y_idxs_.size());
-    CHECK_EQ(x_idxs_.size(), heading_idxs_.size());
+    CHECK_NOTNULL(problem_.get());
     for (const auto& log : logs) CHECK_NOTNULL(log.get());
   }
 
@@ -99,10 +96,9 @@ class TopDownRenderer {
   // Log to render.
   const std::vector<std::shared_ptr<const SolverLog>> logs_;
 
-  // Lists of x/y/heading indices in the state vector.
-  const std::vector<Dimension> x_idxs_;
-  const std::vector<Dimension> y_idxs_;
-  const std::vector<Dimension> heading_idxs_;
+  // Renderable problem. Used to map from states along an operating point to
+  // position and heading.
+  const std::shared_ptr<const TopDownRenderableProblem> problem_;
 
   // Difference from center of the window in world coordinates.
   ImVec2 center_delta_;

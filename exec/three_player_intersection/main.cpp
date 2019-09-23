@@ -45,6 +45,8 @@
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
@@ -56,6 +58,18 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
+
+// Optional log saving and visualization.
+DEFINE_bool(save, false, "Optionally save solver logs to disk.");
+DEFINE_bool(viz, true, "Visualize results in a GUI.");
+DEFINE_bool(last_traj, false, "Should the solver only dump the last trajectory?");
+DEFINE_string(experiment_name, "", "Name for the experiment.");
+
+// Linesearch parameters.
+DEFINE_bool(linesearch, true, "Should the solver linesearch?");
+DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
+DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
+DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -83,23 +97,55 @@ int main(int argc, char** argv) {
   const std::string log_file =
       ILQGAMES_LOG_DIR + std::string("/three_player_intersection.log");
   google::SetLogDestination(0, log_file.c_str());
-  FLAGS_logtostderr = true;
   google::InitGoogleLogging(argv[0]);
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  FLAGS_logtostderr = true;
 
   // Set up the game.
-  ilqgames::ThreePlayerIntersectionExample problem;
+  ilqgames::SolverParams params;
+  params.max_backtracking_steps = 100;
+  params.linesearch = FLAGS_linesearch;
+  params.trust_region_size = FLAGS_trust_region_size;
+  params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
+  params.convergence_tolerance = FLAGS_convergence_tolerance;
+  auto problem =
+      std::make_shared<ilqgames::ThreePlayerIntersectionExample>(params);
 
   // Solve the game.
-  std::shared_ptr<const ilqgames::SolverLog> log = problem.Solve();
-  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log}
-  ;
+  const auto start = std::chrono::system_clock::now();
+  std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
+  LOG(INFO) << "Solver completed in "
+            << std::chrono::duration<ilqgames::Time>(
+                   std::chrono::system_clock::now() - start)
+                   .count()
+            << " seconds.";
+
+  // Check if solution satisfies sufficient conditions for being a local Nash.
+  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
+      problem->Solver().PlayerCosts(), problem->CurrentOperatingPoint(),
+      problem->Solver().TimeStep());
+  if (is_local_nash)
+    LOG(INFO) << "Solution is a local Nash.";
+  else
+    LOG(INFO) << "Solution may not be a local Nash.";
+
+  // Dump the logs and/or exit.
+  if (FLAGS_save) { 
+    if (FLAGS_experiment_name == "") { 
+          CHECK(log->Save(FLAGS_last_traj)); 
+    }
+    else { 
+      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name)); 
+    }
+  }  
+  if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
-  ilqgames::TopDownRenderer top_down_renderer(
-      sliders, logs, problem.XIdxs(), problem.YIdxs(), problem.HeadingIdxs());
+  ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
   ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem.Solver().PlayerCosts());
+                                         problem->Solver().PlayerCosts());
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

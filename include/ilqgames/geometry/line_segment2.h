@@ -65,6 +65,9 @@ class LineSegment2 {
   const Point2& FirstPoint() const { return p1_; }
   const Point2& SecondPoint() const { return p2_; }
   const Point2& UnitDirection() const { return unit_direction_; }
+  float Heading() const {
+    return std::atan2(UnitDirection().y(), UnitDirection().x());
+  }
 
   // Find closest point on this line segment to a given point (and optionally
   // the signed squared distance, where right is positive, and whether or not

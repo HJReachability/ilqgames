@@ -37,9 +37,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Check whether or not a particular set of strategies is a local Nash
-// equilibrium. Since we do not have easy access to gradients and Hessians of
-// each players' total cost with respect to Ps and alphas (though we do have
-// such information at each time step), we shall resort to random sampling.
+// equilibrium.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,7 +45,8 @@
 #define ILQGAMES_UTILS_CHECK_LOCAL_NASH_EQUILIBRIUM_H
 
 #include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -59,13 +58,22 @@ namespace ilqgames {
 // Check if this set of strategies is a local Nash equilibrium by randomly
 // changing each player's strategy with a number of small Gaussian
 // perturbations.
-bool CheckLocalNashEquilibrium(const std::vector<PlayerCost>& player_costs,
-                               const std::vector<Strategy>& strategies,
-                               const OperatingPoint& operating_point,
-                               const MultiPlayerDynamicalSystem& dynamics,
-                               const VectorXf& x0, float time_step,
-                               float max_perturbation,
-                               size_t num_perturbations_per_player);
+bool RandomCheckLocalNashEquilibrium(
+    const std::vector<PlayerCost>& player_costs,
+    const std::vector<Strategy>& strategies,
+    const OperatingPoint& operating_point,
+    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
+    Time time_step, float max_perturbation,
+    size_t num_perturbations_per_player);
+
+// Check sufficient conditions for local Nash equilibrium, i.e., Q_i, R_ij all
+// positive semidefinite for each player. Optionally takes in a pointer to flat
+// dynamics; if provided, the PSD check is performed after changing cost
+// coordinates.
+bool CheckSufficientLocalNashEquilibrium(
+    const std::vector<PlayerCost>& player_costs,
+    const OperatingPoint& operating_point, Time time_step,
+    const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics = nullptr);
 
 }  // namespace ilqgames
 

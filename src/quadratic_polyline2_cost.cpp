@@ -49,7 +49,6 @@
 
 namespace ilqgames {
 
-// Evaluate this cost at the current input.
 float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
@@ -62,8 +61,6 @@ float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   return 0.5 * weight_ * std::abs(signed_squared_distance);
 }
 
-// Quadraticize this cost at the given input, and add to the running=
-// sum of gradients and Hessians (if non-null).
 void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
                                           VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());

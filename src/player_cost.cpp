@@ -42,7 +42,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/cost.h>
+#include <ilqgames/cost/generalized_control_cost.h>
 #include <ilqgames/cost/player_cost.h>
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
 
@@ -51,7 +53,6 @@
 
 namespace ilqgames {
 
-// Add new state and control costs for this player.
 void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
   state_costs_.emplace_back(cost);
 }
@@ -61,22 +62,45 @@ void PlayerCost::AddControlCost(PlayerIndex idx,
   control_costs_.emplace(idx, cost);
 }
 
-// Evaluate this cost at the current time, state, and controls.
+void PlayerCost::AddGeneralizedControlCost(
+    PlayerIndex idx, const std::shared_ptr<GeneralizedControlCost>& cost) {
+  generalized_control_costs_.emplace(idx, cost);
+}
+
 float PlayerCost::Evaluate(Time t, const VectorXf& x,
                            const std::vector<VectorXf>& us) const {
   float total_cost = 0.0;
+
+  // State costs.
   for (const auto& cost : state_costs_) total_cost += cost->Evaluate(t, x);
 
+  // Control costs.
   for (const auto& pair : control_costs_) {
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
     total_cost += cost->Evaluate(t, us[player]);
   }
 
+  // Generalized control costs.
+  for (const auto& pair : generalized_control_costs_) {
+    const PlayerIndex& player = pair.first;
+    const auto& cost = pair.second;
+    total_cost += cost->Evaluate(t, x, us[player]);
+  }
+
   return total_cost;
 }
 
-// Quadraticize this cost at the given time, state, and controls.
+float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
+  float cost = 0.0;
+  for (size_t kk = 0; kk < op.xs.size(); kk++) {
+    const Time t = op.t0 + time_step * static_cast<float>(kk);
+    cost += Evaluate(t, op.xs[kk], op.us[kk]);
+  }
+
+  return cost;
+}
+
 QuadraticCostApproximation PlayerCost::Quadraticize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   QuadraticCostApproximation q(x.size());
@@ -86,7 +110,7 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
 
   // Accumulate control costs.
   for (const auto& pair : control_costs_) {
-    const PlayerIndex& player = pair.first;
+    const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
 
     // If we haven't seen this player yet, initialize R to zero.
@@ -104,6 +128,28 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
     }
 
     cost->Quadraticize(t, us[player], &(iter->second), nullptr);
+  }
+
+  // Accumulate generalized control costs.
+  for (const auto& pair : generalized_control_costs_) {
+    const PlayerIndex player = pair.first;
+    const auto& cost = pair.second;
+
+    // If we haven't seen this player yet, initialize R to zero.
+    auto iter = q.Rs.find(player);
+    if (iter == q.Rs.end()) {
+      auto pair = q.Rs.emplace(
+          player, MatrixXf::Zero(us[player].size(), us[player].size()));
+
+      // Second element should be true because we definitely won't have any
+      // key collisions.
+      CHECK(pair.second);
+
+      // Update iter to point to where the new R was inserted.
+      iter = pair.first;
+    }
+
+    cost->Quadraticize(t, x, us[player], &(iter->second), &q.Q, &q.l);
   }
 
   return q;

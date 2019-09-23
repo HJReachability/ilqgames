@@ -61,7 +61,7 @@
 #ifndef ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
 #define ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -71,7 +71,7 @@
 namespace ilqgames {
 
 std::vector<Strategy> SolveLQGame(
-    const MultiPlayerDynamicalSystem& dynamics,
+    const MultiPlayerIntegrableSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization);
