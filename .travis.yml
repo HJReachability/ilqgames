@@ -31,7 +31,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -qq g++-5; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install --yes build-essential
-    doxygen libeigen3-dev libgflags-dev libgoogle-glog-dev cmake libboost-all-dev freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev; fi
+    doxygen libeigen3-dev libgflags-dev libgoogle-glog-dev cmake libboost-all-dev freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev; fi
 
 before_script:
   # Configure and make.
@@ -41,7 +41,7 @@ before_script:
   - cmake -DCMAKE_BUILD_TYPE=Release ..
 
 script:
-  - make
+  - make -j4
   - ./run_tests
 
 after_success:
