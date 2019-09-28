@@ -31,7 +31,7 @@ install:
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -qq g++-5; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install --yes build-essential
-    doxygen libeigen3-dev libgflags-dev libgoogle-glog-dev cmake libboost-all-dev; fi
+    doxygen libeigen3-dev libgflags-dev libgoogle-glog-dev cmake libboost-all-dev freeglut3-dev; fi
   - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install python-software-properties; fi
 
 before_script:
