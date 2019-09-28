@@ -1,4 +1,7 @@
 # ilqgames
+[![Build Status](https://travis-ci.org/HJReachability/ilqgames.svg?branch=master)](https://travis-ci.org/HJReachability/ilqgames)
+[![License](https://img.shields.io/badge/license-BSD-blue.svg)](LICENSE)
+
 Iterative Linear-Quadratic Games - a new, real-time solver for _N_-player general differential games.
 
 ## Paper
