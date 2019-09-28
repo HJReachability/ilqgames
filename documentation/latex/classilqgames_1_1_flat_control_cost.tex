@@ -1,0 +1,47 @@
+\hypertarget{classilqgames_1_1_flat_control_cost}{}\section{ilqgames\+:\+:Flat\+Control\+Cost Class Reference}
+\label{classilqgames_1_1_flat_control_cost}\index{ilqgames\+::\+Flat\+Control\+Cost@{ilqgames\+::\+Flat\+Control\+Cost}}
+Inheritance diagram for ilqgames\+:\+:Flat\+Control\+Cost\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=4.000000cm]{classilqgames_1_1_flat_control_cost}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual float {\bfseries Evaluate} (const Vector\+Xf \&xi, const Vector\+Xf \&v) const =0\hypertarget{classilqgames_1_1_flat_control_cost_a47542a27e7e6a346e79d9744f02e2991}{}\label{classilqgames_1_1_flat_control_cost_a47542a27e7e6a346e79d9744f02e2991}
+
+\item 
+float {\bfseries Evaluate} (Time t, const Vector\+Xf \&xi, const Vector\+Xf \&v) const \hypertarget{classilqgames_1_1_flat_control_cost_ae892791a5c58b169469baeadbdf66fe3}{}\label{classilqgames_1_1_flat_control_cost_ae892791a5c58b169469baeadbdf66fe3}
+
+\item 
+virtual void {\bfseries Quadraticize} (const Vector\+Xf \&xi, const Vector\+Xf \&v, Matrix\+Xf $\ast$hess\+\_\+v, Matrix\+Xf $\ast$hess\+\_\+xi, Vector\+Xf $\ast$grad\+\_\+xi) const =0\hypertarget{classilqgames_1_1_flat_control_cost_a6168e0177e7de6d737a0d8db35cfd766}{}\label{classilqgames_1_1_flat_control_cost_a6168e0177e7de6d737a0d8db35cfd766}
+
+\item 
+void {\bfseries Quadraticize} (Time t, const Vector\+Xf \&xi, const Vector\+Xf \&v, Matrix\+Xf $\ast$hess\+\_\+v, Matrix\+Xf $\ast$hess\+\_\+xi, Vector\+Xf $\ast$grad\+\_\+xi) const \hypertarget{classilqgames_1_1_flat_control_cost_a91e0b6460b82aa7b2c83fe29d1f6c7cd}{}\label{classilqgames_1_1_flat_control_cost_a91e0b6460b82aa7b2c83fe29d1f6c7cd}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Flat\+Control\+Cost} (float weight, const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_flat_system}{Multi\+Player\+Flat\+System} $>$ \&dynamics, const std\+::string \&name=\char`\"{}\char`\"{})\hypertarget{classilqgames_1_1_flat_control_cost_a17be159f97c955c3dd6e7308daa2bcc2}{}\label{classilqgames_1_1_flat_control_cost_a17be159f97c955c3dd6e7308daa2bcc2}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_flat_system}{Multi\+Player\+Flat\+System} $>$ {\bfseries dynamics\+\_\+}\hypertarget{classilqgames_1_1_flat_control_cost_ab7a34cd3a2851e1f9aeee9ed2484a4ec}{}\label{classilqgames_1_1_flat_control_cost_ab7a34cd3a2851e1f9aeee9ed2484a4ec}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 54 of file flat\+\_\+control\+\_\+cost.\+h.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/cost/flat\+\_\+control\+\_\+cost.\+h\end{DoxyCompactItemize}

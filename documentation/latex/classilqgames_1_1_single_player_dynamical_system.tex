@@ -1,0 +1,53 @@
+\hypertarget{classilqgames_1_1_single_player_dynamical_system}{}\section{ilqgames\+:\+:Single\+Player\+Dynamical\+System Class Reference}
+\label{classilqgames_1_1_single_player_dynamical_system}\index{ilqgames\+::\+Single\+Player\+Dynamical\+System@{ilqgames\+::\+Single\+Player\+Dynamical\+System}}
+Inheritance diagram for ilqgames\+:\+:Single\+Player\+Dynamical\+System\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=0.761905cm]{classilqgames_1_1_single_player_dynamical_system}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual Vector\+Xf {\bfseries Evaluate} (Time t, const Vector\+Xf \&x, const Vector\+Xf \&u) const =0\hypertarget{classilqgames_1_1_single_player_dynamical_system_a6a6fdd6eaf0fd0171d8f87a1648e3320}{}\label{classilqgames_1_1_single_player_dynamical_system_a6a6fdd6eaf0fd0171d8f87a1648e3320}
+
+\item 
+virtual void {\bfseries Linearize} (Time t, Time time\+\_\+step, const Vector\+Xf \&x, const Vector\+Xf \&u, Eigen\+::\+Ref$<$ Matrix\+Xf $>$ A, Eigen\+::\+Ref$<$ Matrix\+Xf $>$ B) const =0\hypertarget{classilqgames_1_1_single_player_dynamical_system_a910d13c85415769ba434e6b423390fc9}{}\label{classilqgames_1_1_single_player_dynamical_system_a910d13c85415769ba434e6b423390fc9}
+
+\item 
+virtual float {\bfseries Distance\+Between} (const Vector\+Xf \&x0, const Vector\+Xf \&x1) const \hypertarget{classilqgames_1_1_single_player_dynamical_system_a2487c7603c1dc998799c0227d00904f3}{}\label{classilqgames_1_1_single_player_dynamical_system_a2487c7603c1dc998799c0227d00904f3}
+
+\item 
+Dimension {\bfseries X\+Dim} () const \hypertarget{classilqgames_1_1_single_player_dynamical_system_a54b50acd4d8eb613c5f1042e38a5f6fd}{}\label{classilqgames_1_1_single_player_dynamical_system_a54b50acd4d8eb613c5f1042e38a5f6fd}
+
+\item 
+Dimension {\bfseries U\+Dim} () const \hypertarget{classilqgames_1_1_single_player_dynamical_system_a24d4db1d3ad5450108eb22c412e606c1}{}\label{classilqgames_1_1_single_player_dynamical_system_a24d4db1d3ad5450108eb22c412e606c1}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Single\+Player\+Dynamical\+System} (Dimension xdim, Dimension udim)\hypertarget{classilqgames_1_1_single_player_dynamical_system_aa83761473fdd007d641ff7a29e7c4fe1}{}\label{classilqgames_1_1_single_player_dynamical_system_aa83761473fdd007d641ff7a29e7c4fe1}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const Dimension {\bfseries xdim\+\_\+}\hypertarget{classilqgames_1_1_single_player_dynamical_system_a556a93c620d076cf36acd55aff69a02f}{}\label{classilqgames_1_1_single_player_dynamical_system_a556a93c620d076cf36acd55aff69a02f}
+
+\item 
+const Dimension {\bfseries udim\+\_\+}\hypertarget{classilqgames_1_1_single_player_dynamical_system_ad7058a359156f603a03323a3abf3de39}{}\label{classilqgames_1_1_single_player_dynamical_system_ad7058a359156f603a03323a3abf3de39}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 51 of file single\+\_\+player\+\_\+dynamical\+\_\+system.\+h.
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/dynamics/single\+\_\+player\+\_\+dynamical\+\_\+system.\+h\end{DoxyCompactItemize}

@@ -1,0 +1,88 @@
+\hypertarget{classilqgames_1_1_concatenated_flat_system}{}\section{ilqgames\+:\+:Concatenated\+Flat\+System Class Reference}
+\label{classilqgames_1_1_concatenated_flat_system}\index{ilqgames\+::\+Concatenated\+Flat\+System@{ilqgames\+::\+Concatenated\+Flat\+System}}
+Inheritance diagram for ilqgames\+:\+:Concatenated\+Flat\+System\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{classilqgames_1_1_concatenated_flat_system}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Concatenated\+Flat\+System} (const Flat\+Subsystem\+List \&subsystems, Time time\+\_\+step)\hypertarget{classilqgames_1_1_concatenated_flat_system_a705aa5fb8097f249181b645db9d59719}{}\label{classilqgames_1_1_concatenated_flat_system_a705aa5fb8097f249181b645db9d59719}
+
+\item 
+Vector\+Xf {\bfseries Evaluate} (const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_concatenated_flat_system_aa66c46c672ba365b02abb639feff4320}{}\label{classilqgames_1_1_concatenated_flat_system_aa66c46c672ba365b02abb639feff4320}
+
+\item 
+void {\bfseries Compute\+Linearized\+System} () const \hypertarget{classilqgames_1_1_concatenated_flat_system_a61ec103cf78e138c7c91b98af0d922ee}{}\label{classilqgames_1_1_concatenated_flat_system_a61ec103cf78e138c7c91b98af0d922ee}
+
+\item 
+Matrix\+Xf {\bfseries Inverse\+Decoupling\+Matrix} (const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a1ddfbabea2c6a2f58d013ee4d919cb31}{}\label{classilqgames_1_1_concatenated_flat_system_a1ddfbabea2c6a2f58d013ee4d919cb31}
+
+\item 
+Vector\+Xf {\bfseries Affine\+Term} (const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a4cd24cf9e78380c9752bfd398dd524c3}{}\label{classilqgames_1_1_concatenated_flat_system_a4cd24cf9e78380c9752bfd398dd524c3}
+
+\item 
+Vector\+Xf {\bfseries Linearizing\+Control} (const Vector\+Xf \&x, const Vector\+Xf \&v, Player\+Index player) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a396cef9dc50fb39896f917b33681310a}{}\label{classilqgames_1_1_concatenated_flat_system_a396cef9dc50fb39896f917b33681310a}
+
+\item 
+std\+::vector$<$ Vector\+Xf $>$ {\bfseries Linearizing\+Controls} (const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&vs) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a1bd90fe0f1198f7934d478f0c17db1d4}{}\label{classilqgames_1_1_concatenated_flat_system_a1bd90fe0f1198f7934d478f0c17db1d4}
+
+\item 
+Vector\+Xf {\bfseries To\+Linear\+System\+State} (const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a032bc555367ecd4122ec5968962cfff5}{}\label{classilqgames_1_1_concatenated_flat_system_a032bc555367ecd4122ec5968962cfff5}
+
+\item 
+Vector\+Xf {\bfseries To\+Linear\+System\+State} (const Vector\+Xf \&x, Player\+Index subsystem\+\_\+idx) const \hypertarget{classilqgames_1_1_concatenated_flat_system_ada597e4306beabae2d83f68ded70823f}{}\label{classilqgames_1_1_concatenated_flat_system_ada597e4306beabae2d83f68ded70823f}
+
+\item 
+Vector\+Xf {\bfseries From\+Linear\+System\+State} (const Vector\+Xf \&xi) const \hypertarget{classilqgames_1_1_concatenated_flat_system_aab7969ca5f64a1b670e075aabc32e621}{}\label{classilqgames_1_1_concatenated_flat_system_aab7969ca5f64a1b670e075aabc32e621}
+
+\item 
+Vector\+Xf {\bfseries From\+Linear\+System\+State} (const Vector\+Xf \&xi, Player\+Index subsystem\+\_\+idx) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a330952bb97f5cef2130f2166ad6daab6}{}\label{classilqgames_1_1_concatenated_flat_system_a330952bb97f5cef2130f2166ad6daab6}
+
+\item 
+bool {\bfseries Is\+Linear\+System\+State\+Singular} (const Vector\+Xf \&xi) const \hypertarget{classilqgames_1_1_concatenated_flat_system_abc379d1ab97515b32e6b5e2e6ec5cf69}{}\label{classilqgames_1_1_concatenated_flat_system_abc379d1ab97515b32e6b5e2e6ec5cf69}
+
+\item 
+Vector\+Xf {\bfseries Subsystem\+States} (const Vector\+Xf \&x, Player\+Index subsystem\+\_\+idx) const \hypertarget{classilqgames_1_1_concatenated_flat_system_af1ee81770be11dd9f301c0b2b7f608c0}{}\label{classilqgames_1_1_concatenated_flat_system_af1ee81770be11dd9f301c0b2b7f608c0}
+
+\item 
+void {\bfseries Change\+Cost\+Coordinates} (const Vector\+Xf \&xi, std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $\ast$q) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a79b8c2249adef578e42cfd92224a45ee}{}\label{classilqgames_1_1_concatenated_flat_system_a79b8c2249adef578e42cfd92224a45ee}
+
+\item 
+void {\bfseries Change\+Control\+Cost\+Coordinates} (const Vector\+Xf \&xi, std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $\ast$q) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a41de9dc81c1e121c0967f6c6f9a1e966}{}\label{classilqgames_1_1_concatenated_flat_system_a41de9dc81c1e121c0967f6c6f9a1e966}
+
+\item 
+float {\bfseries Distance\+Between} (const Vector\+Xf \&x0, const Vector\+Xf \&x1) const \hypertarget{classilqgames_1_1_concatenated_flat_system_aa8d39832e2b73f2666415639e02ccc4e}{}\label{classilqgames_1_1_concatenated_flat_system_aa8d39832e2b73f2666415639e02ccc4e}
+
+\item 
+const Flat\+Subsystem\+List \& {\bfseries Subsystems} () const \hypertarget{classilqgames_1_1_concatenated_flat_system_a85bf62fb46eb94efe02131b6f73f0157}{}\label{classilqgames_1_1_concatenated_flat_system_a85bf62fb46eb94efe02131b6f73f0157}
+
+\item 
+Player\+Index {\bfseries Num\+Players} () const \hypertarget{classilqgames_1_1_concatenated_flat_system_a502e29574127d8dc373beeab9306edde}{}\label{classilqgames_1_1_concatenated_flat_system_a502e29574127d8dc373beeab9306edde}
+
+\item 
+Dimension {\bfseries Subsystem\+X\+Dim} (Player\+Index player\+\_\+idx) const \hypertarget{classilqgames_1_1_concatenated_flat_system_ab721151b47937d8a8f4523b2a1ef12f1}{}\label{classilqgames_1_1_concatenated_flat_system_ab721151b47937d8a8f4523b2a1ef12f1}
+
+\item 
+Dimension {\bfseries Subsystem\+Start\+Dim} (Player\+Index player\+\_\+idx) const \hypertarget{classilqgames_1_1_concatenated_flat_system_af2aa76a51e22b4fa744b1f8e425216ff}{}\label{classilqgames_1_1_concatenated_flat_system_af2aa76a51e22b4fa744b1f8e425216ff}
+
+\item 
+Dimension {\bfseries U\+Dim} (Player\+Index player\+\_\+idx) const \hypertarget{classilqgames_1_1_concatenated_flat_system_a2cb3c62d20eeac814f1b72e4d8355b80}{}\label{classilqgames_1_1_concatenated_flat_system_a2cb3c62d20eeac814f1b72e4d8355b80}
+
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 53 of file concatenated\+\_\+flat\+\_\+system.\+h.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/dynamics/concatenated\+\_\+flat\+\_\+system.\+h\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/src/concatenated\+\_\+flat\+\_\+system.\+cpp\end{DoxyCompactItemize}

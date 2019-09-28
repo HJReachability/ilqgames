@@ -1,0 +1,75 @@
+\hypertarget{classilqgames_1_1_multi_player_integrable_system}{}\section{ilqgames\+:\+:Multi\+Player\+Integrable\+System Class Reference}
+\label{classilqgames_1_1_multi_player_integrable_system}\index{ilqgames\+::\+Multi\+Player\+Integrable\+System@{ilqgames\+::\+Multi\+Player\+Integrable\+System}}
+Inheritance diagram for ilqgames\+:\+:Multi\+Player\+Integrable\+System\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.231076cm]{classilqgames_1_1_multi_player_integrable_system}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+virtual Vector\+Xf {\bfseries Integrate} (Time t0, Time time\+\_\+interval, const Vector\+Xf \&x0, const std\+::vector$<$ Vector\+Xf $>$ \&us) const =0\hypertarget{classilqgames_1_1_multi_player_integrable_system_a591b1d66f51b95cf6e5bd1bd3b1c6f4d}{}\label{classilqgames_1_1_multi_player_integrable_system_a591b1d66f51b95cf6e5bd1bd3b1c6f4d}
+
+\item 
+Vector\+Xf {\bfseries Integrate} (Time t0, Time t, const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_a92e9cc0b05d1402a5ccc2a45f2c16f63}{}\label{classilqgames_1_1_multi_player_integrable_system_a92e9cc0b05d1402a5ccc2a45f2c16f63}
+
+\item 
+Vector\+Xf {\bfseries Integrate} (size\+\_\+t initial\+\_\+timestep, size\+\_\+t final\+\_\+timestep, const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_a38241e3d9edb8ec9ff3c7755b755d689}{}\label{classilqgames_1_1_multi_player_integrable_system_a38241e3d9edb8ec9ff3c7755b755d689}
+
+\item 
+Vector\+Xf {\bfseries Integrate\+To\+Next\+Time\+Step} (Time t0, const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_abba5990a5ccb56588e252a05f0b84b0f}{}\label{classilqgames_1_1_multi_player_integrable_system_abba5990a5ccb56588e252a05f0b84b0f}
+
+\item 
+Vector\+Xf {\bfseries Integrate\+From\+Prior\+Time\+Step} (Time t, const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_ada6af6c39bac2fda2043302b0e6c965c}{}\label{classilqgames_1_1_multi_player_integrable_system_ada6af6c39bac2fda2043302b0e6c965c}
+
+\item 
+virtual Vector\+Xf {\bfseries Stitch} (const Vector\+Xf \&x\+\_\+ego, const Vector\+Xf \&x\+\_\+others) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_a027ab5dea23c68ea74040a50a7b16c31}{}\label{classilqgames_1_1_multi_player_integrable_system_a027ab5dea23c68ea74040a50a7b16c31}
+
+\item 
+Time {\bfseries Time\+Step} () const \hypertarget{classilqgames_1_1_multi_player_integrable_system_a1dfd36e77c611fb9d72ba7d2f66dbc08}{}\label{classilqgames_1_1_multi_player_integrable_system_a1dfd36e77c611fb9d72ba7d2f66dbc08}
+
+\item 
+Dimension {\bfseries X\+Dim} () const \hypertarget{classilqgames_1_1_multi_player_integrable_system_a1f3d72304e04f6906e6e1066717411a7}{}\label{classilqgames_1_1_multi_player_integrable_system_a1f3d72304e04f6906e6e1066717411a7}
+
+\item 
+Dimension {\bfseries Total\+U\+Dim} () const \hypertarget{classilqgames_1_1_multi_player_integrable_system_ac6fc71106bffdff776a55792af4560d1}{}\label{classilqgames_1_1_multi_player_integrable_system_ac6fc71106bffdff776a55792af4560d1}
+
+\item 
+virtual Dimension {\bfseries U\+Dim} (Player\+Index player\+\_\+idx) const =0\hypertarget{classilqgames_1_1_multi_player_integrable_system_a89563d59d8cda88e0825992b86c9a146}{}\label{classilqgames_1_1_multi_player_integrable_system_a89563d59d8cda88e0825992b86c9a146}
+
+\item 
+virtual Player\+Index {\bfseries Num\+Players} () const =0\hypertarget{classilqgames_1_1_multi_player_integrable_system_a894daac1bf9f941718529e5a31b81a88}{}\label{classilqgames_1_1_multi_player_integrable_system_a894daac1bf9f941718529e5a31b81a88}
+
+\item 
+virtual float {\bfseries Distance\+Between} (const Vector\+Xf \&x0, const Vector\+Xf \&x1) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_af25dee45970bc4e53a3844084bc3fad4}{}\label{classilqgames_1_1_multi_player_integrable_system_af25dee45970bc4e53a3844084bc3fad4}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Multi\+Player\+Integrable\+System} (Dimension xdim, Time time\+\_\+step)\hypertarget{classilqgames_1_1_multi_player_integrable_system_a7b66a8aa057ed007006d884b5fe333af}{}\label{classilqgames_1_1_multi_player_integrable_system_a7b66a8aa057ed007006d884b5fe333af}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const Dimension {\bfseries xdim\+\_\+}\hypertarget{classilqgames_1_1_multi_player_integrable_system_ad6f5958f0f51492aa1d368765f417a19}{}\label{classilqgames_1_1_multi_player_integrable_system_ad6f5958f0f51492aa1d368765f417a19}
+
+\item 
+const Time {\bfseries time\+\_\+step\+\_\+}\hypertarget{classilqgames_1_1_multi_player_integrable_system_adbd2c27a82e441fab50201f583a869f2}{}\label{classilqgames_1_1_multi_player_integrable_system_adbd2c27a82e441fab50201f583a869f2}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 55 of file multi\+\_\+player\+\_\+integrable\+\_\+system.\+h.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/dynamics/multi\+\_\+player\+\_\+integrable\+\_\+system.\+h\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/src/multi\+\_\+player\+\_\+integrable\+\_\+system.\+cpp\end{DoxyCompactItemize}
