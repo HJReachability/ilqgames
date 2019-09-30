@@ -1,0 +1,100 @@
+\hypertarget{classilqgames_1_1_single_player_flat_car6_d}{}\section{ilqgames\+:\+:Single\+Player\+Flat\+Car6D Class Reference}
+\label{classilqgames_1_1_single_player_flat_car6_d}\index{ilqgames\+::\+Single\+Player\+Flat\+Car6D@{ilqgames\+::\+Single\+Player\+Flat\+Car6D}}
+Inheritance diagram for ilqgames\+:\+:Single\+Player\+Flat\+Car6D\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classilqgames_1_1_single_player_flat_car6_d}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Single\+Player\+Flat\+Car6D} (float inter\+\_\+axle\+\_\+distance)\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a9fb4fd8e7be90858f22bc536a7bd3222}{}\label{classilqgames_1_1_single_player_flat_car6_d_a9fb4fd8e7be90858f22bc536a7bd3222}
+
+\item 
+Vector\+Xf {\bfseries Evaluate} (const Vector\+Xf \&x, const Vector\+Xf \&u) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_ab1e6af4ef47c00b30ec12420e9691b52}{}\label{classilqgames_1_1_single_player_flat_car6_d_ab1e6af4ef47c00b30ec12420e9691b52}
+
+\item 
+void {\bfseries Linearized\+System} (Time time\+\_\+step, Eigen\+::\+Ref$<$ Matrix\+Xf $>$ A, Eigen\+::\+Ref$<$ Matrix\+Xf $>$ B) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_a2575a1cd3ded4ccd4aea97062a31ba21}{}\label{classilqgames_1_1_single_player_flat_car6_d_a2575a1cd3ded4ccd4aea97062a31ba21}
+
+\item 
+Matrix\+Xf {\bfseries Inverse\+Decoupling\+Matrix} (const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_a236f5a1d6fd3d2d1cb11f4b468efc981}{}\label{classilqgames_1_1_single_player_flat_car6_d_a236f5a1d6fd3d2d1cb11f4b468efc981}
+
+\item 
+Vector\+Xf {\bfseries Affine\+Term} (const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_a662f412d3214b61a99583f2a21647423}{}\label{classilqgames_1_1_single_player_flat_car6_d_a662f412d3214b61a99583f2a21647423}
+
+\item 
+Vector\+Xf {\bfseries To\+Linear\+System\+State} (const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_a514b9407d2e5d7697d366716d11b7d46}{}\label{classilqgames_1_1_single_player_flat_car6_d_a514b9407d2e5d7697d366716d11b7d46}
+
+\item 
+Vector\+Xf {\bfseries From\+Linear\+System\+State} (const Vector\+Xf \&xi) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_a3526acc25cf14c614fdf5b3d8590f269}{}\label{classilqgames_1_1_single_player_flat_car6_d_a3526acc25cf14c614fdf5b3d8590f269}
+
+\item 
+void {\bfseries Partial} (const Vector\+Xf \&xi, std\+::vector$<$ Vector\+Xf $>$ $\ast$grads, std\+::vector$<$ Matrix\+Xf $>$ $\ast$hesses) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_a0b6f26a37091274148c0ff247d13a84b}{}\label{classilqgames_1_1_single_player_flat_car6_d_a0b6f26a37091274148c0ff247d13a84b}
+
+\item 
+bool {\bfseries Is\+Linear\+System\+State\+Singular} (const Vector\+Xf \&xi) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_a7e885c06c72f40ca7a2174cc61850fc3}{}\label{classilqgames_1_1_single_player_flat_car6_d_a7e885c06c72f40ca7a2174cc61850fc3}
+
+\item 
+float {\bfseries Distance\+Between} (const Vector\+Xf \&x0, const Vector\+Xf \&x1) const \hypertarget{classilqgames_1_1_single_player_flat_car6_d_afe249fbf6ebdb0449e4d11fd521c10e6}{}\label{classilqgames_1_1_single_player_flat_car6_d_afe249fbf6ebdb0449e4d11fd521c10e6}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const Dimension {\bfseries k\+Num\+X\+Dims} = 6\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a8f02f15691cbf97bd4b4844d46b2bdf1}{}\label{classilqgames_1_1_single_player_flat_car6_d_a8f02f15691cbf97bd4b4844d46b2bdf1}
+
+\item 
+static const Dimension {\bfseries k\+Px\+Idx} = 0\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a553da23880cb7737b5baf536fa137194}{}\label{classilqgames_1_1_single_player_flat_car6_d_a553da23880cb7737b5baf536fa137194}
+
+\item 
+static const Dimension {\bfseries k\+Py\+Idx} = 1\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a4676c4f73974f6d74012924856d5de18}{}\label{classilqgames_1_1_single_player_flat_car6_d_a4676c4f73974f6d74012924856d5de18}
+
+\item 
+static const Dimension {\bfseries k\+Theta\+Idx} = 2\hypertarget{classilqgames_1_1_single_player_flat_car6_d_aa052602925ac53632106e479566ecb71}{}\label{classilqgames_1_1_single_player_flat_car6_d_aa052602925ac53632106e479566ecb71}
+
+\item 
+static const Dimension {\bfseries k\+Phi\+Idx} = 3\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a48dcdb2ec02da3a047b12c5f92d6e05b}{}\label{classilqgames_1_1_single_player_flat_car6_d_a48dcdb2ec02da3a047b12c5f92d6e05b}
+
+\item 
+static const Dimension {\bfseries k\+V\+Idx} = 4\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a2c87c3ebe3b7b1fa5f251ff32426e100}{}\label{classilqgames_1_1_single_player_flat_car6_d_a2c87c3ebe3b7b1fa5f251ff32426e100}
+
+\item 
+static const Dimension {\bfseries k\+A\+Idx} = 5\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a084b5c8aef49d893ab959a4044fe8c4a}{}\label{classilqgames_1_1_single_player_flat_car6_d_a084b5c8aef49d893ab959a4044fe8c4a}
+
+\item 
+static const Dimension {\bfseries k\+Vx\+Idx} = 2\hypertarget{classilqgames_1_1_single_player_flat_car6_d_aa4cad5ddae903c9c507211215e77e8e9}{}\label{classilqgames_1_1_single_player_flat_car6_d_aa4cad5ddae903c9c507211215e77e8e9}
+
+\item 
+static const Dimension {\bfseries k\+Vy\+Idx} = 3\hypertarget{classilqgames_1_1_single_player_flat_car6_d_aa20d5310f3056be34cedbb3372fd36a4}{}\label{classilqgames_1_1_single_player_flat_car6_d_aa20d5310f3056be34cedbb3372fd36a4}
+
+\item 
+static const Dimension {\bfseries k\+Ax\+Idx} = 4\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a92b405276235bd2f1206a4740660c394}{}\label{classilqgames_1_1_single_player_flat_car6_d_a92b405276235bd2f1206a4740660c394}
+
+\item 
+static const Dimension {\bfseries k\+Ay\+Idx} = 5\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a641b93b0a83a4794f8b44f7f387258c1}{}\label{classilqgames_1_1_single_player_flat_car6_d_a641b93b0a83a4794f8b44f7f387258c1}
+
+\item 
+static const Dimension {\bfseries k\+Num\+U\+Dims} = 2\hypertarget{classilqgames_1_1_single_player_flat_car6_d_ae8329151026fbee7ed9c59e4a4fd4507}{}\label{classilqgames_1_1_single_player_flat_car6_d_ae8329151026fbee7ed9c59e4a4fd4507}
+
+\item 
+static const Dimension {\bfseries k\+Omega\+Idx} = 0\hypertarget{classilqgames_1_1_single_player_flat_car6_d_a9775a4b9e7ee526146b5cfb6631268d8}{}\label{classilqgames_1_1_single_player_flat_car6_d_a9775a4b9e7ee526146b5cfb6631268d8}
+
+\item 
+static const Dimension {\bfseries k\+Jerk\+Idx} = 1\hypertarget{classilqgames_1_1_single_player_flat_car6_d_acd36e1fdc5fa7758ef19493cb6766b9c}{}\label{classilqgames_1_1_single_player_flat_car6_d_acd36e1fdc5fa7758ef19493cb6766b9c}
+
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 63 of file single\+\_\+player\+\_\+flat\+\_\+car\+\_\+6d.\+h.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/dynamics/single\+\_\+player\+\_\+flat\+\_\+car\+\_\+6d.\+h\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/src/single\+\_\+player\+\_\+flat\+\_\+car\+\_\+6d.\+cpp\end{DoxyCompactItemize}
