@@ -67,7 +67,7 @@ class QuadraticPolyline2Cost : public TimeInvariantCost {
   // Evaluate this cost at the current input.
   float Evaluate(const VectorXf& input) const;
 
-  // Quadraticize this cost at the given input, and add to the running=
+  // Quadraticize this cost at the given input, and add to the running
   // sum of gradients and Hessians (if non-null).
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad = nullptr) const;
