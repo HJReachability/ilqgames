@@ -17,8 +17,18 @@ If you find this repository useful, please do cite the paper:
     primaryClass={eess.SY}
 }
 ```
-
-Currently, the paper is under review at IEEE Robotics and Automation Letters. An updated link and reference will be posted upon publication.
+Currently, the paper is under review at IEEE Robotics and Automation Letters. If you are interested in the feedback linearized version of this algorithm, please also refer to that [paper](https://arxiv.org/abs/1910.00681), which is under review at the International Conference on Robotics and Automation:
+```
+@misc{fridovichkeil2019iterative,
+    title={An Iterative Quadratic Method for General-Sum Differential Games with Feedback Linearizable Dynamics},
+    author={David Fridovich-Keil and Vicenc Rubies-Royo and Claire J. Tomlin},
+    year={2019},
+    eprint={1910.00681},
+    archivePrefix={arXiv},
+    primaryClass={eess.SY}
+}
+```
+Updated links and references will be posted upon publication.
 
 ## Primary contributor
 The primary contributor is [David Fridovich-Keil](https://people.eecs.berkeley.edu/~dfk/), a fifth-year PhD student advised by Claire Tomlin in the EECS department at UC Berkeley. The best way to contact David is by email, _dfk at eecs dot berkeley dot edu_, or if you have specific questions about this repository, please post an [issue](https://github.com/HJReachability/ilqgames/issues).
