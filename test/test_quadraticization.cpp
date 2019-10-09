@@ -51,6 +51,7 @@
 #include <ilqgames/cost/quadratic_control_cost_flat_unicycle_4d.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/route_progress_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
@@ -394,4 +395,9 @@ TEST(QuadraticControlCostFlatUnicycle4DTest, QuadraticizesCorrectly) {
   CheckQuadraticization(omega_cost, corresponding_omega_cost, *dynamics,
                         kPlayerIdx);
   CheckQuadraticization(a_cost, corresponding_a_cost, *dynamics, kPlayerIdx);
+}
+
+TEST(QuadraticDifferenceCostTest, QuadraticizesCorrectly) {
+  QuadraticDifferenceCost cost(kCostWeight, {0, 1}, {2, 3});
+  CheckQuadraticization(cost);
 }
