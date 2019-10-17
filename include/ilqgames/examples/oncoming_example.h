@@ -41,25 +41,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLE_TWO_PLAYER_ONCOMING_EXAMPLE_H
-#define ILQGAMES_EXAMPLE_TWO_PLAYER_ONCOMING_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLE_ONCOMING_EXAMPLE_H
+#define ILQGAMES_EXAMPLE_ONCOMING_EXAMPLE_H
 
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 #include <ilqgames/solver/solver_params.h>
 
 namespace ilqgames {
 
-class TwoPlayerOncomingExample : public TopDownRenderableProblem {
+class OncomingExample : public TopDownRenderableProblem {
  public:
-  ~TwoPlayerOncomingExample() {}
-  TwoPlayerOncomingExample(const SolverParams& params);
+  ~OncomingExample() {}
+  OncomingExample(const SolverParams& params);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;
   std::vector<float> Ys(const VectorXf& x) const;
   std::vector<float> Thetas(const VectorXf& x) const;
-};  // class TwoPlayerOncomingExample
+};  // class OncomingExample
 
 }  // namespace ilqgames
 

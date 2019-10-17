@@ -16,7 +16,8 @@
  *
  *    3. Neither the name of the copyright holder nor the names of its
  *       contributors may be used to endorse or promote products derived
- *       from this software without specific prior written permission.
+ *       from this software without sp[<64;43;18M]ecific prior written
+ * permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -36,8 +37,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Three player overtaking example. Ordering is given by the following:
-// (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
+// Originally: Three player overtaking example.
+//
+// Now: Oncoming Example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -56,6 +58,8 @@
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/examples/three_player_overtaking_example.h>
+#include <ilqgames/examples/oncoming_example.h>
+// #include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
@@ -106,7 +110,7 @@ static constexpr bool kOrientedRight = true;
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5;  // m
 
-// Nominal speed.
+  // Nominal speed.
 static constexpr float kP1NominalV = 15.0;  // m/s
 static constexpr float kP2NominalV = 10.0;  // m/s
 static constexpr float kP3NominalV = 10.0;  // m/s
@@ -175,8 +179,7 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
 }  // anonymous namespace
 
-ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
-    const SolverParams& params) {
+OncomingExample::OncomingExample(const SolverParams& params) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
@@ -195,10 +198,10 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   x0_(kP2YIdx) = kP2InitialY;
   x0_(kP2HeadingIdx) = kP2InitialHeading;
   x0_(kP2VIdx) = kP2InitialSpeed;
-  x0_(kP3XIdx) = kP3InitialX;
-  x0_(kP3YIdx) = kP3InitialY;
-  x0_(kP3HeadingIdx) = kP3InitialHeading;
-  x0_(kP3VIdx) = kP3InitialSpeed;
+  // x0_(kP3XIdx) = kP3InitialX;
+  // x0_(kP3YIdx) = kP3InitialY;
+  // x0_(kP3HeadingIdx) = kP3InitialHeading;
+  // x0_(kP3VIdx) = kP3InitialSpeed;
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
@@ -221,9 +224,9 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
       kNominalHeadingCostWeight, kP2HeadingIdx, kP1NominalHeading,
       "NominalHeadingP2");
   // p2_cost.AddStateCost(p2_nominal_orientation_cost);
-  const auto p3_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP3HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP3");
+  // const auto p3_nominal_orientation_cost = std::make_shared<OrientationCost>(
+  //     kNominalHeadingCostWeight, kP3HeadingIdx, kP1NominalHeading,
+  // NominalHeadingP3");
   // p3_cost.AddStateCost(p3_nominal_orientation_cost);
 
   // Stay in lanes.
@@ -262,20 +265,20 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p2_cost.AddStateCost(p2_lane_r_cost);
   p2_cost.AddStateCost(p2_lane_l_cost);
 
-  const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
-                                 "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
-  p3_cost.AddStateCost(p3_lane_cost);
-  p3_cost.AddStateCost(p3_lane_r_cost);
-  p3_cost.AddStateCost(p3_lane_l_cost);
+  // const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
+  //     new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
+  //                                "LaneCenter"));
+  // const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_r_cost(
+  //     new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
+  //                                    {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
+  //                                    kOrientedRight, "LaneRightBoundary"));
+  // const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_l_cost(
+  //     new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
+  //                                    {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
+  //                                    !kOrientedRight, "LaneLeftBoundary"));
+  // p3_cost.AddStateCost(p3_lane_cost);
+  // p3_cost.AddStateCost(p3_lane_r_cost);
+  // p3_cost.AddStateCost(p3_lane_l_cost);
 
   // Max/min/nominal speed costs.
   // const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
@@ -302,11 +305,11 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   //     kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight, "MinV");
   // const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
   //     kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight, "MaxV");
-  const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kP3NominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  // p3_cost.AddStateCost(p3_min_v_cost);
-  // p3_cost.AddStateCost(p3_max_v_cost);
-  p3_cost.AddStateCost(p3_nominal_v_cost);
+  // const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
+  //     kP3NominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
+  // // p3_cost.AddStateCost(p3_min_v_cost);
+  // // p3_cost.AddStateCost(p3_max_v_cost);
+  // p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // Curvature costs for P1 and P2.
   // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
@@ -345,12 +348,12 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p2_cost.AddControlCost(1, p2_omega_cost);
   p2_cost.AddControlCost(1, p2_jerk_cost);
 
-  const auto p3_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  const auto p3_a_cost =
-      std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0, "Jerk");
-  p3_cost.AddControlCost(2, p3_omega_cost);
-  p3_cost.AddControlCost(2, p3_a_cost);
+  // const auto p3_omega_cost = std::make_shared<QuadraticCost>(
+  //     kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
+  // const auto p3_a_cost =
+  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0, "Jerk");
+  // p3_cost.AddControlCost(2, p3_omega_cost);
+  // p3_cost.AddControlCost(2, p3_a_cost);
 
   // // Goal costs.
   // constexpr float kFinalTimeWindow = 0.5;  // s
@@ -385,27 +388,27 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  // const std::shared_ptr<ProxCost> p1p3_proximity_cost(
+  //    new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+  //                 {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p1_cost.AddStateCost(p1p2_proximity_cost);
-  p1_cost.AddStateCost(p1p3_proximity_cost);
+  // p1_cost.AddStateCost(p1p3_proximity_cost);
 
   const std::shared_ptr<ProxCost> p2p1_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p2p3_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  // const std::shared_ptr<ProxCost> p2p3_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                   // {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p2_cost.AddStateCost(p2p1_proximity_cost);
-  p2_cost.AddStateCost(p2p3_proximity_cost);
+  //  p2_cost.AddStateCost(p2p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p3p1_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p3p2_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // const std::shared_ptr<ProxCost> p3p2_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+                   // {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   // p3_cost.AddStateCost(p3p1_proximity_cost);
   // p3_cost.AddStateCost(p3p2_proximity_cost);
 
@@ -416,17 +419,17 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
 
 inline std::vector<float> ThreePlayerOvertakingExample::Xs(
     const VectorXf& x) const {
-  return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx)};
+  return {x(kP1XIdx), x(kP2XIdx)};
 }
 
 inline std::vector<float> ThreePlayerOvertakingExample::Ys(
     const VectorXf& x) const {
-  return {x(kP1YIdx), x(kP2YIdx), x(kP3YIdx)};
+  return {x(kP1YIdx), x(kP2YIdx)};
 }
 
 inline std::vector<float> ThreePlayerOvertakingExample::Thetas(
     const VectorXf& x) const {
-  return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx)};
+  return {x(kP1HeadingIdx), x(kP2HeadingIdx)};
 }
 
 }  // namespace ilqgames
