@@ -16,8 +16,8 @@
  *
  *    3. Neither the name of the copyright holder nor the names of its
  *       contributors may be used to endorse or promote products derived
- *       from this software without sp[<64;43;18M]ecific prior written
- * permission.
+ *       from this software without specific prior written
+ *       permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -91,7 +91,11 @@ static constexpr float kJerkCostWeight = 500.0;
 static constexpr float kACostWeight = 50.0;
 static constexpr float kP1NominalVCostWeight = 10.0;
 static constexpr float kP2NominalVCostWeight = 1.0;
-static constexpr float kP3NominalVCostWeight = 1.0;
+// static constexpr float kP3NominalVCostWeight = 1.0;
+static constexpr float kMaxVCostWeight = 10.0;
+static constexpr float kMinV = 0.0;
+static constexpr float kP1MaxV = 35.8;
+static constexpr float kP2MaxV = 35.8;
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
@@ -99,7 +103,7 @@ static constexpr float kLaneBoundaryCostWeight = 100.0;
 static constexpr float kMinProximity = 5.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
-static constexpr float kP3ProximityCostWeight = 100.0;
+// static constexpr float kP3ProximityCostWeight = 100.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
@@ -110,7 +114,7 @@ static constexpr bool kOrientedRight = true;
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5;  // m
 
-  // Nominal speed.
+// Nominal speed.
 static constexpr float kP1NominalV = 15.0;  // m/s
 static constexpr float kP2NominalV = 10.0;  // m/s
 static constexpr float kP3NominalV = 10.0;  // m/s
@@ -184,7 +188,6 @@ OncomingExample::OncomingExample(const SolverParams& params) {
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
           {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
            std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
           kTimeStep));
 
@@ -213,7 +216,7 @@ OncomingExample::OncomingExample(const SolverParams& params) {
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost;
+  PlayerCost p1_cost, p2_cost;
 
   // Orientation cost
   const auto p1_nominal_orientation_cost = std::make_shared<OrientationCost>(
@@ -281,24 +284,24 @@ OncomingExample::OncomingExample(const SolverParams& params) {
   // p3_cost.AddStateCost(p3_lane_l_cost);
 
   // Max/min/nominal speed costs.
-  // const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  // const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
+  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
+  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  // p1_cost.AddStateCost(p1_min_v_cost);
-  // p1_cost.AddStateCost(p1_max_v_cost);
+  p1_cost.AddStateCost(p1_min_v_cost);
+  p1_cost.AddStateCost(p1_max_v_cost);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
-  // const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
-  // const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
+  const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
+  const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
+      kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP2NominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  // p2_cost.AddStateCost(p2_min_v_cost);
-  // p2_cost.AddStateCost(p2_max_v_cost);
+  p2_cost.AddStateCost(p2_min_v_cost);
+  p2_cost.AddStateCost(p2_max_v_cost);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
   // const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
@@ -413,21 +416,21 @@ OncomingExample::OncomingExample(const SolverParams& params) {
   // p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
+  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost},
                               kTimeHorizon, params));
 }
 
-inline std::vector<float> ThreePlayerOvertakingExample::Xs(
+inline std::vector<float> OncomingExample::Xs(
     const VectorXf& x) const {
   return {x(kP1XIdx), x(kP2XIdx)};
 }
 
-inline std::vector<float> ThreePlayerOvertakingExample::Ys(
+inline std::vector<float> OncomingExample::Ys(
     const VectorXf& x) const {
   return {x(kP1YIdx), x(kP2YIdx)};
 }
 
-inline std::vector<float> ThreePlayerOvertakingExample::Thetas(
+inline std::vector<float> OncomingExample::Thetas(
     const VectorXf& x) const {
   return {x(kP1HeadingIdx), x(kP2HeadingIdx)};
 }
