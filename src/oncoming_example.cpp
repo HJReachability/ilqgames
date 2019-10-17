@@ -19,7 +19,7 @@
  *       from this software without specific prior written
  *       permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
+ * THIS SOFTWARE IS PROVIDED BY THE59;16M COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -92,10 +92,12 @@ static constexpr float kACostWeight = 50.0;
 static constexpr float kP1NominalVCostWeight = 10.0;
 static constexpr float kP2NominalVCostWeight = 1.0;
 // static constexpr float kP3NominalVCostWeight = 1.0;
+
+// Newly added, 10-16-2019 20:33 p.m.
 static constexpr float kMaxVCostWeight = 10.0;
-static constexpr float kMinV = 0.0;
-static constexpr float kP1MaxV = 35.8;
-static constexpr float kP2MaxV = 35.8;
+static constexpr float kMinV = 0.0; // m/s
+static constexpr float kP1MaxV = 35.8; // m/s
+static constexpr float kP2MaxV = 35.8; // m/s
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
