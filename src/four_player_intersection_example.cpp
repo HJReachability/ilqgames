@@ -138,12 +138,12 @@ static constexpr float kP4NominalV = 1.5;  // m/s NEW
 static constexpr float kP1InitialX = -2.0;   // m
 static constexpr float kP2InitialX = -10.0;  // m
 static constexpr float kP3InitialX = -11.0;  // m
-static constexpr float kP4InitialX = -11.0;  // m NEW
+static constexpr float kP4InitialX = 0.0;  // m NEW
 
 static constexpr float kP1InitialY = -30.0;  // m
 static constexpr float kP2InitialY = 45.0;   // m
 static constexpr float kP3InitialY = 16.0;   // m
-static constexpr float kP4InitialY = 16.0;   // m
+static constexpr float kP4InitialY = 0.0;   // m
 
 static constexpr float kP1InitialHeading = M_PI_2;  // rad
 static constexpr float kP2InitialHeading = -M_PI_2; // rad
@@ -212,7 +212,7 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       new ConcatenatedDynamicalSystem(
           {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
            std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerUnicycle4D>()
+           std::make_shared<SinglePlayerUnicycle4D>(),
            std::make_shared<SinglePlayerUnicycle4D>()},
           kTimeStep)); // NEW
 
@@ -416,8 +416,8 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
   const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP4AIdx,
                                                          0.0, "Acceleration");
-  p4_cost.AddControlCost(2, p4_omega_cost);
-  p4_cost.AddControlCost(2, p4_a_cost);
+  p4_cost.AddControlCost(3, p4_omega_cost);
+  p4_cost.AddControlCost(3, p4_a_cost);
 
   // Goal costs.
   constexpr float kFinalTimeWindow = 0.5;  // s
