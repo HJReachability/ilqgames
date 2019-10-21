@@ -32,7 +32,7 @@
  *
  * Please contact the author(s) of this library if you have any questions.
  * Authors: David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
- * Chih-Yuan (Frank) Chiu (chihyuan_chiu@berkeley.edu)
+ *          Chih-Yuan (Frank) Chiu (chihyuan_chiu@berkeley.edu)
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,7 +212,7 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       new ConcatenatedDynamicalSystem(
           {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
            std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerUnicycle4D>()
+           std::make_shared<SinglePlayerUnicycle4D>(),
            std::make_shared<SinglePlayerUnicycle4D>()},
           kTimeStep)); // NEW
 
