@@ -71,7 +71,7 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
+DEFINE_double(trust_region_size, 1.0, "L_infradius for trust region.");
 DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 
   // Create window with graphics context
   GLFWwindow* window = glfwCreateWindow(
-      1280, 720, "ILQGames: 3-Player Intersection Example", NULL, NULL);
+      1280, 720, "ILQGames: 4-Player Intersection Example", NULL, NULL);
   if (window == NULL) return 1;
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);  // Enable vsync
