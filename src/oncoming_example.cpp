@@ -19,8 +19,8 @@
  *       from this software without specific prior written
  *       permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE59;16M COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * THIS SOFTWARE IS PROVIDED BY THE59;16M COPYRIGHT HOLDERS AND CONTRIBUTORS AS
+ * IS AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
@@ -57,8 +57,8 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
-#include <ilqgames/examples/three_player_overtaking_example.h>
 #include <ilqgames/examples/oncoming_example.h>
+#include <ilqgames/examples/three_player_overtaking_example.h>
 // #include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
@@ -95,9 +95,9 @@ static constexpr float kP2NominalVCostWeight = 1.0;
 
 // Newly added, 10-16-2019 20:33 p.m.
 static constexpr float kMaxVCostWeight = 10.0;
-static constexpr float kMinV = 0.0; // m/s
-static constexpr float kP1MaxV = 35.8; // m/s
-static constexpr float kP2MaxV = 35.8; // m/s
+static constexpr float kMinV = 0.0;     // m/s
+static constexpr float kP1MaxV = 35.8;  // m/s
+static constexpr float kP2MaxV = 35.8;  // m/s
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
@@ -356,7 +356,8 @@ OncomingExample::OncomingExample(const SolverParams& params) {
   // const auto p3_omega_cost = std::make_shared<QuadraticCost>(
   //     kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
   // const auto p3_a_cost =
-  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0, "Jerk");
+  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0,
+  //     "Jerk");
   // p3_cost.AddControlCost(2, p3_omega_cost);
   // p3_cost.AddControlCost(2, p3_a_cost);
 
@@ -399,41 +400,60 @@ OncomingExample::OncomingExample(const SolverParams& params) {
   p1_cost.AddStateCost(p1p2_proximity_cost);
   // p1_cost.AddStateCost(p1p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  const std::shared_ptr<InitialTimeCost> p2p1_proximity_cost(
+      std::shared_ptr<ProxCost>(
+          new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                       {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1")),
+      kCooperationTime); // THIS NEEDS TO BE CHANGED
+
   // const std::shared_ptr<ProxCost> p2p3_proximity_cost(
   //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   // {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  // {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p2_cost.AddStateCost(p2p1_proximity_cost);
   //  p2_cost.AddStateCost(p2p3_proximity_cost);
+
+  // NEED TO DEFINE kCooperationTime
+
+
+
+  const std::shared_ptr<FinalTimeCost> p2p1_proximity_cost(
+      std::shared_ptr<ProxCost>(
+          new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                       {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1")),
+      kTimeHorizon - kAdversarialTime);
+  // const std::shared_ptr<ProxCost> p2p3_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+  // {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  p2_cost.AddStateCost(p2p1_proximity_cost);
+  //  p2_cost.AddStateCost(p2p3_proximity_cost);
+
+  // NEED TO DEFINE kAdversarialTime
+
+
 
   // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
   //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
   //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   // const std::shared_ptr<ProxCost> p3p2_proximity_cost(
   //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   // {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  // {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   // p3_cost.AddStateCost(p3p1_proximity_cost);
   // p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost},
-                              kTimeHorizon, params));
+  solver_.reset(
+      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
-inline std::vector<float> OncomingExample::Xs(
-    const VectorXf& x) const {
+inline std::vector<float> OncomingExample::Xs(const VectorXf& x) const {
   return {x(kP1XIdx), x(kP2XIdx)};
 }
 
-inline std::vector<float> OncomingExample::Ys(
-    const VectorXf& x) const {
+inline std::vector<float> OncomingExample::Ys(const VectorXf& x) const {
   return {x(kP1YIdx), x(kP2YIdx)};
 }
 
-inline std::vector<float> OncomingExample::Thetas(
-    const VectorXf& x) const {
+inline std::vector<float> OncomingExample::Thetas(const VectorXf& x) const {
   return {x(kP1HeadingIdx), x(kP2HeadingIdx)};
 }
 
