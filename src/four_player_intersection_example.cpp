@@ -420,6 +420,11 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p4_cost.AddControlCost(3, p4_a_cost);
 
   // Goal costs.
+
+  constexpr float kInitialTimeWindow = 0.5;  // s
+
+  // to edit
+
   constexpr float kFinalTimeWindow = 0.5;  // s
   const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),

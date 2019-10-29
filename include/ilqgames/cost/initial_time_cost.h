@@ -36,12 +36,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Class for applying a given cost only after a fixed time.
+// Class for applying a given cost in an initial time interval.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_FINAL_TIME_COST_H
-#define ILQGAMES_COST_FINAL_TIME_COST_H
+#ifndef ILQGAMES_COST_INITIAL_TIME_COST_H
+#define ILQGAMES_COST_INITIAL_TIME_COST_H
 
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
@@ -52,25 +52,25 @@
 
 namespace ilqgames {
 
-class FinalTimeCost : public Cost {
+class InitialTimeCost : public Cost {
  public:
-  ~FinalTimeCost() {}
-  FinalTimeCost(const std::shared_ptr<const Cost>& cost, Time threshold_time,
-                const std::string& name = "")
+  ~InitialTimeCost() {}
+  InitialTimeCost(const std::shared_ptr<const Cost>& cost, Time threshold_time,
+                  const std::string& name = "")
       : Cost(0.0, name), cost_(cost), threshold_time_(threshold_time) {
     CHECK_NOTNULL(cost.get());
   }
 
   // Evaluate this cost at the current time and input.
   float Evaluate(Time t, const VectorXf& input) const {
-    return (t >= threshold_time_) ? cost_->Evaluate(t, input) : 0.0;
+    return (t < threshold_time_) ? cost_->Evaluate(t, input) : 0.0;
   }
 
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians (if non-null).
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad = nullptr) const {
-    if (t < threshold_time_) return;
+    if (t >= threshold_time_) return;
     cost_->Quadraticize(t, input, hess, grad);
   }
 
