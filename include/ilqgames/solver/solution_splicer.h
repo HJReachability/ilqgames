@@ -43,7 +43,7 @@
 #ifndef ILQGAMES_SOLVER_SOLUTION_SPLICER_H
 #define ILQGAMES_SOLVER_SOLUTION_SPLICER_H
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -63,7 +63,7 @@ class SolutionSplicer {
   // current time or the current state.
   void Splice(const SolverLog& log, Time current_time);
   void Splice(const SolverLog& log, const VectorXf& x,
-              const MultiPlayerDynamicalSystem& dynamics);
+              const MultiPlayerIntegrableSystem& dynamics);
 
   // Accessors.
   const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
@@ -73,8 +73,8 @@ class SolutionSplicer {
 
  private:
   // Converged strategies and operating points for all players.
-  OperatingPoint operating_point_;
   std::vector<Strategy> strategies_;
+  OperatingPoint operating_point_;
 };  // class SolutionSplicer
 
 }  // namespace ilqgames

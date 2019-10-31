@@ -40,7 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/solution_splicer.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/solver_log.h>
@@ -120,7 +120,7 @@ void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
 }
 
 void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
-                             const MultiPlayerDynamicalSystem& dynamics) {
+                             const MultiPlayerIntegrableSystem& dynamics) {
   // (1) Identify current timestep and first timestep of new solution.
   const VectorXf& new_x0 = log.FinalOperatingPoint().xs[0];
   const auto nearest_iter_new_x0 = std::min_element(
