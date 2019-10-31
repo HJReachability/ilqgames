@@ -66,6 +66,7 @@ void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
       (current_time - operating_point_.t0) / log.TimeStep());
   const size_t first_timestep_new_solution = static_cast<size_t>(
       (log.InitialTime() - operating_point_.t0) / log.TimeStep());
+  CHECK_GE(first_timestep_new_solution, current_timestep);
 
   // Resize to be the appropriate length.
   const size_t num_spliced_timesteps =
@@ -136,10 +137,15 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
                                 dynamics.DistanceBetween(x, x2);
                        });
 
-  const size_t current_timestep =
-      (nearest_iter_x == operating_point_.xs.begin())
-          ? 0
-          : std::distance(operating_point_.xs.begin(), nearest_iter_x) - 20;
+  // HACK! If we're close enough to the beginning of the old trajectory, just
+  // save the first few steps along it in case a lower-level path follower uses
+  // this information.
+  size_t current_timestep =
+      std::distance(operating_point_.xs.begin(), nearest_iter_x);
+  constexpr size_t kNumPreviousTimeStepsToSave = 20;
+  if (current_timestep >= kNumPreviousTimeStepsToSave)
+    current_timestep -= kNumPreviousTimeStepsToSave;
+
   const size_t first_timestep_new_solution = std::max<size_t>(
       current_timestep,
       std::distance(operating_point_.xs.begin(), nearest_iter_new_x0));
