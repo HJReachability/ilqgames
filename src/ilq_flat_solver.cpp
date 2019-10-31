@@ -46,6 +46,7 @@
 #include <ilqgames/solver/ilq_flat_solver.h>
 #include <ilqgames/solver/solve_lq_game.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -134,11 +135,14 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
   }
 
   // Keep iterating until convergence.
-  constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
+  LoopTimer timer;
   while (elapsed_time(solver_call_time) <
-             max_runtime - kMaxIterationRuntimeGuess &&
+             max_runtime - timer.RuntimeUpperBound() &&
          !HasConverged(num_iterations, last_operating_point,
                        current_operating_point)) {
+    // Start loop timer.
+    timer.Tic();
+
     // New iteration.
     num_iterations++;
 
@@ -194,6 +198,9 @@ bool ILQFlatSolver::Solve(const VectorXf& xi0,
                             EvaluateCosts(current_operating_point),
                             elapsed_time(solver_call_time));
     }
+
+    // Record loop runtime.
+    timer.Toc();
   }
 
   // Set final strategies and operating point.
