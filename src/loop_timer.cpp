@@ -36,46 +36,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Splice together existing and new solutions to a receding horizon problem.
+// Keeps track of elapsed time (e.g., during loops) and provides an upper bound
+// on the runtime of the next loop. To reduce memory consumption and adapt to
+// changing processor activity, computes statistics based on a moving window of
+// specified length.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLUTION_SPLICER_H
-#define ILQGAMES_SOLVER_SOLUTION_SPLICER_H
-
-#include <ilqgames/dynamics/multi_player_integrable_system.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/solver_log.h>
-#include <ilqgames/utils/strategy.h>
+#include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/types.h>
 
-#include <memory>
-#include <vector>
+#include <glog/logging.h>
+#include <chrono>
+#include <list>
 
 namespace ilqgames {
 
-class SolutionSplicer {
- public:
-  ~SolutionSplicer() {}
-  explicit SolutionSplicer(const SolverLog& log);
+void LoopTimer::Tic() { start_ = std::chrono::high_resolution_clock::now(); }
 
-  // Splice in a new solution stored in a solver log. Also prune before the
-  // the current state.
-  void Splice(const SolverLog& log, const VectorXf& x,
-              const MultiPlayerIntegrableSystem& dynamics);
+void LoopTimer::Toc() {
+  // Elapsed time in seconds.
+  const Time elapsed = (std::chrono::duration<Time>(
+                            std::chrono::high_resolution_clock::now() - start_))
+                           .count();
 
-  // Accessors.
-  const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
-  const OperatingPoint& CurrentOperatingPoint() const {
-    return operating_point_;
+  // Add to queue and pop if queue is too long.
+  loop_times_.push_back(elapsed);
+  total_time_ += elapsed;
+
+  if (loop_times_.size() > max_samples_) {
+    total_time_ -= loop_times_.front();
+    loop_times_.pop_front();
+  }
+}
+
+Time LoopTimer::RuntimeUpperBound(float num_stddevs, Time initial_guess) const {
+  // Handle not enough data.
+  if (loop_times_.size() < 2) return initial_guess;
+
+  // Compute mean and variance.
+  const Time mean = total_time_ / static_cast<Time>(loop_times_.size());
+  Time variance = 0.0;
+  for (const Time entry : loop_times_) {
+    const Time diff = entry - mean;
+    variance += diff * diff;
   }
 
- private:
-  // Converged strategies and operating points for all players.
-  std::vector<Strategy> strategies_;
-  OperatingPoint operating_point_;
-};  // class SolutionSplicer
+  // Unbiased estimator of variance should divide by N - 1, not N.
+  variance /= static_cast<Time>(loop_times_.size() - 1);
+
+  // Compute upper bound.
+  return mean + num_stddevs * std::sqrt(variance);
+}
 
 }  // namespace ilqgames
-
-#endif
