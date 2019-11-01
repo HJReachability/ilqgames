@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>ilqgames: ilqgames::SolutionSplicer Class Reference</title>
+<title>ilqgames: ilqgames::LoopTimer Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -83,39 +83,39 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>ilqgames</b></li><li class="navelem"><a class="el" href="classilqgames_1_1_solution_splicer.html">SolutionSplicer</a></li>  </ul>
+<li class="navelem"><b>ilqgames</b></li><li class="navelem"><a class="el" href="classilqgames_1_1_loop_timer.html">LoopTimer</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classilqgames_1_1_solution_splicer-members.html">List of all members</a>  </div>
+<a href="classilqgames_1_1_loop_timer-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ilqgames::SolutionSplicer Class Reference</div>  </div>
+<div class="title">ilqgames::LoopTimer Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:add264f103d0c16f989549ba4d030d13e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="add264f103d0c16f989549ba4d030d13e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SolutionSplicer</b> (const <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &amp;log)</td></tr>
-<tr class="separator:add264f103d0c16f989549ba4d030d13e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a124e8a060f775e8092c3b277e4f00229"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a124e8a060f775e8092c3b277e4f00229"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>Splice</b> (const <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &amp;log, const VectorXf &amp;x, const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &amp;dynamics)</td></tr>
-<tr class="separator:a124e8a060f775e8092c3b277e4f00229"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab513525045570c0156ce8855fbe49871"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab513525045570c0156ce8855fbe49871"></a>
-const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>CurrentStrategies</b> () const </td></tr>
-<tr class="separator:ab513525045570c0156ce8855fbe49871"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa9986a86a6dead3dbe781c6dfa5d6745"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9986a86a6dead3dbe781c6dfa5d6745"></a>
-const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>CurrentOperatingPoint</b> () const </td></tr>
-<tr class="separator:aa9986a86a6dead3dbe781c6dfa5d6745"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf0fca5ddad39e3939fc178b698b3e4d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf0fca5ddad39e3939fc178b698b3e4d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTimer</b> (size_t max_samples=10)</td></tr>
+<tr class="separator:adf0fca5ddad39e3939fc178b698b3e4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4bdb7d7b8550356ffd177890c11c8ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa4bdb7d7b8550356ffd177890c11c8ef"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Tic</b> ()</td></tr>
+<tr class="separator:aa4bdb7d7b8550356ffd177890c11c8ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1b528948eebaa660b0cdea9a497002a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1b528948eebaa660b0cdea9a497002a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>Toc</b> ()</td></tr>
+<tr class="separator:ac1b528948eebaa660b0cdea9a497002a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a551691bad650b5c70efbeb08b355638f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a551691bad650b5c70efbeb08b355638f"></a>
+Time&#160;</td><td class="memItemRight" valign="bottom"><b>RuntimeUpperBound</b> (float num_stddevs=3.0, Time initial_guess=0.02) const </td></tr>
+<tr class="separator:a551691bad650b5c70efbeb08b355638f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="solution__splicer_8h_source.html#l00057">57</a> of file <a class="el" href="solution__splicer_8h_source.html">solution_splicer.h</a>.</p>
+<p>Definition at line <a class="el" href="loop__timer_8h_source.html#l00057">57</a> of file <a class="el" href="loop__timer_8h_source.html">loop_timer.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/solver/<a class="el" href="solution__splicer_8h_source.html">solution_splicer.h</a></li>
-<li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="solution__splicer_8cpp_source.html">solution_splicer.cpp</a></li>
+<li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/utils/<a class="el" href="loop__timer_8h_source.html">loop_timer.h</a></li>
+<li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="loop__timer_8cpp_source.html">loop_timer.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

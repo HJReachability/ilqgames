@@ -36,45 +36,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Splice together existing and new solutions to a receding horizon problem.
+// Keeps track of elapsed time (e.g., during loops) and provides an upper bound
+// on the runtime of the next loop. To reduce memory consumption and adapt to
+// changing processor activity, computes statistics based on a moving window of
+// specified length.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLUTION_SPLICER_H
-#define ILQGAMES_SOLVER_SOLUTION_SPLICER_H
+#ifndef ILQGAMES_UTILS_LOOP_TIMER_H
+#define ILQGAMES_UTILS_LOOP_TIMER_H
 
-#include <ilqgames/dynamics/multi_player_integrable_system.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/solver_log.h>
-#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <memory>
-#include <vector>
+#include <glog/logging.h>
+#include <chrono>
+#include <list>
 
 namespace ilqgames {
 
-class SolutionSplicer {
+class LoopTimer {
  public:
-  ~SolutionSplicer() {}
-  explicit SolutionSplicer(const SolverLog& log);
+  ~LoopTimer() {}
+  LoopTimer(size_t max_samples = 10)
+      : max_samples_(max_samples), total_time_(0.0) {
+    CHECK_GT(max_samples, 1);
 
-  // Splice in a new solution stored in a solver log. Also prune before the
-  // the current state.
-  void Splice(const SolverLog& log, const VectorXf& x,
-              const MultiPlayerIntegrableSystem& dynamics);
-
-  // Accessors.
-  const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
-  const OperatingPoint& CurrentOperatingPoint() const {
-    return operating_point_;
+    // For defined behavior, starting with a Tic().
+    Tic();
   }
 
+  // Tic and toc. Start and stop loop timer.
+  void Tic();
+  void Toc();
+
+  // High probability upper bound on next loop runtime, with initial guess to be
+  // returned if not enough data has been observed yet.
+  Time RuntimeUpperBound(float num_stddevs = 3.0,
+                         Time initial_guess = 0.02) const;
+
  private:
-  // Converged strategies and operating points for all players.
-  std::vector<Strategy> strategies_;
-  OperatingPoint operating_point_;
-};  // class SolutionSplicer
+  // Maximum number of samples used to compute mean and variance.
+  const size_t max_samples_;
+
+  // Most recent timer start time.
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+
+  // Queue of observed loop times.
+  std::list<Time> loop_times_;
+
+  // Running sum of times in the queue.
+  Time total_time_;
+};  // class LoopTimer
 
 }  // namespace ilqgames
 
