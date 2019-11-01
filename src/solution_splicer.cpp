@@ -57,69 +57,6 @@ SolutionSplicer::SolutionSplicer(const SolverLog& log)
     : strategies_(log.FinalStrategies()),
       operating_point_(log.FinalOperatingPoint()) {}
 
-void SolutionSplicer::Splice(const SolverLog& log, Time current_time) {
-  CHECK_LE(current_time, log.InitialTime());
-  CHECK_GE(current_time, operating_point_.t0);
-
-  // (1) Identify current timestep and first timestep of new solution.
-  const size_t current_timestep = static_cast<size_t>(
-      (current_time - operating_point_.t0) / log.TimeStep());
-  const size_t first_timestep_new_solution = static_cast<size_t>(
-      (log.InitialTime() - operating_point_.t0) / log.TimeStep());
-  CHECK_GE(first_timestep_new_solution, current_timestep);
-
-  // Resize to be the appropriate length.
-  const size_t num_spliced_timesteps =
-      first_timestep_new_solution - current_timestep + log.NumTimeSteps();
-  operating_point_.xs.resize(num_spliced_timesteps);
-  operating_point_.us.resize(num_spliced_timesteps);
-  operating_point_.t0 += current_timestep * log.TimeStep();
-
-  for (auto& strategy : strategies_) {
-    strategy.Ps.resize(num_spliced_timesteps);
-    strategy.alphas.resize(num_spliced_timesteps);
-  }
-
-  // (2) Prune old part of existing plan.
-  for (size_t kk = current_timestep; kk < first_timestep_new_solution; kk++) {
-    const size_t kk_new_solution = kk - current_timestep;
-    operating_point_.xs[kk_new_solution] = operating_point_.xs[kk];
-    operating_point_.us[kk_new_solution] = operating_point_.us[kk];
-
-    for (auto& strategy : strategies_) {
-      strategy.Ps[kk_new_solution] = strategy.Ps[kk];
-      strategy.alphas[kk_new_solution] = strategy.alphas[kk];
-    }
-  }
-
-  // (3) Copy over new solution to overwrite existing log after first timestep.
-  CHECK_EQ(first_timestep_new_solution - current_timestep + log.NumTimeSteps(),
-           operating_point_.xs.size());
-  for (size_t kk = 0; kk < log.NumTimeSteps(); kk++) {
-    const size_t kk_new_solution =
-        kk + first_timestep_new_solution - current_timestep;
-    DCHECK_LT(kk_new_solution, operating_point_.xs.size());
-    DCHECK_LT(kk_new_solution, operating_point_.us.size());
-    DCHECK_LT(kk, log.FinalOperatingPoint().xs.size());
-    DCHECK_LT(kk, log.FinalOperatingPoint().us.size());
-    operating_point_.xs[kk_new_solution] = log.FinalOperatingPoint().xs[kk];
-    operating_point_.us[kk_new_solution] = log.FinalOperatingPoint().us[kk];
-
-    DCHECK_EQ(log.NumPlayers(), strategies_.size());
-    DCHECK_EQ(log.NumPlayers(), log.FinalStrategies().size());
-    for (PlayerIndex ii = 0; ii < log.NumPlayers(); ii++) {
-      DCHECK_LT(kk_new_solution, strategies_[ii].Ps.size());
-      DCHECK_LT(kk_new_solution, strategies_[ii].alphas.size());
-      DCHECK_LT(kk, log.FinalStrategies()[ii].Ps.size());
-      DCHECK_LT(kk, log.FinalStrategies()[ii].alphas.size());
-
-      strategies_[ii].Ps[kk_new_solution] = log.FinalStrategies()[ii].Ps[kk];
-      strategies_[ii].alphas[kk_new_solution] =
-          log.FinalStrategies()[ii].alphas[kk];
-    }
-  }
-}
-
 void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
                              const MultiPlayerIntegrableSystem& dynamics) {
   // (1) Identify current timestep and first timestep of new solution.
@@ -142,12 +79,11 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
   // this information.
   size_t current_timestep =
       std::distance(operating_point_.xs.begin(), nearest_iter_x);
-  constexpr size_t kNumPreviousTimeStepsToSave = 20;
+  constexpr size_t kNumPreviousTimeStepsToSave = 1;
   if (current_timestep < kNumPreviousTimeStepsToSave)
     current_timestep = 0;
   else
     current_timestep -= kNumPreviousTimeStepsToSave;
-  std::cout << "current tstep is " << current_timestep << std::endl;
 
   // HACK! Make sure the new solution starts several timesteps after the
   // nearest match to guard against off-by-one issues.
@@ -157,8 +93,6 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
       std::max<size_t>(
           current_timestep,
           std::distance(operating_point_.xs.begin(), nearest_iter_new_x0));
-  std::cout << "first tstep new soln is " << first_timestep_new_solution
-            << std::endl;
 
   // Resize to be the appropriate length.
   const size_t num_spliced_timesteps =
@@ -168,8 +102,6 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
   operating_point_.t0 =
       log.FinalOperatingPoint().t0 -
       (first_timestep_new_solution - current_timestep) * log.TimeStep();
-
-  std::cout << "log t0 is " << log.FinalOperatingPoint().t0 << std::endl;
 
   for (auto& strategy : strategies_) {
     strategy.Ps.resize(num_spliced_timesteps);

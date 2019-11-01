@@ -60,8 +60,7 @@ class SolutionSplicer {
   explicit SolutionSplicer(const SolverLog& log);
 
   // Splice in a new solution stored in a solver log. Also prune before the
-  // current time or the current state.
-  void Splice(const SolverLog& log, Time current_time);
+  // the current state.
   void Splice(const SolverLog& log, const VectorXf& x,
               const MultiPlayerIntegrableSystem& dynamics);
 
