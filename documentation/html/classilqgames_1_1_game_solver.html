@@ -109,9 +109,9 @@ Inheritance diagram for ilqgames::GameSolver:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a04a24078cb14f0bf176406bb420a06b3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04a24078cb14f0bf176406bb420a06b3"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const VectorXf &amp;x0, const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;initial_operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;initial_strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *final_operating_point, std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *final_strategies, <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> *log=nullptr, Time max_runtime=std::numeric_limits&lt; Time &gt;::infinity())=0</td></tr>
-<tr class="separator:a04a24078cb14f0bf176406bb420a06b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24ed8caa4c9217122f7ce86f16d1bd34"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24ed8caa4c9217122f7ce86f16d1bd34"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const VectorXf &amp;x0, const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;initial_operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;initial_strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *final_operating_point, std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *final_strategies, <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> *log=nullptr, Time max_runtime=std::numeric_limits&lt; Time &gt;::infinity())</td></tr>
+<tr class="separator:a24ed8caa4c9217122f7ce86f16d1bd34"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fa5328990bd8139c556c09453020e33"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fa5328990bd8139c556c09453020e33"></a>
 Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeHorizon</b> () const </td></tr>
 <tr class="separator:a9fa5328990bd8139c556c09453020e33"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -133,6 +133,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a89a591bb5d9fcefc28157a54b016a4d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89a591bb5d9fcefc28157a54b016a4d1"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>GameSolver</b> (const std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &gt; &amp;dynamics, const std::vector&lt; <a class="el" href="classilqgames_1_1_player_cost.html">PlayerCost</a> &gt; &amp;player_costs, Time time_horizon, const <a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a> &amp;params=<a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a>())</td></tr>
 <tr class="separator:a89a591bb5d9fcefc28157a54b016a4d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a1772a9bd07347ed28455119b2571fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a1772a9bd07347ed28455119b2571fe"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeLinearization</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op, std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; *linearization)=0</td></tr>
+<tr class="separator:a4a1772a9bd07347ed28455119b2571fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a02461f67e30de7a1fa44c72160c47fb6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02461f67e30de7a1fa44c72160c47fb6"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>ModifyLQStrategies</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;current_operating_point, std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *strategies) const </td></tr>
 <tr class="separator:a02461f67e30de7a1fa44c72160c47fb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -172,10 +175,13 @@ const size_t&#160;</td><td class="memItemRight" valign="bottom"><b>num_time_step
 <tr class="memitem:adb70fc48a6420c1b516becd5c108a92a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb70fc48a6420c1b516becd5c108a92a"></a>
 const <a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a>&#160;</td><td class="memItemRight" valign="bottom"><b>params_</b></td></tr>
 <tr class="separator:adb70fc48a6420c1b516becd5c108a92a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae77a0725fdd98ec49f96ebf33d966650"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae77a0725fdd98ec49f96ebf33d966650"></a>
+<a class="el" href="classilqgames_1_1_loop_timer.html">LoopTimer</a>&#160;</td><td class="memItemRight" valign="bottom"><b>timer_</b></td></tr>
+<tr class="separator:ae77a0725fdd98ec49f96ebf33d966650"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="game__solver_8h_source.html#l00068">68</a> of file <a class="el" href="game__solver_8h_source.html">game_solver.h</a>.</p>
+<p>Definition at line <a class="el" href="game__solver_8h_source.html#l00077">77</a> of file <a class="el" href="game__solver_8h_source.html">game_solver.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/solver/<a class="el" href="game__solver_8h_source.html">game_solver.h</a></li>
 <li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="game__solver_8cpp_source.html">game_solver.cpp</a></li>

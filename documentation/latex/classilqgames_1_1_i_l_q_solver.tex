@@ -11,8 +11,11 @@ Inheritance diagram for ilqgames\+:\+:I\+L\+Q\+Solver\+:\begin{figure}[H]
 \item 
 {\bfseries I\+L\+Q\+Solver} (const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_dynamical_system}{Multi\+Player\+Dynamical\+System} $>$ \&dynamics, const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \&player\+\_\+costs, Time time\+\_\+horizon, const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} \&params=\hyperlink{structilqgames_1_1_solver_params}{Solver\+Params}())\hypertarget{classilqgames_1_1_i_l_q_solver_a8b93b29aea1dc01c06e1b33a9a08a3b6}{}\label{classilqgames_1_1_i_l_q_solver_a8b93b29aea1dc01c06e1b33a9a08a3b6}
 
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
 \item 
-bool {\bfseries Solve} (const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&initial\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&initial\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$final\+\_\+operating\+\_\+point, std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$final\+\_\+strategies, \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $\ast$log=nullptr, Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())\hypertarget{classilqgames_1_1_i_l_q_solver_aad99e04f6f16581cf1e43da68be83eee}{}\label{classilqgames_1_1_i_l_q_solver_aad99e04f6f16581cf1e43da68be83eee}
+virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)\hypertarget{classilqgames_1_1_i_l_q_solver_a36c9160e4d5503b5160d04c0acd842d5}{}\label{classilqgames_1_1_i_l_q_solver_a36c9160e4d5503b5160d04c0acd842d5}
 
 \end{DoxyCompactItemize}
 \subsection*{Additional Inherited Members}

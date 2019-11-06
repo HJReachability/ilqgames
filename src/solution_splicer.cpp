@@ -79,7 +79,8 @@ void SolutionSplicer::Splice(const SolverLog& log, const VectorXf& x,
   // this information.
   size_t current_timestep =
       std::distance(operating_point_.xs.begin(), nearest_iter_x);
-  constexpr size_t kNumPreviousTimeStepsToSave = 1;
+
+  constexpr size_t kNumPreviousTimeStepsToSave = 5;
   if (current_timestep < kNumPreviousTimeStepsToSave)
     current_timestep = 0;
   else

@@ -58,156 +58,21 @@
 
 namespace ilqgames {
 
-bool ILQFlatSolver::Solve(const VectorXf& xi0,
-                          const OperatingPoint& initial_operating_point,
-                          const std::vector<Strategy>& initial_strategies,
-                          OperatingPoint* final_operating_point,
-                          std::vector<Strategy>* final_strategies,
-                          SolverLog* log, Time max_runtime) {
-  // Start a stopwatch.
-  const auto solver_call_time = clock::now();
+void ILQFlatSolver::ComputeLinearization(
+    const OperatingPoint& op,
+    std::vector<LinearDynamicsApproximation>* linearization) {
+  CHECK_NOTNULL(linearization);
 
-  // Keep iterating until convergence.
-  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
-    return std::chrono::duration<Time>(clock::now() - start).count();
-  };  // elapsed_time
+  // Check if linearization is the right length.
+  if (linearization->size() != op.xs.size())
+    linearization->resize(op.xs.size());
 
-  // Chech return pointers not null.
-  CHECK_NOTNULL(final_strategies);
-  CHECK_NOTNULL(final_operating_point);
-
-  // Make sure we have enough strategies for each time step.
-  DCHECK_EQ(dynamics_->NumPlayers(), initial_strategies.size());
-  DCHECK(std::accumulate(
-      initial_strategies.begin(), initial_strategies.end(), true,
-      [this](bool correct_so_far, const Strategy& strategy) {
-        return correct_so_far &=
-               strategy.Ps.size() == this->num_time_steps_ &&
-               strategy.alphas.size() == this->num_time_steps_;
-      }));
-
-  // Cast dynamics.
+  // Cast dynamics to appropriate type.
   const auto dyn = static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
 
-  // Flag for whether or not the initial operating point is all zeros.
-  // If it is all zeros, we will populate it with the initial state unrolled
-  // with the initial strategies in the first iteration of the solver, but
-  // otherwise we will leave it alone.
-  const bool is_initial_operating_point_zero =
-      initial_operating_point.xs[0].squaredNorm() < constants::kSmallNumber;
-
-  // Last and current operating points.
-  // OperatingPoint last_operating_point(num_time_steps_, dyn->NumPlayers(),
-  //                                     initial_operating_point.t0);
-  OperatingPoint last_operating_point(initial_operating_point);
-  OperatingPoint current_operating_point(initial_operating_point);
-
-  // Ensure that the current operating point starts at the initial state.
-  current_operating_point.xs[0] = xi0;
-  last_operating_point.xs[0] = xi0;
-
-  // Current strategies.
-  std::vector<Strategy> current_strategies(initial_strategies);
-
-  // Preallocate vectors for linearizations and quadraticizations.
-  // Both are time-indexed (and quadraticizations' inner vector is indexed by
-  // player).
-  std::vector<LinearDynamicsApproximation> linearization(
-      num_time_steps_, dyn->LinearizedSystem());
-  std::vector<std::vector<QuadraticCostApproximation>> quadraticization(
-      num_time_steps_);
-  for (auto& quads : quadraticization)
-    quads.resize(dyn->NumPlayers(), QuadraticCostApproximation(dyn->XDim()));
-
-  // // Preallocate vector of non-linear system controls.
-  // std::vector<VectorXf> us(dyn->NumPlayers());
-  // for (PlayerIndex ii = 0; ii < dyn->NumPlayers(); ii++)
-  //   us[ii].resize(dyn->UDim(ii));
-
-  // Number of iterations, starting from 0.
-  size_t num_iterations = 0;
-
-  // Log initial iterate.
-  if (log) {
-    log->AddSolverIterate(current_operating_point, current_strategies,
-                          EvaluateCosts(current_operating_point),
-                          elapsed_time(solver_call_time));
-  }
-
-  // Keep iterating until convergence.
-  LoopTimer timer;
-  while (elapsed_time(solver_call_time) <
-             max_runtime - timer.RuntimeUpperBound() &&
-         !HasConverged(num_iterations, last_operating_point,
-                       current_operating_point)) {
-    // Start loop timer.
-    timer.Tic();
-
-    // New iteration.
-    num_iterations++;
-
-    // auto print_ops = [&last_operating_point,
-    //                   &current_operating_point](const std::string& msg) {
-    //   std::cout << msg << std::endl;
-    //   for (size_t kk = 0; kk < last_operating_point.xs.size(); kk++) {
-    //     std::cout << kk
-    //               << " last x = " << last_operating_point.xs[kk].transpose()
-    //               << "\n current x = "
-    //               << current_operating_point.xs[kk].transpose() << std::endl;
-    //   }
-    // };
-
-    // Swap operating points and compute new current operating point.
-    if (num_iterations > 1 || is_initial_operating_point_zero) {
-      last_operating_point.swap(current_operating_point);
-      CurrentOperatingPoint(last_operating_point, current_strategies,
-                            &current_operating_point);
-    }
-
-    // Linearize dynamics and quadraticize costs for all players about the new
-    // operating point.
-    for (size_t kk = 0; kk < num_time_steps_; kk++) {
-      const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
-      const auto& xi = current_operating_point.xs[kk];
-      const auto& vs = current_operating_point.us[kk];
-
-      // const VectorXf x = dyn->FromLinearSystemState(xi);
-      // us = dyn->LinearizingControls(x, vs);
-
-      // Quadraticize costs.
-      std::transform(player_costs_.begin(), player_costs_.end(),
-                     quadraticization[kk].begin(),
-                     [&t, &xi, &vs](const PlayerCost& cost) {
-                       return cost.Quadraticize(t, xi, vs);
-                     });
-
-      // dyn->ChangeControlCostCoordinates(xi, &quadraticization[kk]);
-    }
-
-    // Solve LQ game.
-    current_strategies =
-        SolveLQGame(*dynamics_, linearization, quadraticization);
-
-    // Modify this LQ solution.
-    if (!ModifyLQStrategies(current_operating_point, &current_strategies))
-      return false;
-
-    // Log current iterate.
-    if (log) {
-      log->AddSolverIterate(current_operating_point, current_strategies,
-                            EvaluateCosts(current_operating_point),
-                            elapsed_time(solver_call_time));
-    }
-
-    // Record loop runtime.
-    timer.Toc();
-  }
-
-  // Set final strategies and operating point.
-  final_strategies->swap(current_strategies);
-  final_operating_point->swap(current_operating_point);
-
-  return true;
+  // Populate one timestep at a time.
+  for (size_t kk = 0; kk < op.xs.size(); kk++)
+    (*linearization)[kk] = dyn->LinearizedSystem();
 }
 
 bool ILQFlatSolver::SatisfiesTrustRegion(

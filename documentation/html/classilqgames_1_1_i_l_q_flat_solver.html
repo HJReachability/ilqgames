@@ -110,10 +110,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a66d3b8710861b90c67ea854b4722b2a2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a66d3b8710861b90c67ea854b4722b2a2"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ILQFlatSolver</b> (const std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_multi_player_flat_system.html">MultiPlayerFlatSystem</a> &gt; &amp;dynamics, const std::vector&lt; <a class="el" href="classilqgames_1_1_player_cost.html">PlayerCost</a> &gt; &amp;player_costs, Time time_horizon, const <a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a> &amp;params=<a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a>())</td></tr>
 <tr class="separator:a66d3b8710861b90c67ea854b4722b2a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1229821b72869b3031d51a1afbb34eb2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1229821b72869b3031d51a1afbb34eb2"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const VectorXf &amp;xi0, const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;initial_operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;initial_strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *final_operating_point, std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *final_strategies, <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> *log=nullptr, Time max_runtime=std::numeric_limits&lt; Time &gt;::infinity())</td></tr>
-<tr class="separator:a1229821b72869b3031d51a1afbb34eb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classilqgames_1_1_game_solver"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classilqgames_1_1_game_solver')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classilqgames_1_1_game_solver.html">ilqgames::GameSolver</a></td></tr>
+<tr class="memitem:a24ed8caa4c9217122f7ce86f16d1bd34 inherit pub_methods_classilqgames_1_1_game_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24ed8caa4c9217122f7ce86f16d1bd34"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const VectorXf &amp;x0, const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;initial_operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;initial_strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *final_operating_point, std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *final_strategies, <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> *log=nullptr, Time max_runtime=std::numeric_limits&lt; Time &gt;::infinity())</td></tr>
+<tr class="separator:a24ed8caa4c9217122f7ce86f16d1bd34 inherit pub_methods_classilqgames_1_1_game_solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9fa5328990bd8139c556c09453020e33 inherit pub_methods_classilqgames_1_1_game_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fa5328990bd8139c556c09453020e33"></a>
 Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeHorizon</b> () const </td></tr>
 <tr class="separator:a9fa5328990bd8139c556c09453020e33 inherit pub_methods_classilqgames_1_1_game_solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -132,6 +132,9 @@ Time&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeTimeStamp</b> 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
+<tr class="memitem:abcaec1afcd87975d5d9af23bae154939"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcaec1afcd87975d5d9af23bae154939"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeLinearization</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op, std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; *linearization)</td></tr>
+<tr class="separator:abcaec1afcd87975d5d9af23bae154939"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0f9a32d7bb55ff8d44c6a34ecc2335ee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f9a32d7bb55ff8d44c6a34ecc2335ee"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>SatisfiesTrustRegion</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;last_operating_point, const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;current_operating_point) const </td></tr>
 <tr class="separator:a0f9a32d7bb55ff8d44c6a34ecc2335ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -176,6 +179,9 @@ const size_t&#160;</td><td class="memItemRight" valign="bottom"><b>num_time_step
 <tr class="memitem:adb70fc48a6420c1b516becd5c108a92a inherit pro_attribs_classilqgames_1_1_game_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb70fc48a6420c1b516becd5c108a92a"></a>
 const <a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a>&#160;</td><td class="memItemRight" valign="bottom"><b>params_</b></td></tr>
 <tr class="separator:adb70fc48a6420c1b516becd5c108a92a inherit pro_attribs_classilqgames_1_1_game_solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae77a0725fdd98ec49f96ebf33d966650 inherit pro_attribs_classilqgames_1_1_game_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae77a0725fdd98ec49f96ebf33d966650"></a>
+<a class="el" href="classilqgames_1_1_loop_timer.html">LoopTimer</a>&#160;</td><td class="memItemRight" valign="bottom"><b>timer_</b></td></tr>
+<tr class="separator:ae77a0725fdd98ec49f96ebf33d966650 inherit pro_attribs_classilqgames_1_1_game_solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">

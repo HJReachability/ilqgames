@@ -9,7 +9,7 @@ Inheritance diagram for ilqgames\+:\+:Game\+Solver\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-virtual bool {\bfseries Solve} (const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&initial\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&initial\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$final\+\_\+operating\+\_\+point, std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$final\+\_\+strategies, \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $\ast$log=nullptr, Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())=0\hypertarget{classilqgames_1_1_game_solver_a04a24078cb14f0bf176406bb420a06b3}{}\label{classilqgames_1_1_game_solver_a04a24078cb14f0bf176406bb420a06b3}
+virtual bool {\bfseries Solve} (const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&initial\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&initial\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$final\+\_\+operating\+\_\+point, std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$final\+\_\+strategies, \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $\ast$log=nullptr, Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())\hypertarget{classilqgames_1_1_game_solver_a24ed8caa4c9217122f7ce86f16d1bd34}{}\label{classilqgames_1_1_game_solver_a24ed8caa4c9217122f7ce86f16d1bd34}
 
 \item 
 Time {\bfseries Time\+Horizon} () const \hypertarget{classilqgames_1_1_game_solver_a9fa5328990bd8139c556c09453020e33}{}\label{classilqgames_1_1_game_solver_a9fa5328990bd8139c556c09453020e33}
@@ -31,6 +31,9 @@ Time {\bfseries Compute\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hyper
 \begin{DoxyCompactItemize}
 \item 
 {\bfseries Game\+Solver} (const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ \&dynamics, const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \&player\+\_\+costs, Time time\+\_\+horizon, const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} \&params=\hyperlink{structilqgames_1_1_solver_params}{Solver\+Params}())\hypertarget{classilqgames_1_1_game_solver_a89a591bb5d9fcefc28157a54b016a4d1}{}\label{classilqgames_1_1_game_solver_a89a591bb5d9fcefc28157a54b016a4d1}
+
+\item 
+virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)=0\hypertarget{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}{}\label{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}
 
 \item 
 virtual bool {\bfseries Modify\+L\+Q\+Strategies} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+operating\+\_\+point, std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies) const \hypertarget{classilqgames_1_1_game_solver_a02461f67e30de7a1fa44c72160c47fb6}{}\label{classilqgames_1_1_game_solver_a02461f67e30de7a1fa44c72160c47fb6}
@@ -71,13 +74,16 @@ const size\+\_\+t {\bfseries num\+\_\+time\+\_\+steps\+\_\+}\hypertarget{classil
 \item 
 const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} {\bfseries params\+\_\+}\hypertarget{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}{}\label{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}
 
+\item 
+\hyperlink{classilqgames_1_1_loop_timer}{Loop\+Timer} {\bfseries timer\+\_\+}\hypertarget{classilqgames_1_1_game_solver_ae77a0725fdd98ec49f96ebf33d966650}{}\label{classilqgames_1_1_game_solver_ae77a0725fdd98ec49f96ebf33d966650}
+
 \end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
 
 
-Definition at line 68 of file game\+\_\+solver.\+h.
+Definition at line 77 of file game\+\_\+solver.\+h.
 
 
 
