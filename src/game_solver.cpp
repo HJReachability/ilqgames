@@ -46,6 +46,7 @@
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/solve_lq_game.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -70,16 +71,147 @@ void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
 
 }  // anonymous namespace
 
+bool GameSolver::Solve(const VectorXf& x0,
+                       const OperatingPoint& initial_operating_point,
+                       const std::vector<Strategy>& initial_strategies,
+                       OperatingPoint* final_operating_point,
+                       std::vector<Strategy>* final_strategies, SolverLog* log,
+                       Time max_runtime) {
+  // Start a stopwatch.
+  const auto solver_call_time = clock::now();
+
+  // Keep iterating until convergence.
+  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
+    return std::chrono::duration<Time>(clock::now() - start).count();
+  };  // elapsed_time
+
+  // Chech return pointers not null.
+  CHECK_NOTNULL(final_strategies);
+  CHECK_NOTNULL(final_operating_point);
+
+  // Make sure we have enough strategies for each time step.
+  DCHECK_EQ(dynamics_->NumPlayers(), initial_strategies.size());
+  DCHECK(std::accumulate(
+      initial_strategies.begin(), initial_strategies.end(), true,
+      [this](bool correct_so_far, const Strategy& strategy) {
+        return correct_so_far &=
+               strategy.Ps.size() == this->num_time_steps_ &&
+               strategy.alphas.size() == this->num_time_steps_;
+      }));
+
+  // Flag for whether or not the initial operating point is all zeros.
+  // If it is all zeros, we will populate it with the initial state unrolled
+  // with the initial strategies in the first iteration of the solver, but
+  // otherwise we will leave it alone.
+  const bool is_initial_operating_point_zero =
+      initial_operating_point.xs[0].squaredNorm() < constants::kSmallNumber;
+
+  // Last and current operating points.
+  OperatingPoint last_operating_point(initial_operating_point);
+  OperatingPoint current_operating_point(initial_operating_point);
+  current_operating_point.xs[0] = x0;
+  last_operating_point.xs[0] = x0;
+
+  // Current strategies.
+  std::vector<Strategy> current_strategies(initial_strategies);
+
+  // Preallocate vectors for linearizations and quadraticizations.
+  // Both are time-indexed (and quadraticizations' inner vector is indexed by
+  // player).
+  std::vector<LinearDynamicsApproximation> linearization(num_time_steps_);
+  if (dynamics_->TreatAsLinear())
+    ComputeLinearization(initial_operating_point, &linearization);
+
+  std::vector<std::vector<QuadraticCostApproximation>> quadraticization(
+      num_time_steps_);
+  for (auto& quads : quadraticization)
+    quads.resize(dynamics_->NumPlayers(),
+                 QuadraticCostApproximation(dynamics_->XDim()));
+
+  // Number of iterations, starting from 0.
+  size_t num_iterations = 0;
+
+  // Log initial iterate.
+  if (log) {
+    log->AddSolverIterate(current_operating_point, current_strategies,
+                          EvaluateCosts(current_operating_point),
+                          elapsed_time(solver_call_time));
+  }
+
+  // Main loop with timer for anytime execution.
+  while (elapsed_time(solver_call_time) <
+             max_runtime - timer_.RuntimeUpperBound() &&
+         !HasConverged(num_iterations, last_operating_point,
+                       current_operating_point)) {
+    // Start loop timer.
+    timer_.Tic();
+
+    // New iteration.
+    num_iterations++;
+
+    // Swap operating points and compute new current operating point.
+    if (num_iterations > 1 || is_initial_operating_point_zero) {
+      last_operating_point.swap(current_operating_point);
+      CurrentOperatingPoint(last_operating_point, current_strategies,
+                            &current_operating_point);
+    }
+
+    // Linearize dynamics and quadraticize costs for all players about the new
+    // operating point, only if the system can't be treated as linear from the
+    // outset, in which case we've already linearized it.
+    if (!dynamics_->TreatAsLinear())
+      ComputeLinearization(current_operating_point, &linearization);
+
+    for (size_t kk = 0; kk < num_time_steps_; kk++) {
+      const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
+      const auto& x = current_operating_point.xs[kk];
+      const auto& us = current_operating_point.us[kk];
+
+      // Quadraticize costs.
+      std::transform(player_costs_.begin(), player_costs_.end(),
+                     quadraticization[kk].begin(),
+                     [&t, &x, &us](const PlayerCost& cost) {
+                       return cost.Quadraticize(t, x, us);
+                     });
+    }
+
+    // Solve LQ game.
+    current_strategies =
+        SolveLQGame(*dynamics_, linearization, quadraticization);
+
+    // Modify this LQ solution.
+    if (!ModifyLQStrategies(current_operating_point, &current_strategies))
+      return false;
+
+    // Log current iterate.
+    if (log) {
+      log->AddSolverIterate(current_operating_point, current_strategies,
+                            EvaluateCosts(current_operating_point),
+                            elapsed_time(solver_call_time));
+    }
+
+    // Record loop runtime.
+    timer_.Toc();
+  }
+
+  // Set final strategies and operating point.
+  final_strategies->swap(current_strategies);
+  final_operating_point->swap(current_operating_point);
+
+  return true;
+}
+
 void GameSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
     OperatingPoint* current_operating_point) const {
   CHECK_NOTNULL(current_operating_point);
+  current_operating_point->t0 = last_operating_point.t0;
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    Time t = ComputeTimeStamp(kk);
+    Time t = last_operating_point.t0 + ComputeTimeStamp(kk);
 
     // Unpack.
     const VectorXf delta_x = x - last_operating_point.xs[kk];

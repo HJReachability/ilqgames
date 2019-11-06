@@ -70,14 +70,13 @@ class ILQFlatSolver : public GameSolver {
                 const SolverParams& params = SolverParams())
       : GameSolver(dynamics, player_costs, time_horizon, params) {}
 
-  // Solve this game. Returns true if converged.
-  bool Solve(const VectorXf& xi0, const OperatingPoint& initial_operating_point,
-             const std::vector<Strategy>& initial_strategies,
-             OperatingPoint* final_operating_point,
-             std::vector<Strategy>* final_strategies, SolverLog* log = nullptr,
-             Time max_runtime = std::numeric_limits<Time>::infinity());
-
  protected:
+  // Populate the given vector with a linearization of the dynamics about
+  // the given operating point.
+  virtual void ComputeLinearization(
+      const OperatingPoint& op,
+      std::vector<LinearDynamicsApproximation>* linearization);
+
   // Check trust region constraint. By default, this just checks if the current
   // and previous operating points are close to each other.
   virtual bool SatisfiesTrustRegion(
