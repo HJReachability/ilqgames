@@ -49,6 +49,7 @@
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/solver_log.h>
@@ -63,19 +64,28 @@
 
 namespace ilqgames {
 
+namespace {
+
+// Rename the system clock for easier usage.
 using clock = std::chrono::system_clock;
+
+// Maximum number of loop times to store in loop timer.
+static constexpr size_t kMaxLoopTimesToRecord = 10;
+
+}  // anonymous namespace
 
 class GameSolver {
  public:
   virtual ~GameSolver() {}
 
   // Solve this game. Returns true if converged.
-  virtual bool Solve(
-      const VectorXf& x0, const OperatingPoint& initial_operating_point,
-      const std::vector<Strategy>& initial_strategies,
-      OperatingPoint* final_operating_point,
-      std::vector<Strategy>* final_strategies, SolverLog* log = nullptr,
-      Time max_runtime = std::numeric_limits<Time>::infinity()) = 0;
+  virtual bool Solve(const VectorXf& x0,
+                     const OperatingPoint& initial_operating_point,
+                     const std::vector<Strategy>& initial_strategies,
+                     OperatingPoint* final_operating_point,
+                     std::vector<Strategy>* final_strategies,
+                     SolverLog* log = nullptr,
+                     Time max_runtime = std::numeric_limits<Time>::infinity());
 
   // Accessors.
   Time TimeHorizon() const { return time_horizon_; }
@@ -97,9 +107,16 @@ class GameSolver {
         time_horizon_(time_horizon),
         time_step_(dynamics->TimeStep()),
         num_time_steps_(static_cast<size_t>(time_horizon / time_step_)),
-        params_(params) {
+        params_(params),
+        timer_(kMaxLoopTimesToRecord) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
   }
+
+  // Populate the given vector with a linearization of the dynamics about
+  // the given operating point.
+  virtual void ComputeLinearization(
+      const OperatingPoint& op,
+      std::vector<LinearDynamicsApproximation>* linearization) = 0;
 
   // Modify LQ strategies to improve convergence properties.
   // This function replaces an Armijo linesearch that would take place in ILQR.
@@ -150,6 +167,9 @@ class GameSolver {
 
   // Solver parameters.
   const SolverParams params_;
+
+  // Timer to keep track of loop execution times.
+  LoopTimer timer_;
 };  // class GameSolver
 
 }  // namespace ilqgames

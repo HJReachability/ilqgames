@@ -60,7 +60,7 @@
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
+DEFINE_double(initial_alpha_scaling, 0.5, "Initial step size in linesearch.");
 DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
 DEFINE_double(convergence_tolerance, 0.5, "L_inf tolerance for convergence.");
 

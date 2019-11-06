@@ -92,6 +92,11 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
     return Integrate(time_interval, xi0, vs);
   }
 
+  // Can this system be treated as linear for the purposes of LQ solves?
+  // For example, linear systems and feedback linearizable systems should return
+  // true here.
+  bool TreatAsLinear() const { return true; }
+
   // Getters.
   const LinearDynamicsApproximation& LinearizedSystem() const {
     if (!discrete_linear_system_) ComputeLinearizedSystem();
