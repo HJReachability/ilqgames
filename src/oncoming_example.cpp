@@ -72,6 +72,7 @@
 
 // Adversarial time.
 DEFINE_double(adversarial_time, 0.0, "Adversarial time window (s).");
+DEFINE_string(scenario, "Parallel", "Scenario (Parallel / Antiparallel).");
 
 namespace ilqgames {
 
@@ -189,8 +190,7 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
 }  // anonymous namespace
 
-OncomingExample::OncomingExample(const SolverParams& params,
-                                 const std::string& scenario) {
+OncomingExample::OncomingExample(const SolverParams& params) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
@@ -206,20 +206,18 @@ OncomingExample::OncomingExample(const SolverParams& params,
   x0_(kP1VIdx) = kP1InitialSpeed;
 
   x0_(kP2XIdx) = kP2InitialX;
-
-  if (scenario == "Parallel") {
+  if (FLAGS_scenario == "Parallel") {
     x0_(kP2HeadingIdx) = kP2InitialHeading;
     x0_(kP2YIdx) = kP2InitialY;
+  } else if (FLAGS_scenario == "Antiparallel") {
+    x0_(kP2HeadingIdx) = kP2InitialHeadingAntiparallel;
+    x0_(kP2YIdx) = kP2InitialYAntiparallel;
   } else {
+    LOG(WARNING) << "Invalid scenario. Using Parallel mode instead.";
     x0_(kP2HeadingIdx) = kP2InitialHeadingAntiparallel;
     x0_(kP2YIdx) = kP2InitialYAntiparallel;
   }
   x0_(kP2VIdx) = kP2InitialSpeed;
-
-  // x0_(kP3XIdx) = kP3InitialX;
-  // x0_(kP3YIdx) = kP3InitialY;
-  // x0_(kP3HeadingIdx) = kP3InitialHeading;
-  // x0_(kP3VIdx) = kP3InitialSpeed;
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
@@ -242,11 +240,6 @@ OncomingExample::OncomingExample(const SolverParams& params,
       kNominalHeadingCostWeight, kP2HeadingIdx, kP1NominalHeading,
       "NominalHeadingP2");
   // p2_cost.AddStateCost(p2_nominal_orientation_cost);
-  // const auto p3_nominal_orientation_cost =
-  // std::make_shared<OrientationCost>(
-  //     kNominalHeadingCostWeight, kP3HeadingIdx, kP1NominalHeading,
-  // NominalHeadingP3");
-  // p3_cost.AddStateCost(p3_nominal_orientation_cost);
 
   // Stay in lanes.
   const Polyline2 lane1(
