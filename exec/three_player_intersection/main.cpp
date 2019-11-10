@@ -68,7 +68,7 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
+DEFINE_double(trust_region_size, 1.0, "L_infradius for trust region.");
 DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
@@ -131,14 +131,14 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Solution may not be a local Nash.";
 
   // Dump the logs and/or exit.
-  if (FLAGS_save) { 
-    if (FLAGS_experiment_name == "") { 
-          CHECK(log->Save(FLAGS_last_traj)); 
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+          CHECK(log->Save(FLAGS_last_traj));
     }
-    else { 
-      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name)); 
+    else {
+      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name));
     }
-  }  
+  }
   if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
