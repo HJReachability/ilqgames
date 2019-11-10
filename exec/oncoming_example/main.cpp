@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  auto problem = std::make_shared<ilqgames::OncomingExample>(params);
+  auto problem = std::make_shared<ilqgames::OncomingExample>(params, scenario);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
