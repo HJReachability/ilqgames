@@ -36,49 +36,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all iterative LQ game solvers.
-// Structured so that derived classes may only modify the `ModifyLQStrategies`
-// and `HasConverged` virtual functions.
+// Keeps track of elapsed time (e.g., during loops) and provides an upper bound
+// on the runtime of the next loop. To reduce memory consumption and adapt to
+// changing processor activity, computes statistics based on a moving window of
+// specified length.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_ILQ_SOLVER_H
-#define ILQGAMES_SOLVER_ILQ_SOLVER_H
+#ifndef ILQGAMES_UTILS_LOOP_TIMER_H
+#define ILQGAMES_UTILS_LOOP_TIMER_H
 
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/solver/game_solver.h>
-#include <ilqgames/solver/solver_params.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/quadratic_cost_approximation.h>
-#include <ilqgames/utils/solver_log.h>
-#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <limits>
-#include <memory>
-#include <vector>
+#include <chrono>
+#include <list>
 
 namespace ilqgames {
 
-class ILQSolver : public GameSolver {
+class LoopTimer {
  public:
-  virtual ~ILQSolver() {}
-  ILQSolver(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
-            const std::vector<PlayerCost>& player_costs, Time time_horizon,
-            const SolverParams& params = SolverParams())
-      : GameSolver(dynamics, player_costs, time_horizon, params) {}
+  ~LoopTimer() {}
+  LoopTimer(size_t max_samples = 10)
+      : max_samples_(max_samples), total_time_(0.0) {
+    CHECK_GT(max_samples, 1);
 
- protected:
-  // Populate the given vector with a linearization of the dynamics about
-  // the given operating point.
-  virtual void ComputeLinearization(
-      const OperatingPoint& op,
-      std::vector<LinearDynamicsApproximation>* linearization);
+    // For defined behavior, starting with a Tic().
+    Tic();
+  }
 
-};  // class ILQSolver
+  // Tic and toc. Start and stop loop timer.
+  void Tic();
+  void Toc();
+
+  // High probability upper bound on next loop runtime, with initial guess to be
+  // returned if not enough data has been observed yet.
+  Time RuntimeUpperBound(float num_stddevs = 3.0,
+                         Time initial_guess = 0.02) const;
+
+ private:
+  // Maximum number of samples used to compute mean and variance.
+  const size_t max_samples_;
+
+  // Most recent timer start time.
+  std::chrono::time_point<std::chrono::high_resolution_clock> start_;
+
+  // Queue of observed loop times.
+  std::list<Time> loop_times_;
+
+  // Running sum of times in the queue.
+  Time total_time_;
+};  // class LoopTimer
 
 }  // namespace ilqgames
 

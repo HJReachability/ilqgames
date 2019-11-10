@@ -1,0 +1,57 @@
+# SSH authorization so that travis can push documentation to the repository.
+env:
+  global:
+    secure: eY2NtKOaBHV/qg1xymO1P1XQNfhzlDOyHlI2rdmgf8cZ8T2sRO6RhQhleBMQ4bKeaFT26b10SOrA/52PC1of4Uw+yX/VkS6QXj4Ndrr2+5zvZAhHVj1yBjFMBfn5qaeRgC1HRsY5WPL5Y2RYg9T4n8hq8usVKDWYGfiUVovYmG+4dDklfh5/cPi6jaDI1L3GQIV7tDVlzsdzGEAp7nQlQBd5D/WmGbLFFo/fHJQDwN4ZXdIUkvGZCiOWSYrcokemcwkSpoeLLZuNwdDJSD7IcoAu1e+hzgSotIbpERYjLe6rRNZicQsG9w6ub64L9fhIdakvwygAv+8XZ3mv3+dOlRD8pBVCdfAYajIgEMOoLHLzCdpPWTWPma/nbk8FmzCSJI+hsH2aJuFTPWp1j6349kYr0/S6NHH8nq1g/ROwyws+Io++PwSHauVO6m84aVpQkoVUpmVG8v12mG3XKJEU+7gqCue43pi0RGDkw11y64NtSiwSufj4hNpjEvgxLCmkBwKHIaWx2R1m+FrFhCJuJPVgB0cOer0kACsIKH8nj+lLY910zj6XH2LQAt3uee2+N5TgNFp5G9fSjMcG0t4BnpuMcsF2NQWaPl7aN1fcPkf/1emxVNkPFczEIK1w+NhR72shJ6wnhU8hj6m9SmkVAE+D4aB3TYzw7espz74Q3oA=
+
+language: cpp
+
+compiler:
+  - gcc
+  #- clang
+
+os:
+  - linux
+
+dist:
+  - xenial
+
+branches:
+  only:
+    - master
+
+notifications:
+  email: false
+
+before_install:
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get update -qq; fi
+
+install:
+  - echo $TRAVIS_OS_NAME
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install -qq g++-5; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 90; fi
+  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then sudo apt-get install --yes build-essential
+    doxygen libeigen3-dev libgflags-dev libgoogle-glog-dev cmake libboost-all-dev freeglut3-dev libxrandr-dev libxinerama-dev libxcursor-dev xorg-dev libglu1-mesa-dev; fi
+
+before_script:
+  # Configure and make.
+  - mkdir bin
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release ..
+
+script:
+  - make -j4
+  - ./run_tests
+
+after_success:
+  - make documentation
+
+deploy:
+  verbose: true
+  provider: pages
+  skip-cleanup: true
+  github-token: $PA_TOKEN
+  keep-history: true
+  on:
+    branch: master

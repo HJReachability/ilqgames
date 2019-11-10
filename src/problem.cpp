@@ -69,7 +69,7 @@ std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
                       &final_operating_point, &final_strategies, log.get(),
                       max_runtime)) {
     LOG(WARNING) << "Solver failed.";
-    return nullptr;  // TODO: maybe return log?
+    return log;
   }
 
   // Store these new strategies/operating point.

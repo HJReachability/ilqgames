@@ -4,7 +4,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 
 # Build options.
 option(BUILD_TESTS "Build tests" ON)
-option(BUILD_DOCUMENTATION "Build documentation" OFF)
+option(BUILD_DOCUMENTATION "Build documentation" ON)
 
 # Add cmake modules.
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)

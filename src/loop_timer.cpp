@@ -36,50 +36,57 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all iterative LQ game solvers.
-// Structured so that derived classes may only modify the `ModifyLQStrategies`
-// and `HasConverged` virtual functions.
+// Keeps track of elapsed time (e.g., during loops) and provides an upper bound
+// on the runtime of the next loop. To reduce memory consumption and adapt to
+// changing processor activity, computes statistics based on a moving window of
+// specified length.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_ILQ_SOLVER_H
-#define ILQGAMES_SOLVER_ILQ_SOLVER_H
-
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/solver/game_solver.h>
-#include <ilqgames/solver/solver_params.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/quadratic_cost_approximation.h>
-#include <ilqgames/utils/solver_log.h>
-#include <ilqgames/utils/strategy.h>
+#include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <limits>
-#include <memory>
-#include <vector>
+#include <chrono>
+#include <list>
 
 namespace ilqgames {
 
-class ILQSolver : public GameSolver {
- public:
-  virtual ~ILQSolver() {}
-  ILQSolver(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
-            const std::vector<PlayerCost>& player_costs, Time time_horizon,
-            const SolverParams& params = SolverParams())
-      : GameSolver(dynamics, player_costs, time_horizon, params) {}
+void LoopTimer::Tic() { start_ = std::chrono::high_resolution_clock::now(); }
 
- protected:
-  // Populate the given vector with a linearization of the dynamics about
-  // the given operating point.
-  virtual void ComputeLinearization(
-      const OperatingPoint& op,
-      std::vector<LinearDynamicsApproximation>* linearization);
+void LoopTimer::Toc() {
+  // Elapsed time in seconds.
+  const Time elapsed = (std::chrono::duration<Time>(
+                            std::chrono::high_resolution_clock::now() - start_))
+                           .count();
 
-};  // class ILQSolver
+  // Add to queue and pop if queue is too long.
+  loop_times_.push_back(elapsed);
+  total_time_ += elapsed;
+
+  if (loop_times_.size() > max_samples_) {
+    total_time_ -= loop_times_.front();
+    loop_times_.pop_front();
+  }
+}
+
+Time LoopTimer::RuntimeUpperBound(float num_stddevs, Time initial_guess) const {
+  // Handle not enough data.
+  if (loop_times_.size() < 2) return initial_guess;
+
+  // Compute mean and variance.
+  const Time mean = total_time_ / static_cast<Time>(loop_times_.size());
+  Time variance = 0.0;
+  for (const Time entry : loop_times_) {
+    const Time diff = entry - mean;
+    variance += diff * diff;
+  }
+
+  // Unbiased estimator of variance should divide by N - 1, not N.
+  variance /= static_cast<Time>(loop_times_.size() - 1);
+
+  // Compute upper bound.
+  return mean + num_stddevs * std::sqrt(variance);
+}
 
 }  // namespace ilqgames
-
-#endif

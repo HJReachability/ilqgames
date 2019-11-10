@@ -46,6 +46,7 @@
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/solve_lq_game.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -58,127 +59,24 @@
 
 namespace ilqgames {
 
-bool ILQSolver::Solve(const VectorXf& x0,
-                      const OperatingPoint& initial_operating_point,
-                      const std::vector<Strategy>& initial_strategies,
-                      OperatingPoint* final_operating_point,
-                      std::vector<Strategy>* final_strategies, SolverLog* log,
-                      Time max_runtime) {
-  // Start a stopwatch.
-  const auto solver_call_time = clock::now();
+void ILQSolver::ComputeLinearization(
+    const OperatingPoint& op,
+    std::vector<LinearDynamicsApproximation>* linearization) {
+  CHECK_NOTNULL(linearization);
 
-  // Keep iterating until convergence.
-  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
-    return std::chrono::duration<Time>(clock::now() - start).count();
-  };  // elapsed_time
+  // Check if linearization is the right length.
+  if (linearization->size() != op.xs.size())
+    linearization->resize(op.xs.size());
 
-  // Chech return pointers not null.
-  CHECK_NOTNULL(final_strategies);
-  CHECK_NOTNULL(final_operating_point);
-
-  // Cast dynamics.
+  // Cast dynamics to appropriate type.
   const auto dyn =
       static_cast<const MultiPlayerDynamicalSystem*>(dynamics_.get());
 
-  // Make sure we have enough strategies for each time step.
-  DCHECK_EQ(dyn->NumPlayers(), initial_strategies.size());
-  DCHECK(std::accumulate(
-      initial_strategies.begin(), initial_strategies.end(), true,
-      [this](bool correct_so_far, const Strategy& strategy) {
-        return correct_so_far &=
-               strategy.Ps.size() == this->num_time_steps_ &&
-               strategy.alphas.size() == this->num_time_steps_;
-      }));
-
-  // Flag for whether or not the initial operating point is all zeros.
-  // If it is all zeros, we will populate it with the initial state unrolled
-  // with the initial strategies in the first iteration of the solver, but
-  // otherwise we will leave it alone.
-  const bool is_initial_operating_point_zero =
-      initial_operating_point.xs[0].squaredNorm() < constants::kSmallNumber;
-
-  // Last and current operating points.
-  OperatingPoint last_operating_point(initial_operating_point);
-  OperatingPoint current_operating_point(initial_operating_point);
-  current_operating_point.xs[0] = x0;
-  last_operating_point.xs[0] = x0;
-
-  // Current strategies.
-  std::vector<Strategy> current_strategies(initial_strategies);
-
-  // Preallocate vectors for linearizations and quadraticizations.
-  // Both are time-indexed (and quadraticizations' inner vector is indexed by
-  // player).
-  std::vector<LinearDynamicsApproximation> linearization(num_time_steps_);
-  std::vector<std::vector<QuadraticCostApproximation>> quadraticization(
-      num_time_steps_);
-  for (auto& quads : quadraticization)
-    quads.resize(dyn->NumPlayers(), QuadraticCostApproximation(dyn->XDim()));
-
-  // Number of iterations, starting from 0.
-  size_t num_iterations = 0;
-
-  // Log initial iterate.
-  if (log) {
-    log->AddSolverIterate(current_operating_point, current_strategies,
-                          EvaluateCosts(current_operating_point),
-                          elapsed_time(solver_call_time));
+  // Populate one timestep at a time.
+  for (size_t kk = 0; kk < op.xs.size(); kk++) {
+    const Time t = op.t0 + ComputeTimeStamp(kk);
+    (*linearization)[kk] = dyn->Linearize(t, op.xs[kk], op.us[kk]);
   }
-
-  constexpr Time kMaxIterationRuntimeGuess = 2e-2;  // s
-  while (elapsed_time(solver_call_time) <
-             max_runtime - kMaxIterationRuntimeGuess &&
-         !HasConverged(num_iterations, last_operating_point,
-                       current_operating_point)) {
-    // New iteration.
-    num_iterations++;
-
-    // Swap operating points and compute new current operating point.
-    if (num_iterations > 1 || is_initial_operating_point_zero) {
-      last_operating_point.swap(current_operating_point);
-      CurrentOperatingPoint(last_operating_point, current_strategies,
-                            &current_operating_point);
-    }
-
-    // Linearize dynamics and quadraticize costs for all players about the new
-    // operating point.
-    for (size_t kk = 0; kk < num_time_steps_; kk++) {
-      const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
-      const auto& x = current_operating_point.xs[kk];
-      const auto& us = current_operating_point.us[kk];
-
-      // Linearize dynamics.
-      linearization[kk] = dyn->Linearize(t, x, us);
-
-      // Quadraticize costs.
-      std::transform(player_costs_.begin(), player_costs_.end(),
-                     quadraticization[kk].begin(),
-                     [&t, &x, &us](const PlayerCost& cost) {
-                       return cost.Quadraticize(t, x, us);
-                     });
-    }
-
-    // Solve LQ game.
-    current_strategies =
-        SolveLQGame(*dynamics_, linearization, quadraticization);
-
-    // Modify this LQ solution.
-    if (!ModifyLQStrategies(current_operating_point, &current_strategies))
-      return false;
-
-    // Log current iterate.
-    if (log) {
-      log->AddSolverIterate(current_operating_point, current_strategies,
-                            EvaluateCosts(current_operating_point),
-                            elapsed_time(solver_call_time));
-    }
-  }
-
-  // Set final strategies and operating point.
-  final_strategies->swap(current_strategies);
-  final_operating_point->swap(current_operating_point);
-
-  return true;
 }
 
 }  // namespace ilqgames

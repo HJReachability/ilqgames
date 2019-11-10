@@ -74,9 +74,14 @@ class MultiPlayerIntegrableSystem {
       Time t, const VectorXf& x0, const OperatingPoint& operating_point,
       const std::vector<Strategy>& strategies) const;
 
-  // Stitch between two states of the system. By default, just takes the first
-  // one but concatenated systems, e.g., can interpret the first one as best for
-  // ego and the second as best for other players.
+  // Can this system be treated as linear for the purposes of LQ solves?
+  // For example, linear systems and feedback linearizable systems should return
+  // true here.
+  virtual bool TreatAsLinear() const { return false; }
+
+  // Stitch between two states of the system. By default, just takes the
+  // first one but concatenated systems, e.g., can interpret the first one
+  // as best for ego and the second as best for other players.
   virtual VectorXf Stitch(const VectorXf& x_ego,
                           const VectorXf& x_others) const {
     return x_ego;
