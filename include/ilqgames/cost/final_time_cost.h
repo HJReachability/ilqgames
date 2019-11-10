@@ -76,6 +76,7 @@ class FinalTimeCost : public Cost {
 
   // Resets threshold time.
   void ResetThresholdTime(Time t) { threshold_time_ = t; }
+  void IncrementThresholdTime(Time dt) { threshold_time_ += dt; }
 
  private:
   // Cost function.

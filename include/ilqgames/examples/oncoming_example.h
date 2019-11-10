@@ -31,13 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Please contact the author(s) of this library if you have any questions.
- * Authors: Chih-Yuan Chiu, (chihyuan_chiu@berkeley.edu)
+ * Authors: Chih-Yuan Chiu         ( chihyuan_chiu@berkeley.edu )
  *          David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
  */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Two Players Incoming.
+// Two Players oncoming.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

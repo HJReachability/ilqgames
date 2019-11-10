@@ -127,9 +127,9 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // Set initial time to first timestamp in new problem.
   const size_t first_timestep_in_new_problem =
       std::distance(operating_point_->xs.begin(), nearest_iter);
-  operating_point_->t0 =
-      t0 + remaining_time_this_step +
-      solver_->TimeStep() * num_steps_to_integrate;  // planner_runtime;
+  const Time change_in_initial_time =
+      remaining_time_this_step + solver_->TimeStep() * num_steps_to_integrate;
+  operating_point_->t0 = t0 + change_in_initial_time;
 
   // NOTE: when we call 'solve' on this new operating point it will
   // automatically end up starting at 'x0', so there is no need to enforce that
@@ -167,6 +167,9 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
         solver_->TimeStep(), operating_point_->xs[kk - 1],
         operating_point_->us[kk - 1]);
   }
+
+  // Update any threshold time costs.
+  UpdateThresholdTimes(change_in_initial_time);
 }
 
 void Problem::OverwriteSolution(const OperatingPoint& operating_point,
@@ -188,6 +191,13 @@ void Problem::OverwriteSolution(const OperatingPoint& operating_point,
       (*strategies_)[ii].alphas[kk] = strategies[ii].alphas[kk];
     }
   }
+}
+
+void Problem::UpdateThresholdTimes(Time time_since_last_update) {
+  for (auto& cost : initial_time_costs_)
+    cost->IncrementThresholdTime(time_since_last_update);
+  for (auto& cost : final_time_costs_)
+    cost->IncrementThresholdTime(time_since_last_update);
 }
 
 std::shared_ptr<SolverLog> Problem::CreateNewLog() const {

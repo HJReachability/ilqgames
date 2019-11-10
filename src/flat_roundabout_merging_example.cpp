@@ -326,62 +326,6 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
                             {kP4XIdx, kP4YIdx}, "RouteProgress"));
   p4_cost.AddStateCost(p4_progress_cost);
 
-  // const std::shared_ptr<SemiquadraticNormCost> p1_min_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx}, kMinV,
-  //                               !kOrientedRight, "MinV"));
-  // const std::shared_ptr<SemiquadraticNormCost> p1_max_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP1VxIdx, kP1VyIdx},
-  //     kP1MaxV,
-  //                               kOrientedRight, "MaxV"));
-  // const std::shared_ptr<QuadraticNormCost> p1_nominal_v_cost(
-  //     new QuadraticNormCost(kNominalVCostWeight, {kP1VxIdx, kP1VyIdx},
-  //                           kP1NominalV, "NominalV"));
-  // p1_cost.AddStateCost(p1_min_v_cost);
-  // p1_cost.AddStateCost(p1_max_v_cost);
-  // p1_cost.AddStateCost(p1_nominal_v_cost);
-
-  // const std::shared_ptr<SemiquadraticNormCost> p2_min_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP2VxIdx, kP2VyIdx}, kMinV,
-  //                               !kOrientedRight, "MinV"));
-  // const std::shared_ptr<SemiquadraticNormCost> p2_max_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP2VxIdx, kP2VyIdx},
-  //     kP2MaxV,
-  //                               kOrientedRight, "MaxV"));
-  // const std::shared_ptr<QuadraticNormCost> p2_nominal_v_cost(
-  //     new QuadraticNormCost(kNominalVCostWeight, {kP2VxIdx, kP2VyIdx},
-  //                           kP2NominalV, "NominalV"));
-  // p2_cost.AddStateCost(p2_min_v_cost);
-  // p2_cost.AddStateCost(p2_max_v_cost);
-  // p2_cost.AddStateCost(p2_nominal_v_cost);
-
-  // const std::shared_ptr<SemiquadraticNormCost> p3_min_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP3VxIdx, kP3VyIdx}, kMinV,
-  //                               !kOrientedRight, "MinV"));
-  // const std::shared_ptr<SemiquadraticNormCost> p3_max_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP3VxIdx, kP3VyIdx},
-  //     kP3MaxV,
-  //                               kOrientedRight, "MaxV"));
-  // const std::shared_ptr<QuadraticNormCost> p3_nominal_v_cost(
-  //     new QuadraticNormCost(kNominalVCostWeight, {kP3VxIdx, kP3VyIdx},
-  //                           kP3NominalV, "NominalV"));
-  // p3_cost.AddStateCost(p3_min_v_cost);
-  // p3_cost.AddStateCost(p3_max_v_cost);
-  // p3_cost.AddStateCost(p3_nominal_v_cost);
-
-  // const std::shared_ptr<SemiquadraticNormCost> p4_min_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP4VxIdx, kP4VyIdx}, kMinV,
-  //                               !kOrientedRight, "MinV"));
-  // const std::shared_ptr<SemiquadraticNormCost> p4_max_v_cost(
-  //     new SemiquadraticNormCost(kMaxVCostWeight, {kP4VxIdx, kP4VyIdx},
-  //     kP4MaxV,
-  //                               kOrientedRight, "MaxV"));
-  // const std::shared_ptr<QuadraticNormCost> p4_nominal_v_cost(
-  //     new QuadraticNormCost(kNominalVCostWeight, {kP4VxIdx, kP4VyIdx},
-  //                           kP4NominalV, "NominalV"));
-  // p4_cost.AddStateCost(p4_min_v_cost);
-  // p4_cost.AddStateCost(p4_max_v_cost);
-  // p4_cost.AddStateCost(p4_nominal_v_cost);
-
   // Penalize control effort.
   constexpr Dimension kApplyInAllDimensions = -1;
   const auto aux_cost = std::make_shared<QuadraticCost>(
@@ -390,52 +334,6 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   p2_cost.AddControlCost(1, aux_cost);
   p3_cost.AddControlCost(2, aux_cost);
   p4_cost.AddControlCost(3, aux_cost);
-
-  // // Goal costs.
-  // constexpr float kFinalTimeWindow = 0.5;  // s
-  // const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx,
-  //                                     lane1.back().x()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx,
-  //                                     lane1.back().y()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p1_cost.AddStateCost(p1_goalx_cost);
-  // p1_cost.AddStateCost(p1_goaly_cost);
-
-  // const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx,
-  //                                     lane2.back().x()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx,
-  //                                     lane2.back().y()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p2_cost.AddStateCost(p2_goalx_cost);
-  // p2_cost.AddStateCost(p2_goaly_cost);
-
-  // const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx,
-  //                                     lane3.back().x()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p3_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx,
-  //                                     lane3.back().y()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p3_cost.AddStateCost(p3_goalx_cost);
-  // p3_cost.AddStateCost(p3_goaly_cost);
-
-  // const auto p4_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP4XIdx,
-  //                                     lane4.back().x()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p4_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP4YIdx,
-  //                                     lane4.back().y()),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p4_cost.AddStateCost(p4_goalx_cost);
-  // p4_cost.AddStateCost(p4_goaly_cost);
 
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
