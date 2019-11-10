@@ -67,6 +67,7 @@ DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
 DEFINE_bool(last_traj, false, "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
+DEFINE_string(scenario, "Parallel", "Scenario (parallel, anti-parallel).");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
@@ -112,7 +113,7 @@ int main(int argc, char** argv) {
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   auto problem =
-      std::make_shared<ilqgames::OncomingExample>(params);
+    std::make_shared<ilqgames::OncomingExample>(params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();

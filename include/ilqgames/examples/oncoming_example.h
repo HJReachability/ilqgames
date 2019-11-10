@@ -54,7 +54,7 @@ namespace ilqgames {
 class OncomingExample : public TopDownRenderableProblem {
  public:
   ~OncomingExample() {}
-  OncomingExample(const SolverParams& params);
+  OncomingExample(const SolverParams& params, const std::string& scenario);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;
