@@ -78,14 +78,14 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 10.0; // s
+static constexpr Time kTimeStep = 0.1;      // s
+static constexpr Time kTimeHorizon = 10.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
-static constexpr float kAdversarialTime = 2.0; // s
+static constexpr float kAdversarialTime = 2.0;  // s
 
 // Car inter-axle distance.
-static constexpr float kInterAxleLength = 4.0; // m
+static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 500000.0;
@@ -98,9 +98,9 @@ static constexpr float kP2NominalVCostWeight = 1.0;
 
 // Newly added, 10-16-2019 20:33 p.m.
 static constexpr float kMaxVCostWeight = 10.0;
-static constexpr float kMinV = 0.0;    // m/s
-static constexpr float kP1MaxV = 35.8; // m/s
-static constexpr float kP2MaxV = 35.8; // m/s
+static constexpr float kMinV = 0.0;     // m/s
+static constexpr float kP1MaxV = 35.8;  // m/s
+static constexpr float kP2MaxV = 35.8;  // m/s
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
@@ -117,33 +117,33 @@ static constexpr float kNominalHeadingCostWeight = 150.0;
 static constexpr bool kOrientedRight = true;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.5; // m
+static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 15.0; // m/s
-static constexpr float kP2NominalV = 10.0; // m/s
-static constexpr float kP3NominalV = 10.0; // m/s
+static constexpr float kP1NominalV = 15.0;  // m/s
+static constexpr float kP2NominalV = 10.0;  // m/s
+static constexpr float kP3NominalV = 10.0;  // m/s
 
 // Nominal heading
-static constexpr float kP1NominalHeading = M_PI_2; // rad
+static constexpr float kP1NominalHeading = M_PI_2;  // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 2.5;   // m
-static constexpr float kP1InitialY = -10.0; // m
+static constexpr float kP1InitialX = 2.5;    // m
+static constexpr float kP1InitialY = -10.0;  // m
 
-static constexpr float kP2InitialX = -1.0;  // m
-static constexpr float kP2InitialY = -10.0; // m
+static constexpr float kP2InitialX = -1.0;   // m
+static constexpr float kP2InitialY = -10.0;  // m
 
-static constexpr float kP3InitialX = 2.5;  // m
-static constexpr float kP3InitialY = 10.0; // m
+static constexpr float kP3InitialX = 2.5;   // m
+static constexpr float kP3InitialY = 10.0;  // m
 
-static constexpr float kP1InitialHeading = M_PI_2; // rad
-static constexpr float kP2InitialHeading = M_PI_2; // rad
-static constexpr float kP3InitialHeading = M_PI_2; // rad
+static constexpr float kP1InitialHeading = M_PI_2;  // rad
+static constexpr float kP2InitialHeading = M_PI_2;  // rad
+static constexpr float kP3InitialHeading = M_PI_2;  // rad
 
-static constexpr float kP1InitialSpeed = 10.0; // m/s
-static constexpr float kP2InitialSpeed = 2.0;  // m/s
-static constexpr float kP3InitialSpeed = 2.0;  // m/s
+static constexpr float kP1InitialSpeed = 10.0;  // m/s
+static constexpr float kP2InitialSpeed = 2.0;   // m/s
+static constexpr float kP3InitialSpeed = 2.0;   // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -186,9 +186,10 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
-} // anonymous namespace
+}  // anonymous namespace
 
-OncomingExample::OncomingExample(const SolverParams &params) {
+OncomingExample::OncomingExample(const SolverParams& params,
+                                 const std::string& scenario) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
@@ -406,8 +407,7 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
-              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-              {kP1XIdx, kP1YIdx})),
+              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
           kAdversarialTime, "InitialProximityCostP1"));
 
   // const std::shared_ptr<ProxCost> p2p3_proximity_cost(
@@ -443,16 +443,16 @@ OncomingExample::OncomingExample(const SolverParams &params) {
       new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
-inline std::vector<float> OncomingExample::Xs(const VectorXf &x) const {
+inline std::vector<float> OncomingExample::Xs(const VectorXf& x) const {
   return {x(kP1XIdx), x(kP2XIdx)};
 }
 
-inline std::vector<float> OncomingExample::Ys(const VectorXf &x) const {
+inline std::vector<float> OncomingExample::Ys(const VectorXf& x) const {
   return {x(kP1YIdx), x(kP2YIdx)};
 }
 
-inline std::vector<float> OncomingExample::Thetas(const VectorXf &x) const {
+inline std::vector<float> OncomingExample::Thetas(const VectorXf& x) const {
   return {x(kP1HeadingIdx), x(kP2HeadingIdx)};
 }
 
-} // namespace ilqgames
+}  // namespace ilqgames

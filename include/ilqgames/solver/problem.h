@@ -44,6 +44,8 @@
 #ifndef ILQGAMES_SOLVER_PROBLEM_H
 #define ILQGAMES_SOLVER_PROBLEM_H
 
+#include <ilqgames/cost/final_time_cost.h>
+#include <ilqgames/cost/initial_time_cost.h>
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -98,6 +100,10 @@ class Problem {
  protected:
   Problem() {}
 
+  // Update threshold times of any initial/final time costs, given that
+  // the given amount of time has elapsed since they were last updated.
+  void UpdateThresholdTimes(Time time_since_last_update);
+
   // Create a new log. This may be overridden by derived classes (e.g., to
   // change the name of the log).
   virtual std::shared_ptr<SolverLog> CreateNewLog() const;
@@ -111,6 +117,10 @@ class Problem {
   // Converged strategies and operating points for all players.
   std::unique_ptr<OperatingPoint> operating_point_;
   std::unique_ptr<std::vector<Strategy>> strategies_;
+
+  // Lists of intial/final time costs.
+  std::vector<std::shared_ptr<InitialTimeCost>> initial_time_costs_;
+  std::vector<std::shared_ptr<FinalTimeCost>> final_time_costs_;
 };  // class Problem
 
 }  // namespace ilqgames
