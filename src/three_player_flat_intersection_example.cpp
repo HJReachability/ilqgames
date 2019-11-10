@@ -384,6 +384,8 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
       kTimeHorizon - kFinalTimeWindow, "GoalY");
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
+  final_time_costs_.push_back(p1_goalx_cost);
+  final_time_costs_.push_back(p1_goaly_cost);
 
   const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
@@ -393,6 +395,8 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
       kTimeHorizon - kFinalTimeWindow, "GoalY");
   p2_cost.AddStateCost(p2_goalx_cost);
   p2_cost.AddStateCost(p2_goaly_cost);
+  final_time_costs_.push_back(p2_goalx_cost);
+  final_time_costs_.push_back(p2_goaly_cost);
 
   const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX),
@@ -402,6 +406,8 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
       kTimeHorizon - kFinalTimeWindow, "GoalY");
   p3_cost.AddStateCost(p3_goalx_cost);
   p3_cost.AddStateCost(p3_goaly_cost);
+  final_time_costs_.push_back(p3_goalx_cost);
+  final_time_costs_.push_back(p3_goaly_cost);
 
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(

@@ -37,10 +37,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Originally: Three player intersection example. Ordering given by:
-// (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
-//
-// Now: Four player intersection example. Ordering given by:
+// Four player intersection example. Ordering given by:
 // (P1, P2, P3, P4) = (Car 1, Car 2, Pedestrian 1, Pedestrian 2).
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,8 +55,7 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
-// #include <ilqgames/examples/three_player_intersection_example.h> // NEW
-#include <ilqgames/examples/four_player_intersection_example.h> // NEW
+#include <ilqgames/examples/four_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
@@ -89,7 +85,6 @@ static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
 static constexpr float kACostWeight = 5.0;
-static constexpr float kCurvatureCostWeight = 1.0;
 static constexpr float kMaxVCostWeight = 10.0;
 static constexpr float kNominalVCostWeight = 10.0;
 
@@ -101,7 +96,7 @@ static constexpr float kMinProximity = 6.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
-static constexpr float kP4ProximityCostWeight = 10.0; // NEW
+static constexpr float kP4ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
@@ -119,47 +114,47 @@ static constexpr float kP2GoalY = 12.0;   // m
 static constexpr float kP3GoalX = 100.0;  // m
 static constexpr float kP3GoalY = 16.0;   // m
 
-static constexpr float kP4GoalX = 100.0;  // m NEW
-static constexpr float kP4GoalY = 16.0;   // m NEW
+static constexpr float kP4GoalX = 100.0;  // m
+static constexpr float kP4GoalY = 16.0;   // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0;  // m/s
 static constexpr float kP2MaxV = 12.0;  // m/s
 static constexpr float kP3MaxV = 2.0;   // m/s
-static constexpr float kP4MaxV = 2.0;   // m/s NEW
+static constexpr float kP4MaxV = 2.0;   // m/s
 static constexpr float kMinV = 1.0;     // m/s
 
 static constexpr float kP1NominalV = 8.0;  // m/s
 static constexpr float kP2NominalV = 5.0;  // m/s
 static constexpr float kP3NominalV = 1.5;  // m/s
-static constexpr float kP4NominalV = 1.5;  // m/s NEW
+static constexpr float kP4NominalV = 1.5;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = -2.0;   // m
 static constexpr float kP2InitialX = -10.0;  // m
 static constexpr float kP3InitialX = -11.0;  // m
-static constexpr float kP4InitialX = 0.0;  // m NEW
+static constexpr float kP4InitialX = 0.0;    // m
 
 static constexpr float kP1InitialY = -30.0;  // m
 static constexpr float kP2InitialY = 45.0;   // m
 static constexpr float kP3InitialY = 16.0;   // m
-static constexpr float kP4InitialY = 0.0;   // m
+static constexpr float kP4InitialY = 0.0;    // m
 
-static constexpr float kP1InitialHeading = M_PI_2;  // rad
-static constexpr float kP2InitialHeading = -M_PI_2; // rad
-static constexpr float kP3InitialHeading = 0.0;     // rad
-static constexpr float kP4InitialHeading = M_PI_2;  // rad NEW, changed heading
+static constexpr float kP1InitialHeading = M_PI_2;   // rad
+static constexpr float kP2InitialHeading = -M_PI_2;  // rad
+static constexpr float kP3InitialHeading = 0.0;      // rad
+static constexpr float kP4InitialHeading = M_PI_2;   // rad
 
 static constexpr float kP1InitialSpeed = 5.0;   // m/s
 static constexpr float kP2InitialSpeed = 5.0;   // m/s
 static constexpr float kP3InitialSpeed = 1.25;  // m/s
-static constexpr float kP4InitialSpeed = 1;  // m/s NEW, slightly slower
+static constexpr float kP4InitialSpeed = 1;     // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
 using P2 = SinglePlayerCar6D;
 using P3 = SinglePlayerUnicycle4D;
-using P4 = SinglePlayerUnicycle4D; // NEW
+using P4 = SinglePlayerUnicycle4D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
@@ -181,17 +176,14 @@ static const Dimension kP3HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
 static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
 
-// P4's X, Y, Heading, V Indices
-
-static const Dimension kP4XIdx = // NEW
-   P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kPxIdx; // NEW
-static const Dimension kP4YIdx = // NEW
-   P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kPyIdx; // NEW
-static const Dimension kP4HeadingIdx = // NEW
-   P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kThetaIdx; // NEW
-static const Dimension kP4VIdx = // NEW
-   P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kVIdx; // NEW
-
+static const Dimension kP4XIdx =
+    P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kPxIdx;
+static const Dimension kP4YIdx =
+    P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kPyIdx;
+static const Dimension kP4HeadingIdx =
+    P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kThetaIdx;
+static const Dimension kP4VIdx =
+    P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kVIdx;
 
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
@@ -200,8 +192,8 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
-static const Dimension kP4OmegaIdx = 0; // NEW
-static const Dimension kP4AIdx = 1; // NEW
+static const Dimension kP4OmegaIdx = 0;
+static const Dimension kP4AIdx = 1;
 
 }  // anonymous namespace
 
@@ -214,7 +206,7 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
            std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
            std::make_shared<SinglePlayerUnicycle4D>(),
            std::make_shared<SinglePlayerUnicycle4D>()},
-          kTimeStep)); // NEW
+          kTimeStep));
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
@@ -230,11 +222,10 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   x0_(kP3YIdx) = kP3InitialY;
   x0_(kP3HeadingIdx) = kP3InitialHeading;
   x0_(kP3VIdx) = kP3InitialSpeed;
-  x0_(kP4XIdx) = kP4InitialX; // NEW
-  x0_(kP4YIdx) = kP4InitialY; // NEW
-  x0_(kP4HeadingIdx) = kP4InitialHeading; // NEW
-  x0_(kP4VIdx) = kP4InitialSpeed; // NEW
-
+  x0_(kP4XIdx) = kP4InitialX;
+  x0_(kP4YIdx) = kP4InitialY;
+  x0_(kP4HeadingIdx) = kP4InitialHeading;
+  x0_(kP4VIdx) = kP4InitialSpeed;
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
@@ -246,7 +237,7 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost, p4_cost; // NEW
+  PlayerCost p1_cost, p2_cost, p3_cost, p4_cost;
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -259,7 +250,7 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   const Polyline2 lane3(
       {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
   const Polyline2 lane4(
-      {Point2(-1000.0, kP4InitialY), Point2(1000.0, kP4InitialY)}); // NEW LANE?
+      {Point2(-1000.0, kP4InitialY), Point2(1000.0, kP4InitialY)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
@@ -305,8 +296,6 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p3_cost.AddStateCost(p3_lane_cost);
   p3_cost.AddStateCost(p3_lane_r_cost);
   p3_cost.AddStateCost(p3_lane_l_cost);
-
-  // NEW lane cost for P4
 
   const std::shared_ptr<QuadraticPolyline2Cost> p4_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane4, {kP4XIdx, kP4YIdx},
@@ -354,8 +343,6 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p3_cost.AddStateCost(p3_max_v_cost);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
-  // NEW min_v_cost, max_v_cost, etc. for P4
-
   const auto p4_min_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP4VIdx, kMinV, !kOrientedRight, "MinV");
   const auto p4_max_v_cost = std::make_shared<SemiquadraticCost>(
@@ -365,28 +352,6 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p4_cost.AddStateCost(p3_min_v_cost);
   p4_cost.AddStateCost(p3_max_v_cost);
   p4_cost.AddStateCost(p3_nominal_v_cost);
-
-  // // Curvature costs for P1 and P2.
-  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
-  // p1_cost.AddStateCost(p1_curvature_cost);
-
-  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
-  // p2_cost.AddStateCost(p2_curvature_cost);
-
-  // // Penalize acceleration for cars.
-  // const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP1AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p1_cost.AddStateCost(p1_a_cost);
-
-  // const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP2AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p2_cost.AddStateCost(p2_a_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
@@ -410,8 +375,6 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
-  // NEW P4 omega_cost
-
   const auto p4_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
   const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP4AIdx,
@@ -420,12 +383,8 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p4_cost.AddControlCost(3, p4_a_cost);
 
   // Goal costs.
-
   constexpr float kInitialTimeWindow = 0.5;  // s
-
-  // to edit
-
-  constexpr float kFinalTimeWindow = 0.5;  // s
+  constexpr float kFinalTimeWindow = 0.5;    // s
   const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
       kTimeHorizon - kFinalTimeWindow, "GoalX");
@@ -434,6 +393,8 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       kTimeHorizon - kFinalTimeWindow, "GoalY");
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
+  final_time_costs_.push_back(p1_goalx_cost);
+  final_time_costs_.push_back(p1_goaly_cost);
 
   const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
@@ -443,6 +404,8 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       kTimeHorizon - kFinalTimeWindow, "GoalY");
   p2_cost.AddStateCost(p2_goalx_cost);
   p2_cost.AddStateCost(p2_goaly_cost);
+  final_time_costs_.push_back(p2_goalx_cost);
+  final_time_costs_.push_back(p2_goaly_cost);
 
   const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX),
@@ -452,8 +415,8 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       kTimeHorizon - kFinalTimeWindow, "GoalY");
   p3_cost.AddStateCost(p3_goalx_cost);
   p3_cost.AddStateCost(p3_goaly_cost);
-
-  // NEW P4 goalx_cost, goaly_cost
+  final_time_costs_.push_back(p3_goalx_cost);
+  final_time_costs_.push_back(p3_goaly_cost);
 
   const auto p4_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP4XIdx, kP4GoalX),
@@ -463,10 +426,10 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
       kTimeHorizon - kFinalTimeWindow, "GoalY");
   p4_cost.AddStateCost(p4_goalx_cost);
   p4_cost.AddStateCost(p4_goaly_cost);
+  final_time_costs_.push_back(p4_goalx_cost);
+  final_time_costs_.push_back(p4_goaly_cost);
 
   // Pairwise proximity costs.
-  // New Pairwise proximity costs have been added for P1, P2, P3 w.r.t. P4.
-
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
@@ -506,8 +469,6 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p3_cost.AddStateCost(p3p2_proximity_cost);
   p3_cost.AddStateCost(p3p4_proximity_cost);
 
-  // NEW P4 Pairwise Proximity Cost
-
   const std::shared_ptr<ProxCost> p4p1_proximity_cost(
       new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
@@ -522,9 +483,6 @@ FourPlayerIntersectionExample::FourPlayerIntersectionExample(
   p4_cost.AddStateCost(p4p3_proximity_cost);
 
   // Set up solver.
-
-  // Add in P4 costs, indices, etc.
-
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost, p4_cost},
                               kTimeHorizon, params));
 }

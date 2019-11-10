@@ -366,60 +366,6 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
   p2_cost.AddControlCost(1, car_aux_cost);
   p3_cost.AddControlCost(2, car_aux_cost);
 
-  // const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  // const auto p1_jerk_cost =
-  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0,
-  //     "Jerk");
-  // p1_cost.AddControlCost(0, p1_omega_cost);
-  // p1_cost.AddControlCost(0, p1_jerk_cost);
-
-  // const auto p2_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  // const auto p2_jerk_cost =
-  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0,
-  //     "Jerk");
-  // p2_cost.AddControlCost(1, p2_omega_cost);
-  // p2_cost.AddControlCost(1, p2_jerk_cost);
-
-  // const auto p3_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  // const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP3AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p3_cost.AddControlCost(2, p3_omega_cost);
-  // p3_cost.AddControlCost(2, p3_a_cost);
-
-  // // Goal costs.
-  // constexpr float kFinalTimeWindow = 0.5;  // s
-  // const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p1_cost.AddStateCost(p1_goalx_cost);
-  // p1_cost.AddStateCost(p1_goaly_cost);
-
-  // const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p2_cost.AddStateCost(p2_goalx_cost);
-  // p2_cost.AddStateCost(p2_goaly_cost);
-
-  // const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalX");
-  // const auto p3_goaly_cost = std::make_shared<FinalTimeCost>(
-  //     std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY),
-  //     kTimeHorizon - kFinalTimeWindow, "GoalY");
-  // p3_cost.AddStateCost(p3_goalx_cost);
-  // p3_cost.AddStateCost(p3_goaly_cost);
-
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
