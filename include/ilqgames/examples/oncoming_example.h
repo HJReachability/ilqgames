@@ -56,6 +56,7 @@ class OncomingExample : public TopDownRenderableProblem {
   ~OncomingExample() {}
   OncomingExample(const SolverParams& params, const std::string& scenario);
 
+
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;
   std::vector<float> Ys(const VectorXf& x) const;
