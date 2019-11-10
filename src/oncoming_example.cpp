@@ -78,14 +78,14 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
+static constexpr Time kTimeStep = 0.1;     // s
+static constexpr Time kTimeHorizon = 10.0; // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
-static constexpr float kAdversarialTime = 2.0;  // s
+static constexpr float kAdversarialTime = 1.0; // s
 
 // Car inter-axle distance.
-static constexpr float kInterAxleLength = 4.0;  // m
+static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 500000.0;
@@ -98,14 +98,14 @@ static constexpr float kP2NominalVCostWeight = 1.0;
 
 // Newly added, 10-16-2019 20:33 p.m.
 static constexpr float kMaxVCostWeight = 10.0;
-static constexpr float kMinV = 0.0;     // m/s
-static constexpr float kP1MaxV = 35.8;  // m/s
-static constexpr float kP2MaxV = 35.8;  // m/s
+static constexpr float kMinV = 0.0;    // m/s
+static constexpr float kP1MaxV = 35.8; // m/s
+static constexpr float kP2MaxV = 35.8; // m/s
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kMinProximity = 5.0;
+static constexpr float kMinProximity = 10.0;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
 // static constexpr float kP3ProximityCostWeight = 100.0;
@@ -117,33 +117,35 @@ static constexpr float kNominalHeadingCostWeight = 150.0;
 static constexpr bool kOrientedRight = true;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.5;  // m
+static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 15.0;  // m/s
-static constexpr float kP2NominalV = 10.0;  // m/s
-static constexpr float kP3NominalV = 10.0;  // m/s
+static constexpr float kP1NominalV = 15.0; // m/s
+static constexpr float kP2NominalV = 10.0; // m/s
+static constexpr float kP3NominalV = 10.0; // m/s
 
 // Nominal heading
-static constexpr float kP1NominalHeading = M_PI_2;  // rad
+static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 2.5;    // m
-static constexpr float kP1InitialY = -10.0;  // m
+static constexpr float kP1InitialX = 2.5;   // m
+static constexpr float kP1InitialY = -10.0; // m
 
-static constexpr float kP2InitialX = -1.0;   // m
-static constexpr float kP2InitialY = -10.0;  // m
+static constexpr float kP2InitialX = -1.0;             // m
+static constexpr float kP2InitialY = -10.0;            // m
+static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
-static constexpr float kP3InitialX = 2.5;   // m
-static constexpr float kP3InitialY = 10.0;  // m
+static constexpr float kP3InitialX = 2.5;  // m
+static constexpr float kP3InitialY = 10.0; // m
 
-static constexpr float kP1InitialHeading = M_PI_2;  // rad
-static constexpr float kP2InitialHeading = M_PI_2;  // rad
-static constexpr float kP3InitialHeading = M_PI_2;  // rad
+static constexpr float kP1InitialHeading = M_PI_2;              // rad
+static constexpr float kP2InitialHeading = M_PI_2;              // rad
+static constexpr float kP2InitialHeadingAntiparallel = -M_PI_2; // rad
+static constexpr float kP3InitialHeading = M_PI_2;              // rad
 
-static constexpr float kP1InitialSpeed = 10.0;  // m/s
-static constexpr float kP2InitialSpeed = 2.0;   // m/s
-static constexpr float kP3InitialSpeed = 2.0;   // m/s
+static constexpr float kP1InitialSpeed = 10.0; // m/s
+static constexpr float kP2InitialSpeed = 2.0;  // m/s
+static constexpr float kP3InitialSpeed = 2.0;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -186,10 +188,10 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
-}  // anonymous namespace
+} // anonymous namespace
 
-OncomingExample::OncomingExample(const SolverParams& params,
-                                 const std::string& scenario) {
+OncomingExample::OncomingExample(const SolverParams &params,
+                                 const std::string &scenario) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
@@ -203,10 +205,18 @@ OncomingExample::OncomingExample(const SolverParams& params,
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
   x0_(kP1VIdx) = kP1InitialSpeed;
+
   x0_(kP2XIdx) = kP2InitialX;
-  x0_(kP2YIdx) = kP2InitialY;
-  x0_(kP2HeadingIdx) = kP2InitialHeading;
+
+  if (scenario == "Parallel") {
+    x0_(kP2HeadingIdx) = kP2InitialHeading;
+    x0_(kP2YIdx) = kP2InitialY;
+  } else {
+    x0_(kP2HeadingIdx) = kP2InitialHeadingAntiparallel;
+    x0_(kP2YIdx) = kP2InitialYAntiparallel;
+  }
   x0_(kP2VIdx) = kP2InitialSpeed;
+
   // x0_(kP3XIdx) = kP3InitialX;
   // x0_(kP3YIdx) = kP3InitialY;
   // x0_(kP3HeadingIdx) = kP3InitialHeading;
@@ -299,7 +309,6 @@ OncomingExample::OncomingExample(const SolverParams& params,
   p1_cost.AddStateCost(p1_min_v_cost);
   p1_cost.AddStateCost(p1_max_v_cost);
   p1_cost.AddStateCost(p1_nominal_v_cost);
-
   const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
   const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
@@ -443,16 +452,16 @@ OncomingExample::OncomingExample(const SolverParams& params,
       new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
-inline std::vector<float> OncomingExample::Xs(const VectorXf& x) const {
+inline std::vector<float> OncomingExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx)};
 }
 
-inline std::vector<float> OncomingExample::Ys(const VectorXf& x) const {
+inline std::vector<float> OncomingExample::Ys(const VectorXf &x) const {
   return {x(kP1YIdx), x(kP2YIdx)};
 }
 
-inline std::vector<float> OncomingExample::Thetas(const VectorXf& x) const {
+inline std::vector<float> OncomingExample::Thetas(const VectorXf &x) const {
   return {x(kP1HeadingIdx), x(kP2HeadingIdx)};
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames
