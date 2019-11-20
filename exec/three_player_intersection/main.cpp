@@ -62,7 +62,8 @@
 // Optional log saving and visualization.
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
-DEFINE_bool(last_traj, false, "Should the solver only dump the last trajectory?");
+DEFINE_bool(last_traj, false,
+            "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
@@ -130,15 +131,27 @@ int main(int argc, char** argv) {
   else
     LOG(INFO) << "Solution may not be a local Nash.";
 
+  // Confirm with numerical check.
+  constexpr float kMaxPerturbation = 10.;
+  constexpr size_t kNumPerturbationsPerPlayer = 10;
+  const bool is_numerical_nash = RandomCheckLocalNashEquilibrium(
+      problem->Solver().PlayerCosts(), problem->CurrentStrategies(),
+      problem->CurrentOperatingPoint(), problem->Solver().Dynamics(),
+      problem->InitialState(), problem->Solver().TimeStep(), kMaxPerturbation,
+      kNumPerturbationsPerPlayer);
+  if (is_numerical_nash)
+    LOG(INFO) << "Solution is a numerical Nash.";
+  else
+    LOG(INFO) << "Solution is not a numerical Nash.";
+
   // Dump the logs and/or exit.
-  if (FLAGS_save) { 
-    if (FLAGS_experiment_name == "") { 
-          CHECK(log->Save(FLAGS_last_traj)); 
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(log->Save(FLAGS_last_traj));
+    } else {
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
     }
-    else { 
-      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name)); 
-    }
-  }  
+  }
   if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.

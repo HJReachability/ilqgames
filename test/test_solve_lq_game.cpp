@@ -157,10 +157,11 @@ class SolveLQGameTest : public ::testing::Test {
     linearization_ = dynamics_->Linearize(
         0.0, VectorXf::Zero(2), {VectorXf::Zero(1), VectorXf::Zero(1)});
 
+    constexpr float kRelativeCostScaling = 0.1;
     const MatrixXf Q1 = MatrixXf::Identity(2, 2);
-    const MatrixXf Q2 = -Q1;
+    const MatrixXf Q2 = kRelativeCostScaling * Q1;
     const VectorXf l1 = VectorXf::Zero(2);
-    const VectorXf l2 = -l1;
+    const VectorXf l2 = kRelativeCostScaling * l1;
 
     const MatrixXf R11 = MatrixXf::Identity(1, 1);
     const MatrixXf R12 = MatrixXf::Zero(1, 1);
@@ -186,7 +187,8 @@ class SolveLQGameTest : public ::testing::Test {
     player_costs_.push_back(player1_cost);
 
     PlayerCost player2_cost;
-    player2_cost.AddStateCost(std::make_shared<QuadraticCost>(0.1, -1));
+    player2_cost.AddStateCost(
+        std::make_shared<QuadraticCost>(kRelativeCostScaling, -1));
     player2_cost.AddControlCost(0, std::make_shared<QuadraticCost>(0.0, -1));
     player2_cost.AddControlCost(1, std::make_shared<QuadraticCost>(1.0, -1));
     player_costs_.push_back(player2_cost);
@@ -246,7 +248,7 @@ TEST_F(SolveLQGameTest, MatchesLyapunovIterations) {
             constants::kSmallNumber);
 }
 
-TEST_F(SolveLQGameTest, LocalNashEquilibrium) {
+TEST_F(SolveLQGameTest, NashEquilibrium) {
   // Set a zero operating point.
   OperatingPoint operating_point(kNumTimeSteps, dynamics_->NumPlayers(), 0.0);
   for (size_t kk = 0; kk < kNumTimeSteps; kk++) {
@@ -260,7 +262,7 @@ TEST_F(SolveLQGameTest, LocalNashEquilibrium) {
   const VectorXf x0 = VectorXf::Ones(dynamics_->XDim());
 
   constexpr float kMaxPerturbation = 0.1;
-  constexpr size_t kNumPerturbationsPerPlayer = 100;
+  constexpr size_t kNumPerturbationsPerPlayer = 10;
   EXPECT_TRUE(RandomCheckLocalNashEquilibrium(
       player_costs_, lq_solution_, operating_point, *dynamics_, x0, kTimeStep,
       kMaxPerturbation, kNumPerturbationsPerPlayer));

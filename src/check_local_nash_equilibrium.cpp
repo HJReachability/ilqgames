@@ -118,22 +118,32 @@ bool RandomCheckLocalNashEquilibrium(
     for (size_t jj = 0; jj < num_perturbations_per_player; jj++) {
       // Perturb strategy for player ii.
       for (size_t kk = 0; kk < num_time_steps; kk++) {
-        MatrixXf& Pk = perturbed_strategies[ii].Ps[kk];
-        Pk += max_perturbation * MatrixXf::Random(Pk.rows(), Pk.cols());
-
         VectorXf& alphak = perturbed_strategies[ii].alphas[kk];
-        alphak += max_perturbation * VectorXf::Random(alphak.size());
+        const VectorXf random_direction = VectorXf::Random(alphak.size());
+        alphak += max_perturbation * random_direction / random_direction.norm();
+
+        // Compute new costs.
+        const std::vector<float> perturbed_costs =
+            ComputeStrategyCosts(player_costs, perturbed_strategies,
+                                 operating_point, dynamics, x0, time_step);
+
+        // Check Nash condition.
+        if (perturbed_costs[ii] < nominal_costs[ii]) {
+          std::printf("player %hu, timestep %zu: nominal %f > perturbed %f\n",
+                      ii, kk, nominal_costs[ii], perturbed_costs[ii]);
+          std::cout << "nominal u: " << operating_point.us[kk][ii].transpose()
+                    << ", alpha original: "
+                    << strategies[ii].alphas[kk].transpose()
+                    << ", vs. perturbed " << alphak.transpose() << std::endl;
+          return false;
+        }
+
+        // Reset this alpha.
+        alphak = strategies[ii].alphas[kk];
       }
 
-      // Compute new costs.
-      const std::vector<float> perturbed_costs =
-          ComputeStrategyCosts(player_costs, perturbed_strategies,
-                               operating_point, dynamics, x0, time_step);
-
-      if (perturbed_costs[ii] < nominal_costs[ii]) return false;
-
       // Reset player ii's strategy.
-      perturbed_strategies[ii] = strategies[ii];
+      //      perturbed_strategies[ii] = strategies[ii];
     }
   }
 
