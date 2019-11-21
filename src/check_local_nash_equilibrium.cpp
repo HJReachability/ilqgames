@@ -63,7 +63,7 @@ std::vector<float> ComputeStrategyCosts(
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    float time_step) {
+    float time_step, bool open_loop = false) {
   // Start at the initial state.
   VectorXf x(x0);
   Time t = 0.0;
@@ -75,8 +75,12 @@ std::vector<float> ComputeStrategyCosts(
   for (size_t kk = 0; kk < num_time_steps; kk++) {
     // Update controls.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
-                              operating_point.us[kk][ii]);
+      if (open_loop)
+        us[ii] = strategies[ii](kk, VectorXf::Zero(x.size()),
+                                operating_point.us[kk][ii]);
+      else
+        us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
+                                operating_point.us[kk][ii]);
     }
 
     // Update costs.
@@ -93,13 +97,12 @@ std::vector<float> ComputeStrategyCosts(
 
 }  // anonymous namespace
 
-bool RandomCheckLocalNashEquilibrium(
+bool NumericalCheckLocalNashEquilibrium(
     const std::vector<PlayerCost>& player_costs,
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    Time time_step, float max_perturbation,
-    size_t num_perturbations_per_player) {
+    Time time_step, float max_perturbation, bool open_loop) {
   CHECK_EQ(strategies.size(), player_costs.size());
   CHECK_EQ(strategies.size(), dynamics.NumPlayers());
   CHECK_EQ(x0.size(), dynamics.XDim());
@@ -108,32 +111,42 @@ bool RandomCheckLocalNashEquilibrium(
   CHECK_EQ(num_time_steps, strategies[0].alphas.size());
 
   // Compute nominal equilibrium cost.
-  const std::vector<float> nominal_costs = ComputeStrategyCosts(
-      player_costs, strategies, operating_point, dynamics, x0, time_step);
+  const std::vector<float> nominal_costs =
+      ComputeStrategyCosts(player_costs, strategies, operating_point, dynamics,
+                           x0, time_step, open_loop);
 
   // For each player, perturb strategies with Gaussian noise a bunch of times
   // and if cost decreases then return false.
   std::vector<Strategy> perturbed_strategies(strategies);
   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-    for (size_t jj = 0; jj < num_perturbations_per_player; jj++) {
-      // Perturb strategy for player ii.
-      for (size_t kk = 0; kk < num_time_steps; kk++) {
-        MatrixXf& Pk = perturbed_strategies[ii].Ps[kk];
-        Pk += max_perturbation * MatrixXf::Random(Pk.rows(), Pk.cols());
+    for (size_t kk = 0; kk < num_time_steps; kk++) {
+      VectorXf& alphak = perturbed_strategies[ii].alphas[kk];
 
-        VectorXf& alphak = perturbed_strategies[ii].alphas[kk];
-        alphak += max_perturbation * VectorXf::Random(alphak.size());
+      for (size_t jj = 0; jj < alphak.size(); jj++) {
+        alphak(jj) += max_perturbation;
+
+        // Compute new costs.
+        const std::vector<float> perturbed_costs = ComputeStrategyCosts(
+            player_costs, perturbed_strategies, operating_point, dynamics, x0,
+            time_step, open_loop);
+
+        // Check Nash condition.
+        if (perturbed_costs[ii] < nominal_costs[ii]) {
+          std::printf("player %hu, timestep %zu: nominal %f > perturbed %f\n",
+                      ii, kk, nominal_costs[ii], perturbed_costs[ii]);
+          std::cout << "nominal u: " << operating_point.us[kk][ii].transpose()
+                    << ", alpha original: "
+                    << strategies[ii].alphas[kk].transpose()
+                    << ", vs. perturbed " << alphak.transpose() << std::endl;
+          return false;
+        }
+
+        // Reset this alpha.
+        alphak = strategies[ii].alphas[kk];
       }
 
-      // Compute new costs.
-      const std::vector<float> perturbed_costs =
-          ComputeStrategyCosts(player_costs, perturbed_strategies,
-                               operating_point, dynamics, x0, time_step);
-
-      if (perturbed_costs[ii] < nominal_costs[ii]) return false;
-
       // Reset player ii's strategy.
-      perturbed_strategies[ii] = strategies[ii];
+      //      perturbed_strategies[ii] = strategies[ii];
     }
   }
 

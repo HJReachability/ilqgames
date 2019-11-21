@@ -56,15 +56,13 @@
 namespace ilqgames {
 
 // Check if this set of strategies is a local Nash equilibrium by randomly
-// changing each player's strategy with a number of small Gaussian
-// perturbations.
-bool RandomCheckLocalNashEquilibrium(
+// changing each player's strategy with a number of small perturbations.
+bool NumericalCheckLocalNashEquilibrium(
     const std::vector<PlayerCost>& player_costs,
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    Time time_step, float max_perturbation,
-    size_t num_perturbations_per_player);
+    Time time_step, float max_perturbation, bool open_loop = false);
 
 // Check sufficient conditions for local Nash equilibrium, i.e., Q_i, R_ij all
 // positive semidefinite for each player. Optionally takes in a pointer to flat
