@@ -206,13 +206,14 @@ OncomingExample::OncomingExample(const SolverParams &params) {
 
   x0_(kP2XIdx) = kP2InitialX;
 
-  if (scenario == "Parallel") {
-    x0_(kP2HeadingIdx) = kP2InitialHeading;
-    x0_(kP2YIdx) = kP2InitialY;
-  } else {
-    x0_(kP2HeadingIdx) = kP2InitialHeadingAntiparallel;
-    x0_(kP2YIdx) = kP2InitialYAntiparallel;
-  }
+  // if (scenario == "Parallel") {
+  //   x0_(kP2HeadingIdx) = kP2InitialHeading;
+  //   x0_(kP2YIdx) = kP2InitialY;
+  // } else {
+  //   x0_(kP2HeadingIdx) = kP2InitialHeadingAntiparallel;
+  //   x0_(kP2YIdx) = kP2InitialYAntiparallel;
+  // }
+
   x0_(kP2VIdx) = kP2InitialSpeed;
 
   // x0_(kP3XIdx) = kP3InitialX;
