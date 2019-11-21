@@ -189,8 +189,7 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
 } // anonymous namespace
 
-OncomingExample::OncomingExample(const SolverParams &params,
-                                 const std::string &scenario) {
+OncomingExample::OncomingExample(const SolverParams &params) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
