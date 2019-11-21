@@ -47,6 +47,7 @@
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
@@ -67,17 +68,20 @@
 #include <memory>
 #include <vector>
 
+// Adversarial time.
+DEFINE_double(adversarial_time, 0.0, "Adversarial time window (s).");
+
 namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
+static constexpr Time kTimeStep = 0.1;     // s
+static constexpr Time kTimeHorizon = 10.0; // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
-static constexpr float kInterAxleLength = 4.0;  // m
+static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 50.0;
@@ -101,44 +105,44 @@ using ProxCost = ProximityCost;
 static constexpr bool kOrientedRight = true;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.5;  // m
+static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Goal points.
-static constexpr float kP1GoalX = -6.0;   // m
-static constexpr float kP1GoalY = 600.0;  // m
+static constexpr float kP1GoalX = -6.0;  // m
+static constexpr float kP1GoalY = 600.0; // m
 
-static constexpr float kP2GoalX = 500.0;  // m
-static constexpr float kP2GoalY = 12.0;   // m
+static constexpr float kP2GoalX = 500.0; // m
+static constexpr float kP2GoalY = 12.0;  // m
 
-static constexpr float kP3GoalX = 100.0;  // m
-static constexpr float kP3GoalY = 16.0;   // m
+static constexpr float kP3GoalX = 100.0; // m
+static constexpr float kP3GoalY = 16.0;  // m
 
 // Nominal and max speed.
-static constexpr float kP1MaxV = 12.0;  // m/s
-static constexpr float kP2MaxV = 12.0;  // m/s
-static constexpr float kP3MaxV = 2.0;   // m/s
-static constexpr float kMinV = 1.0;     // m/s
+static constexpr float kP1MaxV = 12.0; // m/s
+static constexpr float kP2MaxV = 12.0; // m/s
+static constexpr float kP3MaxV = 2.0;  // m/s
+static constexpr float kMinV = 1.0;    // m/s
 
-static constexpr float kP1NominalV = 8.0;  // m/s
-static constexpr float kP2NominalV = 5.0;  // m/s
-static constexpr float kP3NominalV = 1.5;  // m/s
+static constexpr float kP1NominalV = 8.0; // m/s
+static constexpr float kP2NominalV = 5.0; // m/s
+static constexpr float kP3NominalV = 1.5; // m/s
 
 // Initial state.
-static constexpr float kP1InitialX = -2.0;   // m
-static constexpr float kP2InitialX = -10.0;  // m
-static constexpr float kP3InitialX = -11.0;  // m
+static constexpr float kP1InitialX = -2.0;  // m
+static constexpr float kP2InitialX = -10.0; // m
+static constexpr float kP3InitialX = -11.0; // m
 
-static constexpr float kP1InitialY = -30.0;  // m
-static constexpr float kP2InitialY = 45.0;   // m
-static constexpr float kP3InitialY = 16.0;   // m
+static constexpr float kP1InitialY = -30.0; // m
+static constexpr float kP2InitialY = 45.0;  // m
+static constexpr float kP3InitialY = 16.0;  // m
 
-static constexpr float kP1InitialHeading = M_PI_2;   // rad
-static constexpr float kP2InitialHeading = -M_PI_2;  // rad
-static constexpr float kP3InitialHeading = 0.0;      // rad
+static constexpr float kP1InitialHeading = M_PI_2;  // rad
+static constexpr float kP2InitialHeading = -M_PI_2; // rad
+static constexpr float kP3InitialHeading = 0.0;     // rad
 
-static constexpr float kP1InitialSpeed = 5.0;   // m/s
-static constexpr float kP2InitialSpeed = 5.0;   // m/s
-static constexpr float kP3InitialSpeed = 1.25;  // m/s
+static constexpr float kP1InitialSpeed = 5.0;  // m/s
+static constexpr float kP2InitialSpeed = 5.0;  // m/s
+static constexpr float kP3InitialSpeed = 1.25; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -172,10 +176,10 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
-}  // anonymous namespace
+} // anonymous namespace
 
 ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
-    const SolverParams& params) {
+    const SolverParams &params, const std::string &scenario) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
@@ -343,7 +347,7 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p3_cost.AddControlCost(2, p3_a_cost);
 
   // Goal costs.
-  constexpr float kFinalTimeWindow = 0.5;  // s
+  constexpr float kFinalTimeWindow = 0.5; // s
   const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
       kTimeHorizon - kFinalTimeWindow, "GoalX");
@@ -387,22 +391,58 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p1_cost.AddStateCost(p1p2_proximity_cost);
   p1_cost.AddStateCost(p1p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // const std::shared_ptr<ProxCost> p2p1_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+
+  const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
+      new InitialTimeCost(
+          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
+              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
+          FLAGS_adversarial_time, "InitialProximityCostP1"));
+  p2_cost.AddStateCost(p2p1_initial_proximity_cost);
+  initial_time_costs_.push_back(p2p1_initial_proximity_cost);
+
+  const std::shared_ptr<FinalTimeCost> p2p1_final_proximity_cost(
+      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                            kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+
+                        FLAGS_adversarial_time, "FinalProximityCostP1"));
+  p2_cost.AddStateCost(p2p1_final_proximity_cost);
+  final_time_costs_.push_back(p2p1_final_proximity_cost);
+
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p2_cost.AddStateCost(p2p1_proximity_cost);
+  // p2_cost.AddStateCost(p2p1_proximity_cost);
   p2_cost.AddStateCost(p2p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p3p1_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+
+  const std::shared_ptr<InitialTimeCost> p3p1_initial_proximity_cost(
+      new InitialTimeCost(
+          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
+              kP2ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
+          FLAGS_adversarial_time, "InitialProximityCostP1"));
+  p3_cost.AddStateCost(p3p1_initial_proximity_cost);
+  initial_time_costs_.push_back(p2p1_initial_proximity_cost);
+
+  const std::shared_ptr<FinalTimeCost> p3p1_final_proximity_cost(
+      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                            kP2ProximityCostWeight, {kP3XIdx, kP3YIdx},
+                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+
+                        FLAGS_adversarial_time, "FinalProximityCostP1"));
+  p3_cost.AddStateCost(p3p1_final_proximity_cost);
+  final_time_costs_.push_back(p3p1_final_proximity_cost);
+
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  p3_cost.AddStateCost(p3p1_proximity_cost);
+  // p3_cost.AddStateCost(p3p1_proximity_cost);
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
@@ -410,19 +450,19 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
                               kTimeHorizon, params));
 }
 
-inline std::vector<float> ThreePlayerIntersectionExample::Xs(
-    const VectorXf& x) const {
+inline std::vector<float>
+ThreePlayerIntersectionExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx)};
 }
 
-inline std::vector<float> ThreePlayerIntersectionExample::Ys(
-    const VectorXf& x) const {
+inline std::vector<float>
+ThreePlayerIntersectionExample::Ys(const VectorXf &x) const {
   return {x(kP1YIdx), x(kP2YIdx), x(kP3YIdx)};
 }
 
-inline std::vector<float> ThreePlayerIntersectionExample::Thetas(
-    const VectorXf& x) const {
+inline std::vector<float>
+ThreePlayerIntersectionExample::Thetas(const VectorXf &x) const {
   return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx)};
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames
