@@ -262,10 +262,12 @@ TEST_F(SolveLQGameTest, NashEquilibrium) {
   const VectorXf x0 = VectorXf::Ones(dynamics_->XDim());
 
   constexpr float kMaxPerturbation = 0.1;
-  constexpr size_t kNumPerturbationsPerPlayer = 10;
-  EXPECT_TRUE(RandomCheckLocalNashEquilibrium(
+  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
       player_costs_, lq_solution_, operating_point, *dynamics_, x0, kTimeStep,
-      kMaxPerturbation, kNumPerturbationsPerPlayer));
+      kMaxPerturbation));
+  EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
+      player_costs_, lq_solution_, operating_point, *dynamics_, x0, kTimeStep,
+      kMaxPerturbation, true));
 
   EXPECT_TRUE(CheckSufficientLocalNashEquilibrium(player_costs_,
                                                   operating_point, kTimeStep));

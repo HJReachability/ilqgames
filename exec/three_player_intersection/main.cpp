@@ -105,6 +105,7 @@ int main(int argc, char** argv) {
   // Set up the game.
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
+  //  params.max_solver_iters = 10000;
   params.linesearch = FLAGS_linesearch;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
@@ -132,13 +133,13 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Solution may not be a local Nash.";
 
   // Confirm with numerical check.
-  constexpr float kMaxPerturbation = 10.;
-  constexpr size_t kNumPerturbationsPerPlayer = 10;
-  const bool is_numerical_nash = RandomCheckLocalNashEquilibrium(
+  constexpr float kMaxPerturbation = 0.91;
+  constexpr bool kOpenLoop = false;
+  const bool is_numerical_nash = NumericalCheckLocalNashEquilibrium(
       problem->Solver().PlayerCosts(), problem->CurrentStrategies(),
       problem->CurrentOperatingPoint(), problem->Solver().Dynamics(),
       problem->InitialState(), problem->Solver().TimeStep(), kMaxPerturbation,
-      kNumPerturbationsPerPlayer);
+      kOpenLoop);
   if (is_numerical_nash)
     LOG(INFO) << "Solution is a numerical Nash.";
   else

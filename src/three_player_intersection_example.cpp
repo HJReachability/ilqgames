@@ -93,9 +93,9 @@ static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 6.0;
-static constexpr float kP1ProximityCostWeight = 0.0;
-static constexpr float kP2ProximityCostWeight = 0.0;
-static constexpr float kP3ProximityCostWeight = 0.0;
+static constexpr float kP1ProximityCostWeight = 100.0;
+static constexpr float kP2ProximityCostWeight = 100.0;
+static constexpr float kP3ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
@@ -233,9 +233,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
-  // p1_cost.AddStateCost(p1_lane_cost);
-  // p1_cost.AddStateCost(p1_lane_r_cost);
-  // p1_cost.AddStateCost(p1_lane_l_cost);
+  p1_cost.AddStateCost(p1_lane_cost);
+  p1_cost.AddStateCost(p1_lane_r_cost);
+  p1_cost.AddStateCost(p1_lane_l_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
