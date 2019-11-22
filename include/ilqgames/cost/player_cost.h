@@ -56,6 +56,12 @@ namespace ilqgames {
 
 class PlayerCost {
  public:
+  ~PlayerCost() {}
+  explicit PlayerCost(float state_regularization = 0.0,
+                      float control_regularization = 0.0)
+      : state_regularization_(state_regularization),
+        control_regularization_(control_regularization) {}
+
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
@@ -86,6 +92,9 @@ class PlayerCost {
   std::vector<std::shared_ptr<Cost>> state_costs_;
   CostMap<Cost> control_costs_;
   CostMap<GeneralizedControlCost> generalized_control_costs_;
+
+  // Regularization on costs.
+  const float state_regularization_, control_regularization_;
 };  //\class PlayerCost
 
 }  // namespace ilqgames

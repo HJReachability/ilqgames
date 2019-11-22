@@ -80,6 +80,9 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
+static constexpr float kStateRegularization = 1.0;
+static constexpr float kControlRegularization = 5.0;
+
 static constexpr float kOmegaCostWeight = 0.1;
 static constexpr float kJerkCostWeight = 0.1;
 
@@ -90,9 +93,9 @@ static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kGoalCostWeight = 0.1;
 static constexpr float kLaneCostWeight = 25.0;
-static constexpr float kLaneBoundaryCostWeight = 0.0;
+static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kMinProximity = 4.0;
+static constexpr float kMinProximity = 6.0;
 static constexpr float kP1ProximityCostWeight = 50.0;
 static constexpr float kP2ProximityCostWeight = 50.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
@@ -136,9 +139,9 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 8.0;   // m/s
-static constexpr float kP2InitialSpeed = 3.0;   // m/s
-static constexpr float kP3InitialSpeed = 3.0;  // m/s
+static constexpr float kP1InitialSpeed = 5.0;  // m/s
+static constexpr float kP2InitialSpeed = 5.0;  // m/s
+static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -209,7 +212,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost;
+  PlayerCost p1_cost(kStateRegularization, kControlRegularization);
+  PlayerCost p2_cost(kStateRegularization, kControlRegularization);
+  PlayerCost p3_cost(kStateRegularization, kControlRegularization);
 
   // Stay in lanes.
   const Polyline2 lane1(
