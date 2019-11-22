@@ -149,7 +149,7 @@ std::vector<Strategy> SolveLQGame(
 
         if (ii == jj) {
           // Does player ii's cost depend upon player jj's control?
-          const auto control_iter = quad[ii].control.find(jj);
+          const auto control_iter = quad[ii].control.find(ii);
           CHECK(control_iter != quad[ii].control.end());
 
           S_block = BiZi * lin.Bs[ii] + control_iter->second.hess;
