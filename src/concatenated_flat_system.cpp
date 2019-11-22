@@ -288,8 +288,8 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
           // Iterating over each player's cost.
           for (PlayerIndex rr = 0; rr < NumPlayers(); rr++) {
-            const MatrixXf& Q = (*q)[rr].Q;
-            const VectorXf& l = (*q)[rr].l;
+            const MatrixXf& Q = (*q)[rr].state.hess;
+            const VectorXf& l = (*q)[rr].state.grad;
             MatrixXf& xhess = hess_xs[rr];
             for (Dimension kk = 0; kk < SubsystemXDim(pp); kk++) {
               float total = 0.0;
@@ -332,7 +332,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
     //             << hess_xs[pp] << std::endl
     //             << "-----------------\n";
     // }
-    (*q)[pp].Q.swap(hess_xs[pp]);
+    (*q)[pp].state.hess.swap(hess_xs[pp]);
   }
 
   // For loop for gradient.
@@ -342,7 +342,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
 
   // Iterating over primary player indexes.
   for (PlayerIndex pp = 0; pp < NumPlayers(); pp++) {
-    const VectorXf& l = (*q)[pp].l;
+    const VectorXf& l = (*q)[pp].state.grad;
 
     // Iterating over that player's number of dimensions.
     for (Dimension ii = 0; ii < SubsystemXDim(pp); ii++) {
@@ -371,7 +371,7 @@ void ConcatenatedFlatSystem::ChangeCostCoordinates(
     // CHECK_LT(std::abs(grad_xs[pp](0) - (*q)[pp].l(0)), 1e-4);
     // CHECK_LT(std::abs(grad_xs[pp](1) - (*q)[pp].l(1)), 1e-4);
 
-    (*q)[pp].l.swap(grad_xs[pp]);
+    (*q)[pp].state.grad.swap(grad_xs[pp]);
   }
 
   // Now modify the cost hessians, i.e. 'Rs'.
@@ -398,9 +398,9 @@ void ConcatenatedFlatSystem::ChangeControlCostCoordinates(
 
   // Convert Rs.
   for (size_t ii = 0; ii < NumPlayers(); ii++) {
-    for (auto& element : (*q)[ii].Rs) {
-      element.second = M_invs[element.first].transpose() * element.second *
-                       M_invs[element.first];
+    for (auto& element : (*q)[ii].control) {
+      element.second.hess = M_invs[element.first].transpose() *
+                            element.second.hess * M_invs[element.first];
     }
   }
 }

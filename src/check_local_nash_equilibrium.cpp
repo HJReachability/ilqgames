@@ -193,7 +193,7 @@ bool CheckSufficientLocalNashEquilibrium(
     // Check if Q, Rs PSD.
     constexpr float kErrorMargin = 1e-4;
     for (const auto& q : quadraticization) {
-      const auto eig_Q = Eigen::SelfAdjointEigenSolver<MatrixXf>(q.Q);
+      const auto eig_Q = Eigen::SelfAdjointEigenSolver<MatrixXf>(q.state.hess);
       if (eig_Q.eigenvalues().minCoeff() < -kErrorMargin) {
         // std::cout << "Failed at timestep " << kk << std::endl;
         // std::cout << "Q is: \n" << q.Q << std::endl;
@@ -202,9 +202,9 @@ bool CheckSufficientLocalNashEquilibrium(
         return false;
       }
 
-      for (const auto& entry : q.Rs) {
+      for (const auto& entry : q.control) {
         const auto eig_R =
-            Eigen::SelfAdjointEigenSolver<MatrixXf>(entry.second);
+            Eigen::SelfAdjointEigenSolver<MatrixXf>(entry.second.hess);
         if (eig_R.eigenvalues().minCoeff() < -kErrorMargin) return false;
       }
     }
