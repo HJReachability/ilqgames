@@ -116,8 +116,8 @@ std::vector<Strategy> SolveLQGame(
   std::vector<MatrixXf> Zs(dynamics.NumPlayers());
   std::vector<VectorXf> zetas(dynamics.NumPlayers());
   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-    Zs[ii] = quadraticization.back()[ii].Q;
-    zetas[ii] = quadraticization.back()[ii].l;
+    Zs[ii] = quadraticization.back()[ii].state.hess;
+    zetas[ii] = quadraticization.back()[ii].state.grad;
   }
 
   // Preallocate memory for intermediate variables F, beta.
@@ -125,7 +125,9 @@ std::vector<Strategy> SolveLQGame(
   VectorXf beta(dynamics.XDim());
 
   // Work backward in time and solve the dynamic program.
-  for (int kk = horizon - 1; kk >= 0; kk--) {
+  // NOTE: time starts from the second-to-last entry since we'll treat the final
+  // entry as a terminal cost as in Basar and Olsder, ch. 6.
+  for (int kk = horizon - 2; kk >= 0; kk--) {
     // Unpack linearization and quadraticization at this time step.
     const auto& lin = linearization[kk];
     const auto& quad = quadraticization[kk];
@@ -147,11 +149,10 @@ std::vector<Strategy> SolveLQGame(
 
         if (ii == jj) {
           // Does player ii's cost depend upon player jj's control?
-          const auto Rij_iter = quad[ii].Rs.find(jj);
-          const bool ii_depends_on_jj = Rij_iter != quad[ii].Rs.end();
+          const auto control_iter = quad[ii].control.find(ii);
+          CHECK(control_iter != quad[ii].control.end());
 
-          S_block = BiZi * lin.Bs[ii];
-          if (ii_depends_on_jj) S_block += Rij_iter->second;
+          S_block = BiZi * lin.Bs[ii] + control_iter->second.hess;
         } else {
           S_block = BiZi * lin.Bs[jj];
         }
@@ -164,7 +165,7 @@ std::vector<Strategy> SolveLQGame(
       Y.block(cumulative_udim_row, 0, dynamics.UDim(ii), dynamics.XDim()) =
           BiZi * lin.A;
       Y.col(dynamics.XDim()).segment(cumulative_udim_row, dynamics.UDim(ii)) =
-          lin.Bs[ii].transpose() * zetas[ii];
+          lin.Bs[ii].transpose() * zetas[ii] + quad[ii].control.at(ii).grad;
 
       // Increment cumulative_udim_row.
       cumulative_udim_row += dynamics.UDim(ii);
@@ -191,14 +192,16 @@ std::vector<Strategy> SolveLQGame(
     // Update Zs and zetas.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       zetas[ii] =
-          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].l).eval();
-      Zs[ii] = (F.transpose() * Zs[ii] * F + quad[ii].Q).eval();
+          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].state.grad)
+              .eval();
+      Zs[ii] = (F.transpose() * Zs[ii] * F + quad[ii].state.hess).eval();
 
       // Add terms for nonzero Rijs.
-      for (const auto& Rij_entry : quad[ii].Rs) {
+      for (const auto& Rij_entry : quad[ii].control) {
         const PlayerIndex jj = Rij_entry.first;
-        const MatrixXf& Rij = Rij_entry.second;
-        zetas[ii] += Ps[jj].transpose() * Rij * alphas[jj];
+        const MatrixXf& Rij = Rij_entry.second.hess;
+        const VectorXf& rij = Rij_entry.second.grad;
+        zetas[ii] += Ps[jj].transpose() * (Rij * alphas[jj] + rij);
         Zs[ii] += Ps[jj].transpose() * Rij * Ps[jj];
       }
     }

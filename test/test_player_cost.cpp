@@ -98,19 +98,20 @@ TEST_F(PlayerCostTest, QuadraticizeWorks) {
       player_cost_.Quadraticize(0.0, x_, us_);
 
   // Check state Hessian is just kCostWeight on the diagonal.
-  EXPECT_TRUE(quad.Q.diagonal().isApprox(
+  EXPECT_TRUE(quad.state.hess.diagonal().isApprox(
       VectorXf::Constant(kVectorDimension, kCostWeight),
       constants::kSmallNumber));
-  EXPECT_NEAR(quad.Q.norm(),
+  EXPECT_NEAR(quad.state.hess.norm(),
               kCostWeight * std::sqrt(static_cast<float>(kVectorDimension)),
               constants::kSmallNumber);
 
   // Check state gradient.
-  EXPECT_TRUE(quad.l.isApprox(kCostWeight * x_, constants::kSmallNumber));
+  EXPECT_TRUE(
+      quad.state.grad.isApprox(kCostWeight * x_, constants::kSmallNumber));
 
   // Check control Hessians.
-  for (const auto& pair : quad.Rs) {
-    const auto& R = pair.second;
+  for (const auto& pair : quad.control) {
+    const auto& R = pair.second.hess;
     EXPECT_TRUE(
         R.diagonal().isApprox(VectorXf::Constant(kVectorDimension, kCostWeight),
                               constants::kSmallNumber));

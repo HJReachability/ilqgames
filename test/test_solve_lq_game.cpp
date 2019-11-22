@@ -167,17 +167,21 @@ class SolveLQGameTest : public ::testing::Test {
     const MatrixXf R12 = MatrixXf::Zero(1, 1);
     const MatrixXf R21 = MatrixXf::Zero(1, 1);
     const MatrixXf R22 = MatrixXf::Identity(1, 1);
+    const VectorXf r11 = VectorXf::Zero(1);
+    const VectorXf r12 = VectorXf::Zero(1);
+    const VectorXf r21 = VectorXf::Zero(1);
+    const VectorXf r22 = VectorXf::Zero(1);
 
     quadraticizations_ = std::vector<QuadraticCostApproximation>(
         2, QuadraticCostApproximation(2));
-    quadraticizations_[0].Q = Q1;
-    quadraticizations_[0].l = l1;
-    quadraticizations_[0].Rs.emplace(0, R11);
-    quadraticizations_[0].Rs.emplace(1, R12);
-    quadraticizations_[1].Q = Q2;
-    quadraticizations_[1].l = l2;
-    quadraticizations_[1].Rs.emplace(0, R21);
-    quadraticizations_[1].Rs.emplace(1, R22);
+    quadraticizations_[0].state.hess = Q1;
+    quadraticizations_[0].state.grad = l1;
+    quadraticizations_[0].control.emplace(0, SingleCostApproximation(R11, r11));
+    quadraticizations_[0].control.emplace(1, SingleCostApproximation(R12, r12));
+    quadraticizations_[1].state.hess = Q2;
+    quadraticizations_[1].state.grad = l2;
+    quadraticizations_[1].control.emplace(0, SingleCostApproximation(R21, r21));
+    quadraticizations_[1].control.emplace(1, SingleCostApproximation(R22, r22));
 
     // Set up corresponding player costs.
     PlayerCost player1_cost;
@@ -226,15 +230,15 @@ TEST_F(SolveLQGameTest, MatchesLyapunovIterations) {
   const MatrixXf& B1 = linearization_.Bs[0];
   const MatrixXf& B2 = linearization_.Bs[1];
 
-  const MatrixXf& Q1 = quadraticizations_[0].Q;
-  const MatrixXf& Q2 = quadraticizations_[1].Q;
-  const VectorXf& l1 = quadraticizations_[0].l;
-  const VectorXf& l2 = quadraticizations_[1].l;
+  const MatrixXf& Q1 = quadraticizations_[0].state.hess;
+  const MatrixXf& Q2 = quadraticizations_[1].state.hess;
+  const VectorXf& l1 = quadraticizations_[0].state.grad;
+  const VectorXf& l2 = quadraticizations_[1].state.grad;
 
-  const MatrixXf& R11 = quadraticizations_[0].Rs[0];
-  const MatrixXf& R12 = quadraticizations_[0].Rs[1];
-  const MatrixXf& R21 = quadraticizations_[1].Rs[0];
-  const MatrixXf& R22 = quadraticizations_[1].Rs[1];
+  const MatrixXf& R11 = quadraticizations_[0].control.at(0).hess;
+  const MatrixXf& R12 = quadraticizations_[0].control.at(1).hess;
+  const MatrixXf& R21 = quadraticizations_[1].control.at(0).hess;
+  const MatrixXf& R22 = quadraticizations_[1].control.at(1).hess;
 
   // Solve with Lyapunov iterations.
   MatrixXf P1(1, 2);
