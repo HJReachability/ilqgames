@@ -70,8 +70,9 @@ struct SingleCostApproximation {
   }
 
   // Construct with zeros.
-  explicit SingleCostApproximation(Dimension dim)
-      : hess(MatrixXf::Zero(dim, dim)), grad(VectorXf::Zero(dim)) {}
+  SingleCostApproximation(Dimension dim, float regularization = 0.0)
+      : hess(regularization * MatrixXf::Identity(dim, dim)),
+        grad(VectorXf::Zero(dim)) {}
 };  // struct SingleCostApproximation
 
 struct QuadraticCostApproximation {
@@ -79,7 +80,9 @@ struct QuadraticCostApproximation {
   std::unordered_map<PlayerIndex, SingleCostApproximation> control;
 
   // Construct from state dimension.
-  explicit QuadraticCostApproximation(Dimension xdim) : state(xdim) {}
+  explicit QuadraticCostApproximation(Dimension xdim,
+                                      float regularization = 0.0)
+      : state(xdim, regularization) {}
 };  // struct QuadraticCostApproximation
 
 }  // namespace ilqgames

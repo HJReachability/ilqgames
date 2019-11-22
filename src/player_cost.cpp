@@ -103,7 +103,7 @@ float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
 
 QuadraticCostApproximation PlayerCost::Quadraticize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
-  QuadraticCostApproximation q(x.size());
+  QuadraticCostApproximation q(x.size(), state_regularization_);
 
   // Accumulate state costs.
   for (const auto& cost : state_costs_)
@@ -117,8 +117,9 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
     // If we haven't seen this player yet, initialize R and r to zero.
     auto iter = q.control.find(player);
     if (iter == q.control.end()) {
-      auto pair =
-          q.control.emplace(player, SingleCostApproximation(us[player].size()));
+      auto pair = q.control.emplace(
+          player,
+          SingleCostApproximation(us[player].size(), control_regularization_));
 
       // Second element should be true because we definitely won't have any
       // key collisions.
