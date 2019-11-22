@@ -139,9 +139,9 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 8.0;  // m/s
-static constexpr float kP2InitialSpeed = 3.0;  // m/s
-static constexpr float kP3InitialSpeed = 3.0;  // m/s
+static constexpr float kP1InitialSpeed = 5.0;  // m/s
+static constexpr float kP2InitialSpeed = 5.0;  // m/s
+static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
