@@ -201,7 +201,7 @@ std::vector<Strategy> SolveLQGame(
         const PlayerIndex jj = Rij_entry.first;
         const MatrixXf& Rij = Rij_entry.second.hess;
         const VectorXf& rij = Rij_entry.second.grad;
-        zetas[ii] += Ps[jj].transpose() * (Rij * alphas[jj] + rij);
+        zetas[ii] += Ps[jj].transpose() * (Rij * alphas[jj] - rij);
         Zs[ii] += Ps[jj].transpose() * Rij * Ps[jj];
       }
     }
