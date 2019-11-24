@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Solution may not be a local Nash.";
 
   // Confirm with numerical check.
-  constexpr float kMaxPerturbation = 0.91;
+  constexpr float kMaxPerturbation = 0.1;
   constexpr bool kOpenLoop = false;
   const bool is_numerical_nash = NumericalCheckLocalNashEquilibrium(
       problem->Solver().PlayerCosts(), problem->CurrentStrategies(),

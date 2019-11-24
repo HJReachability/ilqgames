@@ -52,6 +52,7 @@
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
 #include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
+#include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/examples/three_player_intersection_example.h>
@@ -81,7 +82,7 @@ static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
 static constexpr float kStateRegularization = 1.0;
-static constexpr float kControlRegularization = 5.0;
+static constexpr float kControlRegularization = 10.0;
 
 static constexpr float kOmegaCostWeight = 0.1;
 static constexpr float kJerkCostWeight = 0.1;
@@ -139,13 +140,13 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 5.0;  // m/s
-static constexpr float kP2InitialSpeed = 5.0;  // m/s
+static constexpr float kP1InitialSpeed = 5.0;   // m/s
+static constexpr float kP2InitialSpeed = 5.0;   // m/s
 static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
-using P1 = SinglePlayerCar6D;
-using P2 = SinglePlayerCar6D;
+using P1 = SinglePlayerCar5D;
+using P2 = SinglePlayerCar5D;
 using P3 = SinglePlayerUnicycle4D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
@@ -182,9 +183,8 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerUnicycle4D>()},
+          {std::make_shared<P1>(kInterAxleLength),
+           std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
           kTimeStep));
 
   // Set up initial state.
