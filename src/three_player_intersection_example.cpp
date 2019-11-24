@@ -73,7 +73,7 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
+static constexpr Time kTimeHorizon = 5.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -120,29 +120,29 @@ static constexpr float kP3GoalY = 16.0;   // m
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0;  // m/s
 static constexpr float kP2MaxV = 12.0;  // m/s
-static constexpr float kP3MaxV = 2.0;   // m/s
+static constexpr float kP3MaxV = 2.5;   // m/s
 static constexpr float kMinV = 1.0;     // m/s
 
 static constexpr float kP1NominalV = 8.0;  // m/s
 static constexpr float kP2NominalV = 5.0;  // m/s
-static constexpr float kP3NominalV = 1.5;  // m/s
+static constexpr float kP3NominalV = 2.5;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = -2.0;   // m
 static constexpr float kP2InitialX = -10.0;  // m
 static constexpr float kP3InitialX = -11.0;  // m
 
-static constexpr float kP1InitialY = -30.0;  // m
-static constexpr float kP2InitialY = 45.0;   // m
+static constexpr float kP1InitialY = -15.0;  // m
+static constexpr float kP2InitialY = 35.0;   // m
 static constexpr float kP3InitialY = 16.0;   // m
 
 static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 5.0;   // m/s
+static constexpr float kP1InitialSpeed = 6.0;   // m/s
 static constexpr float kP2InitialSpeed = 5.0;   // m/s
-static constexpr float kP3InitialSpeed = 1.25;  // m/s
+static constexpr float kP3InitialSpeed = 2.0;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar5D;
