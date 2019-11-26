@@ -40,19 +40,15 @@
 // Corollary 6.1" (pp. 279). All notation matches the text, though we
 // shall assume that `c` (additive drift in dynamics) is always `0`, which
 // holds because these dynamics are for delta x, delta us.
+// Also, we have modified terms slightly to account for linear terms in the
+// stage cost for control, i.e.
+//       control penalty i = 0.5 \sum_j du_j^T R_ij (du_j + 2 r_ij)
 //
 // Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
 // feedback strategies for both players).
 //
 // Assumes that dynamics are given by
 //           ``` dx_{k+1} = A_k dx_k + \sum_i Bs[i]_k du[i]_k ```
-//
-// NOTE: Bs, Qs, ls, R1s, R2s are all lists of lists of matrices.
-// NOTE: all indices of inner lists correspond to the "current time" k except
-// for those of the Qs, which correspond to the "next time" k+1. That is,
-// the kth entry of Qs[i] is the state cost corresponding to time step k+1. This
-// makes sense because there is no point assigning any state cost to the
-// initial state x_0.
 //
 // Returns strategies Ps, alphas.
 //

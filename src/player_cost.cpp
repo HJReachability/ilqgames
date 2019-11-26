@@ -103,21 +103,23 @@ float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
 
 QuadraticCostApproximation PlayerCost::Quadraticize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
-  QuadraticCostApproximation q(x.size());
+  QuadraticCostApproximation q(x.size(), state_regularization_);
 
   // Accumulate state costs.
-  for (const auto& cost : state_costs_) cost->Quadraticize(t, x, &q.Q, &q.l);
+  for (const auto& cost : state_costs_)
+    cost->Quadraticize(t, x, &q.state.hess, &q.state.grad);
 
   // Accumulate control costs.
   for (const auto& pair : control_costs_) {
     const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
 
-    // If we haven't seen this player yet, initialize R to zero.
-    auto iter = q.Rs.find(player);
-    if (iter == q.Rs.end()) {
-      auto pair = q.Rs.emplace(
-          player, MatrixXf::Zero(us[player].size(), us[player].size()));
+    // If we haven't seen this player yet, initialize R and r to zero.
+    auto iter = q.control.find(player);
+    if (iter == q.control.end()) {
+      auto pair = q.control.emplace(
+          player,
+          SingleCostApproximation(us[player].size(), control_regularization_));
 
       // Second element should be true because we definitely won't have any
       // key collisions.
@@ -127,19 +129,22 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
       iter = pair.first;
     }
 
-    cost->Quadraticize(t, us[player], &(iter->second), nullptr);
+    cost->Quadraticize(t, us[player], &(iter->second.hess),
+                       &(iter->second.grad));
   }
 
   // Accumulate generalized control costs.
+  // TODO! Remove this since it is deprecated and confusing.
   for (const auto& pair : generalized_control_costs_) {
+    LOG(WARNING) << "Generalized control costs are deprecated.";
     const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
 
     // If we haven't seen this player yet, initialize R to zero.
-    auto iter = q.Rs.find(player);
-    if (iter == q.Rs.end()) {
-      auto pair = q.Rs.emplace(
-          player, MatrixXf::Zero(us[player].size(), us[player].size()));
+    auto iter = q.control.find(player);
+    if (iter == q.control.end()) {
+      auto pair =
+          q.control.emplace(player, SingleCostApproximation(us[player].size()));
 
       // Second element should be true because we definitely won't have any
       // key collisions.
@@ -149,7 +154,10 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
       iter = pair.first;
     }
 
-    cost->Quadraticize(t, x, us[player], &(iter->second), &q.Q, &q.l);
+    // TODO! This should really be accounting for linear terms too but
+    // not going to add since these costs should be deprecated anyway.
+    cost->Quadraticize(t, x, us[player], &(iter->second.hess), &q.state.hess,
+                       &q.state.grad);
   }
 
   return q;

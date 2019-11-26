@@ -44,6 +44,7 @@
 // -- Q is the Hessian with respect to state
 // -- l is the gradient with respect to state
 // -- Rs[ii] is the Hessian with respect to the control input of player ii
+// -- rs[ii] is the gradient with respect to the control input of player ii
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -52,19 +53,36 @@
 
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <unordered_map>
 
 namespace ilqgames {
 
+struct SingleCostApproximation {
+  MatrixXf hess;
+  VectorXf grad;
+
+  // Construct from matrix/vector directly.
+  SingleCostApproximation(const MatrixXf& hessian, const VectorXf& gradient)
+      : hess(hessian), grad(gradient) {
+    CHECK_EQ(hess.rows(), hess.cols());
+    CHECK_EQ(hess.rows(), grad.size());
+  }
+
+  // Construct with zeros.
+  SingleCostApproximation(Dimension dim, float regularization = 0.0)
+      : hess(regularization * MatrixXf::Identity(dim, dim)),
+        grad(VectorXf::Zero(dim)) {}
+};  // struct SingleCostApproximation
+
 struct QuadraticCostApproximation {
-  MatrixXf Q;
-  VectorXf l;
-  std::unordered_map<PlayerIndex, MatrixXf> Rs;
+  SingleCostApproximation state;
+  std::unordered_map<PlayerIndex, SingleCostApproximation> control;
 
   // Construct from state dimension.
-  QuadraticCostApproximation(Dimension xdim);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  explicit QuadraticCostApproximation(Dimension xdim,
+                                      float regularization = 0.0)
+      : state(xdim, regularization) {}
 };  // struct QuadraticCostApproximation
 
 }  // namespace ilqgames
