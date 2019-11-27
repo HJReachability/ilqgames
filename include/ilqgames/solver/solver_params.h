@@ -67,11 +67,12 @@ struct SolverParams {
   float trust_region_size = 10.0;
   std::vector<Dimension> trust_region_dimensions;
 
-  // Scenario: Pure Cooperative, or Adversarial-to-Cooperative
-  float scenario = 0;
+  // Adersarial time: Pure Cooperative (adversarial_time = 0), or
+  // Adversarial-to-Cooperative (adversarial_time != 0)
+  float adversarial_time = 0;
 
-};  // struct SolverParams
+}; // struct SolverParams
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif
