@@ -47,6 +47,7 @@
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_control_cost_flat_unicycle_4d.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/route_progress_cost.h>
@@ -76,8 +77,8 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
+static constexpr Time kTimeStep = 0.1;     // s
+static constexpr Time kTimeHorizon = 10.0; // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -101,33 +102,33 @@ using ProxCost = ProximityCost;
 static constexpr bool kOrientedRight = true;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.5;  // m
+static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal and max speed.
-static constexpr float kP1MaxV = 12.0;  // m/s
-static constexpr float kP2MaxV = 12.0;  // m/s
-static constexpr float kP3MaxV = 12.0;  // m/s
-static constexpr float kP4MaxV = 12.0;  // m/s
-static constexpr float kMinV = 1.0;     // m/s
+static constexpr float kP1MaxV = 12.0; // m/s
+static constexpr float kP2MaxV = 12.0; // m/s
+static constexpr float kP3MaxV = 12.0; // m/s
+static constexpr float kP4MaxV = 12.0; // m/s
+static constexpr float kMinV = 1.0;    // m/s
 
-static constexpr float kP1NominalV = 10.0;  // m/s
-static constexpr float kP2NominalV = 10.0;  // m/s
-static constexpr float kP3NominalV = 10.0;  // m/s
-static constexpr float kP4NominalV = 10.0;  // m/s
+static constexpr float kP1NominalV = 10.0; // m/s
+static constexpr float kP2NominalV = 10.0; // m/s
+static constexpr float kP3NominalV = 10.0; // m/s
+static constexpr float kP4NominalV = 10.0; // m/s
 
 // Initial distance from roundabout.
-static constexpr float kP1InitialDistanceToRoundabout = 25.0;  // m
-static constexpr float kP2InitialDistanceToRoundabout = 10.0;  // m
-static constexpr float kP3InitialDistanceToRoundabout = 25.0;  // m
-static constexpr float kP4InitialDistanceToRoundabout = 10.0;  // m
+static constexpr float kP1InitialDistanceToRoundabout = 25.0; // m
+static constexpr float kP2InitialDistanceToRoundabout = 10.0; // m
+static constexpr float kP3InitialDistanceToRoundabout = 25.0; // m
+static constexpr float kP4InitialDistanceToRoundabout = 10.0; // m
 
-static constexpr float kP1InitialSpeed = 3.0;  // m/s
-static constexpr float kP2InitialSpeed = 2.0;  // m/s
-static constexpr float kP3InitialSpeed = 3.0;  // m/s
-static constexpr float kP4InitialSpeed = 2.0;  // m/s
+static constexpr float kP1InitialSpeed = 3.0; // m/s
+static constexpr float kP2InitialSpeed = 2.0; // m/s
+static constexpr float kP3InitialSpeed = 3.0; // m/s
+static constexpr float kP4InitialSpeed = 2.0; // m/s
 
 // State dimensions.
-static constexpr float kInterAxleDistance = 4.0;  // m
+static constexpr float kInterAxleDistance = 4.0; // m
 using P1 = SinglePlayerFlatCar6D;
 using P2 = SinglePlayerFlatCar6D;
 using P3 = SinglePlayerFlatCar6D;
@@ -167,10 +168,10 @@ static const Dimension kP4VxIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kVxIdx;
 static const Dimension kP4VyIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kNumXDims + P4::kVyIdx;
-}  // anonymous namespace
+} // anonymous namespace
 
 FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
-    const SolverParams& params) {
+    const SolverParams &params) {
   // Create dynamics.
   dynamics_.reset(
       new ConcatenatedFlatSystem({std::make_shared<P1>(kInterAxleDistance),
@@ -349,42 +350,103 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   //  p1_cost.AddStateCost(p1p3_proximity_cost);
   p1_cost.AddStateCost(p1p4_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // p2p1_proximity cost:  Modified to include adversarial phase
+
+  const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
+      new InitialTimeCost(
+          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
+              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
+          params.adversarial_time, "InitialProximityCostP1"));
+  p2_cost.AddStateCost(p2p1_initial_proximity_cost);
+  initial_time_costs_.push_back(p2p1_initial_proximity_cost);
+
+  const std::shared_ptr<FinalTimeCost> p2p1_final_proximity_cost(
+      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                            kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+
+                        params.adversarial_time, "FinalProximityCostP1"));
+  p2_cost.AddStateCost(p2p1_final_proximity_cost);
+  final_time_costs_.push_back(p2p1_final_proximity_cost);
+
+  // const std::shared_ptr<ProxCost> p2p1_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // p2_cost.AddStateCost(p2p1_proximity_cost);
+
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   const std::shared_ptr<ProxCost> p2p4_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
-  p2_cost.AddStateCost(p2p1_proximity_cost);
+
   p2_cost.AddStateCost(p2p3_proximity_cost);
   //  p2_cost.AddStateCost(p2p4_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p3p1_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // p3p1_proximity_cost:  Modified to include adversarial phase
+
+  const std::shared_ptr<InitialTimeCost> p3p1_initial_proximity_cost(
+      new InitialTimeCost(
+          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
+              kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
+          params.adversarial_time, "InitialProximityCostP1"));
+  p3_cost.AddStateCost(p3p1_initial_proximity_cost);
+  initial_time_costs_.push_back(p3p1_initial_proximity_cost);
+
+  const std::shared_ptr<FinalTimeCost> p3p1_final_proximity_cost(
+      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                            kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+                        params.adversarial_time, "FinalProximityCostP1"));
+  p3_cost.AddStateCost(p3p1_final_proximity_cost);
+  final_time_costs_.push_back(p3p1_final_proximity_cost);
+
+  // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // p3_cost.AddStateCost(p3p1_proximity_cost);
+
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+
   const std::shared_ptr<ProxCost> p3p4_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
-  //  p3_cost.AddStateCost(p3p1_proximity_cost);
+
   p3_cost.AddStateCost(p3p2_proximity_cost);
   p3_cost.AddStateCost(p3p4_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p4p1_proximity_cost(
-      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // p4p1_proximity_cost:  Modified to include adversarial phase
+
+  const std::shared_ptr<InitialTimeCost> p4p1_initial_proximity_cost(
+      new InitialTimeCost(
+          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
+              kP4ProximityCostWeight, {kP4XIdx, kP4YIdx}, {kP1XIdx, kP1YIdx})),
+          params.adversarial_time, "InitialProximityCostP1"));
+  p4_cost.AddStateCost(p4p1_initial_proximity_cost);
+  initial_time_costs_.push_back(p4p1_initial_proximity_cost);
+
+  const std::shared_ptr<FinalTimeCost> p4p1_final_proximity_cost(
+      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                            kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
+                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+                        params.adversarial_time, "FinalProximityCostP1"));
+  p4_cost.AddStateCost(p4p1_final_proximity_cost);
+  final_time_costs_.push_back(p4p1_final_proximity_cost);
+
+  // const std::shared_ptr<ProxCost> p4p1_proximity_cost(
+  //     new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // p4_cost.AddStateCost(p4p1_proximity_cost);
+
   const std::shared_ptr<ProxCost> p4p2_proximity_cost(
       new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   const std::shared_ptr<ProxCost> p4p3_proximity_cost(
       new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p4_cost.AddStateCost(p4p1_proximity_cost);
   //  p4_cost.AddStateCost(p4p2_proximity_cost);
   p4_cost.AddStateCost(p4p3_proximity_cost);
 
@@ -397,21 +459,21 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
                                   kTimeHorizon, revised_params));
 }
 
-inline std::vector<float> FlatRoundaboutMergingExample::Xs(
-    const VectorXf& xi) const {
+inline std::vector<float>
+FlatRoundaboutMergingExample::Xs(const VectorXf &xi) const {
   return {xi(kP1XIdx), xi(kP2XIdx), xi(kP3XIdx), xi(kP4XIdx)};
 }
 
-inline std::vector<float> FlatRoundaboutMergingExample::Ys(
-    const VectorXf& xi) const {
+inline std::vector<float>
+FlatRoundaboutMergingExample::Ys(const VectorXf &xi) const {
   return {xi(kP1YIdx), xi(kP2YIdx), xi(kP3YIdx), xi(kP4YIdx)};
 }
 
-inline std::vector<float> FlatRoundaboutMergingExample::Thetas(
-    const VectorXf& xi) const {
+inline std::vector<float>
+FlatRoundaboutMergingExample::Thetas(const VectorXf &xi) const {
   const VectorXf x = dynamics_->FromLinearSystemState(xi);
   return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx),
           x(kP4HeadingIdx)};
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames
