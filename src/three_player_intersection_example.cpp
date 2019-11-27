@@ -183,13 +183,15 @@ static const Dimension kP3AIdx = 1;
 } // anonymous namespace
 
 ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
-    const SolverParams &params, const std::string &scenario) {
+    const SolverParams &params
+    //  const std::float &scenario
+) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(kInterAxleLength),
-           std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
-          kTimeStep));
+      new ConcatenatedDynamicalSystem({std::make_shared<P1>(kInterAxleLength),
+                                       std::make_shared<P2>(kInterAxleLength),
+                                       std::make_shared<P3>()},
+                                      kTimeStep));
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
@@ -400,54 +402,67 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
   //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
 
-  const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
-      new InitialTimeCost(
-          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
-              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          FLAGS_adversarial_time, "InitialProximityCostP1"));
-  p2_cost.AddStateCost(p2p1_initial_proximity_cost);
-  initial_time_costs_.push_back(p2p1_initial_proximity_cost);
+  if (params.scenario == 0) {
+    const std::shared_ptr<ProxCost> p2p1_proximity_cost(
+        new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                     {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+    p2_cost.AddStateCost(p2p1_proximity_cost);
+  } else {
+    const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
+        new InitialTimeCost(std::shared_ptr<QuadraticDifferenceCost>(
+                                new QuadraticDifferenceCost(
+                                    kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                                    {kP1XIdx, kP1YIdx})),
+                            FLAGS_adversarial_time, "InitialProximityCostP1"));
+    p2_cost.AddStateCost(p2p1_initial_proximity_cost);
+    initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
-  const std::shared_ptr<FinalTimeCost> p2p1_final_proximity_cost(
-      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
-                            kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+    const std::shared_ptr<FinalTimeCost> p2p1_final_proximity_cost(
+        new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                              {kP1XIdx, kP1YIdx}, kMinProximity)),
 
-                        FLAGS_adversarial_time, "FinalProximityCostP1"));
-  p2_cost.AddStateCost(p2p1_final_proximity_cost);
-  final_time_costs_.push_back(p2p1_final_proximity_cost);
+                          FLAGS_adversarial_time, "FinalProximityCostP1"));
+    p2_cost.AddStateCost(p2p1_final_proximity_cost);
+    final_time_costs_.push_back(p2p1_final_proximity_cost);
+  }
 
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  // p2_cost.AddStateCost(p2p1_proximity_cost);
   p2_cost.AddStateCost(p2p3_proximity_cost);
 
   // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
   //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
   //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
 
-  const std::shared_ptr<InitialTimeCost> p3p1_initial_proximity_cost(
-      new InitialTimeCost(
-          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
-              kP2ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
-          FLAGS_adversarial_time, "InitialProximityCostP1"));
-  p3_cost.AddStateCost(p3p1_initial_proximity_cost);
-  initial_time_costs_.push_back(p2p1_initial_proximity_cost);
+  if (params.scenario == 0) {
+    const std::shared_ptr<ProxCost> p3p1_proximity_cost(
+        new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+                     {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+    p3_cost.AddStateCost(p3p1_proximity_cost);
+  } else {
+    const std::shared_ptr<InitialTimeCost> p3p1_initial_proximity_cost(
+        new InitialTimeCost(std::shared_ptr<QuadraticDifferenceCost>(
+                                new QuadraticDifferenceCost(
+                                    kP2ProximityCostWeight, {kP3XIdx, kP3YIdx},
+                                    {kP1XIdx, kP1YIdx})),
+                            FLAGS_adversarial_time, "InitialProximityCostP1"));
+    p3_cost.AddStateCost(p3p1_initial_proximity_cost);
+    initial_time_costs_.push_back(p3p1_initial_proximity_cost);
 
-  const std::shared_ptr<FinalTimeCost> p3p1_final_proximity_cost(
-      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
-                            kP2ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                            {kP1XIdx, kP1YIdx}, kMinProximity)),
-
-                        FLAGS_adversarial_time, "FinalProximityCostP1"));
-  p3_cost.AddStateCost(p3p1_final_proximity_cost);
-  final_time_costs_.push_back(p3p1_final_proximity_cost);
+    const std::shared_ptr<FinalTimeCost> p3p1_final_proximity_cost(
+        new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                              kP2ProximityCostWeight, {kP3XIdx, kP3YIdx},
+                              {kP1XIdx, kP1YIdx}, kMinProximity)),
+                          FLAGS_adversarial_time, "FinalProximityCostP1"));
+    p3_cost.AddStateCost(p3p1_final_proximity_cost);
+    final_time_costs_.push_back(p3p1_final_proximity_cost);
+  }
 
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  // p3_cost.AddStateCost(p3p1_proximity_cost);
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
