@@ -77,7 +77,6 @@ class ILQSolver : public GameSolver {
   virtual void ComputeLinearization(
       const OperatingPoint& op,
       std::vector<LinearDynamicsApproximation>* linearization);
-
 };  // class ILQSolver
 
 }  // namespace ilqgames

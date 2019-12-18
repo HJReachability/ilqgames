@@ -107,9 +107,16 @@ class GameSolver {
         time_horizon_(time_horizon),
         time_step_(dynamics->TimeStep()),
         num_time_steps_(static_cast<size_t>(time_horizon / time_step_)),
+        linearization_(num_time_steps_),
+        quadraticization_(num_time_steps_),
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
+
+    // Prepopulate quadraticization.
+    for (auto& quads : quadraticization_)
+      quads.resize(dynamics_->NumPlayers(),
+                   QuadraticCostApproximation(dynamics_->XDim()));
   }
 
   // Populate the given vector with a linearization of the dynamics about
@@ -164,6 +171,11 @@ class GameSolver {
   const Time time_horizon_;
   const Time time_step_;
   const size_t num_time_steps_;
+
+  // Linearization and quadraticization. Both are time-indexed (and
+  // quadraticizations' inner vector is indexed by player).
+  std::vector<LinearDynamicsApproximation> linearization_;
+  std::vector<std::vector<QuadraticCostApproximation>> quadraticization_;
 
   // Solver parameters.
   const SolverParams params_;
