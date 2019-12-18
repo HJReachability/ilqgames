@@ -62,11 +62,6 @@ void PlayerCost::AddControlCost(PlayerIndex idx,
   control_costs_.emplace(idx, cost);
 }
 
-void PlayerCost::AddGeneralizedControlCost(
-    PlayerIndex idx, const std::shared_ptr<GeneralizedControlCost>& cost) {
-  generalized_control_costs_.emplace(idx, cost);
-}
-
 float PlayerCost::Evaluate(Time t, const VectorXf& x,
                            const std::vector<VectorXf>& us) const {
   float total_cost = 0.0;
@@ -79,13 +74,6 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
     total_cost += cost->Evaluate(t, us[player]);
-  }
-
-  // Generalized control costs.
-  for (const auto& pair : generalized_control_costs_) {
-    const PlayerIndex& player = pair.first;
-    const auto& cost = pair.second;
-    total_cost += cost->Evaluate(t, x, us[player]);
   }
 
   return total_cost;
@@ -131,33 +119,6 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
 
     cost->Quadraticize(t, us[player], &(iter->second.hess),
                        &(iter->second.grad));
-  }
-
-  // Accumulate generalized control costs.
-  // TODO! Remove this since it is deprecated and confusing.
-  for (const auto& pair : generalized_control_costs_) {
-    LOG(WARNING) << "Generalized control costs are deprecated.";
-    const PlayerIndex player = pair.first;
-    const auto& cost = pair.second;
-
-    // If we haven't seen this player yet, initialize R to zero.
-    auto iter = q.control.find(player);
-    if (iter == q.control.end()) {
-      auto pair =
-          q.control.emplace(player, SingleCostApproximation(us[player].size()));
-
-      // Second element should be true because we definitely won't have any
-      // key collisions.
-      CHECK(pair.second);
-
-      // Update iter to point to where the new R was inserted.
-      iter = pair.first;
-    }
-
-    // TODO! This should really be accounting for linear terms too but
-    // not going to add since these costs should be deprecated anyway.
-    cost->Quadraticize(t, x, us[player], &(iter->second.hess), &q.state.hess,
-                       &q.state.grad);
   }
 
   return q;

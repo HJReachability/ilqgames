@@ -65,8 +65,6 @@ class PlayerCost {
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
-  void AddGeneralizedControlCost(
-      PlayerIndex idx, const std::shared_ptr<GeneralizedControlCost>& cost);
 
   // Evaluate this cost at the current time, state, and controls, or integrate
   // over an entire trajectory.
@@ -83,15 +81,11 @@ class PlayerCost {
     return state_costs_;
   }
   const CostMap<Cost>& ControlCosts() const { return control_costs_; }
-  const CostMap<GeneralizedControlCost>& GeneralizedControlCosts() const {
-    return generalized_control_costs_;
-  }
 
  private:
   // State costs, control costs, and generalized control costs.
   std::vector<std::shared_ptr<Cost>> state_costs_;
   CostMap<Cost> control_costs_;
-  CostMap<GeneralizedControlCost> generalized_control_costs_;
 
   // Regularization on costs.
   const float state_regularization_, control_regularization_;
