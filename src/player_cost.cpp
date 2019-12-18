@@ -42,7 +42,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/cost.h>
-#include <ilqgames/cost/generalized_control_cost.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>

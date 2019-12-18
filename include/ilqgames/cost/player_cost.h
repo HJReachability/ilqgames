@@ -45,7 +45,6 @@
 #define ILQGAMES_COST_PLAYER_COST_H
 
 #include <ilqgames/cost/cost.h>
-#include <ilqgames/cost/generalized_control_cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
