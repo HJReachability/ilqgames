@@ -56,12 +56,12 @@ float CurvatureCost::Evaluate(const VectorXf& input) const {
 void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
                                  VectorXf* grad) const {
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Populate Hessian and gradient.
   const float v = input(v_idx_);
@@ -69,19 +69,15 @@ void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float one_over_vsq = 1.0 / (v * v);
   const float weight_over_vsq = weight_ * one_over_vsq;
   const float weight_omega_over_vsq = omega * weight_over_vsq;
-
   (*hess)(omega_idx_, omega_idx_) += weight_over_vsq;
 
   const float cross_term = -2.0 * weight_omega_over_vsq / v;
   (*hess)(omega_idx_, v_idx_) += cross_term;
   (*hess)(v_idx_, omega_idx_) += cross_term;
-
   (*hess)(v_idx_, v_idx_) += 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
 
-  if (grad) {
-    (*grad)(omega_idx_) += weight_omega_over_vsq;
-    (*grad)(v_idx_) -= weight_omega_over_vsq * omega / v;
-  }
+  (*grad)(omega_idx_) += weight_omega_over_vsq;
+  (*grad)(v_idx_) -= weight_omega_over_vsq * omega / v;
 }
 
 }  // namespace ilqgames

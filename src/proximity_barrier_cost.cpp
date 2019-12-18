@@ -57,14 +57,14 @@ float ProximityBarrierCost::Evaluate(const VectorXf& input) const {
 }
 
 void ProximityBarrierCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
+                                        VectorXf* grad) const {
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Compute Hessian and gradient.
   const float dx = input(xidx1_) - input(xidx2_);
@@ -98,15 +98,13 @@ void ProximityBarrierCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   (*hess)(xidx2_, yidx2_) += hess_x1y1;
   (*hess)(yidx2_, xidx2_) += hess_x1y1;
 
-  if (grad) {
-    const float ddx1 = -weight_gap * dx;
-    (*grad)(xidx1_) += ddx1;
-    (*grad)(xidx2_) -= ddx1;
+  const float ddx1 = -weight_gap * dx;
+  (*grad)(xidx1_) += ddx1;
+  (*grad)(xidx2_) -= ddx1;
 
-    const float ddy1 = -weight_gap * dy;
-    (*grad)(yidx1_) += ddy1;
-    (*grad)(yidx2_) -= ddy1;
-  }
+  const float ddy1 = -weight_gap * dy;
+  (*grad)(yidx1_) += ddy1;
+  (*grad)(yidx2_) -= ddy1;
 }
 
 }  // namespace ilqgames

@@ -41,6 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/utils/operating_point.h>
@@ -59,6 +60,11 @@ void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
 void PlayerCost::AddControlCost(PlayerIndex idx,
                                 const std::shared_ptr<Cost>& cost) {
   control_costs_.emplace(idx, cost);
+}
+
+void PlayerCost::AddStateConstraint(
+    const std::shared_ptr<Constraint>& constraint) {
+  state_constraints_.emplace_back(constraint);
 }
 
 float PlayerCost::Evaluate(Time t, const VectorXf& x,

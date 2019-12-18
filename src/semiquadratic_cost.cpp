@@ -71,15 +71,13 @@ void SemiquadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
 
   // Check dimensions.
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
+  CHECK_EQ(input.size(), grad->size());
 
   (*hess)(dimension_, dimension_) += weight_;
-
-  if (grad) {
-    CHECK_EQ(input.size(), grad->size());
-    (*grad)(dimension_) += weight_ * diff;
-  }
+  (*grad)(dimension_) += weight_ * diff;
 }
 
 }  // namespace ilqgames

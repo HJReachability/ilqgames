@@ -44,6 +44,7 @@
 #ifndef ILQGAMES_COST_PLAYER_COST_H
 #define ILQGAMES_COST_PLAYER_COST_H
 
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -65,6 +66,9 @@ class PlayerCost {
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
 
+  // Add new state constraint for this player.
+  void AddStateConstraint(const std::shared_ptr<Constraint>& constraint);
+
   // Evaluate this cost at the current time, state, and controls, or integrate
   // over an entire trajectory.
   float Evaluate(Time t, const VectorXf& x,
@@ -82,9 +86,12 @@ class PlayerCost {
   const CostMap<Cost>& ControlCosts() const { return control_costs_; }
 
  private:
-  // State costs, control costs, and generalized control costs.
+  // State costs and control costs.
   std::vector<std::shared_ptr<Cost>> state_costs_;
   CostMap<Cost> control_costs_;
+
+  // State constraints.
+  std::vector<std::shared_ptr<Constraint>> state_constraints_;
 
   // Regularization on costs.
   const float state_regularization_, control_regularization_;

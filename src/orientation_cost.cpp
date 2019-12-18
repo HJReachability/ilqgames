@@ -43,8 +43,8 @@
 #include <ilqgames/cost/orientation_cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <math.h>
 #include <glog/logging.h>
+#include <math.h>
 
 namespace ilqgames {
 
@@ -52,36 +52,27 @@ float OrientationCost::Evaluate(const VectorXf& input) const {
   CHECK_LT(dim_, input.size());
 
   // Map heading to x,y coordinates in unit circle.
-  // const float heading_x = std::cos(input(dim_));
-  // const float heading_y = std::sin(input(dim_));
-  // const float heading_nom_x = std::cos(nominal_);
-  // const float heading_nom_y = std::sin(nominal_);
-
-  // const float inner_product = heading_nom_x * heading_x + heading_nom_y * heading_y; 
-  const float angle_diff = std::fmod(input(dim_) - nominal_ + M_PI, M_PI*2.0) - M_PI;
+  const float angle_diff =
+      std::fmod(input(dim_) - nominal_ + M_PI, M_PI * 2.0) - M_PI;
 
   return 0.5 * weight_ * angle_diff * angle_diff;
 }
 
 void OrientationCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                     VectorXf* grad) const {
+                                   VectorXf* grad) const {
   CHECK_LT(dim_, input.size());
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
+  CHECK_EQ(input.size(), grad->size());
 
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Populate hessian and, optionally, gradient.
+  // Populate Hessian and gradient.
   (*hess)(dim_, dim_) += weight_;
-
-  if (grad) {
-    (*grad)(dim_) += weight_ *  (std::fmod(input(dim_) - nominal_ + M_PI,M_PI*2.0) - M_PI);
-    //(weight_*std::sin(input(dim_) - nominal_)*std::acos(std::cos(input(dim_) - nominal_)))
-    //                  /std::sqrt(1.0 - std::cos(input(dim_) - nominal_)*std::cos(input(dim_) - nominal_));
-  }
+  (*grad)(dim_) +=
+      weight_ * (std::fmod(input(dim_) - nominal_ + M_PI, M_PI * 2.0) - M_PI);
 }
 
 }  // namespace ilqgames

@@ -75,10 +75,10 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
   CHECK_LT(yidx_, input.size());
 
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Unpack current position and find closest point / segment.
   const Point2 current_position(input(xidx_), input(yidx_));
@@ -106,28 +106,24 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
     (*hess)(xidx_, yidx_) -= cross_term;
     (*hess)(yidx_, xidx_) -= cross_term;
 
-    // Maybe handle gradient.
-    if (grad) {
-      const float w_cross =
-          weight_ * (relative.x() * unit_segment.y() -
-                     relative.y() * unit_segment.x() - threshold_);
+    // Gandle gradient.
+    const float w_cross =
+        weight_ * (relative.x() * unit_segment.y() -
+                   relative.y() * unit_segment.x() - threshold_);
 
-      (*grad)(xidx_) += w_cross * unit_segment.y();
-      (*grad)(yidx_) -= w_cross * unit_segment.x();
-    }
+    (*grad)(xidx_) += w_cross * unit_segment.y();
+    (*grad)(yidx_) -= w_cross * unit_segment.x();
   } else {
     // Closest point is a vertex.
     (*hess)(xidx_, xidx_) += weight_;
     (*hess)(yidx_, yidx_) += weight_;
 
-    if (grad) {
-      float scaling = std::sqrt(std::abs(signed_squared_distance));
-      scaling = (scaling - std::abs(threshold_)) / scaling;
-      (*grad)(xidx_) +=
-          weight_ * scaling * (current_position.x() - closest_point.x());
-      (*grad)(yidx_) +=
-          weight_ * scaling * (current_position.y() - closest_point.y());
-    }
+    float scaling = std::sqrt(std::abs(signed_squared_distance));
+    scaling = (scaling - std::abs(threshold_)) / scaling;
+    (*grad)(xidx_) +=
+        weight_ * scaling * (current_position.x() - closest_point.x());
+    (*grad)(yidx_) +=
+        weight_ * scaling * (current_position.y() - closest_point.y());
   }
 }
 

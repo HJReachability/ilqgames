@@ -60,17 +60,16 @@ void NominalPathLengthCost::Quadraticize(Time t, const VectorXf& input,
                                          MatrixXf* hess, VectorXf* grad) const {
   CHECK_LT(dimension_, input.size());
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Populate Hessian and gradient.
   (*hess)(dimension_, dimension_) += weight_;
-  if (grad)
-    (*grad)(dimension_) += weight_ * (input(dimension_) - t * nominal_speed_);
+  (*grad)(dimension_) += weight_ * (input(dimension_) - t * nominal_speed_);
 }
 
 }  // namespace ilqgames

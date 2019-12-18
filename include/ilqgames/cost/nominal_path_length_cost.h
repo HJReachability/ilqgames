@@ -63,9 +63,9 @@ class NominalPathLengthCost : public Cost {
   float Evaluate(Time t, const VectorXf& input) const;
 
   // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians (if non-null).
+  // sum of gradients and Hessians.
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+                    VectorXf* grad) const;
 
  private:
   // Dimension in which to apply the quadratic cost.
