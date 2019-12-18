@@ -59,19 +59,14 @@
 namespace ilqgames {
 
 void ILQFlatSolver::ComputeLinearization(
-    const OperatingPoint& op,
     std::vector<LinearDynamicsApproximation>* linearization) {
   CHECK_NOTNULL(linearization);
-
-  // Check if linearization is the right length.
-  if (linearization->size() != op.xs.size())
-    linearization->resize(op.xs.size());
 
   // Cast dynamics to appropriate type.
   const auto dyn = static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
 
   // Populate one timestep at a time.
-  for (size_t kk = 0; kk < op.xs.size(); kk++)
+  for (size_t kk = 0; kk < linearization->size(); kk++)
     (*linearization)[kk] = dyn->LinearizedSystem();
 }
 
