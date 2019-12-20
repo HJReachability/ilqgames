@@ -70,49 +70,20 @@ void ILQFlatSolver::ComputeLinearization(
     (*linearization)[kk] = dyn->LinearizedSystem();
 }
 
-bool ILQFlatSolver::SatisfiesTrustRegion(
-    const OperatingPoint& last_operating_point,
-    const OperatingPoint& current_operating_point) const {
-  // Check if all states are far from singularity.
-  const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
-  for (size_t ii = 0; ii < current_operating_point.xs.size(); ii++) {
-    if (dyn.IsLinearSystemStateSingular(current_operating_point.xs[ii])) {
-      return false;
-    }
-  }
-
-  // Are the operating points close.
-  return AreOperatingPointsClose(last_operating_point, current_operating_point,
-                                 params_.trust_region_size,
-                                 params_.trust_region_dimensions);
-}
-
-bool ILQFlatSolver::AreOperatingPointsClose(
-    const OperatingPoint& op1, const OperatingPoint& op2, float threshold,
-    const std::vector<Dimension>& dims) const {
-  CHECK_EQ(op1.xs.size(), op2.xs.size());
+float ILQFlatSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
+                                   const std::vector<Dimension>& dims) const {
   const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
 
-  for (size_t kk = 0; kk < op1.xs.size(); kk++) {
-    VectorXf x1 = op1.xs[kk];
-    VectorXf x2 = op2.xs[kk];
-
-    // If not singular, use nonlinear system states.
-    if (!dyn.IsLinearSystemStateSingular(x1))
-      x1 = dyn.FromLinearSystemState(x1);
-    if (!dyn.IsLinearSystemStateSingular(x2))
-      x2 = dyn.FromLinearSystemState(x2);
-
-    if (dims.empty() && (x1 - x2).cwiseAbs().maxCoeff() > threshold)
-      return false;
-    else if (!dims.empty()) {
-      for (const Dimension dim : dims) {
-        if (std::abs(x1(dim) - x2(dim)) > threshold) return false;
-      }
-    }
+  // If singular return infinite distance and throw a warning. Otherwise, use
+  // base class implementation but for nonlinear system states.
+  if (dyn.IsLinearSystemStateSingular(x1) ||
+      dyn.IsLinearSystemStateSingular(x2)) {
+    LOG(WARNING) << "Singular state encountered when computing state distance.";
+    return std::numeric_limits<float>::infinity();
   }
 
-  return true;
+  return GameSolver::StateDistance(dyn.FromLinearSystemState(x1),
+                                   dyn.FromLinearSystemState(x2), dims);
 }
 
 }  // namespace ilqgames

@@ -115,8 +115,9 @@ bool GameSolver::Solve(const VectorXf& x0,
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
 
-  // Number of iterations, starting from 0.
+  // Number of iterations and whether or not the solver has converged.
   size_t num_iterations = 0;
+  bool has_converged = false;
 
   // Log initial iterate.
   if (log) {
@@ -126,21 +127,30 @@ bool GameSolver::Solve(const VectorXf& x0,
   }
 
   // Main loop with timer for anytime execution.
-  while (elapsed_time(solver_call_time) <
-             max_runtime - timer_.RuntimeUpperBound() &&
-         !HasConverged(num_iterations, last_operating_point,
-                       current_operating_point)) {
+  while (num_iterations < params_.max_solver_iters && !has_converged &&
+         elapsed_time(solver_call_time) <
+             max_runtime - timer_.RuntimeUpperBound()) {
     // Start loop timer.
     timer_.Tic();
 
     // New iteration.
     num_iterations++;
 
-    // Swap operating points and compute new current operating point.
-    if (num_iterations > 1 || is_initial_operating_point_zero) {
+    // Swap operating points and compute new current operating point if this is
+    // the first iteration and the initial operating point was zero. Future
+    // operating points will be computed during the call to `ModifyLQStrategies`
+    // which occurs after solving the LQ game.
+    if (num_iterations == 1 && is_initial_operating_point_zero) {
       last_operating_point.swap(current_operating_point);
       CurrentOperatingPoint(last_operating_point, current_strategies,
-                            &current_operating_point);
+                            &current_operating_point, &has_converged, false);
+    }
+
+    // Log current iterate.
+    if (log) {
+      log->AddSolverIterate(current_operating_point, current_strategies,
+                            EvaluateCosts(current_operating_point),
+                            elapsed_time(solver_call_time));
     }
 
     // Linearize dynamics and quadraticize costs for all players about the new
@@ -167,14 +177,11 @@ bool GameSolver::Solve(const VectorXf& x0,
         SolveLQGame(*dynamics_, linearization_, quadraticization_);
 
     // Modify this LQ solution.
-    if (!ModifyLQStrategies(current_operating_point, &current_strategies))
+    if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
+                            &has_converged)) {
+      final_strategies->swap(current_strategies);
+      final_operating_point->swap(last_operating_point);
       return false;
-
-    // Log current iterate.
-    if (log) {
-      log->AddSolverIterate(current_operating_point, current_strategies,
-                            EvaluateCosts(current_operating_point),
-                            elapsed_time(solver_call_time));
     }
 
     // Record loop runtime.
@@ -188,22 +195,32 @@ bool GameSolver::Solve(const VectorXf& x0,
   return true;
 }
 
-void GameSolver::CurrentOperatingPoint(
+bool GameSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point) const {
+    OperatingPoint* current_operating_point, bool* has_converged,
+    bool check_trust_region) const {
   CHECK_NOTNULL(current_operating_point);
+  CHECK_NOTNULL(has_converged);
   current_operating_point->t0 = last_operating_point.t0;
+  *has_converged = true;
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    Time t = last_operating_point.t0 + ComputeTimeStamp(kk);
+    const Time t = last_operating_point.t0 + ComputeTimeStamp(kk);
 
     // Unpack.
     const VectorXf delta_x = x - last_operating_point.xs[kk];
     const auto& last_us = last_operating_point.us[kk];
     auto& current_us = current_operating_point->us[kk];
+
+    // Check convergence and trust region.
+    const float delta_x_distance = StateDistance(
+        x, last_operating_point.xs[kk], params_.trust_region_dimensions);
+    *has_converged &= (delta_x_distance < params_.convergence_tolerance);
+    if (check_trust_region && delta_x_distance > params_.trust_region_size)
+      return false;
 
     // Record state.
     current_operating_point->xs[kk] = x;
@@ -218,6 +235,8 @@ void GameSolver::CurrentOperatingPoint(
     if (kk < num_time_steps_ - 1)
       x = dynamics_->Integrate(t, time_step_, x, current_us);
   }
+
+  return true;
 }
 
 std::vector<float> GameSolver::EvaluateCosts(const OperatingPoint& op) const {
@@ -228,65 +247,45 @@ std::vector<float> GameSolver::EvaluateCosts(const OperatingPoint& op) const {
   return costs;
 }
 
-bool GameSolver::HasConverged(
-    size_t iteration, const OperatingPoint& last_operating_point,
-    const OperatingPoint& current_operating_point) const {
-  // Check iterations.
-  if (iteration >= params_.max_solver_iters) return true;
-  if (iteration <= 1) return false;
+float GameSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
+                                const std::vector<Dimension>& dims) const {
+  if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
 
-  // Check operating points.
-  const std::vector<Dimension> kCheckAllDimensions;
-  return AreOperatingPointsClose(last_operating_point, current_operating_point,
-                                 params_.convergence_tolerance,
-                                 kCheckAllDimensions);
+  float distance = 0.0;
+  for (const Dimension dim : dims) distance += std::abs(x1(dim) - x2(dim));
+
+  return distance;
 }
 
-bool GameSolver::AreOperatingPointsClose(
-    const OperatingPoint& op1, const OperatingPoint& op2, float threshold,
-    const std::vector<Dimension>& dims) const {
-  CHECK_EQ(op1.xs.size(), op2.xs.size());
-
-  for (size_t kk = 0; kk < op1.xs.size(); kk++) {
-    const VectorXf& x1 = op1.xs[kk];
-    const VectorXf& x2 = op2.xs[kk];
-    if (dims.empty() && (x1 - x2).cwiseAbs().maxCoeff() > threshold)
-      return false;
-    else if (!dims.empty()) {
-      for (const Dimension dim : dims) {
-        if (std::abs(x1(dim) - x2(dim)) > threshold) return false;
-      }
-    }
-  }
-
-  return true;
-}
-
-bool GameSolver::ModifyLQStrategies(
-    const OperatingPoint& current_operating_point,
-    std::vector<Strategy>* strategies) const {
-  // Compute next operating point.
-  OperatingPoint next_operating_point(num_time_steps_, dynamics_->NumPlayers(),
-                                      current_operating_point.t0);
-  CurrentOperatingPoint(current_operating_point, *strategies,
-                        &next_operating_point);
+bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
+                                    OperatingPoint* current_operating_point,
+                                    bool* has_converged) const {
+  CHECK_NOTNULL(strategies);
+  CHECK_NOTNULL(current_operating_point);
+  CHECK_NOTNULL(has_converged);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary backtracking.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
 
+  // Compute next operating point.
+  const OperatingPoint last_operating_point(*current_operating_point);
+  bool satisfies_trust_region =
+      CurrentOperatingPoint(last_operating_point, *strategies,
+                            current_operating_point, has_converged);
+
   if (!params_.linesearch) return true;
 
-  // Keep reducing alphas until the maximum elementwise state difference is
-  // above a threshold.
+  // Keep reducing alphas until we satisfy the trust region constraint.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
-    if (SatisfiesTrustRegion(current_operating_point, next_operating_point))
-      return true;
+    if (satisfies_trust_region) return true;
 
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
-    CurrentOperatingPoint(current_operating_point, *strategies,
-                          &next_operating_point);
+    satisfies_trust_region =
+        CurrentOperatingPoint(last_operating_point, *strategies,
+                              current_operating_point, has_converged);
   }
 
+  // Output a warning. Solver should revert to last valid operating point.
   LOG(WARNING) << "Exceeded maximum number of backtracking steps.";
   return false;
 }

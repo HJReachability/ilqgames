@@ -78,7 +78,7 @@ class ILQFlatSolver : public GameSolver {
   // Populate the given vector with a linearization of the dynamics about
   // the given operating point. Provide version with no operating point for use
   // with feedback linearizable systems.
-  virtual void ComputeLinearization(
+  void ComputeLinearization(
       const OperatingPoint& op,
       std::vector<LinearDynamicsApproximation>* linearization) {
     ComputeLinearization(linearization);
@@ -86,19 +86,11 @@ class ILQFlatSolver : public GameSolver {
   void ComputeLinearization(
       std::vector<LinearDynamicsApproximation>* linearization);
 
-  // Check trust region constraint. By default, this just checks if the current
-  // and previous operating points are close to each other.
-  virtual bool SatisfiesTrustRegion(
-      const OperatingPoint& last_operating_point,
-      const OperatingPoint& current_operating_point) const;
-
-  // Check if operating points (with states transformed into nonlinear system
-  // states) are close to one another in the given dimension. If dimensions
-  // empty, checks all dimensions.
-  virtual bool AreOperatingPointsClose(
-      const OperatingPoint& op1, const OperatingPoint& op2, float threshold,
-      const std::vector<Dimension>& dims) const;
-
+  // Compute distance (infinity norm) between states in the given dimensions.
+  // If dimensions empty, checks all dimensions. Computes in the nonlinear
+  // system state coordinates.
+  float StateDistance(const VectorXf& x1, const VectorXf& x2,
+                      const std::vector<Dimension>& dims) const;
 };  // class ILQFlatSolver
 
 }  // namespace ilqgames
