@@ -10,7 +10,7 @@ If you find this repository useful, please do cite the paper:
 ```
 @misc{fridovichkeil2019efficient,
     title={Efficient Iterative Linear-Quadratic Approximations for Nonlinear Multi-Player General-Sum Differential Games},
-    author={David Fridovich-Keil and Ellis Ratner and Anca D. Dragan and Claire J. Tomlin},
+    author={David Fridovich-Keil and Ellis Ratner and Lasse Peters and Anca D. Dragan and Claire J. Tomlin},
     year={2019},
     eprint={1909.04694},
     archivePrefix={arXiv},
