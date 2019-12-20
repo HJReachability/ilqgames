@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
@@ -369,4 +370,12 @@ TEST(OrientationFlatCostTest, QuadraticizesCorrectly) {
 TEST(OrientationCostTest, QuadraticizesCorrectly) {
   OrientationCost cost(kCostWeight, 1, M_PI_2);
   CheckQuadraticization(cost);
+}
+
+TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
+  ProximityConstraint inside_constraint({0, 1}, {2, 3}, 100.0, true);
+  CheckQuadraticization(inside_constraint);
+
+  ProximityConstraint outside_constraint({0, 1}, {2, 3}, 0.0, false);
+  CheckQuadraticization(outside_constraint);
 }

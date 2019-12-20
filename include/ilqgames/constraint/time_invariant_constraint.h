@@ -36,53 +36,53 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Penalizes (thresh - relative distance)^2 between two pairs of state
-// dimensions (representing two positions of vehicles whose states have been
-// concatenated) whenever relative distance is less than thresh.
+// Base class for all time-invariant constraints.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_PROXIMITY_COST_H
-#define ILQGAMES_COST_PROXIMITY_COST_H
+#ifndef ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/constraint/constraint.h>
+#include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-class ProximityCost : public TimeInvariantCost {
+class TimeInvariantConstraint : public Constraint {
  public:
-  ProximityCost(float weight,
-                const std::pair<Dimension, Dimension>& position_idxs1,
-                const std::pair<Dimension, Dimension>& position_idxs2,
-                float threshold, const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        threshold_(threshold),
-        threshold_sq_(threshold * threshold),
-        xidx1_(position_idxs1.first),
-        yidx1_(position_idxs1.second),
-        xidx2_(position_idxs2.first),
-        yidx2_(position_idxs2.second) {}
+  virtual ~TimeInvariantConstraint() {}
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
+  // Check if this constraint is satisfied, and optionally return the value of a
+  // function whose zero sub-level set corresponds to the feasible set.
+  bool IsSatisfied(Time t, const VectorXf& input,
+                   float* level = nullptr) const {
+    return IsSatisfied(input, level);
+  };
+  virtual bool IsSatisfied(const VectorXf& input,
+                           float* level = nullptr) const = 0;
 
-  // Quadraticize this cost at the given input, and add to the running
+  // Evaluate the barrier at the current input.
+  float Evaluate(Time t, const VectorXf& input) const {
+    return Evaluate(input);
+  };
+  virtual float Evaluate(const VectorXf& input) const = 0;
+
+  // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    Quadraticize(input, hess, grad);
+  };
+  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const = 0;
 
- private:
-  // Threshold for minimum squared relative distance.
-  const float threshold_, threshold_sq_;
-
-  // Position indices for two vehicles.
-  const Dimension xidx1_, yidx1_;
-  const Dimension xidx2_, yidx2_;
-};  //\class ProximityCost
+ protected:
+  explicit TimeInvariantConstraint(const std::string& name = "")
+      : Constraint(name) {}
+};  //\class TimeInvariantConstraint
 
 }  // namespace ilqgames
 
