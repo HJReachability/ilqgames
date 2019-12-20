@@ -107,29 +107,6 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         }
       }
     }
-
-    // Finally, handle generalized control costs.
-    for (const auto& cost_pair : player_cost.GeneralizedControlCosts()) {
-      const auto other_player = cost_pair.first;
-      const auto& cost = cost_pair.second;
-      auto e = evaluated_costs.emplace(cost->Name(),
-                                       std::vector<std::vector<float>>());
-      LOG_IF(WARNING, !e.second)
-          << "Player " << ii
-          << " has duplicate cost with name: " << cost->Name();
-
-      auto& entry = e.first->second;
-      entry.resize(log->NumIterates());
-      for (size_t jj = 0; jj < log->NumIterates(); jj++) {
-        entry[jj].resize(log->NumTimeSteps());
-
-        for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-          entry[jj][kk] =
-              cost->Evaluate(log->IndexToTime(kk), log->State(jj, kk),
-                             log->Control(jj, kk, other_player));
-        }
-      }
-    }
   }
 }
 

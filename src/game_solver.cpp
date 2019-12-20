@@ -115,19 +115,6 @@ bool GameSolver::Solve(const VectorXf& x0,
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
 
-  // Preallocate vectors for linearizations and quadraticizations.
-  // Both are time-indexed (and quadraticizations' inner vector is indexed by
-  // player).
-  std::vector<LinearDynamicsApproximation> linearization(num_time_steps_);
-  if (dynamics_->TreatAsLinear())
-    ComputeLinearization(initial_operating_point, &linearization);
-
-  std::vector<std::vector<QuadraticCostApproximation>> quadraticization(
-      num_time_steps_);
-  for (auto& quads : quadraticization)
-    quads.resize(dynamics_->NumPlayers(),
-                 QuadraticCostApproximation(dynamics_->XDim()));
-
   // Number of iterations, starting from 0.
   size_t num_iterations = 0;
 
@@ -160,7 +147,7 @@ bool GameSolver::Solve(const VectorXf& x0,
     // operating point, only if the system can't be treated as linear from the
     // outset, in which case we've already linearized it.
     if (!dynamics_->TreatAsLinear())
-      ComputeLinearization(current_operating_point, &linearization);
+      ComputeLinearization(current_operating_point, &linearization_);
 
     for (size_t kk = 0; kk < num_time_steps_; kk++) {
       const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
@@ -169,7 +156,7 @@ bool GameSolver::Solve(const VectorXf& x0,
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
-                     quadraticization[kk].begin(),
+                     quadraticization_[kk].begin(),
                      [&t, &x, &us](const PlayerCost& cost) {
                        return cost.Quadraticize(t, x, us);
                      });
@@ -177,7 +164,7 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // Solve LQ game.
     current_strategies =
-        SolveLQGame(*dynamics_, linearization, quadraticization);
+        SolveLQGame(*dynamics_, linearization_, quadraticization_);
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(current_operating_point, &current_strategies))

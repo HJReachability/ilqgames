@@ -41,14 +41,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/curvature_cost.h>
-#include <ilqgames/cost/generalized_control_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
 #include <ilqgames/cost/orientation_flat_cost.h>
 #include <ilqgames/cost/proximity_barrier_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
-#include <ilqgames/cost/quadratic_control_cost_flat_unicycle_4d.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_difference_cost.h>
@@ -100,25 +98,25 @@ VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
   return grad;
 }
 
-VectorXf NumericalStateGradient(const GeneralizedControlCost& cost, Time t,
-                                const VectorXf& xi, const VectorXf& v) {
-  VectorXf grad(xi.size());
+// VectorXf NumericalStateGradient(const GeneralizedControlCost& cost, Time t,
+//                                 const VectorXf& xi, const VectorXf& v) {
+//   VectorXf grad(xi.size());
 
-  // Central differences.
-  VectorXf query(xi);
-  for (size_t ii = 0; ii < xi.size(); ii++) {
-    query(ii) += kGradForwardStep;
-    const float hi = cost.Evaluate(t, query, v);
+//   // Central differences.
+//   VectorXf query(xi);
+//   for (size_t ii = 0; ii < xi.size(); ii++) {
+//     query(ii) += kGradForwardStep;
+//     const float hi = cost.Evaluate(t, query, v);
 
-    query(ii) = xi(ii) - kGradForwardStep;
-    const float lo = cost.Evaluate(t, query, v);
+//     query(ii) = xi(ii) - kGradForwardStep;
+//     const float lo = cost.Evaluate(t, query, v);
 
-    grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
-    query(ii) = xi(ii);
-  }
+//     grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
+//     query(ii) = xi(ii);
+//   }
 
-  return grad;
-}
+//   return grad;
+// }
 
 // Function to compute numerical Hessian of a cost.
 MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
@@ -145,31 +143,32 @@ MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
   return hess;
 }
 
-MatrixXf NumericalStateHessian(const GeneralizedControlCost& cost, Time t,
-                               const VectorXf& xi, const VectorXf& v) {
-  MatrixXf hess(xi.size(), xi.size());
+// MatrixXf NumericalStateHessian(const GeneralizedControlCost& cost, Time t,
+//                                const VectorXf& xi, const VectorXf& v) {
+//   MatrixXf hess(xi.size(), xi.size());
 
-  // Central differences on analytic gradients (otherwise things get too noisy).
-  MatrixXf hess_v(v.size(), v.size());
-  MatrixXf hess_analytic(xi.size(), xi.size());
-  VectorXf query(xi);
-  for (size_t ii = 0; ii < xi.size(); ii++) {
-    VectorXf grad_analytic_hi = VectorXf::Zero(xi.size());
-    VectorXf grad_analytic_lo = VectorXf::Zero(xi.size());
+//   // Central differences on analytic gradients (otherwise things get too
+//   noisy). MatrixXf hess_v(v.size(), v.size()); MatrixXf
+//   hess_analytic(xi.size(), xi.size()); VectorXf query(xi); for (size_t ii =
+//   0; ii < xi.size(); ii++) {
+//     VectorXf grad_analytic_hi = VectorXf::Zero(xi.size());
+//     VectorXf grad_analytic_lo = VectorXf::Zero(xi.size());
 
-    query(ii) += kHessForwardStep;
-    cost.Quadraticize(t, query, v, &hess_v, &hess_analytic, &grad_analytic_hi);
+//     query(ii) += kHessForwardStep;
+//     cost.Quadraticize(t, query, v, &hess_v, &hess_analytic,
+//     &grad_analytic_hi);
 
-    query(ii) = xi(ii) - kHessForwardStep;
-    cost.Quadraticize(t, query, v, &hess_v, &hess_analytic, &grad_analytic_lo);
+//     query(ii) = xi(ii) - kHessForwardStep;
+//     cost.Quadraticize(t, query, v, &hess_v, &hess_analytic,
+//     &grad_analytic_lo);
 
-    hess.col(ii) =
-        0.5 * (grad_analytic_hi - grad_analytic_lo) / kHessForwardStep;
-    query(ii) = xi(ii);
-  }
+//     hess.col(ii) =
+//         0.5 * (grad_analytic_hi - grad_analytic_lo) / kHessForwardStep;
+//     query(ii) = xi(ii);
+//   }
 
-  return hess;
-}
+//   return hess;
+// }
 
 // Test that each cost's gradient and Hessian match a numerical approximation.
 void CheckQuadraticization(const Cost& cost) {
@@ -215,78 +214,81 @@ void CheckQuadraticization(const Cost& cost) {
   }
 }
 
-void CheckQuadraticization(const GeneralizedControlCost& cost,
-                           const Cost& corresponding_cost,
-                           const ConcatenatedFlatSystem& dynamics,
-                           PlayerIndex player) {
-  // State and control dimension.
-  const Dimension xdim = dynamics.XDim();
-  const Dimension udim = dynamics.UDim(player);
+// void CheckQuadraticization(const GeneralizedControlCost& cost,
+//                            const Cost& corresponding_cost,
+//                            const ConcatenatedFlatSystem& dynamics,
+//                            PlayerIndex player) {
+//   // State and control dimension.
+//   const Dimension xdim = dynamics.XDim();
+//   const Dimension udim = dynamics.UDim(player);
 
-  // Random number generator to make random timestamps.
-  std::default_random_engine rng(0);
-  std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
-  std::bernoulli_distribution sign_distribution;
-  std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
+//   // Random number generator to make random timestamps.
+//   std::default_random_engine rng(0);
+//   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
+//   std::bernoulli_distribution sign_distribution;
+//   std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
 
-  // Try a bunch of random points.
-  constexpr size_t kNumRandomPoints = 20;
-  for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
-    VectorXf xi(xdim);
-    for (size_t jj = 0; jj < xdim; jj++) {
-      const float s = sign_distribution(rng);
-      xi(jj) = (1.0 - 2.0 * s) * entry_distribution(rng);
-    }
+//   // Try a bunch of random points.
+//   constexpr size_t kNumRandomPoints = 20;
+//   for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
+//     VectorXf xi(xdim);
+//     for (size_t jj = 0; jj < xdim; jj++) {
+//       const float s = sign_distribution(rng);
+//       xi(jj) = (1.0 - 2.0 * s) * entry_distribution(rng);
+//     }
 
-    VectorXf v(udim);
-    for (size_t jj = 0; jj < udim; jj++) {
-      v(jj) = entry_distribution(rng);
-    }
+//     VectorXf v(udim);
+//     for (size_t jj = 0; jj < udim; jj++) {
+//       v(jj) = entry_distribution(rng);
+//     }
 
-    const Time t = time_distribution(rng);
+//     const Time t = time_distribution(rng);
 
-    // Compute all the analytic Hessians and gradient.
-    MatrixXf hess_v_analytic(MatrixXf::Zero(udim, udim));
-    MatrixXf hess_xi_analytic(MatrixXf::Zero(xdim, xdim));
-    VectorXf grad_xi_analytic(VectorXf::Zero(xdim));
-    cost.Quadraticize(t, xi, v, &hess_v_analytic, &hess_xi_analytic,
-                      &grad_xi_analytic);
+//     // Compute all the analytic Hessians and gradient.
+//     MatrixXf hess_v_analytic(MatrixXf::Zero(udim, udim));
+//     MatrixXf hess_xi_analytic(MatrixXf::Zero(xdim, xdim));
+//     VectorXf grad_xi_analytic(VectorXf::Zero(xdim));
+//     cost.Quadraticize(t, xi, v, &hess_v_analytic, &hess_xi_analytic,
+//                       &grad_xi_analytic);
 
-    // Numerical xi derivatives.
-    const MatrixXf hess_xi_numerical = NumericalStateHessian(cost, t, xi, v);
-    const VectorXf grad_xi_numerical = NumericalStateGradient(cost, t, xi, v);
+//     // Numerical xi derivatives.
+//     const MatrixXf hess_xi_numerical = NumericalStateHessian(cost, t, xi, v);
+//     const VectorXf grad_xi_numerical = NumericalStateGradient(cost, t, xi,
+//     v);
 
-    // Numerical v Hessian based on corresponding cost transformed by the
-    // inverse decoupling matrix.
-    const auto& subsystem = *dynamics.Subsystems()[player];
-    const VectorXf x = dynamics.FromLinearSystemState(xi, player);
-    const VectorXf u = subsystem.LinearizingControl(x, v);
-    MatrixXf hess_u(MatrixXf::Zero(udim, udim));
-    corresponding_cost.Quadraticize(t, u, &hess_u, nullptr);
+//     // Numerical v Hessian based on corresponding cost transformed by the
+//     // inverse decoupling matrix.
+//     const auto& subsystem = *dynamics.Subsystems()[player];
+//     const VectorXf x = dynamics.FromLinearSystemState(xi, player);
+//     const VectorXf u = subsystem.LinearizingControl(x, v);
+//     MatrixXf hess_u(MatrixXf::Zero(udim, udim));
+//     corresponding_cost.Quadraticize(t, u, &hess_u, nullptr);
 
-    const MatrixXf M_inv = subsystem.InverseDecouplingMatrix(x);
-    const MatrixXf hess_v_numerical = M_inv.transpose() * hess_u * M_inv;
+//     const MatrixXf M_inv = subsystem.InverseDecouplingMatrix(x);
+//     const MatrixXf hess_v_numerical = M_inv.transpose() * hess_u * M_inv;
 
-#if 0
-    if ((grad_xi_analytic - grad_xi_numerical).lpNorm<Eigen::Infinity>() >=
-        kNumericalPrecision) {
-      std::cout << "xi: " << xi.transpose() << std::endl;
-      std::cout << "v: " << v.transpose() << std::endl;
-      std::cout << "numeric hess: \n" << hess_xi_numerical << std::endl;
-      std::cout << "analytic hess: \n" << hess_xi_analytic << std::endl;
-      std::cout << "numeric grad: \n" << grad_xi_numerical << std::endl;
-      std::cout << "analytic grad: \n" << grad_xi_analytic << std::endl;
-    }
-#endif
+// #if 0
+//     if ((grad_xi_analytic - grad_xi_numerical).lpNorm<Eigen::Infinity>() >=
+//         kNumericalPrecision) {
+//       std::cout << "xi: " << xi.transpose() << std::endl;
+//       std::cout << "v: " << v.transpose() << std::endl;
+//       std::cout << "numeric hess: \n" << hess_xi_numerical << std::endl;
+//       std::cout << "analytic hess: \n" << hess_xi_analytic << std::endl;
+//       std::cout << "numeric grad: \n" << grad_xi_numerical << std::endl;
+//       std::cout << "analytic grad: \n" << grad_xi_analytic << std::endl;
+//     }
+// #endif
 
-    EXPECT_LT((hess_v_analytic - hess_v_numerical).lpNorm<Eigen::Infinity>(),
-              kNumericalPrecision);
-    EXPECT_LT((hess_xi_analytic - hess_xi_numerical).lpNorm<Eigen::Infinity>(),
-              kNumericalPrecision);
-    EXPECT_LT((grad_xi_analytic - grad_xi_numerical).lpNorm<Eigen::Infinity>(),
-              kNumericalPrecision);
-  }
-}
+//     EXPECT_LT((hess_v_analytic - hess_v_numerical).lpNorm<Eigen::Infinity>(),
+//               kNumericalPrecision);
+//     EXPECT_LT((hess_xi_analytic -
+//     hess_xi_numerical).lpNorm<Eigen::Infinity>(),
+//               kNumericalPrecision);
+//     EXPECT_LT((grad_xi_analytic -
+//     grad_xi_numerical).lpNorm<Eigen::Infinity>(),
+//               kNumericalPrecision);
+//   }
+// }
 
 }  // anonymous namespace
 
@@ -367,37 +369,5 @@ TEST(OrientationFlatCostTest, QuadraticizesCorrectly) {
 
 TEST(OrientationCostTest, QuadraticizesCorrectly) {
   OrientationCost cost(kCostWeight, 1, M_PI_2);
-  CheckQuadraticization(cost);
-}
-
-TEST(QuadraticControlCostFlatUnicycle4DTest, QuadraticizesCorrectly) {
-  const std::shared_ptr<ConcatenatedFlatSystem> dynamics(
-      new ConcatenatedFlatSystem(
-          {std::make_shared<SinglePlayerFlatUnicycle4D>(),
-           std::make_shared<SinglePlayerFlatUnicycle4D>()},
-          0.1));
-
-  // Omega cost and corresponding cost in nonlinear system.
-  constexpr PlayerIndex kPlayerIdx = 1;
-  QuadraticControlCostFlatUnicycle4D omega_cost(
-      kCostWeight, dynamics, kPlayerIdx, SinglePlayerFlatUnicycle4D::kOmegaIdx,
-      0.0);
-  QuadraticCost corresponding_omega_cost(
-      kCostWeight, SinglePlayerFlatUnicycle4D::kOmegaIdx, 0.0);
-
-  // Acceleration cost and corresponding cost in nonlinear system.
-  QuadraticControlCostFlatUnicycle4D a_cost(kCostWeight, dynamics, kPlayerIdx,
-                                            SinglePlayerFlatUnicycle4D::kAIdx,
-                                            0.0);
-  QuadraticCost corresponding_a_cost(kCostWeight,
-                                     SinglePlayerFlatUnicycle4D::kAIdx, 0.0);
-
-  CheckQuadraticization(omega_cost, corresponding_omega_cost, *dynamics,
-                        kPlayerIdx);
-  CheckQuadraticization(a_cost, corresponding_a_cost, *dynamics, kPlayerIdx);
-}
-
-TEST(QuadraticDifferenceCostTest, QuadraticizesCorrectly) {
-  QuadraticDifferenceCost cost(kCostWeight, {0, 1}, {2, 3});
   CheckQuadraticization(cost);
 }

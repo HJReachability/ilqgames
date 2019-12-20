@@ -68,13 +68,22 @@ class ILQFlatSolver : public GameSolver {
   ILQFlatSolver(const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics,
                 const std::vector<PlayerCost>& player_costs, Time time_horizon,
                 const SolverParams& params = SolverParams())
-      : GameSolver(dynamics, player_costs, time_horizon, params) {}
+      : GameSolver(dynamics, player_costs, time_horizon, params) {
+    // Precompute linearization.
+    CHECK(dynamics_->TreatAsLinear());
+    ComputeLinearization(&linearization_);
+  }
 
  protected:
   // Populate the given vector with a linearization of the dynamics about
-  // the given operating point.
+  // the given operating point. Provide version with no operating point for use
+  // with feedback linearizable systems.
   virtual void ComputeLinearization(
       const OperatingPoint& op,
+      std::vector<LinearDynamicsApproximation>* linearization) {
+    ComputeLinearization(linearization);
+  }
+  void ComputeLinearization(
       std::vector<LinearDynamicsApproximation>* linearization);
 
   // Check trust region constraint. By default, this just checks if the current
