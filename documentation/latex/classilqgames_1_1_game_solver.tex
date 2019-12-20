@@ -36,19 +36,13 @@ Time {\bfseries Compute\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hyper
 virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)=0\hypertarget{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}{}\label{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}
 
 \item 
-virtual bool {\bfseries Modify\+L\+Q\+Strategies} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+operating\+\_\+point, std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies) const \hypertarget{classilqgames_1_1_game_solver_a02461f67e30de7a1fa44c72160c47fb6}{}\label{classilqgames_1_1_game_solver_a02461f67e30de7a1fa44c72160c47fb6}
+virtual bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged) const \hypertarget{classilqgames_1_1_game_solver_af00ddb857c80af26959ac6a26a193ff5}{}\label{classilqgames_1_1_game_solver_af00ddb857c80af26959ac6a26a193ff5}
 
 \item 
-virtual bool {\bfseries Has\+Converged} (size\+\_\+t iteration, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+operating\+\_\+point) const \hypertarget{classilqgames_1_1_game_solver_a41c295d2bd647104daf98e8792d438e9}{}\label{classilqgames_1_1_game_solver_a41c295d2bd647104daf98e8792d438e9}
+virtual float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}{}\label{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}
 
 \item 
-virtual bool {\bfseries Are\+Operating\+Points\+Close} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op1, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op2, float threshold, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_game_solver_a98a3abcc7548e8c8ba26ec3e703668fa}{}\label{classilqgames_1_1_game_solver_a98a3abcc7548e8c8ba26ec3e703668fa}
-
-\item 
-virtual bool {\bfseries Satisfies\+Trust\+Region} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+operating\+\_\+point) const \hypertarget{classilqgames_1_1_game_solver_a8d130435ee6d534d1d93251b00416dee}{}\label{classilqgames_1_1_game_solver_a8d130435ee6d534d1d93251b00416dee}
-
-\item 
-void {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point) const \hypertarget{classilqgames_1_1_game_solver_ae13927d570a00ff73c9556218bff773d}{}\label{classilqgames_1_1_game_solver_ae13927d570a00ff73c9556218bff773d}
+bool {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged, bool check\+\_\+trust\+\_\+region=true) const \hypertarget{classilqgames_1_1_game_solver_a0b06485f66ce770eb24955353a8be8f4}{}\label{classilqgames_1_1_game_solver_a0b06485f66ce770eb24955353a8be8f4}
 
 \item 
 std\+::vector$<$ float $>$ {\bfseries Evaluate\+Costs} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op) const \hypertarget{classilqgames_1_1_game_solver_a38e4812eb9b9537d5a0811a9bf85df97}{}\label{classilqgames_1_1_game_solver_a38e4812eb9b9537d5a0811a9bf85df97}

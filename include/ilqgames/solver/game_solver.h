@@ -127,36 +127,26 @@ class GameSolver {
 
   // Modify LQ strategies to improve convergence properties.
   // This function replaces an Armijo linesearch that would take place in ILQR.
-  // Returns true if successful.
-  virtual bool ModifyLQStrategies(const OperatingPoint& current_operating_point,
-                                  std::vector<Strategy>* strategies) const;
+  // Returns true if successful, and records if we have converged.
+  virtual bool ModifyLQStrategies(std::vector<Strategy>* strategies,
+                                  OperatingPoint* current_operating_point,
+                                  bool* has_converged) const;
 
-  // Check convergence. Returns true if converged.
-  virtual bool HasConverged(
-      size_t iteration, const OperatingPoint& last_operating_point,
-      const OperatingPoint& current_operating_point) const;
-
-  // Check if operating points are close to one another in the given dimension.
+  // Compute distance (infinity norm) between states in the given dimensions.
   // If dimensions empty, checks all dimensions.
-  virtual bool AreOperatingPointsClose(
-      const OperatingPoint& op1, const OperatingPoint& op2, float threshold,
-      const std::vector<Dimension>& dims) const;
-
-  // Check trust region constraint. By default, this just checks if the current
-  // and previous operating points are close to each other.
-  virtual bool SatisfiesTrustRegion(
-      const OperatingPoint& last_operating_point,
-      const OperatingPoint& current_operating_point) const {
-    return AreOperatingPointsClose(
-        last_operating_point, current_operating_point,
-        params_.trust_region_size, params_.trust_region_dimensions);
-  }
+  virtual float StateDistance(const VectorXf& x1, const VectorXf& x2,
+                              const std::vector<Dimension>& dims) const;
 
   // Compute the current operating point based on the current set of strategies
-  // and the last operating point.
-  void CurrentOperatingPoint(const OperatingPoint& last_operating_point,
+  // and the last operating point. Optionally records whether or not the solver
+  // has converged and checks convergence. Returns true if the new operating
+  // point satisfies the trust region, or if the `check_trust_region` flag is
+  // false.
+  bool CurrentOperatingPoint(const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
-                             OperatingPoint* current_operating_point) const;
+                             OperatingPoint* current_operating_point,
+                             bool* has_converged,
+                             bool check_trust_region = true) const;
 
   // Evaluate all player costs.
   std::vector<float> EvaluateCosts(const OperatingPoint& op) const;
