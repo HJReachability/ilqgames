@@ -70,8 +70,8 @@
 #include <memory>
 #include <vector>
 
-// Adversarial time.
-DEFINE_double(adversarial_time, 0.0, "Adversarial time window (s).");
+// // Adversarial time.
+// DEFINE_double(adversarial_time, 0.0, "Adversarial time window (s).");
 
 namespace ilqgames {
 
@@ -127,17 +127,17 @@ static constexpr float kP3NominalV = 10.0; // m/s
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 2.5;   // m
-static constexpr float kP1InitialY = -10.0; // m
+static constexpr float kP1InitialX = -1.5;   // m
+static constexpr float kP1InitialY = 30.0; // m
 
-static constexpr float kP2InitialX = -1.0;             // m
-static constexpr float kP2InitialY = -10.0;            // m
+static constexpr float kP2InitialX = -1.0;  // m
+static constexpr float kP2InitialY = -45.0; // m
 static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
 static constexpr float kP3InitialX = 2.5;  // m
 static constexpr float kP3InitialY = 10.0; // m
 
-static constexpr float kP1InitialHeading = M_PI_2;              // rad
+static constexpr float kP1InitialHeading = -M_PI_2;              // rad
 static constexpr float kP2InitialHeading = M_PI_2;              // rad
 static constexpr float kP2InitialHeadingAntiparallel = -M_PI_2; // rad
 static constexpr float kP3InitialHeading = M_PI_2;              // rad
@@ -205,6 +205,9 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   x0_(kP1VIdx) = kP1InitialSpeed;
 
   x0_(kP2XIdx) = kP2InitialX;
+  x0_(kP2YIdx) = kP2InitialY;
+  x0_(kP2HeadingIdx) = kP2InitialHeading;
+  x0_(kP2VIdx) = kP2InitialSpeed;
 
   // if (scenario == "Parallel") {
   //   x0_(kP2HeadingIdx) = kP2InitialHeading;

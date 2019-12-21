@@ -74,6 +74,10 @@ DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
 DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
 DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 
+// Adversarial Time.
+DEFINE_double(adversarial_time, 0.0,
+              "Amount of time other agents are assumed to be adversarial");
+
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
 // libraries are often used for this purpose! Here we are supporting a few
@@ -111,8 +115,8 @@ int main(int argc, char **argv) {
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.adversarial_time = 0.0;
-  // params.adversarial_time = FLAGS_adversarial_time;
+  // params.adversarial_time = 0.0;
+  params.adversarial_time = FLAGS_adversarial_time;
 
   auto problem =
       std::make_shared<ilqgames::ThreePlayerFlatOvertakingExample>(params);

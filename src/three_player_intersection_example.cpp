@@ -69,8 +69,8 @@
 #include <memory>
 #include <vector>
 
-// Adversarial time.
-DEFINE_double(adversarial_time, 0.0, "Adversarial time window (s).");
+// // Adversarial time.
+// DEFINE_double(adversarial_time, 0.0, "Adversarial time window (s).");
 
 namespace ilqgames {
 
