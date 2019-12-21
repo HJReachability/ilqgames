@@ -126,6 +126,12 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
                        &(iter->second.grad));
   }
 
+  // Accumulate state constraint barriers.
+  // NOTE: these are *not* considered when evaluating costs, since the barriers
+  // are only intended to enforce inequality constraints.
+  for (const auto& constraint : state_constraints_)
+    constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
+
   return q;
 }
 
