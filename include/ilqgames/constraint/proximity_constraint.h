@@ -84,7 +84,7 @@ class ProximityConstraint : public TimeInvariantConstraint {
   // Threshold for squared relative distance.
   const float threshold_sq_;
 
-  // Orientation, either `inside` (states should be close) or `outside` (state
+  // Orientation, either `inside` (states should be close) or `outside` (states
   // should be far apart).
   const bool inside_;
 

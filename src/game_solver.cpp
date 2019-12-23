@@ -233,8 +233,8 @@ bool GameSolver::CurrentOperatingPoint(
       return true;
     };  // check_all_constraints
 
-    if (check_trust_region && delta_x_distance > params_.trust_region_size &&
-        check_all_constraints(t, x))
+    if (check_trust_region && (delta_x_distance > params_.trust_region_size ||
+                               !check_all_constraints(t, x)))
       return false;
 
     // Record state.

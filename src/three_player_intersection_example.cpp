@@ -41,6 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -103,6 +104,7 @@ static constexpr float kP3ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
+static constexpr bool kConstraintOrientedInside = false;
 
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5;  // m
@@ -140,8 +142,8 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 5.0;   // m/s
-static constexpr float kP2InitialSpeed = 5.0;   // m/s
+static constexpr float kP1InitialSpeed = 4.0;  // m/s
+static constexpr float kP2InitialSpeed = 4.0;  // m/s
 static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
@@ -377,32 +379,66 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p3_cost.AddStateCost(p3_goaly_cost);
 
   // Pairwise proximity costs.
-  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p1_cost.AddStateCost(p1p2_proximity_cost);
-  p1_cost.AddStateCost(p1p3_proximity_cost);
+  // const std::shared_ptr<ProxCost> p1p2_proximity_cost(
+  //     new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+  //                  {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  // const std::shared_ptr<ProxCost> p1p3_proximity_cost(
+  //     new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+  //                  {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  // p1_cost.AddStateCost(p1p2_proximity_cost);
+  // p1_cost.AddStateCost(p1p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p2p3_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p2_cost.AddStateCost(p2p1_proximity_cost);
-  p2_cost.AddStateCost(p2p3_proximity_cost);
+  // const std::shared_ptr<ProxCost> p2p1_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // const std::shared_ptr<ProxCost> p2p3_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+  //                  {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  // p2_cost.AddStateCost(p2p1_proximity_cost);
+  // p2_cost.AddStateCost(p2p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p3p1_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p3p2_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  p3_cost.AddStateCost(p3p1_proximity_cost);
-  p3_cost.AddStateCost(p3p2_proximity_cost);
+  // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // const std::shared_ptr<ProxCost> p3p2_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+  //                  {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  // p3_cost.AddStateCost(p3p1_proximity_cost);
+  // p3_cost.AddStateCost(p3p2_proximity_cost);
+
+  // Collision-avoidance constraints.
+  const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP2"));
+  const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP3"));
+  p1_cost.AddStateConstraint(p1p2_proximity_constraint);
+  p1_cost.AddStateConstraint(p1p3_proximity_constraint);
+
+  const std::shared_ptr<ProximityConstraint> p2p1_proximity_constraint(
+      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP1"));
+  const std::shared_ptr<ProximityConstraint> p2p3_proximity_constraint(
+      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP3"));
+  p2_cost.AddStateConstraint(p2p1_proximity_constraint);
+  p2_cost.AddStateConstraint(p2p3_proximity_constraint);
+
+  const std::shared_ptr<ProximityConstraint> p3p1_proximity_constraint(
+      new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP1"));
+  const std::shared_ptr<ProximityConstraint> p3p2_proximity_constraint(
+      new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP2"));
+  p3_cost.AddStateConstraint(p3p1_proximity_constraint);
+  p3_cost.AddStateConstraint(p3p2_proximity_constraint);
 
   // Set up solver.
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
