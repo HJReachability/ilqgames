@@ -84,6 +84,12 @@ class PlayerCost {
   // Check whether constraints are satisfied at the given time and state.
   bool CheckConstraints(Time t, const VectorXf& x) const;
 
+  // Scale all weights associated with all constraint barriers by the given
+  // multiplier, which ought to be less than 1.0. Can also reset all weights
+  // to 1.0.
+  void ScaleConstraintBarrierWeights(float scale = 0.5);
+  void ResetConstraintBarrierWeights();
+
   // Accessors.
   const std::vector<std::shared_ptr<Cost>>& StateCosts() const {
     return state_costs_;

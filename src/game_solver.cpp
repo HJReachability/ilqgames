@@ -116,9 +116,13 @@ bool GameSolver::Solve(const VectorXf& x0,
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
 
+  // Reset all constraint barrier weights to unity.
+  for (PlayerCost& cost : player_costs_) cost.ResetConstraintBarrierWeights();
+
   // Number of iterations, whether or not the solver has converged, and total
   // costs for all players.
   size_t num_iterations = 0;
+  size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
   std::vector<float> total_costs;
 
@@ -131,6 +135,14 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // New iteration.
     num_iterations++;
+    num_iterations_since_barrier_rescaling++;
+
+    // Maybe rescale constraint barrier weights.
+    if (num_iterations_since_barrier_rescaling >
+        params_.barrier_scaling_iters) {
+      for (PlayerCost& cost : player_costs_)
+        cost.ScaleConstraintBarrierWeights(params_.geometric_barrier_scaling);
+    }
 
     // Swap operating points and compute new current operating point if this is
     // the first iteration and the initial operating point was zero. Future

@@ -56,9 +56,11 @@ class Constraint : public Cost {
  public:
   virtual ~Constraint() {}
 
-  // Set the barrier weight. This will typically decrease with successive solves
-  // in order to improve the approximation of the barrier-free objective.
+  // Set or multiplicatively scale the barrier weight. This will typically
+  // decrease with successive solves in order to improve the approximation of
+  // the barrier-free objective.
   void SetBarrierWeight(float weight) { weight_ = weight; }
+  void ScaleBarrierWeight(float scale) { weight_ *= scale; }
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.

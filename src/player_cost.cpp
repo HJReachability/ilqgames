@@ -143,4 +143,16 @@ bool PlayerCost::CheckConstraints(Time t, const VectorXf& x) const {
   return true;
 }
 
+void PlayerCost::ScaleConstraintBarrierWeights(float scale) {
+  CHECK_LT(scale, 1.0);
+  CHECK_GT(scale, 0.0);
+
+  for (auto& constraint : state_constraints_)
+    constraint->ScaleBarrierWeight(scale);
+}
+
+void PlayerCost::ResetConstraintBarrierWeights() {
+  for (auto& constraint : state_constraints_) constraint->SetBarrierWeight(1.0);
+}
+
 }  // namespace ilqgames

@@ -156,7 +156,7 @@ class GameSolver {
   const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
 
   // Player costs. These will not change during operation of this solver.
-  const std::vector<PlayerCost> player_costs_;
+  std::vector<PlayerCost> player_costs_;
 
   // Time horizon (s), time step (s), and number of time steps.
   const Time time_horizon_;
