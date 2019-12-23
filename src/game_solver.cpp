@@ -53,6 +53,7 @@
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -115,16 +116,11 @@ bool GameSolver::Solve(const VectorXf& x0,
   // Current strategies.
   std::vector<Strategy> current_strategies(initial_strategies);
 
-  // Number of iterations and whether or not the solver has converged.
+  // Number of iterations, whether or not the solver has converged, and total
+  // costs for all players.
   size_t num_iterations = 0;
   bool has_converged = false;
-
-  // Log initial iterate.
-  if (log) {
-    log->AddSolverIterate(current_operating_point, current_strategies,
-                          EvaluateCosts(current_operating_point),
-                          elapsed_time(solver_call_time));
-  }
+  std::vector<float> total_costs;
 
   // Main loop with timer for anytime execution.
   while (num_iterations < params_.max_solver_iters && !has_converged &&
@@ -143,14 +139,14 @@ bool GameSolver::Solve(const VectorXf& x0,
     if (num_iterations == 1 && is_initial_operating_point_zero) {
       last_operating_point.swap(current_operating_point);
       CurrentOperatingPoint(last_operating_point, current_strategies,
-                            &current_operating_point, &has_converged, false);
+                            &current_operating_point, &has_converged,
+                            &total_costs, false);
     }
 
     // Log current iterate.
     if (log) {
       log->AddSolverIterate(current_operating_point, current_strategies,
-                            EvaluateCosts(current_operating_point),
-                            elapsed_time(solver_call_time));
+                            total_costs, elapsed_time(solver_call_time));
     }
 
     // Linearize dynamics and quadraticize costs for all players about the new
@@ -178,7 +174,7 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
-                            &has_converged)) {
+                            &has_converged, &total_costs)) {
       final_strategies->swap(current_strategies);
       final_operating_point->swap(last_operating_point);
       return false;
@@ -199,11 +195,16 @@ bool GameSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
     OperatingPoint* current_operating_point, bool* has_converged,
-    bool check_trust_region) const {
+    std::vector<float>* total_costs, bool check_trust_region) const {
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
+  CHECK_NOTNULL(total_costs);
+
   current_operating_point->t0 = last_operating_point.t0;
   *has_converged = true;
+  if (total_costs->size() != player_costs_.size())
+    total_costs->resize(player_costs_.size());
+  std::fill(total_costs->begin(), total_costs->end(), 0.0);
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
@@ -215,11 +216,25 @@ bool GameSolver::CurrentOperatingPoint(
     const auto& last_us = last_operating_point.us[kk];
     auto& current_us = current_operating_point->us[kk];
 
-    // Check convergence and trust region.
+    // Accumulate costs.
+    for (size_t ii = 0; ii < player_costs_.size(); ii++)
+      (*total_costs)[ii] += player_costs_[ii].Evaluate(t, x, current_us);
+
+    // Check convergence and trust region (including explicit inequality
+    // constraints).
     const float delta_x_distance = StateDistance(
         x, last_operating_point.xs[kk], params_.trust_region_dimensions);
     *has_converged &= (delta_x_distance < params_.convergence_tolerance);
-    if (check_trust_region && delta_x_distance > params_.trust_region_size)
+
+    auto check_all_constraints = [this](Time t, const VectorXf& x) {
+      for (const auto& cost : this->player_costs_) {
+        if (!cost.CheckConstraints(t, x)) return false;
+      }
+      return true;
+    };  // check_all_constraints
+
+    if (check_trust_region && delta_x_distance > params_.trust_region_size &&
+        check_all_constraints(t, x))
       return false;
 
     // Record state.
@@ -239,14 +254,6 @@ bool GameSolver::CurrentOperatingPoint(
   return true;
 }
 
-std::vector<float> GameSolver::EvaluateCosts(const OperatingPoint& op) const {
-  std::vector<float> costs(player_costs_.size());
-  for (PlayerIndex ii = 0; ii < costs.size(); ii++)
-    costs[ii] = player_costs_[ii].Evaluate(op, time_step_);
-
-  return costs;
-}
-
 float GameSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
                                 const std::vector<Dimension>& dims) const {
   if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
@@ -259,19 +266,21 @@ float GameSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
 
 bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
                                     OperatingPoint* current_operating_point,
-                                    bool* has_converged) const {
+                                    bool* has_converged,
+                                    std::vector<float>* total_costs) const {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
+  CHECK_NOTNULL(total_costs);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary backtracking.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
 
   // Compute next operating point.
   const OperatingPoint last_operating_point(*current_operating_point);
-  bool satisfies_trust_region =
-      CurrentOperatingPoint(last_operating_point, *strategies,
-                            current_operating_point, has_converged);
+  bool satisfies_trust_region = CurrentOperatingPoint(
+      last_operating_point, *strategies, current_operating_point, has_converged,
+      total_costs);
 
   if (!params_.linesearch) return true;
 
@@ -280,9 +289,9 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
     if (satisfies_trust_region) return true;
 
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
-    satisfies_trust_region =
-        CurrentOperatingPoint(last_operating_point, *strategies,
-                              current_operating_point, has_converged);
+    satisfies_trust_region = CurrentOperatingPoint(
+        last_operating_point, *strategies, current_operating_point,
+        has_converged, total_costs);
   }
 
   // Output a warning. Solver should revert to last valid operating point.

@@ -70,20 +70,28 @@ class PlayerCost {
   void AddStateConstraint(const std::shared_ptr<Constraint>& constraint);
 
   // Evaluate this cost at the current time, state, and controls, or integrate
-  // over an entire trajectory.
+  // over an entire trajectory. Does *not* incorporate cost barriers due to
+  // inequality constraints.
   float Evaluate(Time t, const VectorXf& x,
                  const std::vector<VectorXf>& us) const;
   float Evaluate(const OperatingPoint& op, Time time_step) const;
 
   // Quadraticize this cost at the given time, state, and controls.
+  // *Does* account for cost barriers due to inequality constraints.
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
+  // Check whether constraints are satisfied at the given time and state.
+  bool CheckConstraints(Time t, const VectorXf& x) const;
+
   // Accessors.
-  const std::vector<std::shared_ptr<Cost>> StateCosts() const {
+  const std::vector<std::shared_ptr<Cost>>& StateCosts() const {
     return state_costs_;
   }
   const CostMap<Cost>& ControlCosts() const { return control_costs_; }
+  const std::vector<std::shared_ptr<Constraint>>& StateConstraints() const {
+    return state_constraints_;
+  }
 
  private:
   // State costs and control costs.

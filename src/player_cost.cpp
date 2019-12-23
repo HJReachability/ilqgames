@@ -135,4 +135,12 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
   return q;
 }
 
+bool PlayerCost::CheckConstraints(Time t, const VectorXf& x) const {
+  for (const auto& constraint : state_constraints_) {
+    if (!constraint->IsSatisfied(t, x)) return false;
+  }
+
+  return true;
+}
+
 }  // namespace ilqgames
