@@ -46,7 +46,6 @@
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
 #include <ilqgames/cost/orientation_flat_cost.h>
-#include <ilqgames/cost/proximity_barrier_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
@@ -344,11 +343,6 @@ TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
 
 TEST(ProximityCostTest, QuadraticizesCorrectly) {
   ProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
-  CheckQuadraticization(cost);
-}
-
-TEST(ProximityBarrierCostTest, QuadraticizesCorrectly) {
-  ProximityBarrierCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
   CheckQuadraticization(cost);
 }
 
