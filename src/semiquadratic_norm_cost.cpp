@@ -65,12 +65,12 @@ void SemiquadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_LT(dim1_, input.size());
   CHECK_LT(dim2_, input.size());
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Check if cost is active.
   const float norm = std::hypot(input(dim1_), input(dim2_));
@@ -88,10 +88,8 @@ void SemiquadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
       threshold_ * input(dim1_) * input(dim2_) * weight_ / norm_3;
   (*hess)(dim2_, dim1_) += (*hess)(dim1_, dim2_);
 
-  if (grad) {
-    (*grad)(dim1_) += -weight_ * input(dim1_) * (-1.0 + threshold_ / norm);
-    (*grad)(dim2_) += -weight_ * input(dim2_) * (-1.0 + threshold_ / norm);
-  }
+  (*grad)(dim1_) += -weight_ * input(dim1_) * (-1.0 + threshold_ / norm);
+  (*grad)(dim2_) += -weight_ * input(dim2_) * (-1.0 + threshold_ / norm);
 }
 
 }  // namespace ilqgames

@@ -127,10 +127,12 @@ class GameSolver {
 
   // Modify LQ strategies to improve convergence properties.
   // This function replaces an Armijo linesearch that would take place in ILQR.
-  // Returns true if successful, and records if we have converged.
+  // Returns true if successful, and records if we have converged and the total
+  // costs for all players at the new operating point.
   virtual bool ModifyLQStrategies(std::vector<Strategy>* strategies,
                                   OperatingPoint* current_operating_point,
-                                  bool* has_converged) const;
+                                  bool* has_converged,
+                                  std::vector<float>* total_costs) const;
 
   // Compute distance (infinity norm) between states in the given dimensions.
   // If dimensions empty, checks all dimensions.
@@ -138,24 +140,23 @@ class GameSolver {
                               const std::vector<Dimension>& dims) const;
 
   // Compute the current operating point based on the current set of strategies
-  // and the last operating point. Optionally records whether or not the solver
-  // has converged and checks convergence. Returns true if the new operating
-  // point satisfies the trust region, or if the `check_trust_region` flag is
-  // false.
+  // and the last operating point. Checks whether the solver has converged and
+  // populates the total costs for all players of the new operating point.
+  // Returns true if the new operating point satisfies the trust region
+  // (including all explicit inequality constraints), or if the
+  // `check_trust_region` flag is false.
   bool CurrentOperatingPoint(const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
                              OperatingPoint* current_operating_point,
                              bool* has_converged,
+                             std::vector<float>* total_costs,
                              bool check_trust_region = true) const;
-
-  // Evaluate all player costs.
-  std::vector<float> EvaluateCosts(const OperatingPoint& op) const;
 
   // Dynamical system.
   const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
 
   // Player costs. These will not change during operation of this solver.
-  const std::vector<PlayerCost> player_costs_;
+  std::vector<PlayerCost> player_costs_;
 
   // Time horizon (s), time step (s), and number of time steps.
   const Time time_horizon_;

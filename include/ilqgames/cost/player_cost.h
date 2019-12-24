@@ -44,6 +44,7 @@
 #ifndef ILQGAMES_COST_PLAYER_COST_H
 #define ILQGAMES_COST_PLAYER_COST_H
 
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -65,26 +66,54 @@ class PlayerCost {
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
 
+  // Add new state and control constraints for this player.
+  void AddStateConstraint(const std::shared_ptr<Constraint>& constraint);
+  void AddControlConstraint(PlayerIndex idx,
+                            const std::shared_ptr<Constraint>& constraint);
+
   // Evaluate this cost at the current time, state, and controls, or integrate
-  // over an entire trajectory.
+  // over an entire trajectory. Does *not* incorporate cost barriers due to
+  // inequality constraints.
   float Evaluate(Time t, const VectorXf& x,
                  const std::vector<VectorXf>& us) const;
   float Evaluate(const OperatingPoint& op, Time time_step) const;
 
   // Quadraticize this cost at the given time, state, and controls.
+  // *Does* account for cost barriers due to inequality constraints.
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
+  // Check whether constraints are satisfied at the given time and state.
+  bool CheckConstraints(Time t, const VectorXf& x) const;
+
+  // Scale all weights associated with all constraint barriers by the given
+  // multiplier, which ought to be less than 1.0. Can also reset all weights
+  // to 1.0.
+  void ScaleConstraintBarrierWeights(float scale = 0.5);
+  void ResetConstraintBarrierWeights();
+
   // Accessors.
-  const std::vector<std::shared_ptr<Cost>> StateCosts() const {
+  const std::vector<std::shared_ptr<Cost>>& StateCosts() const {
     return state_costs_;
   }
   const CostMap<Cost>& ControlCosts() const { return control_costs_; }
+  const std::vector<std::shared_ptr<Constraint>>& StateConstraints() const {
+    return state_constraints_;
+  }
+  const CostMap<Constraint>& ControlConstraints() const {
+    return control_constraints_;
+  }
 
  private:
-  // State costs, control costs, and generalized control costs.
+  // State costs and control costs.
   std::vector<std::shared_ptr<Cost>> state_costs_;
   CostMap<Cost> control_costs_;
+
+  // State and control constraints. Control constraints can apply to any
+  // player's control input, though it likely only makes sense to apply them to
+  // this player's input.
+  std::vector<std::shared_ptr<Constraint>> state_constraints_;
+  CostMap<Constraint> control_constraints_;
 
   // Regularization on costs.
   const float state_regularization_, control_regularization_;

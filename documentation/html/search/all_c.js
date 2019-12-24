@@ -4,6 +4,7 @@ var searchData=
   ['semiquadraticnormcost',['SemiquadraticNormCost',['../classilqgames_1_1_semiquadratic_norm_cost.html',1,'ilqgames']]],
   ['semiquadraticpolyline2cost',['SemiquadraticPolyline2Cost',['../classilqgames_1_1_semiquadratic_polyline2_cost.html',1,'ilqgames']]],
   ['singlecostapproximation',['SingleCostApproximation',['../structilqgames_1_1_single_cost_approximation.html',1,'ilqgames']]],
+  ['singledimensionconstraint',['SingleDimensionConstraint',['../classilqgames_1_1_single_dimension_constraint.html',1,'ilqgames']]],
   ['singleplayercar5d',['SinglePlayerCar5D',['../classilqgames_1_1_single_player_car5_d.html',1,'ilqgames']]],
   ['singleplayercar6d',['SinglePlayerCar6D',['../classilqgames_1_1_single_player_car6_d.html',1,'ilqgames']]],
   ['singleplayercar7d',['SinglePlayerCar7D',['../classilqgames_1_1_single_player_car7_d.html',1,'ilqgames']]],

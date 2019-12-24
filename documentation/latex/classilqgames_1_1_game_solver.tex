@@ -36,16 +36,13 @@ Time {\bfseries Compute\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hyper
 virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)=0\hypertarget{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}{}\label{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}
 
 \item 
-virtual bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged) const \hypertarget{classilqgames_1_1_game_solver_af00ddb857c80af26959ac6a26a193ff5}{}\label{classilqgames_1_1_game_solver_af00ddb857c80af26959ac6a26a193ff5}
+virtual bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged, std\+::vector$<$ float $>$ $\ast$total\+\_\+costs) const \hypertarget{classilqgames_1_1_game_solver_a5dffdeb025d68e884d4172994d21a3c4}{}\label{classilqgames_1_1_game_solver_a5dffdeb025d68e884d4172994d21a3c4}
 
 \item 
 virtual float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}{}\label{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}
 
 \item 
-bool {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged, bool check\+\_\+trust\+\_\+region=true) const \hypertarget{classilqgames_1_1_game_solver_a0b06485f66ce770eb24955353a8be8f4}{}\label{classilqgames_1_1_game_solver_a0b06485f66ce770eb24955353a8be8f4}
-
-\item 
-std\+::vector$<$ float $>$ {\bfseries Evaluate\+Costs} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op) const \hypertarget{classilqgames_1_1_game_solver_a38e4812eb9b9537d5a0811a9bf85df97}{}\label{classilqgames_1_1_game_solver_a38e4812eb9b9537d5a0811a9bf85df97}
+bool {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged, std\+::vector$<$ float $>$ $\ast$total\+\_\+costs, bool check\+\_\+trust\+\_\+region=true) const \hypertarget{classilqgames_1_1_game_solver_aec793cd5afb9cf01102fb2c5d852d186}{}\label{classilqgames_1_1_game_solver_aec793cd5afb9cf01102fb2c5d852d186}
 
 \end{DoxyCompactItemize}
 \subsection*{Protected Attributes}
@@ -54,7 +51,7 @@ std\+::vector$<$ float $>$ {\bfseries Evaluate\+Costs} (const \hyperlink{structi
 const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ {\bfseries dynamics\+\_\+}\hypertarget{classilqgames_1_1_game_solver_addd321f0c2c7a760bccd2e4f043b3725}{}\label{classilqgames_1_1_game_solver_addd321f0c2c7a760bccd2e4f043b3725}
 
 \item 
-const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ {\bfseries player\+\_\+costs\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a7ec8e339dd5dfd05a1bebfaa4ebc4c9c}{}\label{classilqgames_1_1_game_solver_a7ec8e339dd5dfd05a1bebfaa4ebc4c9c}
+std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ {\bfseries player\+\_\+costs\+\_\+}\hypertarget{classilqgames_1_1_game_solver_aa9271829f762e9ad732921042005f856}{}\label{classilqgames_1_1_game_solver_aa9271829f762e9ad732921042005f856}
 
 \item 
 const Time {\bfseries time\+\_\+horizon\+\_\+}\hypertarget{classilqgames_1_1_game_solver_ae515fafef0ee7df96cfe1447d9f35581}{}\label{classilqgames_1_1_game_solver_ae515fafef0ee7df96cfe1447d9f35581}

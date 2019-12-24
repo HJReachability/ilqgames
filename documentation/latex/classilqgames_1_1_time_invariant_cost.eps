@@ -5,7 +5,7 @@
 %%For: 
 %Magnification: 1.00
 %%Orientation: Portrait
-%%BoundingBox: 0 0 500 612.244898
+%%BoundingBox: 0 0 500 571.428571
 %%Pages: 0
 %%BeginSetup
 %%EndSetup
@@ -19,12 +19,12 @@
 /marginwidth 10 def
 /distx 20 def
 /disty 40 def
-/boundaspect 0.816667 def  % aspect ratio of the BoundingBox (width/height)
+/boundaspect 0.875000 def  % aspect ratio of the BoundingBox (width/height)
 /boundx 500 def
 /boundy boundx boundaspect div def
 /xspacing 0 def
 /yspacing 0 def
-/rows 15 def
+/rows 14 def
 /cols 2 def
 /scalefactor 0 def
 /boxfont /Times-Roman findfont fontheight scalefont def
@@ -179,7 +179,6 @@ boxfont setfont
 (ilqgames::LocallyConvexProximityCost) cw
 (ilqgames::OrientationCost) cw
 (ilqgames::OrientationFlatCost) cw
-(ilqgames::ProximityBarrierCost) cw
 (ilqgames::ProximityCost) cw
 (ilqgames::QuadraticCost) cw
 (ilqgames::QuadraticNormCost) cw
@@ -199,13 +198,12 @@ boundx scalefactor div boundy scalefactor div scale
 
 % ----- classes -----
 
- (ilqgames::TimeInvariantCost) 0.000000 13.000000 box
- (ilqgames::Cost) 0.000000 14.000000 box
- (ilqgames::CurvatureCost) 1.000000 12.000000 box
- (ilqgames::LocallyConvexProximityCost) 1.000000 11.000000 box
- (ilqgames::OrientationCost) 1.000000 10.000000 box
- (ilqgames::OrientationFlatCost) 1.000000 9.000000 box
- (ilqgames::ProximityBarrierCost) 1.000000 8.000000 box
+ (ilqgames::TimeInvariantCost) 0.000000 12.000000 box
+ (ilqgames::Cost) 0.000000 13.000000 box
+ (ilqgames::CurvatureCost) 1.000000 11.000000 box
+ (ilqgames::LocallyConvexProximityCost) 1.000000 10.000000 box
+ (ilqgames::OrientationCost) 1.000000 9.000000 box
+ (ilqgames::OrientationFlatCost) 1.000000 8.000000 box
  (ilqgames::ProximityCost) 1.000000 7.000000 box
  (ilqgames::QuadraticCost) 1.000000 6.000000 box
  (ilqgames::QuadraticNormCost) 1.000000 5.000000 box
@@ -218,13 +216,11 @@ boundx scalefactor div boundy scalefactor div scale
 % ----- relations -----
 
 solid
-0 0.000000 13.000000 out
+0 0.000000 12.000000 out
 solid
-1 0.000000 14.000000 in
+1 0.000000 13.000000 in
 solid
-1 0.000000 12.250000 out
-solid
-0 0.000000 12.500000 hedge
+1 0.000000 11.250000 out
 solid
 0 0.000000 11.500000 hedge
 solid
@@ -250,4 +246,4 @@ solid
 solid
 0 0.000000 0.500000 hedge
 solid
-0.000000 13.000000 0.500000 vedge
+0.000000 12.000000 0.500000 vedge

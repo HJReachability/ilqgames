@@ -12,6 +12,12 @@ void {\bfseries Add\+State\+Cost} (const std\+::shared\+\_\+ptr$<$ \hyperlink{cl
 void {\bfseries Add\+Control\+Cost} (Player\+Index idx, const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \&cost)\hypertarget{classilqgames_1_1_player_cost_aba4df0e6414aba024c86bf77fe57f819}{}\label{classilqgames_1_1_player_cost_aba4df0e6414aba024c86bf77fe57f819}
 
 \item 
+void {\bfseries Add\+State\+Constraint} (const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ \&constraint)\hypertarget{classilqgames_1_1_player_cost_a9c1a21f669ab3f937c3be8a49bf7b5b3}{}\label{classilqgames_1_1_player_cost_a9c1a21f669ab3f937c3be8a49bf7b5b3}
+
+\item 
+void {\bfseries Add\+Control\+Constraint} (Player\+Index idx, const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ \&constraint)\hypertarget{classilqgames_1_1_player_cost_a9df6549112ab9b03bd639b4955b700da}{}\label{classilqgames_1_1_player_cost_a9df6549112ab9b03bd639b4955b700da}
+
+\item 
 float {\bfseries Evaluate} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_ac1ad99a1822d97a53d084fd9da162cb1}{}\label{classilqgames_1_1_player_cost_ac1ad99a1822d97a53d084fd9da162cb1}
 
 \item 
@@ -21,10 +27,25 @@ float {\bfseries Evaluate} (const \hyperlink{structilqgames_1_1_operating_point}
 \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} {\bfseries Quadraticize} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_ad3962847f8eda8bcfecf2096e6abccb6}{}\label{classilqgames_1_1_player_cost_ad3962847f8eda8bcfecf2096e6abccb6}
 
 \item 
-const std\+::vector$<$ std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ $>$ {\bfseries State\+Costs} () const \hypertarget{classilqgames_1_1_player_cost_aeaead26e5c4d0a845a8eed317cd12464}{}\label{classilqgames_1_1_player_cost_aeaead26e5c4d0a845a8eed317cd12464}
+bool {\bfseries Check\+Constraints} (Time t, const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_player_cost_aecd3478584357f4ea5d743c14b842e71}{}\label{classilqgames_1_1_player_cost_aecd3478584357f4ea5d743c14b842e71}
+
+\item 
+void {\bfseries Scale\+Constraint\+Barrier\+Weights} (float scale=0.\+5)\hypertarget{classilqgames_1_1_player_cost_a01099622def541cf226c94140c38d485}{}\label{classilqgames_1_1_player_cost_a01099622def541cf226c94140c38d485}
+
+\item 
+void {\bfseries Reset\+Constraint\+Barrier\+Weights} ()\hypertarget{classilqgames_1_1_player_cost_add7445e01947fcaaf9d5f1e392471970}{}\label{classilqgames_1_1_player_cost_add7445e01947fcaaf9d5f1e392471970}
+
+\item 
+const std\+::vector$<$ std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ $>$ \& {\bfseries State\+Costs} () const \hypertarget{classilqgames_1_1_player_cost_adfb1861f05ba2efa163e7a28670f0585}{}\label{classilqgames_1_1_player_cost_adfb1861f05ba2efa163e7a28670f0585}
 
 \item 
 const Cost\+Map$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \& {\bfseries Control\+Costs} () const \hypertarget{classilqgames_1_1_player_cost_a4fa0717c227acf2773deda56eaf62e99}{}\label{classilqgames_1_1_player_cost_a4fa0717c227acf2773deda56eaf62e99}
+
+\item 
+const std\+::vector$<$ std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ $>$ \& {\bfseries State\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_ac6ef894e71fd9524bd6aa6d3982f415a}{}\label{classilqgames_1_1_player_cost_ac6ef894e71fd9524bd6aa6d3982f415a}
+
+\item 
+const Cost\+Map$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ \& {\bfseries Control\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_acf0081bb561f71522cd9716a9e34eb60}{}\label{classilqgames_1_1_player_cost_acf0081bb561f71522cd9716a9e34eb60}
 
 \end{DoxyCompactItemize}
 
@@ -32,7 +53,7 @@ const Cost\+Map$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \& {\bfseries Co
 \subsection{Detailed Description}
 
 
-Definition at line 56 of file player\+\_\+cost.\+h.
+Definition at line 57 of file player\+\_\+cost.\+h.
 
 
 

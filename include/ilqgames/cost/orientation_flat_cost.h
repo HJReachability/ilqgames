@@ -58,7 +58,7 @@ class OrientationFlatCost : public TimeInvariantCost {
   // Construct from a multiplicative weight, the dimensions in which to apply
   // the quadratic cost, a threshold, and a flag for which side to apply it.
   OrientationFlatCost(float weight, const std::pair<Dimension, Dimension>& dims,
-                    float nominal = 0.0, const std::string& name = "")
+                      float nominal = 0.0, const std::string& name = "")
       : TimeInvariantCost(weight, name),
         dim1_(dims.first),
         dim2_(dims.second),
@@ -71,9 +71,9 @@ class OrientationFlatCost : public TimeInvariantCost {
   float Evaluate(const VectorXf& input) const;
 
   // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians (if non-null).
+  // sum of gradients and Hessians.
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+                    VectorXf* grad) const;
 
  private:
   // Dimensions in which to apply the quadratic cost.

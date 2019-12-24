@@ -64,7 +64,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
       <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
-      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -136,27 +135,24 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a4a1772a9bd07347ed28455119b2571fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a1772a9bd07347ed28455119b2571fe"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeLinearization</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op, std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; *linearization)=0</td></tr>
 <tr class="separator:a4a1772a9bd07347ed28455119b2571fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af00ddb857c80af26959ac6a26a193ff5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af00ddb857c80af26959ac6a26a193ff5"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>ModifyLQStrategies</b> (std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged) const </td></tr>
-<tr class="separator:af00ddb857c80af26959ac6a26a193ff5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5dffdeb025d68e884d4172994d21a3c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5dffdeb025d68e884d4172994d21a3c4"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>ModifyLQStrategies</b> (std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged, std::vector&lt; float &gt; *total_costs) const </td></tr>
+<tr class="separator:a5dffdeb025d68e884d4172994d21a3c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a413329f89a63805c387e35a99b53ad73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a413329f89a63805c387e35a99b53ad73"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>StateDistance</b> (const VectorXf &amp;x1, const VectorXf &amp;x2, const std::vector&lt; Dimension &gt; &amp;dims) const </td></tr>
 <tr class="separator:a413329f89a63805c387e35a99b53ad73"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0b06485f66ce770eb24955353a8be8f4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0b06485f66ce770eb24955353a8be8f4"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>CurrentOperatingPoint</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;last_operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;current_strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged, bool check_trust_region=true) const </td></tr>
-<tr class="separator:a0b06485f66ce770eb24955353a8be8f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a38e4812eb9b9537d5a0811a9bf85df97"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a38e4812eb9b9537d5a0811a9bf85df97"></a>
-std::vector&lt; float &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>EvaluateCosts</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op) const </td></tr>
-<tr class="separator:a38e4812eb9b9537d5a0811a9bf85df97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec793cd5afb9cf01102fb2c5d852d186"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aec793cd5afb9cf01102fb2c5d852d186"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>CurrentOperatingPoint</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;last_operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;current_strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged, std::vector&lt; float &gt; *total_costs, bool check_trust_region=true) const </td></tr>
+<tr class="separator:aec793cd5afb9cf01102fb2c5d852d186"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:addd321f0c2c7a760bccd2e4f043b3725"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="addd321f0c2c7a760bccd2e4f043b3725"></a>
 const std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dynamics_</b></td></tr>
 <tr class="separator:addd321f0c2c7a760bccd2e4f043b3725"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7ec8e339dd5dfd05a1bebfaa4ebc4c9c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7ec8e339dd5dfd05a1bebfaa4ebc4c9c"></a>
-const std::vector&lt; <a class="el" href="classilqgames_1_1_player_cost.html">PlayerCost</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>player_costs_</b></td></tr>
-<tr class="separator:a7ec8e339dd5dfd05a1bebfaa4ebc4c9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa9271829f762e9ad732921042005f856"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9271829f762e9ad732921042005f856"></a>
+std::vector&lt; <a class="el" href="classilqgames_1_1_player_cost.html">PlayerCost</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>player_costs_</b></td></tr>
+<tr class="separator:aa9271829f762e9ad732921042005f856"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae515fafef0ee7df96cfe1447d9f35581"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae515fafef0ee7df96cfe1447d9f35581"></a>
 const Time&#160;</td><td class="memItemRight" valign="bottom"><b>time_horizon_</b></td></tr>
 <tr class="separator:ae515fafef0ee7df96cfe1447d9f35581"><td class="memSeparator" colspan="2">&#160;</td></tr>

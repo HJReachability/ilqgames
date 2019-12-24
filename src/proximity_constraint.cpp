@@ -36,77 +36,82 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Penalizes -log(relative distance^2 - threshold^2) between two pairs of state
-// dimensions (representing two positions of vehicles whose states have been
-// concatenated).
+// Constraint on proximity between two pairs of state dimensions (representing
+// 2D position of vehicles whose states have been concatenated). Can be oriented
+// either `inside` or `outside`, i.e., can constrain the states to be close
+// together or far apart (respectively).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/proximity_barrier_cost.h>
+#include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <string>
+#include <utility>
 
 namespace ilqgames {
 
-float ProximityBarrierCost::Evaluate(const VectorXf& input) const {
+bool ProximityConstraint::IsSatisfied(const VectorXf& input,
+                                      float* level) const {
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
-  const float gap = dx * dx + dy * dy - threshold_sq_;
-  return -0.5 * weight_ * std::log(gap);
+  const float delta_sq = dx * dx + dy * dy;
+
+  // Sign corresponding to orientation of this constraint.
+  const float sign = (inside_) ? -1.0 : 1.0;
+
+  // Maybe populate level.
+  if (level) *level = sign * (threshold_sq_ - delta_sq);
+
+  return (inside_) ? delta_sq < threshold_sq_ : delta_sq > threshold_sq_;
 }
 
-void ProximityBarrierCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
+void ProximityConstraint::Quadraticize(const VectorXf& input, MatrixXf* hess,
+                                       VectorXf* grad) const {
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Compute Hessian and gradient.
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
-  const float gap = dx * dx + dy * dy - threshold_sq_;
-  const float weight_gap = weight_ / gap;
-  const float weight_gap_sq = weight_gap / gap;
+  const float dx2 = dx * dx;
+  const float dy2 = dy * dy;
+  const float delta_sq = dx2 + dy2;
 
-  const float hess_x1x1 = 2.0 * weight_gap_sq * dx * dx - weight_gap;
+  const float grad_coeff = 2.0 / (threshold_sq_ - delta_sq);
+  const float weighted_grad_coeff = weight_ * grad_coeff;
+  (*grad)(xidx1_) += weighted_grad_coeff * dx;
+  (*grad)(xidx2_) -= weighted_grad_coeff * dx;
+  (*grad)(yidx1_) += weighted_grad_coeff * dy;
+  (*grad)(yidx2_) -= weighted_grad_coeff * dy;
+
+  const float hess_x1x1 = weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
   (*hess)(xidx1_, xidx1_) += hess_x1x1;
   (*hess)(xidx1_, xidx2_) -= hess_x1x1;
   (*hess)(xidx2_, xidx1_) -= hess_x1x1;
   (*hess)(xidx2_, xidx2_) += hess_x1x1;
 
-  const float hess_y1y1 = 2.0 * weight_gap_sq * dy * dy - weight_gap;
+  const float hess_y1y1 = weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
   (*hess)(yidx1_, yidx1_) += hess_y1y1;
   (*hess)(yidx1_, yidx2_) -= hess_y1y1;
   (*hess)(yidx2_, yidx1_) -= hess_y1y1;
   (*hess)(yidx2_, yidx2_) += hess_y1y1;
 
-  const float hess_x1y1 = 2.0 * weight_gap_sq * dx * dy;
+  const float hess_x1y1 = weighted_grad_coeff * grad_coeff * dx * dy;
   (*hess)(xidx1_, yidx1_) += hess_x1y1;
   (*hess)(yidx1_, xidx1_) += hess_x1y1;
-
   (*hess)(xidx1_, yidx2_) -= hess_x1y1;
-  (*hess)(yidx2_, xidx1_) -= hess_x1y1;
-
-  (*hess)(xidx2_, yidx1_) -= hess_x1y1;
   (*hess)(yidx1_, xidx2_) -= hess_x1y1;
-
+  (*hess)(xidx2_, yidx1_) -= hess_x1y1;
+  (*hess)(yidx2_, xidx1_) -= hess_x1y1;
   (*hess)(xidx2_, yidx2_) += hess_x1y1;
   (*hess)(yidx2_, xidx2_) += hess_x1y1;
-
-  if (grad) {
-    const float ddx1 = -weight_gap * dx;
-    (*grad)(xidx1_) += ddx1;
-    (*grad)(xidx2_) -= ddx1;
-
-    const float ddy1 = -weight_gap * dy;
-    (*grad)(yidx1_) += ddy1;
-    (*grad)(yidx2_) -= ddy1;
-  }
 }
 
 }  // namespace ilqgames

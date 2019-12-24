@@ -5,7 +5,7 @@
 %%For: 
 %Magnification: 1.00
 %%Orientation: Portrait
-%%BoundingBox: 0 0 500 244.897959
+%%BoundingBox: 0 0 500 190.476190
 %%Pages: 0
 %%BeginSetup
 %%EndSetup
@@ -19,13 +19,13 @@
 /marginwidth 10 def
 /distx 20 def
 /disty 40 def
-/boundaspect 2.041667 def  % aspect ratio of the BoundingBox (width/height)
+/boundaspect 2.625000 def  % aspect ratio of the BoundingBox (width/height)
 /boundx 500 def
 /boundy boundx boundaspect div def
 /xspacing 0 def
 /yspacing 0 def
-/rows 15 def
-/cols 5 def
+/rows 14 def
+/cols 6 def
 /scalefactor 0 def
 /boxfont /Times-Roman findfont fontheight scalefont def
 
@@ -174,15 +174,16 @@
 boxfont setfont
 1 boundaspect scale
 (ilqgames::Cost) cw
+(ilqgames::Constraint) cw
 (ilqgames::FinalTimeCost) cw
 (ilqgames::NominalPathLengthCost) cw
 (ilqgames::RouteProgressCost) cw
 (ilqgames::TimeInvariantCost) cw
+(ilqgames::TimeInvariantConstraint) cw
 (ilqgames::CurvatureCost) cw
 (ilqgames::LocallyConvexProximityCost) cw
 (ilqgames::OrientationCost) cw
 (ilqgames::OrientationFlatCost) cw
-(ilqgames::ProximityBarrierCost) cw
 (ilqgames::ProximityCost) cw
 (ilqgames::QuadraticCost) cw
 (ilqgames::QuadraticNormCost) cw
@@ -202,66 +203,72 @@ boundx scalefactor div boundy scalefactor div scale
 
 % ----- classes -----
 
- (ilqgames::Cost) 1.500000 14.000000 box
- (ilqgames::FinalTimeCost) 0.000000 13.000000 box
- (ilqgames::NominalPathLengthCost) 1.000000 13.000000 box
- (ilqgames::RouteProgressCost) 2.000000 13.000000 box
- (ilqgames::TimeInvariantCost) 3.000000 13.000000 box
- (ilqgames::CurvatureCost) 4.000000 12.000000 box
- (ilqgames::LocallyConvexProximityCost) 4.000000 11.000000 box
- (ilqgames::OrientationCost) 4.000000 10.000000 box
- (ilqgames::OrientationFlatCost) 4.000000 9.000000 box
- (ilqgames::ProximityBarrierCost) 4.000000 8.000000 box
- (ilqgames::ProximityCost) 4.000000 7.000000 box
- (ilqgames::QuadraticCost) 4.000000 6.000000 box
- (ilqgames::QuadraticNormCost) 4.000000 5.000000 box
- (ilqgames::QuadraticPolyline2Cost) 4.000000 4.000000 box
- (ilqgames::SemiquadraticCost) 4.000000 3.000000 box
- (ilqgames::SemiquadraticNormCost) 4.000000 2.000000 box
- (ilqgames::SemiquadraticPolyline2Cost) 4.000000 1.000000 box
- (ilqgames::WeightedConvexProximityCost) 4.000000 0.000000 box
+ (ilqgames::Cost) 2.000000 13.000000 box
+ (ilqgames::Constraint) 0.000000 12.000000 box
+ (ilqgames::FinalTimeCost) 1.000000 12.000000 box
+ (ilqgames::NominalPathLengthCost) 2.000000 12.000000 box
+ (ilqgames::RouteProgressCost) 3.000000 12.000000 box
+ (ilqgames::TimeInvariantCost) 4.000000 12.000000 box
+ (ilqgames::TimeInvariantConstraint) 0.000000 11.000000 box
+0.000000 11.000000 mark
+ (ilqgames::CurvatureCost) 5.000000 11.000000 box
+ (ilqgames::LocallyConvexProximityCost) 5.000000 10.000000 box
+ (ilqgames::OrientationCost) 5.000000 9.000000 box
+ (ilqgames::OrientationFlatCost) 5.000000 8.000000 box
+ (ilqgames::ProximityCost) 5.000000 7.000000 box
+ (ilqgames::QuadraticCost) 5.000000 6.000000 box
+ (ilqgames::QuadraticNormCost) 5.000000 5.000000 box
+ (ilqgames::QuadraticPolyline2Cost) 5.000000 4.000000 box
+ (ilqgames::SemiquadraticCost) 5.000000 3.000000 box
+ (ilqgames::SemiquadraticNormCost) 5.000000 2.000000 box
+ (ilqgames::SemiquadraticPolyline2Cost) 5.000000 1.000000 box
+ (ilqgames::WeightedConvexProximityCost) 5.000000 0.000000 box
 
 % ----- relations -----
 
 solid
-1 1.500000 13.250000 out
+1 2.000000 12.250000 out
 solid
-0.000000 3.000000 14.000000 conn
+0.000000 4.000000 13.000000 conn
 solid
-0 0.000000 13.750000 in
+0 0.000000 12.750000 in
 solid
-0 1.000000 13.750000 in
+1 0.000000 11.250000 out
 solid
-0 2.000000 13.750000 in
+0 1.000000 12.750000 in
 solid
-0 3.000000 13.750000 in
+0 2.000000 12.750000 in
 solid
-1 3.000000 12.250000 out
+0 3.000000 12.750000 in
 solid
-0 3.000000 12.500000 hedge
+0 4.000000 12.750000 in
 solid
-0 3.000000 11.500000 hedge
+1 4.000000 11.250000 out
 solid
-0 3.000000 10.500000 hedge
+0 0.000000 11.750000 in
 solid
-0 3.000000 9.500000 hedge
+0 4.000000 11.500000 hedge
 solid
-0 3.000000 8.500000 hedge
+0 4.000000 10.500000 hedge
 solid
-0 3.000000 7.500000 hedge
+0 4.000000 9.500000 hedge
 solid
-0 3.000000 6.500000 hedge
+0 4.000000 8.500000 hedge
 solid
-0 3.000000 5.500000 hedge
+0 4.000000 7.500000 hedge
 solid
-0 3.000000 4.500000 hedge
+0 4.000000 6.500000 hedge
 solid
-0 3.000000 3.500000 hedge
+0 4.000000 5.500000 hedge
 solid
-0 3.000000 2.500000 hedge
+0 4.000000 4.500000 hedge
 solid
-0 3.000000 1.500000 hedge
+0 4.000000 3.500000 hedge
 solid
-0 3.000000 0.500000 hedge
+0 4.000000 2.500000 hedge
 solid
-3.000000 13.000000 0.500000 vedge
+0 4.000000 1.500000 hedge
+solid
+0 4.000000 0.500000 hedge
+solid
+4.000000 12.000000 0.500000 vedge

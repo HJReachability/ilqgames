@@ -66,6 +66,11 @@ struct SolverParams {
   // empty then applies in all dimensions.
   float trust_region_size = 10.0;
   std::vector<Dimension> trust_region_dimensions;
+
+  // Number of iterations until each constraint barrier weights are scaled by
+  // the given factor (< 1).
+  size_t barrier_scaling_iters = 10;
+  float geometric_barrier_scaling = 0.5;
 };  // struct SolverParams
 
 }  // namespace ilqgames

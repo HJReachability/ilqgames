@@ -70,10 +70,10 @@ void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
   CHECK_LT(yidx_, input.size());
 
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Unpack current position and find closest point / segment.
   const Point2 current_position(input(xidx_), input(yidx_));
@@ -85,10 +85,8 @@ void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
   (*hess)(xidx_, xidx_) += weight_;
   (*hess)(yidx_, yidx_) += weight_;
 
-  if (grad) {
-    (*grad)(xidx_) += weight_ * (current_position.x() - route_point.x());
-    (*grad)(yidx_) += weight_ * (current_position.y() - route_point.y());
-  }
+  (*grad)(xidx_) += weight_ * (current_position.x() - route_point.x());
+  (*grad)(yidx_) += weight_ * (current_position.y() - route_point.y());
 }
 
 }  // namespace ilqgames

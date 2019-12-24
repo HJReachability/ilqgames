@@ -64,7 +64,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
       <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
       <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
-      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
     </ul>
   </div>
 <!-- window showing the filter options -->
@@ -106,15 +105,14 @@ Inheritance diagram for ilqgames::TimeInvariantCost:</div>
 <area href="classilqgames_1_1_locally_convex_proximity_cost.html" alt="ilqgames::LocallyConvexProximityCost" shape="rect" coords="247,168,484,192"/>
 <area href="classilqgames_1_1_orientation_cost.html" alt="ilqgames::OrientationCost" shape="rect" coords="247,224,484,248"/>
 <area href="classilqgames_1_1_orientation_flat_cost.html" alt="ilqgames::OrientationFlatCost" shape="rect" coords="247,280,484,304"/>
-<area href="classilqgames_1_1_proximity_barrier_cost.html" alt="ilqgames::ProximityBarrierCost" shape="rect" coords="247,336,484,360"/>
-<area href="classilqgames_1_1_proximity_cost.html" alt="ilqgames::ProximityCost" shape="rect" coords="247,392,484,416"/>
-<area href="classilqgames_1_1_quadratic_cost.html" alt="ilqgames::QuadraticCost" shape="rect" coords="247,448,484,472"/>
-<area href="classilqgames_1_1_quadratic_norm_cost.html" alt="ilqgames::QuadraticNormCost" shape="rect" coords="247,504,484,528"/>
-<area href="classilqgames_1_1_quadratic_polyline2_cost.html" alt="ilqgames::QuadraticPolyline2Cost" shape="rect" coords="247,560,484,584"/>
-<area href="classilqgames_1_1_semiquadratic_cost.html" alt="ilqgames::SemiquadraticCost" shape="rect" coords="247,616,484,640"/>
-<area href="classilqgames_1_1_semiquadratic_norm_cost.html" alt="ilqgames::SemiquadraticNormCost" shape="rect" coords="247,672,484,696"/>
-<area href="classilqgames_1_1_semiquadratic_polyline2_cost.html" alt="ilqgames::SemiquadraticPolyline2Cost" shape="rect" coords="247,728,484,752"/>
-<area href="classilqgames_1_1_weighted_convex_proximity_cost.html" alt="ilqgames::WeightedConvexProximityCost" shape="rect" coords="247,784,484,808"/>
+<area href="classilqgames_1_1_proximity_cost.html" alt="ilqgames::ProximityCost" shape="rect" coords="247,336,484,360"/>
+<area href="classilqgames_1_1_quadratic_cost.html" alt="ilqgames::QuadraticCost" shape="rect" coords="247,392,484,416"/>
+<area href="classilqgames_1_1_quadratic_norm_cost.html" alt="ilqgames::QuadraticNormCost" shape="rect" coords="247,448,484,472"/>
+<area href="classilqgames_1_1_quadratic_polyline2_cost.html" alt="ilqgames::QuadraticPolyline2Cost" shape="rect" coords="247,504,484,528"/>
+<area href="classilqgames_1_1_semiquadratic_cost.html" alt="ilqgames::SemiquadraticCost" shape="rect" coords="247,560,484,584"/>
+<area href="classilqgames_1_1_semiquadratic_norm_cost.html" alt="ilqgames::SemiquadraticNormCost" shape="rect" coords="247,616,484,640"/>
+<area href="classilqgames_1_1_semiquadratic_polyline2_cost.html" alt="ilqgames::SemiquadraticPolyline2Cost" shape="rect" coords="247,672,484,696"/>
+<area href="classilqgames_1_1_weighted_convex_proximity_cost.html" alt="ilqgames::WeightedConvexProximityCost" shape="rect" coords="247,728,484,752"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -126,9 +124,9 @@ virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b>
 <tr class="memitem:a1e59c75a8765e4d89243c20838cc2bed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e59c75a8765e4d89243c20838cc2bed"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (Time t, const VectorXf &amp;input) const </td></tr>
 <tr class="separator:a1e59c75a8765e4d89243c20838cc2bed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d43234a62fc4a3117492bf70fccd39d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d43234a62fc4a3117492bf70fccd39d"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (const VectorXf &amp;input, MatrixXf *hess, VectorXf *grad=nullptr) const =0</td></tr>
-<tr class="separator:a0d43234a62fc4a3117492bf70fccd39d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe3173385a2f31fa556c1553075eb18f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe3173385a2f31fa556c1553075eb18f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (const VectorXf &amp;input, MatrixXf *hess, VectorXf *grad) const =0</td></tr>
+<tr class="separator:abe3173385a2f31fa556c1553075eb18f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a185aa5080bcdaa68804810d1a046ebcd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a185aa5080bcdaa68804810d1a046ebcd"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (Time t, const VectorXf &amp;input, MatrixXf *hess, VectorXf *grad) const </td></tr>
 <tr class="separator:a185aa5080bcdaa68804810d1a046ebcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -150,9 +148,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_attribs_classilqgames_1_1_cost"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classilqgames_1_1_cost')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classilqgames_1_1_cost.html">ilqgames::Cost</a></td></tr>
-<tr class="memitem:a9d23ad75587bd930e9d63bd53532f688 inherit pro_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d23ad75587bd930e9d63bd53532f688"></a>
-const float&#160;</td><td class="memItemRight" valign="bottom"><b>weight_</b></td></tr>
-<tr class="separator:a9d23ad75587bd930e9d63bd53532f688 inherit pro_attribs_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a03c98f733c0e722960dad9e80e235652 inherit pro_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03c98f733c0e722960dad9e80e235652"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>weight_</b></td></tr>
+<tr class="separator:a03c98f733c0e722960dad9e80e235652 inherit pro_attribs_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36d7d9ee9585912fc98fca10d9c81614 inherit pro_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36d7d9ee9585912fc98fca10d9c81614"></a>
 const std::string&#160;</td><td class="memItemRight" valign="bottom"><b>name_</b></td></tr>
 <tr class="separator:a36d7d9ee9585912fc98fca10d9c81614 inherit pro_attribs_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>

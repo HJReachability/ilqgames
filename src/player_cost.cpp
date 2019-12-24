@@ -41,6 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/utils/operating_point.h>
@@ -52,6 +53,40 @@
 
 namespace ilqgames {
 
+namespace {
+
+// Accumulate control costs into the given quadratic approximation.
+// NOTE: templated to allow use with constraints as well.
+template <typename T>
+void AccumulateControlCosts(const CostMap<T>& costs, Time t,
+                            const std::vector<VectorXf>& us,
+                            float regularization,
+                            QuadraticCostApproximation* q) {
+  for (const auto& pair : costs) {
+    const PlayerIndex player = pair.first;
+    const auto& cost = pair.second;
+
+    // If we haven't seen this player yet, initialize R and r to zero.
+    auto iter = q->control.find(player);
+    if (iter == q->control.end()) {
+      auto inserted_pair = q->control.emplace(
+          player, SingleCostApproximation(us[player].size(), regularization));
+
+      // Second element should be true because we definitely won't have any
+      // key collisions.
+      CHECK(inserted_pair.second);
+
+      // Update iter to point to where the new R was inserted.
+      iter = inserted_pair.first;
+    }
+
+    cost->Quadraticize(t, us[player], &(iter->second.hess),
+                       &(iter->second.grad));
+  }
+}
+
+}  // anonymous namespace
+
 void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
   state_costs_.emplace_back(cost);
 }
@@ -59,6 +94,16 @@ void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
 void PlayerCost::AddControlCost(PlayerIndex idx,
                                 const std::shared_ptr<Cost>& cost) {
   control_costs_.emplace(idx, cost);
+}
+
+void PlayerCost::AddStateConstraint(
+    const std::shared_ptr<Constraint>& constraint) {
+  state_constraints_.emplace_back(constraint);
+}
+
+void PlayerCost::AddControlConstraint(
+    PlayerIndex idx, const std::shared_ptr<Constraint>& constraint) {
+  control_constraints_.emplace(idx, constraint);
 }
 
 float PlayerCost::Evaluate(Time t, const VectorXf& x,
@@ -97,30 +142,42 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
     cost->Quadraticize(t, x, &q.state.hess, &q.state.grad);
 
   // Accumulate control costs.
-  for (const auto& pair : control_costs_) {
-    const PlayerIndex player = pair.first;
-    const auto& cost = pair.second;
+  AccumulateControlCosts(control_costs_, t, us, control_regularization_, &q);
 
-    // If we haven't seen this player yet, initialize R and r to zero.
-    auto iter = q.control.find(player);
-    if (iter == q.control.end()) {
-      auto pair = q.control.emplace(
-          player,
-          SingleCostApproximation(us[player].size(), control_regularization_));
+  // Accumulate state and control constraint barriers.
+  // NOTE: these are *not* considered when evaluating costs, since the barriers
+  // are only intended to enforce inequality constraints.
+  for (const auto& constraint : state_constraints_)
+    constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
 
-      // Second element should be true because we definitely won't have any
-      // key collisions.
-      CHECK(pair.second);
-
-      // Update iter to point to where the new R was inserted.
-      iter = pair.first;
-    }
-
-    cost->Quadraticize(t, us[player], &(iter->second.hess),
-                       &(iter->second.grad));
-  }
+  AccumulateControlCosts(control_constraints_, t, us, control_regularization_,
+                         &q);
 
   return q;
+}
+
+bool PlayerCost::CheckConstraints(Time t, const VectorXf& x) const {
+  for (const auto& constraint : state_constraints_) {
+    if (!constraint->IsSatisfied(t, x)) return false;
+  }
+
+  return true;
+}
+
+void PlayerCost::ScaleConstraintBarrierWeights(float scale) {
+  CHECK_LT(scale, 1.0);
+  CHECK_GT(scale, 0.0);
+
+  for (auto& constraint : state_constraints_)
+    constraint->ScaleBarrierWeight(scale);
+
+  for (auto& pair : control_constraints_)
+    pair.second->ScaleBarrierWeight(scale);
+}
+
+void PlayerCost::ResetConstraintBarrierWeights() {
+  for (auto& constraint : state_constraints_) constraint->SetBarrierWeight(1.0);
+  for (auto& pair : control_constraints_) pair.second->SetBarrierWeight(1.0);
 }
 
 }  // namespace ilqgames
