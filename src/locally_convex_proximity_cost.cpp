@@ -63,12 +63,12 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
                                               MatrixXf* hess,
                                               VectorXf* grad) const {
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Compute Hessian and gradient.
   const float dx = input(xidx1_) - input(xidx2_);
@@ -87,23 +87,19 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
     (*hess)(xidx1_, xidx2_) -= weight_;
     (*hess)(xidx2_, xidx1_) -= weight_;
     (*hess)(xidx2_, xidx2_) += weight_;
+
+    const float ddx1 = -weight_ * delta_x;
+    (*grad)(xidx1_) += ddx1;
+    (*grad)(xidx2_) -= ddx1;
   } else {
     (*hess)(yidx1_, yidx1_) += weight_;
     (*hess)(yidx1_, yidx2_) -= weight_;
     (*hess)(yidx2_, yidx1_) -= weight_;
     (*hess)(yidx2_, yidx2_) += weight_;
-  }
 
-  if (grad) {
-    if (is_x_active) {
-      const float ddx1 = -weight_ * delta_x;
-      (*grad)(xidx1_) += ddx1;
-      (*grad)(xidx2_) -= ddx1;
-    } else {
-      const float ddy1 = -weight_ * delta_y;
-      (*grad)(yidx1_) += ddy1;
-      (*grad)(yidx2_) -= ddy1;
-    }
+    const float ddy1 = -weight_ * delta_y;
+    (*grad)(yidx1_) += ddy1;
+    (*grad)(yidx2_) -= ddy1;
   }
 }
 

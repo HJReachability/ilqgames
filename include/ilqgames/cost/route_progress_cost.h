@@ -74,9 +74,9 @@ class RouteProgressCost : public Cost {
   float Evaluate(Time t, const VectorXf& input) const;
 
   // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians (if non-null).
+  // sum of gradients and Hessians.
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+                    VectorXf* grad) const;
 
  private:
   // Nominal speed.

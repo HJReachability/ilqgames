@@ -49,6 +49,7 @@
 #include <ilqgames/utils/types.h>
 
 #include <string>
+#include <utility>
 
 namespace ilqgames {
 
@@ -70,9 +71,9 @@ class ProximityCost : public TimeInvariantCost {
   float Evaluate(const VectorXf& input) const;
 
   // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians (if non-null).
+  // sum of gradients and Hessians.
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+                    VectorXf* grad) const;
 
  private:
   // Threshold for minimum squared relative distance.

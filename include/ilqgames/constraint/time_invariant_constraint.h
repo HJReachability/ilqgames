@@ -36,57 +36,53 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Semiquadratic cost function of the norm of two states (difference from some
-// nominal norm value), i.e. 0.5 * w * (||(x, y)|| - nominal)^2 if ||(x, y)|| >
-// nominal (or optionally <).
+// Base class for all time-invariant constraints.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_SEMIQUADRATIC_NORM_COST_H
-#define ILQGAMES_COST_SEMIQUADRATIC_NORM_COST_H
+#ifndef ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/constraint/constraint.h>
+#include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-class SemiquadraticNormCost : public TimeInvariantCost {
+class TimeInvariantConstraint : public Constraint {
  public:
-  // Construct from a multiplicative weight, the dimensions in which to apply
-  // the semiquadratic cost, a threshold, and a flag for which side to apply it.
-  SemiquadraticNormCost(float weight,
-                        const std::pair<Dimension, Dimension>& dims,
-                        float threshold, bool oriented_right,
-                        const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        dim1_(dims.first),
-        dim2_(dims.second),
-        threshold_(threshold),
-        oriented_right_(oriented_right) {
-    CHECK_GE(dim1_, 0);
-    CHECK_GE(dim2_, 0);
-  }
+  virtual ~TimeInvariantConstraint() {}
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
+  // Check if this constraint is satisfied, and optionally return the value of a
+  // function whose zero sub-level set corresponds to the feasible set.
+  bool IsSatisfied(Time t, const VectorXf& input,
+                   float* level = nullptr) const {
+    return IsSatisfied(input, level);
+  };
+  virtual bool IsSatisfied(const VectorXf& input,
+                           float* level = nullptr) const = 0;
 
-  // Quadraticize this cost at the given input, and add to the running
+  // Evaluate the barrier at the current input (use base class implementation
+  // and provide arbitrary time).
+  float Evaluate(const VectorXf& input) const {
+    return Constraint::Evaluate(0.0, input);
+  };
+
+  // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    Quadraticize(input, hess, grad);
+  };
+  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const = 0;
 
- private:
-  // Dimensions in which to apply the quadratic cost.
-  const Dimension dim1_, dim2_;
-
-  // Threshold and which side to apply it to.
-  const float threshold_;
-  const bool oriented_right_;
-};  //\class SemiquadraticNormCost
+ protected:
+  explicit TimeInvariantConstraint(const std::string& name = "")
+      : Constraint(name) {}
+};  //\class TimeInvariantConstraint
 
 }  // namespace ilqgames
 
