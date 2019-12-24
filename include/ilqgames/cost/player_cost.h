@@ -66,8 +66,10 @@ class PlayerCost {
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
 
-  // Add new state constraint for this player.
+  // Add new state and control constraints for this player.
   void AddStateConstraint(const std::shared_ptr<Constraint>& constraint);
+  void AddControlConstraint(PlayerIndex idx,
+                            const std::shared_ptr<Constraint>& constraint);
 
   // Evaluate this cost at the current time, state, and controls, or integrate
   // over an entire trajectory. Does *not* incorporate cost barriers due to
@@ -98,14 +100,20 @@ class PlayerCost {
   const std::vector<std::shared_ptr<Constraint>>& StateConstraints() const {
     return state_constraints_;
   }
+  const CostMap<Constraint>& ControlConstraints() const {
+    return control_constraints_;
+  }
 
  private:
   // State costs and control costs.
   std::vector<std::shared_ptr<Cost>> state_costs_;
   CostMap<Cost> control_costs_;
 
-  // State constraints.
+  // State and control constraints. Control constraints can apply to any
+  // player's control input, though it likely only makes sense to apply them to
+  // this player's input.
   std::vector<std::shared_ptr<Constraint>> state_constraints_;
+  CostMap<Constraint> control_constraints_;
 
   // Regularization on costs.
   const float state_regularization_, control_regularization_;

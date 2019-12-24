@@ -89,6 +89,7 @@ static constexpr float kControlRegularization = 5.0;
 
 static constexpr float kOmegaCostWeight = 0.1;
 static constexpr float kJerkCostWeight = 0.1;
+static constexpr float kMaxOmega = 1.0;
 
 static constexpr float kACostWeight = 0.1;
 static constexpr float kCurvatureCostWeight = 1.0;
@@ -330,24 +331,48 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   // p2_cost.AddStateCost(p2_a_cost);
 
   // Penalize control effort.
+  const auto p1_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP1OmegaIdx, kMaxOmega, !kOrientedRight, "SteeringMax");
+  const auto p1_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP1OmegaIdx, -kMaxOmega, kOrientedRight, "SteeringMin");
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   const auto p1_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
+  const auto p2_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP2OmegaIdx, kMaxOmega, !kOrientedRight, "SteeringMax");
+  const auto p2_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP2OmegaIdx, -kMaxOmega, kOrientedRight, "SteeringMin");
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
   const auto p2_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
+  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
   p2_cost.AddControlCost(1, p2_omega_cost);
   p2_cost.AddControlCost(1, p2_jerk_cost);
 
+  const auto p3_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP3OmegaIdx, kMaxOmega, !kOrientedRight, "SteeringMax");
+  const auto p3_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP3OmegaIdx, -kMaxOmega, kOrientedRight, "SteeringMin");
   const auto p3_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
   const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP3AIdx,
                                                          0.0, "Acceleration");
+  p3_cost.AddControlConstraint(2, p3_omega_max_constraint);
+  p3_cost.AddControlConstraint(2, p3_omega_min_constraint);
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
