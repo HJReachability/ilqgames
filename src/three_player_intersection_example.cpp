@@ -277,34 +277,34 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p3_cost.AddStateConstraint(p3_lane_l_constraint);
 
   // Max/min/nominal speed costs.
-  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
+  const auto p1_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  p1_cost.AddStateCost(p1_min_v_cost);
-  p1_cost.AddStateCost(p1_max_v_cost);
+  p1_cost.AddStateConstraint(p1_min_v_constraint);
+  p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
-  const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
+  const auto p2_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p2_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kP2MaxV, !kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  p2_cost.AddStateCost(p2_min_v_cost);
-  p2_cost.AddStateCost(p2_max_v_cost);
+  p2_cost.AddStateConstraint(p2_min_v_constraint);
+  p2_cost.AddStateConstraint(p2_max_v_constraint);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
-  const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight, "MaxV");
+  const auto p3_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p3_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kP3MaxV, !kOrientedRight, "MaxV");
   const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  p3_cost.AddStateCost(p3_min_v_cost);
-  p3_cost.AddStateCost(p3_max_v_cost);
+  p3_cost.AddStateConstraint(p3_min_v_constraint);
+  p3_cost.AddStateConstraint(p3_max_v_constraint);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // // Curvature costs for P1 and P2.
