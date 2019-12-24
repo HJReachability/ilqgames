@@ -112,9 +112,6 @@ static constexpr float kP1NominalV = 15.0; // m/s
 static constexpr float kP2NominalV = 10.0; // m/s
 static constexpr float kP3NominalV = 10.0; // m/s
 
-// Nominal heading
-static constexpr float kP1NominalHeading = M_PI_2; // rad
-
 // Initial state.
 static constexpr float kP1InitialX = 2.5;   // m
 static constexpr float kP1InitialY = -10.0; // m
@@ -136,8 +133,7 @@ static constexpr float kP3InitialSpeed = 2.0;  // m/s
 // State dimensions.
 using P1 = SinglePlayerCar6D;
 using P2 = SinglePlayerCar6D;
-using P3 = SinglePlayerCar6D;
-// using P3 = SinglePlayerUnicycle4D;
+using P3 = SinglePlayerUnicycle4D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
@@ -212,20 +208,6 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
 
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost;
-
-  // Orientation cost
-  const auto p1_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP1HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP1");
-  // p1_cost.AddStateCost(p1_nominal_orientation_cost);
-  const auto p2_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP2HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP2");
-  // p2_cost.AddStateCost(p2_nominal_orientation_cost);
-  const auto p3_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP3HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP3");
-  // p3_cost.AddStateCost(p3_nominal_orientation_cost);
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -418,8 +400,7 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-
-  // p3_cost.AddStateCost(p3p2_proximity_cost);
+  p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
