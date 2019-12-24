@@ -41,7 +41,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -142,8 +144,8 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 4.0;  // m/s
-static constexpr float kP2InitialSpeed = 4.0;  // m/s
+static constexpr float kP1InitialSpeed = 3.0;   // m/s
+static constexpr float kP2InitialSpeed = 3.0;   // m/s
 static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
 // State dimensions.
@@ -232,47 +234,47 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  p1_cost.AddStateCost(p1_lane_r_cost);
-  p1_cost.AddStateCost(p1_lane_l_cost);
+  p1_cost.AddStateConstraint(p1_lane_r_constraint);
+  p1_cost.AddStateConstraint(p1_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  p2_cost.AddStateCost(p2_lane_r_cost);
-  p2_cost.AddStateCost(p2_lane_l_cost);
+  p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
-                                     {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
-                                     {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane3, {kP3XIdx, kP3YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane3, {kP3XIdx, kP3YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  p3_cost.AddStateCost(p3_lane_r_cost);
-  p3_cost.AddStateCost(p3_lane_l_cost);
+  p3_cost.AddStateConstraint(p3_lane_r_constraint);
+  p3_cost.AddStateConstraint(p3_lane_l_constraint);
 
   // Max/min/nominal speed costs.
   const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(

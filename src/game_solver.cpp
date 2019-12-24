@@ -70,14 +70,6 @@ void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
   }
 }
 
-// Emit a warning if the number of iterations is <= 1, which could indicate that
-// the initial operating point is infeasible.
-void MaybeWarnInfeasibleInitialOperatingPoint(size_t num_iterations) {
-  if (num_iterations <= 1)
-    LOG(WARNING) << "Solver exited after only 1 iteration, which may indicate "
-                    "an infeasible initial operating point.";
-}
-
 }  // anonymous namespace
 
 bool GameSolver::Solve(const VectorXf& x0,
@@ -197,7 +189,11 @@ bool GameSolver::Solve(const VectorXf& x0,
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
                             &has_converged, &total_costs)) {
       // Maybe emit warning if exiting early.
-      MaybeWarnInfeasibleInitialOperatingPoint(num_iterations);
+      if (num_iterations <= 1) {
+        LOG(WARNING)
+            << "Solver exited after only 1 iteration, which may indicate "
+               "an infeasible initial operating point.";
+      }
 
       final_strategies->swap(current_strategies);
       final_operating_point->swap(last_operating_point);
@@ -206,6 +202,13 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // Record loop runtime.
     timer_.Toc();
+  }
+
+  // Maybe emit warning if exiting early.
+  if (num_iterations <= 1) {
+    LOG(WARNING) << "Solver exited after only 1 iteration but passed "
+                    "backtracking checks, which may indicate an *almost* "
+                    "infeasible initial operating point.";
   }
 
   // Set final strategies and operating point.
