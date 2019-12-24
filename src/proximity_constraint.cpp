@@ -67,16 +67,6 @@ bool ProximityConstraint::IsSatisfied(const VectorXf& input,
   return (inside_) ? delta_sq < threshold_sq_ : delta_sq > threshold_sq_;
 }
 
-float ProximityConstraint::Evaluate(const VectorXf& input) const {
-  float level = 0.0;
-  CHECK(IsSatisfied(input, &level));
-  CHECK_LT(level, 0.0);
-
-  // For a concise introduction to log barrier methods, please refer to
-  // Calafiore and El Ghaoui, pp. 453.
-  return -std::log(-level);
-}
-
 void ProximityConstraint::Quadraticize(const VectorXf& input, MatrixXf* hess,
                                        VectorXf* grad) const {
   CHECK_NOTNULL(hess);
@@ -97,25 +87,26 @@ void ProximityConstraint::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float dy2 = dy * dy;
   const float delta_sq = dx2 + dy2;
 
-  const float grad_coeff = sign * 2.0 / (threshold_sq_ - delta_sq);
-  (*grad)(xidx1_) += grad_coeff * dx;
-  (*grad)(xidx2_) -= grad_coeff * dx;
-  (*grad)(yidx1_) += grad_coeff * dy;
-  (*grad)(yidx2_) -= grad_coeff * dy;
+  const float grad_coeff = 2.0 / (threshold_sq_ - delta_sq);
+  const float weighted_grad_coeff = weight_ * grad_coeff;
+  (*grad)(xidx1_) += weighted_grad_coeff * dx;
+  (*grad)(xidx2_) -= weighted_grad_coeff * dx;
+  (*grad)(yidx1_) += weighted_grad_coeff * dy;
+  (*grad)(yidx2_) -= weighted_grad_coeff * dy;
 
-  const float hess_x1x1 = grad_coeff * (grad_coeff * dx2 + 1.0);
+  const float hess_x1x1 = weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
   (*hess)(xidx1_, xidx1_) += hess_x1x1;
   (*hess)(xidx1_, xidx2_) -= hess_x1x1;
   (*hess)(xidx2_, xidx1_) -= hess_x1x1;
   (*hess)(xidx2_, xidx2_) += hess_x1x1;
 
-  const float hess_y1y1 = grad_coeff * (grad_coeff * dy2 + 1.0);
+  const float hess_y1y1 = weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
   (*hess)(yidx1_, yidx1_) += hess_y1y1;
   (*hess)(yidx1_, yidx2_) -= hess_y1y1;
   (*hess)(yidx2_, yidx1_) -= hess_y1y1;
   (*hess)(yidx2_, yidx2_) += hess_y1y1;
 
-  const float hess_x1y1 = grad_coeff * grad_coeff * dx * dy;
+  const float hess_x1y1 = weighted_grad_coeff * grad_coeff * dx * dy;
   (*hess)(xidx1_, yidx1_) += hess_x1y1;
   (*hess)(yidx1_, xidx1_) += hess_x1y1;
   (*hess)(xidx1_, yidx2_) -= hess_x1y1;

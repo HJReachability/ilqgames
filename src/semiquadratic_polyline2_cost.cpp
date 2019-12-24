@@ -89,7 +89,7 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
   const Point2 closest_point = polyline_.ClosestPoint(
       current_position, &is_vertex, &segment, &signed_squared_distance);
 
-  /// Check if cost is active.
+  // Check if cost is active.
   if (!IsActive(signed_squared_distance)) return;
 
   // Handle cases separately depending on whether or not closest point is
@@ -106,7 +106,7 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
     (*hess)(xidx_, yidx_) -= cross_term;
     (*hess)(yidx_, xidx_) -= cross_term;
 
-    // Gandle gradient.
+    // Handle gradient.
     const float w_cross =
         weight_ * (relative.x() * unit_segment.y() -
                    relative.y() * unit_segment.x() - threshold_);

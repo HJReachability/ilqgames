@@ -36,51 +36,62 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all constraints. We assume that all constraints are
-// *inequalities*, which support a check for satisfaction. All constraints must
-// also implement the cost interface corresponding to a barrier function.
+// Constraint on the signed distance to a polyline. Can be oriented either
+// `right` or `left`, i.e., can constrain the signed distance to be either > or
+// < the given threshold, respectively.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
 
-#include <ilqgames/cost/cost.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
+#include <utility>
 
 namespace ilqgames {
 
-class Constraint : public Cost {
+class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
  public:
-  virtual ~Constraint() {}
-
-  // Set or multiplicatively scale the barrier weight. This will typically
-  // decrease with successive solves in order to improve the approximation of
-  // the barrier-free objective.
-  void SetBarrierWeight(float weight) { weight_ = weight; }
-  void ScaleBarrierWeight(float scale) { weight_ *= scale; }
+  Polyline2SignedDistanceConstraint(
+      const Polyline2& polyline,
+      const std::pair<Dimension, Dimension>& position_idxs, float threshold,
+      bool oriented_right, const std::string& name = "")
+      : TimeInvariantConstraint(name),
+        polyline_(polyline),
+        signed_threshold_sq_(sgn(threshold) * threshold * threshold),
+        oriented_right_(oriented_right),
+        xidx_(position_idxs.first),
+        yidx_(position_idxs.second) {}
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.
-  virtual bool IsSatisfied(Time t, const VectorXf& input,
-                           float* level = nullptr) const = 0;
+  bool IsSatisfied(const VectorXf& input, float* level = nullptr) const;
 
-  // Evaluate the barrier at the current time and input.
-  float Evaluate(Time t, const VectorXf& input) const;
+  // Evaluate the barrier at the current input.
+  float Evaluate(const VectorXf& input) const;
 
-  // Quadraticize the barrier at the given time and input, and add to the
-  // running sum of gradients and Hessians (if non-null).
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+  // Quadraticize this cost at the given time and input, and add to the running
+  // sum of gradients and Hessians.
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const;
 
-  // Access the name of this cost.
-  const std::string& Name() const { return name_; }
+ private:
+  // Polyline to compute distances from.
+  const Polyline2 polyline_;
 
- protected:
-  explicit Constraint(const std::string& name = "") : Cost(1.0, name) {}
-};  //\class Constraint
+  // Threshold for signed squared distance.
+  const float signed_threshold_sq_;
+
+  // Orientation.
+  const bool oriented_right_;
+
+  // Position indices.
+  const Dimension xidx_, yidx_;
+};  //\class Polyline2SignedDistanceConstraint
 
 }  // namespace ilqgames
 

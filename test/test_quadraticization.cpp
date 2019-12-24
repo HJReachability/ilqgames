@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -195,9 +196,11 @@ void CheckQuadraticization(const Cost& cost) {
     MatrixXf hess_numerical = NumericalHessian(cost, t, input);
     VectorXf grad_numerical = NumericalGradient(cost, t, input);
 
-#if 0
+#if 1
     if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
-        kNumericalPrecision) {
+            kNumericalPrecision ||
+        (grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>() >=
+            kNumericalPrecision) {
       std::cout << "input: " << input.transpose() << std::endl;
       std::cout << "numeric hess: \n" << hess_numerical << std::endl;
       std::cout << "analytic hess: \n" << hess_analytic << std::endl;
@@ -206,8 +209,8 @@ void CheckQuadraticization(const Cost& cost) {
     }
 #endif
 
-    // EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
-    //           kNumericalPrecision);
+    EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
+              kNumericalPrecision);
     EXPECT_LT((grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
               kNumericalPrecision);
   }
@@ -367,9 +370,21 @@ TEST(OrientationCostTest, QuadraticizesCorrectly) {
 }
 
 TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
-  ProximityConstraint inside_constraint({0, 1}, {2, 3}, 100.0, true);
+  ProximityConstraint inside_constraint({0, 1}, {2, 3}, 10.0, true);
   CheckQuadraticization(inside_constraint);
 
   ProximityConstraint outside_constraint({0, 1}, {2, 3}, 0.0, false);
   CheckQuadraticization(outside_constraint);
+}
+
+TEST(Polyline2SignedDistanceConstraintTest, QuadraticizesCorrectly) {
+  const Polyline2 polyline(
+      {Point2(2.0, -2.0), Point2(-0.5, 1.0), Point2(2.0, 2.0)});
+  Polyline2SignedDistanceConstraint left_constraint(polyline, {0, 1}, 10.0,
+                                                    false);
+  CheckQuadraticization(left_constraint);
+
+  Polyline2SignedDistanceConstraint right_constraint(polyline, {0, 1}, -10.0,
+                                                     true);
+  CheckQuadraticization(right_constraint);
 }

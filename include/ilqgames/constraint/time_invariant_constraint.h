@@ -64,11 +64,11 @@ class TimeInvariantConstraint : public Constraint {
   virtual bool IsSatisfied(const VectorXf& input,
                            float* level = nullptr) const = 0;
 
-  // Evaluate the barrier at the current input.
-  float Evaluate(Time t, const VectorXf& input) const {
-    return Evaluate(input);
+  // Evaluate the barrier at the current input (use base class implementation
+  // and provide arbitrary time).
+  float Evaluate(const VectorXf& input) const {
+    return Constraint::Evaluate(0.0, input);
   };
-  virtual float Evaluate(const VectorXf& input) const = 0;
 
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.

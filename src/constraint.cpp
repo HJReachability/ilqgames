@@ -42,46 +42,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_CONSTRAINT_H
-
-#include <ilqgames/cost/cost.h>
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <string>
 
 namespace ilqgames {
 
-class Constraint : public Cost {
- public:
-  virtual ~Constraint() {}
+float Constraint::Evaluate(Time t, const VectorXf& input) const {
+  float level = 0.0;
+  CHECK(IsSatisfied(t, input, &level));
+  CHECK_LT(level, 0.0);
 
-  // Set or multiplicatively scale the barrier weight. This will typically
-  // decrease with successive solves in order to improve the approximation of
-  // the barrier-free objective.
-  void SetBarrierWeight(float weight) { weight_ = weight; }
-  void ScaleBarrierWeight(float scale) { weight_ *= scale; }
-
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  virtual bool IsSatisfied(Time t, const VectorXf& input,
-                           float* level = nullptr) const = 0;
-
-  // Evaluate the barrier at the current time and input.
-  float Evaluate(Time t, const VectorXf& input) const;
-
-  // Quadraticize the barrier at the given time and input, and add to the
-  // running sum of gradients and Hessians (if non-null).
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
-
-  // Access the name of this cost.
-  const std::string& Name() const { return name_; }
-
- protected:
-  explicit Constraint(const std::string& name = "") : Cost(1.0, name) {}
-};  //\class Constraint
+  // For a concise introduction to log barrier methods, please refer to
+  // Calafiore and El Ghaoui, pp. 453.
+  return -weight_ * std::log(-level);
+}
 
 }  // namespace ilqgames
-
-#endif

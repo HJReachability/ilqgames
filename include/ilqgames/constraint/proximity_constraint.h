@@ -72,9 +72,6 @@ class ProximityConstraint : public TimeInvariantConstraint {
   // function whose zero sub-level set corresponds to the feasible set.
   bool IsSatisfied(const VectorXf& input, float* level = nullptr) const;
 
-  // Evaluate the barrier at the current input.
-  float Evaluate(const VectorXf& input) const;
-
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
