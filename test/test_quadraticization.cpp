@@ -42,6 +42,7 @@
 
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
@@ -386,5 +387,13 @@ TEST(Polyline2SignedDistanceConstraintTest, QuadraticizesCorrectly) {
 
   Polyline2SignedDistanceConstraint right_constraint(polyline, {0, 1}, -10.0,
                                                      true);
+  CheckQuadraticization(right_constraint);
+}
+
+TEST(SingleDimensionConstraintTest, SingleDimensionCorrectly) {
+  SingleDimensionConstraint left_constraint(0, 10.0, false);
+  CheckQuadraticization(left_constraint);
+
+  SingleDimensionConstraint right_constraint(0, -10.0, true);
   CheckQuadraticization(right_constraint);
 }
