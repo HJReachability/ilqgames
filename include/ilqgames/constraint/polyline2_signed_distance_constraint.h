@@ -36,51 +36,59 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Penalizes -log(relative distance^2 - threshold^2) between two pairs of state
-// dimensions (representing two positions of vehicles whose states have been
-// concatenated).
+// Constraint on the signed distance to a polyline. Can be oriented either
+// `right` or `left`, i.e., can constrain the signed distance to be either > or
+// < the given threshold, respectively.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_PROXIMITY_BARRIER_COST_H
-#define ILQGAMES_COST_PROXIMITY_BARRIER_COST_H
+#ifndef ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
+#include <utility>
 
 namespace ilqgames {
 
-class ProximityBarrierCost : public TimeInvariantCost {
+class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
  public:
-  ProximityBarrierCost(float weight,
-                       const std::pair<Dimension, Dimension>& position_idxs1,
-                       const std::pair<Dimension, Dimension>& position_idxs2,
-                       float threshold, const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        threshold_sq_(threshold * threshold),
-        xidx1_(position_idxs1.first),
-        yidx1_(position_idxs1.second),
-        xidx2_(position_idxs2.first),
-        yidx2_(position_idxs2.second) {}
+  Polyline2SignedDistanceConstraint(
+      const Polyline2& polyline,
+      const std::pair<Dimension, Dimension>& position_idxs, float threshold,
+      bool oriented_right, const std::string& name = "")
+      : TimeInvariantConstraint(name),
+        polyline_(polyline),
+        signed_threshold_sq_(sgn(threshold) * threshold * threshold),
+        oriented_right_(oriented_right),
+        xidx_(position_idxs.first),
+        yidx_(position_idxs.second) {}
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
+  // Check if this constraint is satisfied, and optionally return the value of a
+  // function whose zero sub-level set corresponds to the feasible set.
+  bool IsSatisfied(const VectorXf& input, float* level = nullptr) const;
 
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians (if non-null).
+  // Quadraticize this cost at the given time and input, and add to the running
+  // sum of gradients and Hessians.
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+                    VectorXf* grad) const;
 
  private:
-  // Threshold for minimum squared relative distance.
-  const float threshold_sq_;
+  // Polyline to compute distances from.
+  const Polyline2 polyline_;
 
-  // Position indices for two vehicles.
-  const Dimension xidx1_, yidx1_;
-  const Dimension xidx2_, yidx2_;
-};  //\class ProximityCost
+  // Threshold for signed squared distance.
+  const float signed_threshold_sq_;
+
+  // Orientation.
+  const bool oriented_right_;
+
+  // Position indices.
+  const Dimension xidx_, yidx_;
+};  //\class Polyline2SignedDistanceConstraint
 
 }  // namespace ilqgames
 

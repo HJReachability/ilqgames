@@ -52,6 +52,8 @@ namespace ilqgames {
 
 class TimeInvariantCost : public Cost {
  public:
+  virtual ~TimeInvariantCost() {}
+
   // Evaluate this cost at the given input.
   virtual float Evaluate(const VectorXf& input) const = 0;
   float Evaluate(Time t, const VectorXf& input) const {
@@ -59,9 +61,9 @@ class TimeInvariantCost : public Cost {
   }
 
   // Quadraticize this cost at the given input, and add to the running set of
-  // sum of gradients and Hessians (if non-null).
+  // sum of gradients and Hessians.
   virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad = nullptr) const = 0;
+                            VectorXf* grad) const = 0;
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad) const {
     Quadraticize(input, hess, grad);
@@ -70,7 +72,6 @@ class TimeInvariantCost : public Cost {
  protected:
   explicit TimeInvariantCost(float weight, const std::string& name = "")
       : Cost(weight, name) {}
-  virtual ~TimeInvariantCost() {}
 };  //\class TimeInvariantCost
 
 }  // namespace ilqgames

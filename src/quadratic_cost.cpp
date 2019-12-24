@@ -65,27 +65,24 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
                                  VectorXf* grad) const {
   CHECK_LT(dimension_, input.size());
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
-
-  if (grad) CHECK_EQ(input.size(), grad->size());
+  CHECK_EQ(input.size(), grad->size());
 
   // Handle single dimension case first.
   if (dimension_ >= 0) {
     (*hess)(dimension_, dimension_) += weight_;
-
-    if (grad) (*grad)(dimension_) += weight_ * (input(dimension_) - nominal_);
+    (*grad)(dimension_) += weight_ * (input(dimension_) - nominal_);
   }
 
   // Handle dimension < 0 case.
   else {
     hess->diagonal() =
         hess->diagonal() + VectorXf::Constant(input.size(), weight_);
-
-    if (grad)
-      *grad += weight_ * (input - VectorXf::Constant(input.size(), nominal_));
+    *grad += weight_ * (input - VectorXf::Constant(input.size(), nominal_));
   }
 }
 

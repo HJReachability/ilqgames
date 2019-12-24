@@ -52,43 +52,47 @@ float OrientationFlatCost::Evaluate(const VectorXf& input) const {
   CHECK_LT(dim1_, input.size());
   CHECK_LT(dim2_, input.size());
 
-  const float rotated_vx =  input(dim1_) * std::cos(nominal_) + input(dim2_) * std::sin(nominal_);
-  const float rotated_vy = -input(dim1_) * std::sin(nominal_) + input(dim2_) * std::cos(nominal_);
+  const float rotated_vx =
+      input(dim1_) * std::cos(nominal_) + input(dim2_) * std::sin(nominal_);
+  const float rotated_vy =
+      -input(dim1_) * std::sin(nominal_) + input(dim2_) * std::cos(nominal_);
 
   const float diff = std::atan2(rotated_vy, rotated_vx);
   return 0.5 * weight_ * diff * diff;
 }
 
 void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                     VectorXf* grad) const {
+                                       VectorXf* grad) const {
   CHECK_LT(dim1_, input.size());
   CHECK_LT(dim2_, input.size());
   CHECK_NOTNULL(hess);
+  CHECK_NOTNULL(grad);
 
   // Check dimensions.
   CHECK_EQ(input.size(), hess->rows());
   CHECK_EQ(input.size(), hess->cols());
+  CHECK_EQ(input.size(), grad->size());
 
-  if (grad) CHECK_EQ(input.size(), grad->size());
-
-  // Populate hessian and, optionally, gradient.
+  // Populate Hessian and gradient.
   const float vx = input(dim1_);
   const float vy = input(dim2_);
   const float cos_tn = std::cos(nominal_);
   const float sin_tn = std::sin(nominal_);
-  const float angle = std::atan2(vy * cos_tn - vx * sin_tn, vx * cos_tn + vy * sin_tn);
+  const float angle =
+      std::atan2(vy * cos_tn - vx * sin_tn, vx * cos_tn + vy * sin_tn);
   const float norm = std::hypot(input(dim1_), input(dim2_));
   const float norm2 = norm * norm;
-  const float theta = std::atan2(input(dim2_), input(dim1_));
-  (*hess)(dim1_, dim1_) +=  (vy * weight_ * (vy + 2*vx*angle)) / (norm2 * norm2);
-  (*hess)(dim1_, dim2_) += -(weight_ * (vx * vx * angle - vy * vy * angle + vx * vy))/(norm2 * norm2);
-  (*hess)(dim2_, dim2_) +=  (vx * weight_ * (vx - 2*vy*angle)) / (norm2 * norm2);
-  (*hess)(dim2_, dim1_) +=  (*hess)(dim1_, dim2_);
+  (*hess)(dim1_, dim1_) +=
+      (vy * weight_ * (vy + 2 * vx * angle)) / (norm2 * norm2);
+  (*hess)(dim1_, dim2_) +=
+      -(weight_ * (vx * vx * angle - vy * vy * angle + vx * vy)) /
+      (norm2 * norm2);
+  (*hess)(dim2_, dim2_) +=
+      (vx * weight_ * (vx - 2 * vy * angle)) / (norm2 * norm2);
+  (*hess)(dim2_, dim1_) += (*hess)(dim1_, dim2_);
 
-  if (grad) {
-    (*grad)(dim1_) +=  -(vy*weight_*angle)/norm2;
-    (*grad)(dim2_) +=   (vx*weight_*angle)/norm2;
-  }
+  (*grad)(dim1_) += -(vy * weight_ * angle) / norm2;
+  (*grad)(dim2_) += (vx * weight_ * angle) / norm2;
 }
 
 }  // namespace ilqgames

@@ -36,57 +36,59 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Semiquadratic cost function of the norm of two states (difference from some
-// nominal norm value), i.e. 0.5 * w * (||(x, y)|| - nominal)^2 if ||(x, y)|| >
-// nominal (or optionally <).
+// Constraint on proximity between two pairs of state dimensions (representing
+// 2D position of vehicles whose states have been concatenated). Can be oriented
+// either `inside` or `outside`, i.e., can constrain the states to be close
+// together or far apart (respectively).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_SEMIQUADRATIC_NORM_COST_H
-#define ILQGAMES_COST_SEMIQUADRATIC_NORM_COST_H
+#ifndef ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <string>
 #include <utility>
 
 namespace ilqgames {
 
-class SemiquadraticNormCost : public TimeInvariantCost {
+class ProximityConstraint : public TimeInvariantConstraint {
  public:
-  // Construct from a multiplicative weight, the dimensions in which to apply
-  // the semiquadratic cost, a threshold, and a flag for which side to apply it.
-  SemiquadraticNormCost(float weight,
-                        const std::pair<Dimension, Dimension>& dims,
-                        float threshold, bool oriented_right,
-                        const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        dim1_(dims.first),
-        dim2_(dims.second),
-        threshold_(threshold),
-        oriented_right_(oriented_right) {
-    CHECK_GE(dim1_, 0);
-    CHECK_GE(dim2_, 0);
-  }
+  ProximityConstraint(const std::pair<Dimension, Dimension>& position_idxs1,
+                      const std::pair<Dimension, Dimension>& position_idxs2,
+                      float threshold, bool inside = false,
+                      const std::string& name = "")
+      : TimeInvariantConstraint(name),
+        threshold_sq_(threshold * threshold),
+        inside_(inside),
+        xidx1_(position_idxs1.first),
+        yidx1_(position_idxs1.second),
+        xidx2_(position_idxs2.first),
+        yidx2_(position_idxs2.second) {}
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
+  // Check if this constraint is satisfied, and optionally return the value of a
+  // function whose zero sub-level set corresponds to the feasible set.
+  bool IsSatisfied(const VectorXf& input, float* level = nullptr) const;
 
-  // Quadraticize this cost at the given input, and add to the running
+  // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad) const;
 
  private:
-  // Dimensions in which to apply the quadratic cost.
-  const Dimension dim1_, dim2_;
+  // Threshold for squared relative distance.
+  const float threshold_sq_;
 
-  // Threshold and which side to apply it to.
-  const float threshold_;
-  const bool oriented_right_;
-};  //\class SemiquadraticNormCost
+  // Orientation, either `inside` (states should be close) or `outside` (states
+  // should be far apart).
+  const bool inside_;
+
+  // Position indices for two vehicles.
+  const Dimension xidx1_, yidx1_;
+  const Dimension xidx2_, yidx2_;
+};  //\class ProximityConstraint
 
 }  // namespace ilqgames
 

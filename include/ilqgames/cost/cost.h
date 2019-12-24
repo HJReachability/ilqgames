@@ -38,8 +38,6 @@
 //
 // Base class for all cost functions. All costs must support evaluation and
 // quadraticization. By default, cost functions are of only state or control.
-// The GeneralizedControlCost and its descendants, however, allow for
-// state-dependent control costs as one encounters in feedback linearization.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -72,7 +70,7 @@ class Cost {
       : weight_(weight), name_(name) {}
 
   // Multiplicative weight associated to this cost.
-  const float weight_;
+  float weight_;
 
   // Name associated to every cost.
   const std::string name_;
