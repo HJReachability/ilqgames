@@ -70,6 +70,14 @@ void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
   }
 }
 
+// Emit a warning if the number of iterations is <= 1, which could indicate that
+// the initial operating point is infeasible.
+void MaybeWarnInfeasibleInitialOperatingPoint(size_t num_iterations) {
+  if (num_iterations <= 1)
+    LOG(WARNING) << "Solver exited after only 1 iteration, which may indicate "
+                    "an infeasible initial operating point.";
+}
+
 }  // anonymous namespace
 
 bool GameSolver::Solve(const VectorXf& x0,
@@ -140,6 +148,7 @@ bool GameSolver::Solve(const VectorXf& x0,
     // Maybe rescale constraint barrier weights.
     if (num_iterations_since_barrier_rescaling >
         params_.barrier_scaling_iters) {
+      num_iterations_since_barrier_rescaling = 0;
       for (PlayerCost& cost : player_costs_)
         cost.ScaleConstraintBarrierWeights(params_.geometric_barrier_scaling);
     }
@@ -187,6 +196,9 @@ bool GameSolver::Solve(const VectorXf& x0,
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
                             &has_converged, &total_costs)) {
+      // Maybe emit warning if exiting early.
+      MaybeWarnInfeasibleInitialOperatingPoint(num_iterations);
+
       final_strategies->swap(current_strategies);
       final_operating_point->swap(last_operating_point);
       return false;

@@ -77,9 +77,6 @@ void ProximityConstraint::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), hess->cols());
   CHECK_EQ(input.size(), grad->size());
 
-  // Sign corresponding to orientation of this constraint.
-  const float sign = (inside_) ? -1.0 : 1.0;
-
   // Compute Hessian and gradient.
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
