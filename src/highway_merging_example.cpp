@@ -89,12 +89,12 @@ static constexpr float kOmegaCostWeight = 500000.0;
 static constexpr float kJerkCostWeight = 500.0;
 
 static constexpr float kACostWeight = 50.0;
+static constexpr float kP1NominalVCostWeight = 1.0;
+static constexpr float kP2NominalVCostWeight = 1.0;
 static constexpr float kP3NominalVCostWeight = 10.0;
 static constexpr float kP4NominalVCostWeight = 10.0;
 static constexpr float kP5NominalVCostWeight = 10.0;
 static constexpr float kP6NominalVCostWeight = 10.0;
-static constexpr float kP1NominalVCostWeight = 1.0;
-static constexpr float kP2NominalVCostWeight = 1.0;
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
@@ -118,19 +118,19 @@ static constexpr bool kOrientedRight = true;
 static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 25.0; // m/s
-static constexpr float kP2NominalV = 25.0; // m/s
-static constexpr float kP3NominalV = 25.0; // m/s
-static constexpr float kP4NominalV = 25.0; // m/s
-static constexpr float kP5NominalV = 25.0; // m/s
-static constexpr float kP6NominalV = 25.0; // m/s
+static constexpr float kP1NominalV = 15.0; // m/s
+static constexpr float kP2NominalV = 15.0; // m/s
+static constexpr float kP3NominalV = 15.0; // m/s
+static constexpr float kP4NominalV = 15.0; // m/s
+static constexpr float kP5NominalV = 15.0; // m/s
+static constexpr float kP6NominalV = 15.0; // m/s
 
 // Initial state.
 
-static constexpr float kP1InitialX = 2.0; // m
+static constexpr float kP1InitialX = 6.0; // m
 static constexpr float kP1InitialY = 0.0; // m
 
-static constexpr float kP2InitialX = 4.0;   // m
+static constexpr float kP2InitialX = 12.0;   // m
 static constexpr float kP2InitialY = -10.0; // m
 
 static constexpr float kP3InitialX = 0.0;  // m
@@ -139,14 +139,14 @@ static constexpr float kP3InitialY = 20.0; // m
 static constexpr float kP4InitialX = 0.0;   // m
 static constexpr float kP4InitialY = -20.0; // m
 
-static constexpr float kP5InitialX = -5.0; // m
+static constexpr float kP5InitialX = -8.0; // m
 static constexpr float kP5InitialY = 20.0; // m
 
-static constexpr float kP6InitialX = -5.0;  // m
+static constexpr float kP6InitialX = -8.0;  // m
 static constexpr float kP6InitialY = -20.0; // m
 
 static constexpr float kP1InitialHeading = M_PI * 2 / 3; // rad
-static constexpr float kP2InitialHeading = M_PI * 3 / 4; // rad
+static constexpr float kP2InitialHeading = M_PI * 2 / 3; // rad
 static constexpr float kP3InitialHeading = M_PI_2;       // rad
 static constexpr float kP4InitialHeading = M_PI_2;       // rad
 static constexpr float kP5InitialHeading = M_PI_2;       // rad
@@ -166,7 +166,6 @@ using P3 = SinglePlayerCar6D;
 using P4 = SinglePlayerCar6D;
 using P5 = SinglePlayerCar6D;
 using P6 = SinglePlayerCar6D;
-// using P3 = SinglePlayerUnicycle4D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
@@ -270,26 +269,32 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
+
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
   x0_(kP1VIdx) = kP1InitialSpeed;
+
   x0_(kP2XIdx) = kP2InitialX;
   x0_(kP2YIdx) = kP2InitialY;
   x0_(kP2HeadingIdx) = kP2InitialHeading;
   x0_(kP2VIdx) = kP2InitialSpeed;
+
   x0_(kP3XIdx) = kP3InitialX;
   x0_(kP3YIdx) = kP3InitialY;
   x0_(kP3HeadingIdx) = kP3InitialHeading;
   x0_(kP3VIdx) = kP3InitialSpeed;
+
   x0_(kP4XIdx) = kP4InitialX;
   x0_(kP4YIdx) = kP4InitialY;
   x0_(kP4HeadingIdx) = kP4InitialHeading;
   x0_(kP4VIdx) = kP4InitialSpeed;
+
   x0_(kP5XIdx) = kP5InitialX;
   x0_(kP5YIdx) = kP5InitialY;
   x0_(kP5HeadingIdx) = kP5InitialHeading;
   x0_(kP5VIdx) = kP5InitialSpeed;
+
   x0_(kP6XIdx) = kP6InitialX;
   x0_(kP6YIdx) = kP6InitialY;
   x0_(kP6HeadingIdx) = kP6InitialHeading;
@@ -310,11 +315,12 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   // Stay in lanes.
 
   const Polyline2 lane1({Point2(kP2InitialX, kP2InitialY),
-                         Point2(kP2InitialX - 1.0, kP2InitialY + 5.0),
+                         Point2(kP2InitialX - 2.0, kP2InitialY + 5.0),
                          Point2(kP1InitialX, kP1InitialY),
                          Point2(kP1InitialX - 1.0, kP1InitialY + 5.0),
                          Point2(kP1InitialX - 2.0, kP1InitialY + 10.0),
-                         Point2(kP3InitialX, kP3InitialY), Point2(0, 1000.0)});
+                         Point2(kP3InitialX, kP3InitialY),
+                         Point2(kP3InitialX, 1000.0)});
   const Polyline2 lane2(
       {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
   const Polyline2 lane3(
@@ -391,9 +397,9 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
                                      {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
-  p3_cost.AddStateCost(p5_lane_cost);
-  p3_cost.AddStateCost(p5_lane_r_cost);
-  p3_cost.AddStateCost(p5_lane_l_cost);
+  p5_cost.AddStateCost(p5_lane_cost);
+  p5_cost.AddStateCost(p5_lane_r_cost);
+  p5_cost.AddStateCost(p5_lane_l_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p6_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP6XIdx, kP6YIdx},
@@ -406,9 +412,9 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
                                      {kP6XIdx, kP6YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
-  p4_cost.AddStateCost(p6_lane_cost);
-  p4_cost.AddStateCost(p6_lane_r_cost);
-  p4_cost.AddStateCost(p6_lane_l_cost);
+  p6_cost.AddStateCost(p6_lane_cost);
+  p6_cost.AddStateCost(p6_lane_r_cost);
+  p6_cost.AddStateCost(p6_lane_l_cost);
 
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
@@ -424,7 +430,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
 
   const auto p4_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP4NominalVCostWeight, kP4VIdx, kP4NominalV, "NominalV");
-  p1_cost.AddStateCost(p4_nominal_v_cost);
+  p4_cost.AddStateCost(p4_nominal_v_cost);
 
   const auto p5_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP5NominalVCostWeight, kP5VIdx, kP5NominalV, "NominalV");

@@ -133,7 +133,8 @@ static constexpr float kP3InitialSpeed = 2.0;  // m/s
 // State dimensions.
 using P1 = SinglePlayerCar6D;
 using P2 = SinglePlayerCar6D;
-using P3 = SinglePlayerUnicycle4D;
+using P3 = SinglePlayerCar6D;
+// using P3 = SinglePlayerUnicycle4D;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
@@ -208,6 +209,8 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
 
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost;
+
+  // Orientation cost ...
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -359,7 +362,6 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-
                         params.adversarial_time, "FinalProximityCostP1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);

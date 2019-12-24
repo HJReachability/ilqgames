@@ -36,7 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Main GUI for three player intersection example.
+// Main GUI for three player overtaking example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 
   // Create window with graphics context
   GLFWwindow *window = glfwCreateWindow(
-      1280, 720, "ILQGames: 3-Player Intersection Example", NULL, NULL);
+      1280, 720, "ILQGames: 3-Player Overtaking Example", NULL, NULL);
   if (window == NULL)
     return 1;
   glfwMakeContextCurrent(window);
