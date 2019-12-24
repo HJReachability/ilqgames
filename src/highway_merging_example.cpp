@@ -85,7 +85,7 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 500000.0;
+static constexpr float kOmegaCostWeight = 500.0;
 static constexpr float kJerkCostWeight = 500.0;
 
 static constexpr float kACostWeight = 50.0;
@@ -118,12 +118,12 @@ static constexpr bool kOrientedRight = true;
 static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 15.0; // m/s
-static constexpr float kP2NominalV = 15.0; // m/s
-static constexpr float kP3NominalV = 15.0; // m/s
-static constexpr float kP4NominalV = 15.0; // m/s
-static constexpr float kP5NominalV = 15.0; // m/s
-static constexpr float kP6NominalV = 15.0; // m/s
+static constexpr float kP1NominalV = 10.0; // m/s
+static constexpr float kP2NominalV = 10.0; // m/s
+static constexpr float kP3NominalV = 10.0; // m/s
+static constexpr float kP4NominalV = 10.0; // m/s
+static constexpr float kP5NominalV = 10.0; // m/s
+static constexpr float kP6NominalV = 10.0; // m/s
 
 // Initial state.
 
@@ -152,12 +152,12 @@ static constexpr float kP4InitialHeading = M_PI_2;       // rad
 static constexpr float kP5InitialHeading = M_PI_2;       // rad
 static constexpr float kP6InitialHeading = M_PI_2;       // rad
 
-static constexpr float kP1InitialSpeed = 18.0; // m/s
-static constexpr float kP2InitialSpeed = 18.0; // m/s
-static constexpr float kP3InitialSpeed = 25.0; // m/s
-static constexpr float kP4InitialSpeed = 25.0; // m/s
-static constexpr float kP5InitialSpeed = 25.0; // m/s
-static constexpr float kP6InitialSpeed = 25.0; // m/s
+static constexpr float kP1InitialSpeed = 1.0; // m/s
+static constexpr float kP2InitialSpeed = 1.0; // m/s
+static constexpr float kP3InitialSpeed = 2.0; // m/s
+static constexpr float kP4InitialSpeed = 2.0; // m/s
+static constexpr float kP5InitialSpeed = 2.0; // m/s
+static constexpr float kP6InitialSpeed = 2.0; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -709,7 +709,7 @@ inline std::vector<float> HighwayMergingExample::Xs(const VectorXf &x) const {
 
 inline std::vector<float> HighwayMergingExample::Ys(const VectorXf &x) const {
   return {x(kP1YIdx), x(kP2YIdx), x(kP3YIdx),
-          x(kP1YIdx), x(kP2YIdx), x(kP3YIdx)};
+          x(kP4YIdx), x(kP5YIdx), x(kP6YIdx)};
 }
 
 inline std::vector<float>
