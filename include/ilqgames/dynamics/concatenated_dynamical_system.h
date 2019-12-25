@@ -82,15 +82,21 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
   }
 
   // Getters.
+  const SubsystemList& Subsystems() const { return subsystems_; }
+  PlayerIndex NumPlayers() const { return subsystems_.size(); }
+  Dimension SubsystemXDim(PlayerIndex player_idx) const {
+    return subsystems_[player_idx]->XDim();
+  }
   Dimension UDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->UDim();
   }
 
-  PlayerIndex NumPlayers() const { return subsystems_.size(); }
-
  private:
   // List of subsystems, each of which controls the affects of a single player.
   const SubsystemList subsystems_;
+
+  // Cumulative sum of dimensions of each subsystem.
+  std::vector<Dimension> subsystem_start_dims_;
 };  // namespace ilqgames
 
 }  // namespace ilqgames

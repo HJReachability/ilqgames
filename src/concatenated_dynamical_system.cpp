@@ -59,7 +59,14 @@ ConcatenatedDynamicalSystem::ConcatenatedDynamicalSystem(
                             return total + subsystem->XDim();
                           }),
           time_step),
-      subsystems_(subsystems) {}
+      subsystems_(subsystems) {
+  // Populate subsystem start dimensions.
+  subsystem_start_dims_.push_back(0);
+  for (const auto& subsystem : subsystems_) {
+    subsystem_start_dims_.push_back(subsystem_start_dims_.back() +
+                                    subsystem->XDim());
+  }
+}
 
 VectorXf ConcatenatedDynamicalSystem::Evaluate(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
