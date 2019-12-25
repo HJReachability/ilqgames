@@ -84,6 +84,9 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
   // Getters.
   const SubsystemList& Subsystems() const { return subsystems_; }
   PlayerIndex NumPlayers() const { return subsystems_.size(); }
+  Dimension SubsystemStartDim(PlayerIndex player_idx) const {
+    return subsystem_start_dims_[player_idx];
+  }
   Dimension SubsystemXDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->XDim();
   }
