@@ -36,62 +36,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic penalty on distance from where we should be along a given polyline
-// if we were traveling at the given nominal speed.
+// Base class for all cost functions. All costs must support evaluation and
+// quadraticization. By default, cost functions are of only state or control.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_ROUTE_PROGRESS_COST_H
-#define ILQGAMES_COST_ROUTE_PROGRESS_COST_H
-
 #include <ilqgames/cost/cost.h>
-#include <ilqgames/geometry/polyline2.h>
-#include <ilqgames/utils/types.h>
-
-#include <string>
-#include <tuple>
 
 namespace ilqgames {
 
-class RouteProgressCost : public Cost {
- public:
-  // Construct from a multiplicative weight and the input dimensions
-  // corresponding to (x, y)-position.
-  RouteProgressCost(float weight, float nominal_speed,
-                    const Polyline2& polyline,
-                    const std::pair<Dimension, Dimension>& position_idxs,
-                    const std::string& name = "",
-                    float initial_route_pos = 0.0)
-      : Cost(weight, name),
-        nominal_speed_(nominal_speed),
-        polyline_(polyline),
-        xidx_(position_idxs.first),
-        yidx_(position_idxs.second),
-        initial_route_pos_(initial_route_pos) {}
-
-  // Evaluate this cost at the current input.
-  float Evaluate(Time t, const VectorXf& input) const;
-
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
-
- private:
-  // Nominal speed.
-  const float nominal_speed_;
-
-  // Polyline to compute distances from.
-  const Polyline2 polyline_;
-
-  // Dimensions of input corresponding to (x, y)-position.
-  const Dimension xidx_;
-  const Dimension yidx_;
-
-  // Initial route position and time.
-  const float initial_route_pos_;
-};  //\class RouteProgressCost
+// Initial time associated to this cost.
+Time Cost::initial_time_ = 0.0;
 
 }  // namespace ilqgames
-
-#endif

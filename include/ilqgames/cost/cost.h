@@ -65,6 +65,9 @@ class Cost {
   // Access the name of this cost.
   const std::string& Name() const { return name_; }
 
+  // Reset the initial time associated to this cost.
+  static void ResetInitialTime(Time t0) { initial_time_ = t0; };
+
  protected:
   explicit Cost(float weight, const std::string& name = "")
       : weight_(weight), name_(name) {}
@@ -74,6 +77,9 @@ class Cost {
 
   // Name associated to every cost.
   const std::string name_;
+
+  // Initial time associated to this cost.
+  static Time initial_time_;
 };  //\class Cost
 
 }  // namespace ilqgames

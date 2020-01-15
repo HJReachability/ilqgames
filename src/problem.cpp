@@ -99,10 +99,11 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
       static_cast<size_t>(relative_t0 / solver_->TimeStep());
   const Time remaining_time_this_step =
       solver_->TimeStep() * (first_integration_timestep + 1) - relative_t0;
-  const size_t num_steps_to_integrate = static_cast<size_t>(
-      0.5 + std::max(planner_runtime - remaining_time_this_step,
-                     static_cast<Time>(0.0)) /
-                solver_->TimeStep());
+  const size_t num_steps_to_integrate =
+      static_cast<size_t>(0.5 +
+                          std::max(planner_runtime - remaining_time_this_step,
+                                   static_cast<Time>(0.0)) /
+                              solver_->TimeStep());
   const size_t last_integration_timestep =
       first_integration_timestep + num_steps_to_integrate;
 
@@ -130,6 +131,9 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   operating_point_->t0 =
       t0 + remaining_time_this_step +
       solver_->TimeStep() * num_steps_to_integrate;  // planner_runtime;
+
+  // Update all costs to have the correct initial time.
+  Cost::ResetInitialTime(operating_point_->t0);
 
   // NOTE: when we call 'solve' on this new operating point it will
   // automatically end up starting at 'x0', so there is no need to enforce that
