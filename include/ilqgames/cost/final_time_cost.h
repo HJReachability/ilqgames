@@ -63,14 +63,15 @@ class FinalTimeCost : public Cost {
 
   // Evaluate this cost at the current time and input.
   float Evaluate(Time t, const VectorXf& input) const {
-    return (t >= threshold_time_) ? cost_->Evaluate(t, input) : 0.0;
+    return (t >= initial_time_ + threshold_time_) ? cost_->Evaluate(t, input)
+                                                  : 0.0;
   }
 
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad) const {
-    if (t < threshold_time_) return;
+    if (t < initial_time_ + threshold_time_) return;
     cost_->Quadraticize(t, input, hess, grad);
   }
 
@@ -78,7 +79,7 @@ class FinalTimeCost : public Cost {
   // Cost function.
   const std::shared_ptr<const Cost> cost_;
 
-  // Time threshold after which to apply cost.
+  // Time threshold relative to initial time after which to apply cost.
   const Time threshold_time_;
 };  //\class Cost
 

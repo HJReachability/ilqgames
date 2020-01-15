@@ -105,9 +105,9 @@ Inheritance diagram for ilqgames::RouteProgressCost:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ab2c7d990abd1ba3a5df7c6e475d8fec0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab2c7d990abd1ba3a5df7c6e475d8fec0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>RouteProgressCost</b> (float weight, float nominal_speed, const <a class="el" href="classilqgames_1_1_polyline2.html">Polyline2</a> &amp;polyline, const std::pair&lt; Dimension, Dimension &gt; &amp;position_idxs, const std::string &amp;name=&quot;&quot;, float initial_route_pos=0.0, Time initial_time=0.0)</td></tr>
-<tr class="separator:ab2c7d990abd1ba3a5df7c6e475d8fec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bc119604ce84627367f7e943e28a90d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9bc119604ce84627367f7e943e28a90d"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>RouteProgressCost</b> (float weight, float nominal_speed, const <a class="el" href="classilqgames_1_1_polyline2.html">Polyline2</a> &amp;polyline, const std::pair&lt; Dimension, Dimension &gt; &amp;position_idxs, const std::string &amp;name=&quot;&quot;, float initial_route_pos=0.0)</td></tr>
+<tr class="separator:a9bc119604ce84627367f7e943e28a90d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93a76046fac60030e3f8767c0b8efea0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93a76046fac60030e3f8767c0b8efea0"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (Time t, const VectorXf &amp;input) const </td></tr>
 <tr class="separator:a93a76046fac60030e3f8767c0b8efea0"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -121,6 +121,10 @@ const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>Na
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pub_static_methods_classilqgames_1_1_cost"><td colspan="2" onclick="javascript:toggleInherit('pub_static_methods_classilqgames_1_1_cost')"><img src="closed.png" alt="-"/>&#160;Static Public Member Functions inherited from <a class="el" href="classilqgames_1_1_cost.html">ilqgames::Cost</a></td></tr>
+<tr class="memitem:a3ac607a91844c85761467f08326245e5 inherit pub_static_methods_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ac607a91844c85761467f08326245e5"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>ResetInitialTime</b> (Time t0)</td></tr>
+<tr class="separator:a3ac607a91844c85761467f08326245e5 inherit pub_static_methods_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classilqgames_1_1_cost"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classilqgames_1_1_cost')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classilqgames_1_1_cost.html">ilqgames::Cost</a></td></tr>
 <tr class="memitem:a9b30ac1d7733741609a3c8d6522a925b inherit pro_methods_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9b30ac1d7733741609a3c8d6522a925b"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Cost</b> (float weight, const std::string &amp;name=&quot;&quot;)</td></tr>
@@ -132,6 +136,10 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>weight_</b></td></tr
 <tr class="memitem:a36d7d9ee9585912fc98fca10d9c81614 inherit pro_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36d7d9ee9585912fc98fca10d9c81614"></a>
 const std::string&#160;</td><td class="memItemRight" valign="bottom"><b>name_</b></td></tr>
 <tr class="separator:a36d7d9ee9585912fc98fca10d9c81614 inherit pro_attribs_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_static_attribs_classilqgames_1_1_cost"><td colspan="2" onclick="javascript:toggleInherit('pro_static_attribs_classilqgames_1_1_cost')"><img src="closed.png" alt="-"/>&#160;Static Protected Attributes inherited from <a class="el" href="classilqgames_1_1_cost.html">ilqgames::Cost</a></td></tr>
+<tr class="memitem:ab86100ec9752b36fd5b6a338964f73cc inherit pro_static_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab86100ec9752b36fd5b6a338964f73cc"></a>
+static Time&#160;</td><td class="memItemRight" valign="bottom"><b>initial_time_</b> = 0.0</td></tr>
+<tr class="separator:ab86100ec9752b36fd5b6a338964f73cc inherit pro_static_attribs_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
