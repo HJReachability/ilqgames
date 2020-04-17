@@ -55,9 +55,13 @@ float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
 
   // Compute signed squared distance by finding closest point.
   float signed_squared_distance;
-  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
+  bool is_vertex;
+  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex, nullptr,
                          &signed_squared_distance);
-
+  if(is_vertex){
+    // endpoint fix
+  	signed_squared_distance = 0;
+  }
   return 0.5 * weight_ * std::abs(signed_squared_distance);
 }
 

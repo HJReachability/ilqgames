@@ -55,9 +55,12 @@ float SemiquadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
 
   // Compute signed squared distance by finding closest point.
   float signed_squared_distance;
-  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
+  bool is_vertex;
+  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex, nullptr,
                          &signed_squared_distance);
-
+  if (is_vertex){
+    signed_squared_distance = 0;
+  }
   // Check which side we're on.
   if (!IsActive(signed_squared_distance)) return 0.0;
 

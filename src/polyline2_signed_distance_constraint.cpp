@@ -58,9 +58,12 @@ bool Polyline2SignedDistanceConstraint::IsSatisfied(const VectorXf& input,
 
   // Compute signed squared distance by finding closest point.
   float signed_distance_sq;
-  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
+  bool is_vertex;
+  polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex, nullptr,
                          &signed_distance_sq);
-
+  if(is_vertex){
+    signed_distance_sq = 0;
+  }
   // Maybe set level.
   const float sign = (oriented_right_) ? 1.0 : -1.0;
   if (level) *level = sign * (signed_threshold_sq_ - signed_distance_sq);

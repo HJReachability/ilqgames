@@ -36,60 +36,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic penalty on distance from where we should be along a given polyline
-// if we were traveling at the given nominal speed.
+// Two player collision example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/route_progress_cost.h>
-#include <ilqgames/geometry/polyline2.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_EXAMPLE_TWO_PLAYER_COLLISION_EXAMPLE_H
+#define ILQGAMES_EXAMPLE_TWO_PLAYER_COLLISION_EXAMPLE_H
 
-#include <string>
-#include <tuple>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
+#include <ilqgames/solver/solver_params.h>
 
 namespace ilqgames {
 
-float RouteProgressCost::Evaluate(Time t, const VectorXf& input) const {
-  CHECK_LT(xidx_, input.size());
-  CHECK_LT(yidx_, input.size());
+class TwoPlayerCollisionExample : public TopDownRenderableProblem {
+ public:
+  ~TwoPlayerCollisionExample() {}
+  TwoPlayerCollisionExample(const SolverParams& params);
 
-  const float desired_route_pos =
-      initial_route_pos_ + (t - initial_time_) * nominal_speed_;
-  bool is_vertex;
-  const Point2 desired = polyline_.PointAt(desired_route_pos, &is_vertex, nullptr);
-  if(is_vertex){
-    return 0;
-  }
-  const float dx = input(xidx_) - desired.x();
-  const float dy = input(yidx_) - desired.y();
-
-  return 0.5 * weight_ * (dx * dx + dy * dy);
-}
-
-void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
-                                     MatrixXf* hess, VectorXf* grad) const {
-  CHECK_LT(xidx_, input.size());
-  CHECK_LT(yidx_, input.size());
-
-  CHECK_NOTNULL(hess);
-  CHECK_NOTNULL(grad);
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
-
-  // Unpack current position and find closest point / segment.
-  const Point2 current_position(input(xidx_), input(yidx_));
-  const float desired_route_pos =
-      initial_route_pos_ + (t - initial_time_) * nominal_speed_;
-
-  const Point2 route_point = polyline_.PointAt(desired_route_pos);
-
-  (*hess)(xidx_, xidx_) += weight_;
-  (*hess)(yidx_, yidx_) += weight_;
-
-  (*grad)(xidx_) += weight_ * (current_position.x() - route_point.x());
-  (*grad)(yidx_) += weight_ * (current_position.y() - route_point.y());
-}
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class TwoPlayerCollisionExample
 
 }  // namespace ilqgames
+
+#endif
