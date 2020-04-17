@@ -49,7 +49,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/solver/solve_lq_game.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -148,7 +148,7 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
 
 }  // anonymous namespace
 
-class SolveLQGameTest : public ::testing::Test {
+class LQFeedbackSolverTest : public ::testing::Test {
  protected:
   void SetUp() {
     dynamics_.reset(new TwoPlayerPointMass1D(kTimeStep));
@@ -206,7 +206,7 @@ class SolveLQGameTest : public ::testing::Test {
     quadraticizations_.push_back(player_costs_[1].Quadraticize(
         0.0, operating_point_->xs[0], operating_point_->us[0]));
 
-    lq_solution_ = SolveLQGame(
+    lq_solution_ = lq_solver_.Solve(
         *dynamics_,
         std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),
         std::vector<std::vector<QuadraticCostApproximation>>(
@@ -232,11 +232,14 @@ class SolveLQGameTest : public ::testing::Test {
   LinearDynamicsApproximation linearization_;
   std::vector<QuadraticCostApproximation> quadraticizations_;
 
+  // Core LQ solver.
+  LQFeedbackSolver lq_solver_;
+
   // Solution to LQ game.
   std::vector<Strategy> lq_solution_;
 };  // class SolveLQGameTest
 
-TEST_F(SolveLQGameTest, MatchesLyapunovIterations) {
+TEST_F(LQFeedbackSolverTest, MatchesLyapunovIterations) {
   const MatrixXf& A = linearization_.A;
   const MatrixXf& B1 = linearization_.Bs[0];
   const MatrixXf& B2 = linearization_.Bs[1];
@@ -263,7 +266,7 @@ TEST_F(SolveLQGameTest, MatchesLyapunovIterations) {
             constants::kSmallNumber);
 }
 
-TEST_F(SolveLQGameTest, NashEquilibrium) {
+TEST_F(LQFeedbackSolverTest, NashEquilibrium) {
   // Initial state.
   const VectorXf x0 = VectorXf::Ones(dynamics_->XDim());
 
@@ -281,7 +284,7 @@ TEST_F(SolveLQGameTest, NashEquilibrium) {
   //                                                 kTimeStep));
 }
 
-TEST_F(SolveLQGameTest, NashEquilibriumWithLinearCostTerms) {
+TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
   // Reset with nonzero nominal values for state and control.
   ConstructCostsWithNominal(0.5);
 

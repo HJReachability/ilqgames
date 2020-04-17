@@ -44,7 +44,7 @@
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/solver/game_solver.h>
-#include <ilqgames/solver/solve_lq_game.h>
+#include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
@@ -183,7 +183,7 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // Solve LQ game.
     current_strategies =
-        SolveLQGame(*dynamics_, linearization_, quadraticization_);
+        lq_solver_->Solve(*dynamics_, linearization_, quadraticization_);
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,

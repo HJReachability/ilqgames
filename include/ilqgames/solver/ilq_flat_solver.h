@@ -48,6 +48,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/game_solver.h>
+#include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
@@ -67,8 +68,9 @@ class ILQFlatSolver : public GameSolver {
   virtual ~ILQFlatSolver() {}
   ILQFlatSolver(const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics,
                 const std::vector<PlayerCost>& player_costs, Time time_horizon,
+                LQSolver* lq_solver = nullptr,
                 const SolverParams& params = SolverParams())
-      : GameSolver(dynamics, player_costs, time_horizon, params) {
+      : GameSolver(dynamics, player_costs, time_horizon, lq_solver, params) {
     // Precompute linearization.
     CHECK(dynamics_->TreatAsLinear());
     ComputeLinearization(&linearization_);
