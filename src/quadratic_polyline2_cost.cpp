@@ -105,11 +105,12 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
     (*grad)(xidx_) += w_cross * unit_segment.y();
     (*grad)(yidx_) -= w_cross * unit_segment.x();
   } else {
-    (*hess)(xidx_, xidx_) += weight_;
-    (*hess)(yidx_, yidx_) += weight_;
+    // endpoint fix - when cost is 0 
+    (*hess)(xidx_, xidx_) += 0;
+    (*hess)(yidx_, yidx_) += 0;
 
-    (*grad)(xidx_) += weight_ * (current_position.x() - closest_point.x());
-    (*grad)(yidx_) += weight_ * (current_position.y() - closest_point.y());
+    (*grad)(xidx_) += 0;
+    (*grad)(yidx_) += 0;
   }
 }
 

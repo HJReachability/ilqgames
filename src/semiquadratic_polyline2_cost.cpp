@@ -59,6 +59,7 @@ float SemiquadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex, nullptr,
                          &signed_squared_distance);
   if (is_vertex){
+    // endpoint fix
     signed_squared_distance = 0;
   }
   // Check which side we're on.
@@ -118,15 +119,11 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
     (*grad)(yidx_) -= w_cross * unit_segment.x();
   } else {
     // Closest point is a vertex.
-    (*hess)(xidx_, xidx_) += weight_;
-    (*hess)(yidx_, yidx_) += weight_;
+    (*hess)(xidx_, xidx_) += 0;
+    (*hess)(yidx_, yidx_) += 0;
 
-    float scaling = std::sqrt(std::abs(signed_squared_distance));
-    scaling = (scaling - std::abs(threshold_)) / scaling;
-    (*grad)(xidx_) +=
-        weight_ * scaling * (current_position.x() - closest_point.x());
-    (*grad)(yidx_) +=
-        weight_ * scaling * (current_position.y() - closest_point.y());
+    (*grad)(xidx_) += 0;
+    (*grad)(yidx_) += 0;
   }
 }
 
