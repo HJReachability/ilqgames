@@ -115,7 +115,7 @@ class GameSolver {
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
-    CHECK_NOTNULL(lq_solver_);
+    CHECK_NOTNULL(lq_solver_.get());
 
     // Prepopulate quadraticization.
     for (auto& quads : quadraticization_)
