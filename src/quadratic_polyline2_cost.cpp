@@ -106,11 +106,7 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
     (*grad)(yidx_) -= w_cross * unit_segment.x();
   } else {
     // endpoint fix - when cost is 0 
-    (*hess)(xidx_, xidx_) += 0;
-    (*hess)(yidx_, yidx_) += 0;
-
-    (*grad)(xidx_) += 0;
-    (*grad)(yidx_) += 0;
+    return;
   }
 }
 

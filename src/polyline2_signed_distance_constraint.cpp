@@ -130,17 +130,7 @@ void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
     (*hess)(yidx_, xidx_) -= hess_xy;
   } else {
     // Closest point is a vertex.
-    const float grad_coeff = 2.0 * orientation * sign / level;
-    const float weighted_grad_coeff = weight_ * grad_coeff;
-    (*grad)(xidx_) += weighted_grad_coeff * dx;
-    (*grad)(yidx_) += weighted_grad_coeff * dy;
-
-    (*hess)(xidx_, xidx_) += weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
-    (*hess)(yidx_, yidx_) += weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
-
-    const float hess_xy = weighted_grad_coeff * grad_coeff * dx * dy;
-    (*hess)(xidx_, yidx_) += hess_xy;
-    (*hess)(yidx_, xidx_) += hess_xy;
+    return;
   }
 }
 

@@ -119,11 +119,7 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
     (*grad)(yidx_) -= w_cross * unit_segment.x();
   } else {
     // Closest point is a vertex.
-    (*hess)(xidx_, xidx_) += 0;
-    (*hess)(yidx_, yidx_) += 0;
-
-    (*grad)(xidx_) += 0;
-    (*grad)(yidx_) += 0;
+    return;
   }
 }
 
