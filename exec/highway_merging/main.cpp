@@ -109,6 +109,7 @@ int main(int argc, char **argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
+  params.max_solver_iters = 3;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
   params.trust_region_size = FLAGS_trust_region_size;
@@ -117,8 +118,7 @@ int main(int argc, char **argv) {
   // params.adversarial_time = 0.0;
   params.adversarial_time = FLAGS_adversarial_time;
 
-  auto problem =
-      std::make_shared<ilqgames::HighwayMergingExample>(params);
+  auto problem = std::make_shared<ilqgames::HighwayMergingExample>(params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();

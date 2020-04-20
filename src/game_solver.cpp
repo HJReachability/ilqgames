@@ -181,9 +181,15 @@ bool GameSolver::Solve(const VectorXf& x0,
                      });
     }
 
+    // Print out quadraticization per iteration.
+    // std::cout << quadraticization_[0][1].state.grad << std::endl << std::endl;
+    // std::cout << quadraticization_[0][1].state.hess << std::endl << std::endl;
+
     // Solve LQ game.
     current_strategies =
         SolveLQGame(*dynamics_, linearization_, quadraticization_);
+
+    std::cout << current_strategies[1].alphas[0].transpose() << std::endl << std::endl;
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,

@@ -85,32 +85,58 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 500.0;
-static constexpr float kJerkCostWeight = 500.0;
+// static constexpr float kOmegaCostWeight = 500000.0;
+// static constexpr float kJerkCostWeight = 500.0;
 
-static constexpr float kACostWeight = 50.0;
-static constexpr float kP1NominalVCostWeight = 1.0;
-static constexpr float kP2NominalVCostWeight = 1.0;
-static constexpr float kP3NominalVCostWeight = 10.0;
-static constexpr float kP4NominalVCostWeight = 10.0;
-static constexpr float kP5NominalVCostWeight = 10.0;
-static constexpr float kP6NominalVCostWeight = 10.0;
+// static constexpr float kACostWeight = 50.0;
+// static constexpr float kP1NominalVCostWeight = 0.1;
+// static constexpr float kP2NominalVCostWeight = 0.1;
+// static constexpr float kP3NominalVCostWeight = 0.1;
+// static constexpr float kP4NominalVCostWeight = 0.1;
+// static constexpr float kP5NominalVCostWeight = 0.1;
+// static constexpr float kP6NominalVCostWeight = 0.1;
 
-static constexpr float kLaneCostWeight = 25.0;
-static constexpr float kLaneBoundaryCostWeight = 100.0;
+static constexpr float kOmegaCostWeight = 50.0;
+static constexpr float kJerkCostWeight = 50.0;
 
-static constexpr float kMinProximity = 5.0;
-static constexpr float kP1ProximityCostWeight = 100.0;
-static constexpr float kP2ProximityCostWeight = 100.0;
-static constexpr float kP3ProximityCostWeight = 100.0;
-static constexpr float kP4ProximityCostWeight = 100.0;
-static constexpr float kP5ProximityCostWeight = 100.0;
-static constexpr float kP6ProximityCostWeight = 100.0;
+static constexpr float kACostWeight = 5.0;
+static constexpr float kP1NominalVCostWeight = 0.1;
+static constexpr float kP2NominalVCostWeight = 0.1;
+static constexpr float kP3NominalVCostWeight = 0.1;
+static constexpr float kP4NominalVCostWeight = 0.1;
+static constexpr float kP5NominalVCostWeight = 0.1;
+static constexpr float kP6NominalVCostWeight = 0.1;
+
+// static constexpr float kLaneCostWeight = 25.0;
+// static constexpr float kLaneBoundaryCostWeight = 100.0;
+
+static constexpr float kLaneCostWeight = 2.0;
+static constexpr float kLaneBoundaryCostWeight = 10.0;
+
+// static constexpr float kLaneCostWeight = 0.0;
+// static constexpr float kLaneBoundaryCostWeight = 0.0;
+
+// static constexpr float kMinProximity = 0.1;
+static constexpr float kMinProximity = 0.0001;
+static constexpr float kP1ProximityCostWeight = 1.0;
+static constexpr float kP2ProximityCostWeight = 1.0;
+static constexpr float kP3ProximityCostWeight = 1.0;
+static constexpr float kP4ProximityCostWeight = 1.0;
+static constexpr float kP5ProximityCostWeight = 1.0;
+static constexpr float kP6ProximityCostWeight = 1.0;
+
+// static constexpr float kP1ProximityCostWeight = 0.0;
+// static constexpr float kP2ProximityCostWeight = 0.0;
+// static constexpr float kP3ProximityCostWeight = 0.0;
+// static constexpr float kP4ProximityCostWeight = 0.0;
+// static constexpr float kP5ProximityCostWeight = 0.0;
+// static constexpr float kP6ProximityCostWeight = 0.0;
 
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kNominalHeadingCostWeight = 150.0;
+// static constexpr float kNominalHeadingCostWeight = 150.0;
+static constexpr float kNominalHeadingCostWeight = 10.0;
 
 static constexpr bool kOrientedRight = true;
 
@@ -118,32 +144,32 @@ static constexpr bool kOrientedRight = true;
 static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 10.0; // m/s
-static constexpr float kP2NominalV = 10.0; // m/s
-static constexpr float kP3NominalV = 10.0; // m/s
-static constexpr float kP4NominalV = 10.0; // m/s
-static constexpr float kP5NominalV = 10.0; // m/s
-static constexpr float kP6NominalV = 10.0; // m/s
+static constexpr float kP1NominalV = 5.0; // m/s
+static constexpr float kP2NominalV = 5.0; // m/s
+static constexpr float kP3NominalV = 5.0; // m/s
+static constexpr float kP4NominalV = 5.0; // m/s
+static constexpr float kP5NominalV = 5.0; // m/s
+static constexpr float kP6NominalV = 5.0; // m/s
 
 // Initial state.
 
 static constexpr float kP1InitialX = 6.0; // m
 static constexpr float kP1InitialY = 0.0; // m
 
-static constexpr float kP2InitialX = 12.0;   // m
+static constexpr float kP2InitialX = 12.0;  // m
 static constexpr float kP2InitialY = -10.0; // m
 
 static constexpr float kP3InitialX = 0.0;  // m
 static constexpr float kP3InitialY = 20.0; // m
 
 static constexpr float kP4InitialX = 0.0;   // m
-static constexpr float kP4InitialY = -20.0; // m
+static constexpr float kP4InitialY = -10.0; // m
 
 static constexpr float kP5InitialX = -8.0; // m
 static constexpr float kP5InitialY = 20.0; // m
 
 static constexpr float kP6InitialX = -8.0;  // m
-static constexpr float kP6InitialY = -20.0; // m
+static constexpr float kP6InitialY = -10.0; // m
 
 static constexpr float kP1InitialHeading = M_PI * 2 / 3; // rad
 static constexpr float kP2InitialHeading = M_PI * 2 / 3; // rad
@@ -152,12 +178,12 @@ static constexpr float kP4InitialHeading = M_PI_2;       // rad
 static constexpr float kP5InitialHeading = M_PI_2;       // rad
 static constexpr float kP6InitialHeading = M_PI_2;       // rad
 
-static constexpr float kP1InitialSpeed = 1.0; // m/s
-static constexpr float kP2InitialSpeed = 1.0; // m/s
-static constexpr float kP3InitialSpeed = 2.0; // m/s
-static constexpr float kP4InitialSpeed = 2.0; // m/s
-static constexpr float kP5InitialSpeed = 2.0; // m/s
-static constexpr float kP6InitialSpeed = 2.0; // m/s
+static constexpr float kP1InitialSpeed = 5.0; // m/s
+static constexpr float kP2InitialSpeed = 5.0; // m/s
+static constexpr float kP3InitialSpeed = 5.0; // m/s
+static constexpr float kP4InitialSpeed = 5.0; // m/s
+static constexpr float kP5InitialSpeed = 5.0; // m/s
+static constexpr float kP6InitialSpeed = 5.0; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;

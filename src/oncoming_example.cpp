@@ -41,6 +41,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
+#include <ilqgames/constraint/proximity_constraint.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/initial_time_cost.h>
@@ -87,8 +90,8 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 500000.0;
-static constexpr float kJerkCostWeight = 500.0;
+static constexpr float kOmegaCostWeight = 50.0;
+static constexpr float kJerkCostWeight = 50.0;
 
 static constexpr float kACostWeight = 50.0;
 static constexpr float kP1NominalVCostWeight = 10.0;
@@ -101,7 +104,7 @@ static constexpr float kMinV = 0.0;    // m/s
 static constexpr float kP1MaxV = 35.8; // m/s
 static constexpr float kP2MaxV = 35.8; // m/s
 
-static constexpr float kLaneCostWeight = 25.0;
+static constexpr float kLaneCostWeight = 0.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 10.0;
@@ -114,6 +117,7 @@ using ProxCost = ProximityCost;
 static constexpr float kNominalHeadingCostWeight = 150.0;
 
 static constexpr bool kOrientedRight = true;
+static constexpr bool kConstraintOrientedInside = false;
 
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5; // m
@@ -127,20 +131,16 @@ static constexpr float kP3NominalV = 10.0; // m/s
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = -1.5;   // m
-static constexpr float kP1InitialY = 30.0; // m
+static constexpr float kP1InitialX = 10.0; // m
+static constexpr float kP1InitialY = -45.0; // m
 
 static constexpr float kP2InitialX = -1.0;  // m
-static constexpr float kP2InitialY = -45.0; // m
+static constexpr float kP2InitialY = 30.0;             // m
 static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
-static constexpr float kP3InitialX = 2.5;  // m
-static constexpr float kP3InitialY = 10.0; // m
-
-static constexpr float kP1InitialHeading = -M_PI_2;              // rad
-static constexpr float kP2InitialHeading = M_PI_2;              // rad
+static constexpr float kP1InitialHeading = M_PI_2;              // rad
+static constexpr float kP2InitialHeading = -M_PI_2;             // rad
 static constexpr float kP2InitialHeadingAntiparallel = -M_PI_2; // rad
-static constexpr float kP3InitialHeading = M_PI_2;              // rad
 
 static constexpr float kP1InitialSpeed = 10.0; // m/s
 static constexpr float kP2InitialSpeed = 2.0;  // m/s
@@ -253,9 +253,9 @@ OncomingExample::OncomingExample(const SolverParams &params) {
 
   // Stay in lanes.
   const Polyline2 lane1(
-      {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
+      {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
   const Polyline2 lane2(
-      {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
+      {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
@@ -273,14 +273,14 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   p1_cost.AddStateCost(p1_lane_l_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
                                      {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
                                      kOrientedRight, "LaneRightBoundary"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
                                      {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
@@ -323,10 +323,18 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   p2_cost.AddControlCost(1, p2_jerk_cost);
 
   // Pairwise proximity costs.
-  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  p1_cost.AddStateCost(p1p2_proximity_cost);
+  // const std::shared_ptr<ProxCost> p1p2_proximity_cost(
+  //     new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+  //                  {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  // p1_cost.AddStateCost(p1p2_proximity_cost);
+
+  // Collision-avoidance constraints.
+  const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP2"));
+
+  p1_cost.AddStateConstraint(p1p2_proximity_constraint);
 
   // Original: If Statement with params.scenario with 0 or 1
 
