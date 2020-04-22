@@ -83,6 +83,8 @@ static constexpr float kInterAxleLength = 4.0;  // m
 // Cost weights.
 static constexpr float kOmegaCostWeight = 500000.0;
 static constexpr float kJerkCostWeight = 500.0;
+static constexpr float kOmegaCostWeight = 50000.0;
+static constexpr float kJerkCostWeight = 5000.0;
 
 static constexpr float kACostWeight = 50.0;
 static constexpr float kP1NominalVCostWeight = 10.0;
@@ -96,6 +98,13 @@ static constexpr float kMinProximity = 5.0;
 static constexpr float kP1ProximityCostWeight = 1000.0;
 static constexpr float kP2ProximityCostWeight = 1000.0;
 //static constexpr float kP3ProximityCostWeight = 100.0;
+
+static constexpr float kLaneCostWeight = 250.0;
+static constexpr float kLaneBoundaryCostWeight = 50000.0;
+
+static constexpr float kMinProximity = 7.5;
+static constexpr float kP1ProximityCostWeight = 5000.0;
+static constexpr float kP2ProximityCostWeight = 5000.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
@@ -110,6 +119,8 @@ static constexpr float kLaneHalfWidth = 2.5;  // m
 static constexpr float kP1NominalV = 30.0;  // m/s
 static constexpr float kP2NominalV = 20.0;  // m/s
 //static constexpr float kP3NominalV = 10.0;  // m/s
+static constexpr float kP1NominalV = 10.0;  // m/s
+static constexpr float kP2NominalV = 15.0;  // m/s
 
 // Nominal heading
 static constexpr float kP1NominalHeading = M_PI_2;  // rad
@@ -278,6 +289,74 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
   p2_cost.AddStateCost(p2_lane_cost2);
   p2_cost.AddStateCost(p2_lane_r_cost2);
   p2_cost.AddStateCost(p2_lane_l_cost2);
+  // cost for deviating from the center of the lane (for both p1 and p2)
+  const Polyline2 lane1(
+      {Point2(2.5, -50.0), Point2(2.5, 50.0)});
+  const std::shared_ptr<QuadraticPolyline2Cost> p1_lane1_cost(
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
+                                 "LaneCenter"));
+  const std::shared_ptr<QuadraticPolyline2Cost> p2_lane1_cost(
+      new QuadraticPolyline2Cost(kLaneCostWeight*10, lane1, {kP2XIdx, kP2YIdx},
+                                 "LaneCenter"));
+  p1_cost.AddStateCost(p1_lane1_cost);
+  p2_cost.AddStateCost(p2_lane1_cost);
+
+  // cost for leaving the left boundary of the lane (for both p1 and p2)
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane1_l_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
+                                     {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
+                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane1_l_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight*10, lane1,
+                                     {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
+                                     !kOrientedRight, "LaneLeftBoundary"));
+  p1_cost.AddStateCost(p1_lane1_l_cost);
+  p2_cost.AddStateCost(p2_lane1_l_cost);
+
+  // p2 cost of leaving right lane boundary
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane1_r_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
+                                     {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
+                                     kOrientedRight, "LaneRightBoundary"));
+  p2_cost.AddStateCost(p2_lane1_r_cost);
+
+  // p1 right lane boundary cost
+  const Polyline2 lane2(
+      {Point2(2.5 + kLaneHalfWidth, -50.0), Point2(2.5 + kLaneHalfWidth, -10.0)});
+  const Polyline2 lane3(
+      {Point2(2.5 + kLaneHalfWidth, 10.0), Point2(2.5 + kLaneHalfWidth, 50.0)});
+  const Polyline2 lane4(
+      {Point2(10.0, -10.0), Point2(10.0, 10.0)});
+  const Polyline2 lane5(
+      {Point2(2.5 + kLaneHalfWidth, 10.0), Point2(25.0, 10.0)});
+  const Polyline2 lane6(
+      {Point2(2.5 + kLaneHalfWidth, -10.0), Point2(25, -10.0)});
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane2_r_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
+                                     {kP1XIdx, kP1YIdx}, 0,
+                                     kOrientedRight, "LaneRightBoundary"));
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane3_r_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
+                                     {kP1XIdx, kP1YIdx}, 0,
+                                     kOrientedRight, "LaneRightBoundary"));
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane4_r_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane4,
+                                     {kP1XIdx, kP1YIdx}, 0,
+                                     kOrientedRight, "LaneRightBoundary"));
+ const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane5_l_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane5,
+                                     {kP1XIdx, kP1YIdx}, 0,
+                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane6_r_cost(
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane6,
+                                     {kP1XIdx, kP1YIdx}, 0,
+                                     kOrientedRight, "LaneRightBoundary"));
+  p1_cost.AddStateCost(p1_lane2_r_cost);
+  p1_cost.AddStateCost(p1_lane3_r_cost);
+  p1_cost.AddStateCost(p1_lane4_r_cost);
+  p1_cost.AddStateCost(p1_lane5_l_cost);
+  p1_cost.AddStateCost(p1_lane6_r_cost);
+
 
   // Max/min/nominal speed costs.
   // const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
