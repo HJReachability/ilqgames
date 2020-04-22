@@ -128,9 +128,6 @@ void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
         hess_coeff * unit_direction.x() * unit_direction.x();
     (*hess)(xidx_, yidx_) -= hess_xy;
     (*hess)(yidx_, xidx_) -= hess_xy;
-  } else {
-    // Closest point is a vertex.
-    return;
   }
 }
 

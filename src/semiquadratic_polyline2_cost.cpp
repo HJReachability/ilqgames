@@ -60,7 +60,7 @@ float SemiquadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
                          &signed_squared_distance);
   if (is_vertex){
     // endpoint fix
-    signed_squared_distance = 0;
+    return 0;
   }
   // Check which side we're on.
   if (!IsActive(signed_squared_distance)) return 0.0;
@@ -117,9 +117,6 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
 
     (*grad)(xidx_) += w_cross * unit_segment.y();
     (*grad)(yidx_) -= w_cross * unit_segment.x();
-  } else {
-    // Closest point is a vertex.
-    return;
   }
 }
 
