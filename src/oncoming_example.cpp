@@ -40,7 +40,6 @@
 // Oncoming example.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/constraint/single_dimension_constraint.h>
@@ -90,16 +89,16 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
+
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
 static constexpr float kACostWeight = 50.0;
 static constexpr float kP1NominalVCostWeight = 10.0;
-static constexpr float kP2NominalVCostWeight = 1.0;
+static constexpr float kP2NominalVCostWeight = 10.0;
 // static constexpr float kP3NominalVCostWeight = 1.0;
 
 // Newly added, 10-16-2019 20:33 p.m.
-static constexpr float kMaxVCostWeight = 10.0;
 static constexpr float kMinV = 0.0;    // m/s
 static constexpr float kP1MaxV = 35.8; // m/s
 static constexpr float kP2MaxV = 35.8; // m/s
@@ -107,7 +106,7 @@ static constexpr float kP2MaxV = 35.8; // m/s
 static constexpr float kLaneCostWeight = 0.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kMinProximity = 10.0;
+static constexpr float kMinProximity = 2.5;
 static constexpr float kP1ProximityCostWeight = 100.0;
 static constexpr float kP2ProximityCostWeight = 100.0;
 // static constexpr float kP3ProximityCostWeight = 100.0;
@@ -131,10 +130,10 @@ static constexpr float kP3NominalV = 10.0; // m/s
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 10.0; // m
+static constexpr float kP1InitialX = 2.5;   // m
 static constexpr float kP1InitialY = -45.0; // m
 
-static constexpr float kP2InitialX = -1.0;  // m
+static constexpr float kP2InitialX = 0.0;              // m
 static constexpr float kP2InitialY = 30.0;             // m
 static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
@@ -257,9 +256,12 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   const Polyline2 lane2(
       {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
 
-  const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
-                                 "LaneCenter"));
+  // Modify below:
+
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            3 * kLaneHalfWidth, kOrientedRight,
+                                            "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
@@ -268,13 +270,14 @@ OncomingExample::OncomingExample(const SolverParams &params) {
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
                                      {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
-  p1_cost.AddStateCost(p1_lane_cost);
+  p1_cost.AddStateCost(p1_lane_constraint);
   p1_cost.AddStateCost(p1_lane_r_cost);
   p1_cost.AddStateCost(p1_lane_l_cost);
 
-  const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
-                                 "LaneCenter"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
+                                            3 * kLaneHalfWidth, kOrientedRight,
+                                            "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
                                      {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
@@ -283,28 +286,32 @@ OncomingExample::OncomingExample(const SolverParams &params) {
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
                                      {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
-  p2_cost.AddStateCost(p2_lane_cost);
+  p2_cost.AddStateCost(p2_lane_constraint);
   p2_cost.AddStateCost(p2_lane_r_cost);
   p2_cost.AddStateCost(p2_lane_l_cost);
 
+  // Modify above.
+
   // Max/min/nominal speed costs.
-  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
+
+  const auto p1_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  p1_cost.AddStateCost(p1_min_v_cost);
-  p1_cost.AddStateCost(p1_max_v_cost);
+  p1_cost.AddStateConstraint(p1_min_v_constraint);
+  p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);
-  const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
+
+  const auto p2_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p2_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kP2MaxV, !kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP2NominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  p2_cost.AddStateCost(p2_min_v_cost);
-  p2_cost.AddStateCost(p2_max_v_cost);
+  p2_cost.AddStateConstraint(p2_min_v_constraint);
+  p2_cost.AddStateConstraint(p2_max_v_constraint);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
   // Penalize control effort.

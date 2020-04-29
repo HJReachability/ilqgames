@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *
- * Please contact the author(s) of this library if you have any questions.
+ * Please contact the author(s) of this libra3ry if you have any questions.
  * Authors: David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
  */
 
@@ -111,13 +111,12 @@ static constexpr float kP6NominalVCostWeight = 0.1;
 // static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kLaneCostWeight = 2.0;
-static constexpr float kLaneBoundaryCostWeight = 10.0;
+static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 // static constexpr float kLaneCostWeight = 0.0;
 // static constexpr float kLaneBoundaryCostWeight = 0.0;
 
-// static constexpr float kMinProximity = 0.1;
-static constexpr float kMinProximity = 0.0001;
+static constexpr float kMinProximity = 10.0;
 static constexpr float kP1ProximityCostWeight = 1.0;
 static constexpr float kP2ProximityCostWeight = 1.0;
 static constexpr float kP3ProximityCostWeight = 1.0;
@@ -413,15 +412,15 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p4_cost.AddStateCost(p4_lane_l_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p5_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP5XIdx, kP5YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p5_lane_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
-                                     {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
+                                     {kP5XIdx, kP5YIdx}, kLaneHalfWidth,
                                      kOrientedRight, "LaneRightBoundary"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p5_lane_l_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
-                                     {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
+                                     {kP5XIdx, kP5YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
   p5_cost.AddStateCost(p5_lane_cost);
   p5_cost.AddStateCost(p5_lane_r_cost);
@@ -642,6 +641,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   // p4_cost.AddStateCost(p4p1_proximity_cost);
 
+  // TODO: Why is this here?
+
   const std::shared_ptr<InitialTimeCost> p4p2_initial_proximity_cost(
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
@@ -701,6 +702,9 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
 
   // Pairwise proximity costs: Player 6.
 
+  const std::shared_ptr<ProxCost> p6p1_proximity_cost(
+      new ProxCost(kP6ProximityCostWeight, {kP6XIdx, kP6YIdx},
+                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   const std::shared_ptr<ProxCost> p6p2_proximity_cost(
       new ProxCost(kP6ProximityCostWeight, {kP6XIdx, kP6YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
@@ -713,9 +717,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   const std::shared_ptr<ProxCost> p6p5_proximity_cost(
       new ProxCost(kP6ProximityCostWeight, {kP6XIdx, kP6YIdx},
                    {kP5XIdx, kP5YIdx}, kMinProximity, "ProximityP5"));
-  const std::shared_ptr<ProxCost> p6p1_proximity_cost(
-      new ProxCost(kP6ProximityCostWeight, {kP6XIdx, kP6YIdx},
-                   {kP6XIdx, kP6YIdx}, kMinProximity, "ProximityP6"));
+
   p6_cost.AddStateCost(p6p1_proximity_cost);
   p6_cost.AddStateCost(p6p2_proximity_cost);
   p6_cost.AddStateCost(p6p3_proximity_cost);

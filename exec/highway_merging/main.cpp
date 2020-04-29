@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
-  params.max_solver_iters = 3;
+  params.max_solver_iters = 1000;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
   params.trust_region_size = FLAGS_trust_region_size;
