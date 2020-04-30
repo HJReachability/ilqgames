@@ -36,8 +36,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Core open-loop LQ game solver from Basar and Olsder, Chapter 6. All notation
-// matches the text, though we shall assume that `c` (additive drift in
+// Core open-loop LQ game solver based on Basar and Olsder, Chapter 6. All
+// notation matches the text, though we shall assume that `c` (additive drift in
 // dynamics) is always `0`, which holds because these dynamics are for delta x,
 // delta us. Also, we have modified terms slightly to account for linear terms
 // in the stage cost for control, i.e.
@@ -51,6 +51,9 @@
 //
 // Returns strategies Ps, alphas. Here, all the Ps are zero (by default), and
 // only the alphas are nonzero.
+//
+// Notation is based on derivation which may be found in the PDF included in
+// this repository named "open_loop_lq_derivation.pdf".
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -77,7 +80,8 @@ class LQOpenLoopSolver : public LQSolver {
       const MultiPlayerIntegrableSystem& dynamics,
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
-          quadraticization);
+          quadraticization,
+      const VectorXf& x0);
 };  // LQOpenLoopSolver
 
 }  // namespace ilqgames

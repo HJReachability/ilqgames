@@ -77,7 +77,8 @@ class LQFeedbackSolver : public LQSolver {
       const MultiPlayerIntegrableSystem& dynamics,
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
-          quadraticization);
+          quadraticization,
+      const VectorXf& x0);
 };  // LQFeedbackSolver
 
 }  // namespace ilqgames

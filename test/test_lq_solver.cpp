@@ -210,7 +210,8 @@ class LQFeedbackSolverTest : public ::testing::Test {
         *dynamics_,
         std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),
         std::vector<std::vector<QuadraticCostApproximation>>(
-            kNumTimeSteps, quadraticizations_));
+            kNumTimeSteps, quadraticizations_),
+        VectorXf::Ones(2));
   }
 
   // Time parameters.
@@ -307,3 +308,5 @@ TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
   //                                                 operating_point,
   //                                                 kTimeStep));
 }
+
+TEST(LQOpenLoopSolver, NashEquilibrium) { EXPECT_TRUE(true); }
