@@ -36,26 +36,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Core LQ game solver from Basar and Olsder, "Preliminary Notation for
-// Corollary 6.1" (pp. 279). All notation matches the text, though we
-// shall assume that `c` (additive drift in dynamics) is always `0`, which
-// holds because these dynamics are for delta x, delta us.
-// Also, we have modified terms slightly to account for linear terms in the
-// stage cost for control, i.e.
-//       control penalty i = 0.5 \sum_j du_j^T R_ij (du_j + 2 r_ij)
-//
-// Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
-// feedback strategies for both players).
-//
-// Assumes that dynamics are given by
-//           ``` dx_{k+1} = A_k dx_k + \sum_i Bs[i]_k du[i]_k ```
-//
-// Returns strategies Ps, alphas.
+//  Base class for all LQ game solvers. For further details please refer to
+//  derived class comments.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
-#define ILQGAMES_SOLVER_SOLVE_LQ_GAME_H
+#ifndef ILQGAMES_SOLVER_LQ_SOLVER_H
+#define ILQGAMES_SOLVER_LQ_SOLVER_H
 
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
@@ -66,11 +53,21 @@
 
 namespace ilqgames {
 
-std::vector<Strategy> SolveLQGame(
-    const MultiPlayerIntegrableSystem& dynamics,
-    const std::vector<LinearDynamicsApproximation>& linearization,
-    const std::vector<std::vector<QuadraticCostApproximation>>&
-        quadraticization);
+class LQSolver {
+ public:
+  virtual ~LQSolver() {}
+
+  // Solve underlying LQ game to a Nash equilibrium. This will differ in derived
+  // classes depending on the information structure of the game.
+  virtual std::vector<Strategy> Solve(
+      const MultiPlayerIntegrableSystem& dynamics,
+      const std::vector<LinearDynamicsApproximation>& linearization,
+      const std::vector<std::vector<QuadraticCostApproximation>>&
+          quadraticization) = 0;
+
+ protected:
+  LQSolver() {}
+};  // class LQSolver
 
 }  // namespace ilqgames
 

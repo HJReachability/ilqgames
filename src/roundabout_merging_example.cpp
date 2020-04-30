@@ -57,6 +57,7 @@
 #include <ilqgames/examples/roundabout_merging_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/initialize_along_route.h>
@@ -480,8 +481,10 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   // kP2YIdx,
   //                                           kP3XIdx, kP3YIdx, kP4XIdx,
   //                                           kP4YIdx};
+
+  LQFeedbackSolver lq_solver;
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost, p4_cost},
-                              kTimeHorizon, params));
+                              kTimeHorizon, &lq_solver, params));
 }
 
 inline std::vector<float> RoundaboutMergingExample::Xs(

@@ -30,7 +30,7 @@ Time {\bfseries Compute\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hyper
 \subsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-{\bfseries Game\+Solver} (const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ \&dynamics, const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \&player\+\_\+costs, Time time\+\_\+horizon, const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} \&params=\hyperlink{structilqgames_1_1_solver_params}{Solver\+Params}())\hypertarget{classilqgames_1_1_game_solver_a89a591bb5d9fcefc28157a54b016a4d1}{}\label{classilqgames_1_1_game_solver_a89a591bb5d9fcefc28157a54b016a4d1}
+{\bfseries Game\+Solver} (const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ \&dynamics, const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \&player\+\_\+costs, Time time\+\_\+horizon, \hyperlink{classilqgames_1_1_l_q_solver}{L\+Q\+Solver} $\ast$lq\+\_\+solver=nullptr, const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} \&params=\hyperlink{structilqgames_1_1_solver_params}{Solver\+Params}())\hypertarget{classilqgames_1_1_game_solver_a54366663b73c3b024d74e9c8d7980da3}{}\label{classilqgames_1_1_game_solver_a54366663b73c3b024d74e9c8d7980da3}
 
 \item 
 virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)=0\hypertarget{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}{}\label{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}
@@ -69,6 +69,9 @@ std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Li
 std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries quadraticization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a039a0b26778f15ce89509452b11c5fb2}{}\label{classilqgames_1_1_game_solver_a039a0b26778f15ce89509452b11c5fb2}
 
 \item 
+std\+::unique\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_l_q_solver}{L\+Q\+Solver} $>$ {\bfseries lq\+\_\+solver\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a1b7e0da6a2566c0a959b7c6c9d7845be}{}\label{classilqgames_1_1_game_solver_a1b7e0da6a2566c0a959b7c6c9d7845be}
+
+\item 
 const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} {\bfseries params\+\_\+}\hypertarget{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}{}\label{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}
 
 \item 
@@ -80,7 +83,7 @@ const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} {\bfseries pa
 \subsection{Detailed Description}
 
 
-Definition at line 77 of file game\+\_\+solver.\+h.
+Definition at line 78 of file game\+\_\+solver.\+h.
 
 
 
