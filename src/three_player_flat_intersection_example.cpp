@@ -58,6 +58,7 @@
 #include <ilqgames/examples/three_player_flat_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_flat_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/initialize_along_route.h>
@@ -432,8 +433,9 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
+  LQFeedbackSolver lq_solver;
   solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
-                                  kTimeHorizon, params));
+                                  kTimeHorizon, &lq_solver, params));
 }
 
 inline std::vector<float> ThreePlayerFlatIntersectionExample::Xs(

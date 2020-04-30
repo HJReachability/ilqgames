@@ -36,54 +36,50 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all iterative LQ game solvers.
-// Structured so that derived classes may only modify the `ModifyLQStrategies`
-// and `HasConverged` virtual functions.
+// Core LQ game solver from Basar and Olsder, "Preliminary Notation for
+// Corollary 6.1" (pp. 279). All notation matches the text, though we
+// shall assume that `c` (additive drift in dynamics) is always `0`, which
+// holds because these dynamics are for delta x, delta us.
+// Also, we have modified terms slightly to account for linear terms in the
+// stage cost for control, i.e.
+//       control penalty i = 0.5 \sum_j du_j^T R_ij (du_j + 2 r_ij)
+//
+// Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
+// feedback strategies for both players).
+//
+// Assumes that dynamics are given by
+//           ``` dx_{k+1} = A_k dx_k + \sum_i Bs[i]_k du[i]_k ```
+//
+// Returns strategies Ps, alphas.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/solver/ilq_flat_solver.h>
+#ifndef ILQGAMES_SOLVER_LQ_FEEDBACK_SOLVER_H
+#define ILQGAMES_SOLVER_LQ_FEEDBACK_SOLVER_H
+
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/loop_timer.h>
-#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
-#include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
-#include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-void ILQFlatSolver::ComputeLinearization(
-    std::vector<LinearDynamicsApproximation>* linearization) {
-  CHECK_NOTNULL(linearization);
+class LQFeedbackSolver : public LQSolver {
+ public:
+  ~LQFeedbackSolver() {}
+  LQFeedbackSolver() : LQSolver() {}
 
-  // Cast dynamics to appropriate type.
-  const auto dyn = static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
-
-  // Populate one timestep at a time.
-  for (size_t kk = 0; kk < linearization->size(); kk++)
-    (*linearization)[kk] = dyn->LinearizedSystem();
-}
-
-float ILQFlatSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
-                                   const std::vector<Dimension>& dims) const {
-  const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
-
-  // If singular return infinite distance and throw a warning. Otherwise, use
-  // base class implementation but for nonlinear system states.
-  if (dyn.IsLinearSystemStateSingular(x1) ||
-      dyn.IsLinearSystemStateSingular(x2)) {
-    LOG(WARNING) << "Singular state encountered when computing state distance.";
-    return std::numeric_limits<float>::infinity();
-  }
-
-  return GameSolver::StateDistance(dyn.FromLinearSystemState(x1),
-                                   dyn.FromLinearSystemState(x2), dims);
-}
+  // Solve underlying LQ game to a feedback Nash equilibrium.
+  std::vector<Strategy> Solve(
+      const MultiPlayerIntegrableSystem& dynamics,
+      const std::vector<LinearDynamicsApproximation>& linearization,
+      const std::vector<std::vector<QuadraticCostApproximation>>&
+          quadraticization);
+};  // LQFeedbackSolver
 
 }  // namespace ilqgames
+
+#endif
