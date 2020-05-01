@@ -136,7 +136,7 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     hat_lambdas[kk] = VectorXf::Zero(dynamics.XDim());
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       const MatrixXf B_warpedB_prod = lin.Bs[ii] * warped_Bs[kk][ii];
-      capital_lambdas[kk] += B_warpedB_prod * Ms[kk][ii];
+      capital_lambdas[kk] += B_warpedB_prod * Ms[kk + 1][ii];
       bar_lambdas[kk] += lin.Bs[ii] * warped_rs[kk][ii];
       hat_lambdas[kk] += B_warpedB_prod * lambdas[kk + 1][ii];
     }
@@ -150,27 +150,28 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     // Compute lambdas and Ms.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       const MatrixXf AM_product = lin.A * Ms[kk + 1][ii];
-      lambdas[kk][ii] =
+      lambdas[kk].emplace_back(
           lin.A.transpose() * quadraticization[kk + 1][ii].state.grad +
-          quad[ii].state.grad - AM_product * warped_lambdas[kk];
-      Ms[kk][ii] = quad[ii].state.hess + AM_product * warped_As[kk];
+          quad[ii].state.grad - AM_product * warped_lambdas[kk]);
+      Ms[kk].emplace_back(quad[ii].state.hess + AM_product * warped_As[kk]);
     }
   }
 
   // (2) Now compute optimal state trajectory forward in time.
   std::vector<VectorXf> xs(horizon);
   xs[0] = x0;
-  for (size_t kk = 1; kk < horizon - 1; kk++)
-    xs[kk] = warped_As[kk] * xs[kk - 1] - warped_lambdas[kk];
+  for (size_t kk = 1; kk < horizon; kk++)
+    xs[kk] = warped_As[kk - 1] * xs[kk - 1] - warped_lambdas[kk - 1];
 
   // (3) Finally, compute optimal control trajectory backward in time.
   // Set optimal control as negative alpha for each player, at each time.
   for (int kk = horizon - 2; kk >= 0; kk--) {
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       strategies[ii].alphas[kk] =
           warped_Bs[kk][ii] *
               (Ms[kk + 1][ii] * xs[kk + 1] + lambdas[kk + 1][ii]) +
           warped_rs[kk][ii];
+    }
   }
 
   return strategies;
