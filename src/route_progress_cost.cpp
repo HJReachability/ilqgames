@@ -56,9 +56,9 @@ float RouteProgressCost::Evaluate(Time t, const VectorXf& input) const {
 
   const float desired_route_pos =
       initial_route_pos_ + (t - initial_time_) * nominal_speed_;
-  bool is_vertex;
-  const Point2 desired = polyline_.PointAt(desired_route_pos, &is_vertex, nullptr);
-  if(is_vertex){// endpoint fix
+  bool is_endpoint;
+  const Point2 desired = polyline_.PointAt(desired_route_pos, nullptr, nullptr, &is_endpoint);
+  if(is_endpoint){// endpoint fix
     return 0;
   }
   const float dx = input(xidx_) - desired.x();
@@ -83,9 +83,9 @@ void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
   const float desired_route_pos =
       initial_route_pos_ + (t - initial_time_) * nominal_speed_;
 
-  bool is_vertex;
-  const Point2 route_point = polyline_.PointAt(desired_route_pos, &is_vertex, nullptr);
-  if(is_vertex) //endpoint fix
+  bool is_endpoint;
+  const Point2 route_point = polyline_.PointAt(desired_route_pos, nullptr, nullptr, &is_endpoint);
+  if(is_endpoint) //endpoint fix
     return;
 
   (*hess)(xidx_, xidx_) += weight_;
