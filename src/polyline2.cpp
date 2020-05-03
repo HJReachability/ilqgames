@@ -89,7 +89,7 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
                  remaining > segments_[idx].Length();
   }
 
-  Point2 return_point = segments_[idx].FirstPoint() +
+  const Point2 return_point = segments_[idx].FirstPoint() +
          remaining * segments_[idx].UnitDirection();
   if (is_endpoint) {
     if(idx == 0){
@@ -116,7 +116,7 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
 
   float current_signed_squared_distance;
   int segment_ind = 0;
-  int counter = 0;
+  int segment_counter = 0;
   for (const auto& s : segments_) {
     bool is_segment_endpoint;
     const Point2 current_point =
@@ -129,32 +129,35 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
 
       if (is_vertex) *is_vertex = is_segment_endpoint;
       if (segment) *segment = s;
-      segment_ind = counter;
+      segment_ind = segment_counter;
     }
-    counter += 1; 
+
+    segment_counter++; 
   }
 
-  // check if the closest point occurs at an endpoint for the polyline
-  if (is_endpoint){
-    if(segment_ind == 0){
+  // Check if the closest point occurs at an endpoint for the polyline.
+  if (is_endpoint) {
+    // Check if the closest point is on the first or last segment of the polyline. 
+    if (segment_ind == 0) {
+      // Check if the closest point is also an endpoint for the adjacent line segment.
       bool check_vertex;
       float ssd;
       segments_[segment_ind + 1].ClosestPoint(query, &check_vertex, &ssd);
-      if(!check_vertex){
+      if (!check_vertex) {
+        // If the closest point is not an internal endpoint (vertex) then return true.
         *is_endpoint = true;
       }
-    }
-    else if(segment_ind == segments_.size()-1){
+    } else if (segment_ind == segments_.size()-1) {
+      // Check if the closest point is also an endpoint for the adjacent line segment.
       bool check_vertex;
       float ssd;
       segments_[segment_ind - 1].ClosestPoint(query, &check_vertex, &ssd);
-      if(!check_vertex){
+      if (!check_vertex) {
+        // If the closest point is not an internal endpoint (vertex) then return true.
         *is_endpoint = true;
       }
-    }
-    else{
+    } else
      *is_endpoint = false; 
-    }
   } 
 
 

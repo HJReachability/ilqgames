@@ -58,9 +58,9 @@ float SemiquadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   bool is_endpoint;
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_squared_distance, &is_endpoint);
-  if (is_endpoint){
-    // endpoint fix
-    return 0;
+  if (is_endpoint) {
+    // If the is_endpoint flag is raised, we return 0.0.
+    return 0.0;
   }
   // Check which side we're on.
   if (!IsActive(signed_squared_distance)) return 0.0;
@@ -98,7 +98,7 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
   if (!IsActive(signed_squared_distance)) return;
 
   // First checks whether the closest point is an endpoint of the polyline
-  if(!is_endpoint){
+  if (!is_endpoint) {
     // Handle cases separately depending on whether or not closest point is
     // a vertex of the polyline.
     if (!is_vertex) {

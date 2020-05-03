@@ -58,10 +58,11 @@ float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   bool is_endpoint;
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_squared_distance, &is_endpoint);
-  if(is_endpoint){
-    // endpoint fix
-  	signed_squared_distance = 0;
+  if (is_endpoint) {
+    // If the is_endpoint flag is raised, we set the signed_squared_distance to 0.0.
+  	signed_squared_distance = 0.0;
   }
+
   return 0.5 * weight_ * std::abs(signed_squared_distance);
 }
 
@@ -85,8 +86,8 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const Point2 closest_point =
       polyline_.ClosestPoint(current_position, &is_vertex, &segment, nullptr, &is_endpoint);
 
-  //First check whether the closest point is a endpoint of the polyline.
-  if(!is_endpoint){
+  // First check whether the closest point is a endpoint of the polyline.
+  if (!is_endpoint) {
   // Handle cases separately depending on whether or not closest point is
   // a vertex of the polyline.    
     if (!is_vertex) {
@@ -114,8 +115,7 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
       (*grad)(xidx_) += weight_ * (current_position.x() - closest_point.x());
       (*grad)(yidx_) += weight_ * (current_position.y() - closest_point.y());   
     }
-  } else
-    return; // endpoint fix - when cost is 0
+  } 
 }
 
 }  // namespace ilqgames

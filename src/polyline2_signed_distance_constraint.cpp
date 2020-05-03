@@ -61,9 +61,10 @@ bool Polyline2SignedDistanceConstraint::IsSatisfied(const VectorXf& input,
   bool is_endpoint;
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_distance_sq, &is_endpoint);
-  if(is_endpoint){
-    signed_distance_sq = 0;
+  if (is_endpoint) {
+    signed_distance_sq = 0.0;
   }
+
   // Maybe set level.
   const float sign = (oriented_right_) ? 1.0 : -1.0;
   if (level) *level = sign * (signed_threshold_sq_ - signed_distance_sq);
@@ -106,8 +107,8 @@ void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
   const float dy2 = dy * dy;
   const float level = orientation * (signed_threshold_sq_ - signed_distance_sq);
 
-  // First check if closest point is an endpoint of the polyline
-  if(!is_endpoint){
+  // First check if closest point is an endpoint of the polyline.
+  if (!is_endpoint) {
     // Handle cases separately depending on whether or not closest point is
     // a vertex of the polyline.
     if (!is_vertex) {
@@ -132,18 +133,18 @@ void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
       (*hess)(xidx_, yidx_) -= hess_xy;
       (*hess)(yidx_, xidx_) -= hess_xy;
     } else {
-    // Closest point is a vertex.
-    const float grad_coeff = 2.0 * orientation * sign / level;
-    const float weighted_grad_coeff = weight_ * grad_coeff;
-    (*grad)(xidx_) += weighted_grad_coeff * dx;
-    (*grad)(yidx_) += weighted_grad_coeff * dy;
+      // Closest point is a vertex.
+      const float grad_coeff = 2.0 * orientation * sign / level;
+      const float weighted_grad_coeff = weight_ * grad_coeff;
+      (*grad)(xidx_) += weighted_grad_coeff * dx;
+      (*grad)(yidx_) += weighted_grad_coeff * dy;
 
-    (*hess)(xidx_, xidx_) += weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
-    (*hess)(yidx_, yidx_) += weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
+      (*hess)(xidx_, xidx_) += weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
+      (*hess)(yidx_, yidx_) += weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
 
-    const float hess_xy = weighted_grad_coeff * grad_coeff * dx * dy;
-    (*hess)(xidx_, yidx_) += hess_xy;
-    (*hess)(yidx_, xidx_) += hess_xy;
+      const float hess_xy = weighted_grad_coeff * grad_coeff * dx * dy;
+      (*hess)(xidx_, yidx_) += hess_xy;
+      (*hess)(yidx_, xidx_) += hess_xy;
     }
   } 
 }
