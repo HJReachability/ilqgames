@@ -92,12 +92,12 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
   const Point2 return_point = segments_[idx].FirstPoint() +
          remaining * segments_[idx].UnitDirection();
   if (is_endpoint) {
-    if(idx == 0){
-      if(return_point == segments_[idx].FirstPoint())
+    if (idx == 0) {
+      if (return_point == segments_[idx].FirstPoint())
         *is_endpoint = true;
     }
-    else if(idx == segments_.size()-1){
-      if(return_point == segments_[idx].SecondPoint())
+    else if (idx == segments_.size()-1) {
+      if (return_point == segments_[idx].SecondPoint())
         *is_endpoint = true;
     }
     else
@@ -141,8 +141,7 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
     if (segment_ind == 0) {
       // Check if the closest point is also an endpoint for the adjacent line segment.
       bool check_vertex;
-      float ssd;
-      segments_[segment_ind + 1].ClosestPoint(query, &check_vertex, &ssd);
+      segments_[segment_ind + 1].ClosestPoint(query, &check_vertex, nullptr);
       if (!check_vertex) {
         // If the closest point is not an internal endpoint (vertex) then return true.
         *is_endpoint = true;
@@ -150,8 +149,7 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
     } else if (segment_ind == segments_.size()-1) {
       // Check if the closest point is also an endpoint for the adjacent line segment.
       bool check_vertex;
-      float ssd;
-      segments_[segment_ind - 1].ClosestPoint(query, &check_vertex, &ssd);
+      segments_[segment_ind - 1].ClosestPoint(query, &check_vertex, nullptr);
       if (!check_vertex) {
         // If the closest point is not an internal endpoint (vertex) then return true.
         *is_endpoint = true;
