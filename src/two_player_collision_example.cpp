@@ -206,18 +206,18 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1_p1p2, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane1_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight*10, lane1_p1p2, {kP2XIdx, kP2YIdx},
+      new QuadraticPolyline2Cost(kLaneCostWeight * 10, lane1_p1p2, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
   p1_cost.AddStateCost(p1_lane1_cost);
   p2_cost.AddStateCost(p2_lane1_cost);
 
   // cost for leaving the left boundary of the lane (for both p1 and p2)
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane1_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight*1000, lane1_p1p2,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight * 1000, lane1_p1p2,
                                      {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane1_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight*10, lane1_p1p2,
+      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight * 10, lane1_p1p2,
                                      {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
                                      !kOrientedRight, "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane1_l_cost);
@@ -243,24 +243,24 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
       {Point2(2.5 + kLaneHalfWidth, -5.0), Point2(25, -5.0)});
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane2_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1_p1,
-                                     {kP1XIdx, kP1YIdx}, 0,
-                                     kOrientedRight, "LaneRightBoundary"));
+                                     {kP1XIdx, kP1YIdx}, 0.0,
+                                     kOrientedRight, "LaneRightBoundary_lane1_p1"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane3_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2_p1,
-                                     {kP1XIdx, kP1YIdx}, 0,
-                                     kOrientedRight, "LaneRightBoundary"));
+                                     {kP1XIdx, kP1YIdx}, 0.0,
+                                     kOrientedRight, "LaneRightBoundary_lane2_p1"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane4_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3_p1,
-                                     {kP1XIdx, kP1YIdx}, 0,
-                                     kOrientedRight, "LaneRightBoundary"));
+                                     {kP1XIdx, kP1YIdx}, 0.0,
+                                     kOrientedRight, "LaneRightBoundary_lane3_p1"));
  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane5_l_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane4_p1,
-                                     {kP1XIdx, kP1YIdx}, 0,
-                                     !kOrientedRight, "LaneLeftBoundary2"));
+                                     {kP1XIdx, kP1YIdx}, 0.0,
+                                     !kOrientedRight, "LaneLeftBoundary_lane4_p1"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane6_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane5_p1,
-                                     {kP1XIdx, kP1YIdx}, 0,
-                                     kOrientedRight, "LaneRightBoundary2"));
+                                     {kP1XIdx, kP1YIdx}, 0.0,
+                                     kOrientedRight, "LaneRightBoundary_lane5_p1"));
   p1_cost.AddStateCost(p1_lane2_r_cost);
   p1_cost.AddStateCost(p1_lane3_r_cost);
   p1_cost.AddStateCost(p1_lane4_r_cost);
