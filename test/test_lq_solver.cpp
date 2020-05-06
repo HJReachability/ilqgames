@@ -319,12 +319,9 @@ TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
   // Solve LQ game.
   QuadraticizeAndSolve();
 
-  // Make sure this is a feedback Nash and not an open loop Nash.
+  // Make sure this is an open loop Nash.
   constexpr float kMaxPerturbation = 0.1;
   EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
-      kTimeStep, kMaxPerturbation));
-  EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
       player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
       kTimeStep, kMaxPerturbation, true));
 }
