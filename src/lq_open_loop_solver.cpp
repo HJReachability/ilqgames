@@ -92,7 +92,7 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
   std::vector<std::vector<VectorXf>> ms(horizon);
   std::vector<std::vector<MatrixXf>> Ms(horizon);
   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-    ms.back().emplace_back(VectorXf::Zero(dynamics.XDim()));
+    ms.back().emplace_back(quadraticization.back()[ii].state.grad);
     Ms.back().emplace_back(quadraticization.back()[ii].state.hess);
   }
 
