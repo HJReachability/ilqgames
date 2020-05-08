@@ -174,6 +174,15 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     }
   }
 
+  // for (size_t kk = 1; kk < horizon; kk++) {
+  //   VectorXf check_x = linearization[kk - 1].A * xs[kk - 1];
+  //   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+  //     check_x -= linearization[kk - 1].Bs[ii] * strategies[ii].alphas[kk -
+  //     1];
+
+  //   CHECK_LE((xs[kk] - check_x).cwiseAbs().maxCoeff(), 1e-2);
+  // }
+
   return strategies;
 }  // namespace ilqgames
 

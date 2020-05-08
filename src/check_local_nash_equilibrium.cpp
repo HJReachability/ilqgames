@@ -71,7 +71,8 @@ std::vector<float> ComputeStrategyCosts(
   // Walk forward along the trajectory and accumulate total cost.
   std::vector<VectorXf> us(dynamics.NumPlayers());
   std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
-  const size_t num_time_steps = strategies[0].Ps.size();
+  const size_t num_time_steps =
+      (open_loop) ? strategies[0].Ps.size() - 1 : strategies[0].Ps.size();
   for (size_t kk = 0; kk < num_time_steps; kk++) {
     // Update controls.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
@@ -84,12 +85,17 @@ std::vector<float> ComputeStrategyCosts(
     }
 
     // Update costs.
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
-      total_costs[ii] += player_costs[ii].Evaluate(t, x, us);
+    const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
+    const Time next_t = t + time_step;
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      total_costs[ii] +=
+          (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)
+                      : player_costs[ii].Evaluate(t, x, us);
+    }
 
     // Update state and time
-    x = dynamics.Integrate(t, time_step, x, us);
-    t += time_step;
+    x = next_x;
+    t = next_t;
   }
 
   return total_costs;
@@ -119,7 +125,7 @@ bool NumericalCheckLocalNashEquilibrium(
   // and if cost decreases then return false.
   std::vector<Strategy> perturbed_strategies(strategies);
   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-    for (size_t kk = 0; kk < num_time_steps; kk++) {
+    for (size_t kk = 0; kk < num_time_steps - 1; kk++) {
       VectorXf& alphak = perturbed_strategies[ii].alphas[kk];
 
       for (size_t jj = 0; jj < alphak.size(); jj++) {
@@ -132,12 +138,13 @@ bool NumericalCheckLocalNashEquilibrium(
 
         // Check Nash condition.
         if (perturbed_costs[ii] < nominal_costs[ii]) {
-          // std::printf("player %hu, timestep %zu: nominal %f > perturbed %f\n",
-          //             ii, kk, nominal_costs[ii], perturbed_costs[ii]);
-          // std::cout << "nominal u: " << operating_point.us[kk][ii].transpose()
-          //           << ", alpha original: "
-          //           << strategies[ii].alphas[kk].transpose()
-          //           << ", vs. perturbed " << alphak.transpose() << std::endl;
+          std::printf("player %hu, timestep %zu: nominal %f > perturbed %f\n",
+                      ii, kk, nominal_costs[ii], perturbed_costs[ii]);
+          std::cout << "nominal u: " <<
+          operating_point.us[kk][ii].transpose()
+                    << ", alpha original: "
+                    << strategies[ii].alphas[kk].transpose()
+                    << ", vs. perturbed " << alphak.transpose() << std::endl;
           return false;
         }
 

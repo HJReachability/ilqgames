@@ -285,10 +285,6 @@ TEST_F(LQFeedbackSolverTest, NashEquilibrium) {
   EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
       player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
       kTimeStep, kMaxPerturbation, true));
-
-  // EXPECT_TRUE(CheckSufficientLocalNashEquilibrium(player_costs_,
-  //                                                 operating_point,
-  //                                                 kTimeStep));
 }
 
 TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
@@ -306,10 +302,6 @@ TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
   EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
       player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
       kTimeStep, kMaxPerturbation, true));
-
-  // EXPECT_TRUE(CheckSufficientLocalNashEquilibrium(player_costs_,
-  //                                                 operating_point,
-  //                                                 kTimeStep));
 }
 
 TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {

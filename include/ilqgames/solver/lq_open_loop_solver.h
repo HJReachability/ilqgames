@@ -65,7 +65,6 @@
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
-
 #include <vector>
 
 namespace ilqgames {
