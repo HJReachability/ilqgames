@@ -140,9 +140,8 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
       // Intermediate term in ms computation.
       VectorXf intermediary = VectorXf::Zero(dynamics.XDim());
       for (PlayerIndex jj = 0; jj < dynamics.NumPlayers(); jj++) {
-        intermediary -=
-            lin.Bs[jj] *
-            (warped_Bs[kk][jj] * next_quad[jj].state.grad + warped_rs[kk][jj]);
+        intermediary -= lin.Bs[jj] * (warped_Bs[kk][jj] * ms[kk + 1][ii] +
+                                      warped_rs[kk][jj]);
       }
 
       ms[kk].push_back(
