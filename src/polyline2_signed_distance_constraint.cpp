@@ -58,8 +58,12 @@ bool Polyline2SignedDistanceConstraint::IsSatisfied(const VectorXf& input,
 
   // Compute signed squared distance by finding closest point.
   float signed_distance_sq;
+  bool is_endpoint;
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
-                         &signed_distance_sq);
+                         &signed_distance_sq, &is_endpoint);
+  if (is_endpoint) {
+    signed_distance_sq = 0.0;
+  }
 
   // Maybe set level.
   const float sign = (oriented_right_) ? 1.0 : -1.0;
@@ -86,9 +90,10 @@ void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
 
   float signed_distance_sq;
   bool is_vertex;
+  bool is_endpoint;
   LineSegment2 segment(Point2(0.0, 0.0), Point2(1.0, 1.0));
   const Point2 closest_point = polyline_.ClosestPoint(
-      current_position, &is_vertex, &segment, &signed_distance_sq);
+      current_position, &is_vertex, &segment, &signed_distance_sq, &is_endpoint);
 
   // Sign corresponding to orientation of this constraint and of the signed
   // distance itself.
@@ -102,43 +107,46 @@ void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
   const float dy2 = dy * dy;
   const float level = orientation * (signed_threshold_sq_ - signed_distance_sq);
 
-  // Handle cases separately depending on whether or not closest point is
-  // a vertex of the polyline.
-  if (!is_vertex) {
-    const Point2 relative = current_position - segment.FirstPoint();
-    const Point2& unit_direction = segment.UnitDirection();
-    const float cross =
-        relative.x() * unit_direction.y() - relative.y() * unit_direction.x();
-    CHECK_EQ(sgn(cross), sgn(signed_distance_sq));
+  // First check if closest point is an endpoint of the polyline.
+  if (!is_endpoint) {
+    // Handle cases separately depending on whether or not closest point is
+    // a vertex of the polyline.
+    if (!is_vertex) {
+      const Point2 relative = current_position - segment.FirstPoint();
+      const Point2& unit_direction = segment.UnitDirection();
+      const float cross =
+          relative.x() * unit_direction.y() - relative.y() * unit_direction.x();
+      CHECK_EQ(sgn(cross), sgn(signed_distance_sq));
 
-    const float coeff = 2.0 * orientation * sign / level;
-    const float grad_coeff = coeff * cross;
-    const float weighted_grad_coeff = weight_ * grad_coeff;
-    (*grad)(xidx_) += weighted_grad_coeff * unit_direction.y();
-    (*grad)(yidx_) -= weighted_grad_coeff * unit_direction.x();
+      const float coeff = 2.0 * orientation * sign / level;
+      const float grad_coeff = coeff * cross;
+      const float weighted_grad_coeff = weight_ * grad_coeff;
+      (*grad)(xidx_) += weighted_grad_coeff * unit_direction.y();
+      (*grad)(yidx_) -= weighted_grad_coeff * unit_direction.x();
 
-    const float hess_coeff = weight_ * coeff * (grad_coeff * cross + 1.0);
-    const float hess_xy = hess_coeff * unit_direction.x() * unit_direction.y();
-    (*hess)(xidx_, xidx_) +=
-        hess_coeff * unit_direction.y() * unit_direction.y();
-    (*hess)(yidx_, yidx_) +=
-        hess_coeff * unit_direction.x() * unit_direction.x();
-    (*hess)(xidx_, yidx_) -= hess_xy;
-    (*hess)(yidx_, xidx_) -= hess_xy;
-  } else {
-    // Closest point is a vertex.
-    const float grad_coeff = 2.0 * orientation * sign / level;
-    const float weighted_grad_coeff = weight_ * grad_coeff;
-    (*grad)(xidx_) += weighted_grad_coeff * dx;
-    (*grad)(yidx_) += weighted_grad_coeff * dy;
+      const float hess_coeff = weight_ * coeff * (grad_coeff * cross + 1.0);
+      const float hess_xy = hess_coeff * unit_direction.x() * unit_direction.y();
+      (*hess)(xidx_, xidx_) +=
+          hess_coeff * unit_direction.y() * unit_direction.y();
+      (*hess)(yidx_, yidx_) +=
+          hess_coeff * unit_direction.x() * unit_direction.x();
+      (*hess)(xidx_, yidx_) -= hess_xy;
+      (*hess)(yidx_, xidx_) -= hess_xy;
+    } else {
+      // Closest point is a vertex.
+      const float grad_coeff = 2.0 * orientation * sign / level;
+      const float weighted_grad_coeff = weight_ * grad_coeff;
+      (*grad)(xidx_) += weighted_grad_coeff * dx;
+      (*grad)(yidx_) += weighted_grad_coeff * dy;
 
-    (*hess)(xidx_, xidx_) += weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
-    (*hess)(yidx_, yidx_) += weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
+      (*hess)(xidx_, xidx_) += weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
+      (*hess)(yidx_, yidx_) += weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
 
-    const float hess_xy = weighted_grad_coeff * grad_coeff * dx * dy;
-    (*hess)(xidx_, yidx_) += hess_xy;
-    (*hess)(yidx_, xidx_) += hess_xy;
-  }
+      const float hess_xy = weighted_grad_coeff * grad_coeff * dx * dy;
+      (*hess)(xidx_, yidx_) += hess_xy;
+      (*hess)(yidx_, xidx_) += hess_xy;
+    }
+  } 
 }
 
 }  // namespace ilqgames
