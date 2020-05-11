@@ -31,13 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Please contact the author(s) of this library if you have any questions.
- * Authors: David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
+ * Authors: Tanmay Gautam          ( tgautam23@berkeley.edu )
+ *          David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
  */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Three player overtaking example. Ordering is given by the following:
-// (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
+// Three player collision example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +58,7 @@
 #include <ilqgames/examples/two_player_collision_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/solver_log.h>
@@ -118,7 +119,7 @@ static constexpr float kP1InitialY = -50.0;  // m
 static constexpr float kP2InitialX = 2.5;   // m
 static constexpr float kP2InitialY = 50.0;  // m
 
-static constexpr float kP1InitialHeading = M_PI_2;  // rad
+static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 
 static constexpr float kP1InitialSpeed = 10.0;  // m/s
@@ -130,7 +131,6 @@ static constexpr float kP1GoalX = 2.5;
 static constexpr float kP1GoalY = 50.0;
 static constexpr float kP2GoalX = 2.5;
 static constexpr float kP2GoalY = -50.0;
-
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -198,16 +198,15 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
       kNominalHeadingCostWeight, kP2HeadingIdx, kP1NominalHeading,
       "NominalHeadingP2");
   // p2_cost.AddStateCost(p2_nominal_orientation_cost);
-  
+
   // cost for deviating from the center of the lane (for both p1 and p2)
-  const Polyline2 lane1_p1p2(
-      {Point2(2.5, -50.0), Point2(2.5, 50.0)});
+  const Polyline2 lane1_p1p2({Point2(2.5, -50.0), Point2(2.5, 50.0)});
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane1_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane1_p1p2, {kP1XIdx, kP1YIdx},
-                                 "LaneCenter"));
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane1_p1p2,
+                                 {kP1XIdx, kP1YIdx}, "LaneCenter"));
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane1_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight * 10, lane1_p1p2, {kP2XIdx, kP2YIdx},
-                                 "LaneCenter"));
+      new QuadraticPolyline2Cost(kLaneCostWeight * 10, lane1_p1p2,
+                                 {kP2XIdx, kP2YIdx}, "LaneCenter"));
   p1_cost.AddStateCost(p1_lane1_cost);
   p2_cost.AddStateCost(p2_lane1_cost);
 
@@ -231,36 +230,35 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
   p2_cost.AddStateCost(p2_lane1_r_cost);
 
   // p1 right lane boundary cost
-  const Polyline2 lane1_p1(
-      {Point2(2.5 + kLaneHalfWidth, -50.0), Point2(2.5 + kLaneHalfWidth, -5.0)});
+  const Polyline2 lane1_p1({Point2(2.5 + kLaneHalfWidth, -50.0),
+                            Point2(2.5 + kLaneHalfWidth, -5.0)});
   const Polyline2 lane2_p1(
       {Point2(2.5 + kLaneHalfWidth, 5.0), Point2(2.5 + kLaneHalfWidth, 50.0)});
-  const Polyline2 lane3_p1(
-      {Point2(10.0, -5.0), Point2(10.0, 5.0)});
+  const Polyline2 lane3_p1({Point2(10.0, -5.0), Point2(10.0, 5.0)});
   const Polyline2 lane4_p1(
       {Point2(2.5 + kLaneHalfWidth, 5.0), Point2(25.0, 5.0)});
   const Polyline2 lane5_p1(
       {Point2(2.5 + kLaneHalfWidth, -5.0), Point2(25, -5.0)});
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane2_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1_p1,
-                                     {kP1XIdx, kP1YIdx}, 0.0,
-                                     kOrientedRight, "LaneRightBoundary_lane1_p1"));
+                                     {kP1XIdx, kP1YIdx}, 0.0, kOrientedRight,
+                                     "LaneRightBoundary_lane1_p1"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane3_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2_p1,
-                                     {kP1XIdx, kP1YIdx}, 0.0,
-                                     kOrientedRight, "LaneRightBoundary_lane2_p1"));
+                                     {kP1XIdx, kP1YIdx}, 0.0, kOrientedRight,
+                                     "LaneRightBoundary_lane2_p1"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane4_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3_p1,
-                                     {kP1XIdx, kP1YIdx}, 0.0,
-                                     kOrientedRight, "LaneRightBoundary_lane3_p1"));
- const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane5_l_cost(
+                                     {kP1XIdx, kP1YIdx}, 0.0, kOrientedRight,
+                                     "LaneRightBoundary_lane3_p1"));
+  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane5_l_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane4_p1,
-                                     {kP1XIdx, kP1YIdx}, 0.0,
-                                     !kOrientedRight, "LaneLeftBoundary_lane4_p1"));
+                                     {kP1XIdx, kP1YIdx}, 0.0, !kOrientedRight,
+                                     "LaneLeftBoundary_lane4_p1"));
   const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane6_r_cost(
       new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane5_p1,
-                                     {kP1XIdx, kP1YIdx}, 0.0,
-                                     kOrientedRight, "LaneRightBoundary_lane5_p1"));
+                                     {kP1XIdx, kP1YIdx}, 0.0, kOrientedRight,
+                                     "LaneRightBoundary_lane5_p1"));
   p1_cost.AddStateCost(p1_lane2_r_cost);
   p1_cost.AddStateCost(p1_lane3_r_cost);
   p1_cost.AddStateCost(p1_lane4_r_cost);
@@ -335,8 +333,9 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
   p2_cost.AddStateCost(p2p1_proximity_cost);
 
   // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost},
-                              kTimeHorizon, params));
+  LQFeedbackSolver lq_solver;
+  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon,
+                              &lq_solver, params));
 }
 
 inline std::vector<float> TwoPlayerCollisionExample::Xs(
