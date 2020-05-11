@@ -71,6 +71,9 @@ struct SolverParams {
   // the given factor (< 1).
   size_t barrier_scaling_iters = 10;
   float geometric_barrier_scaling = 0.5;
+
+  // Whether solver should shoot for an open loop or feedback Nash.
+  bool open_loop = false;
 };  // struct SolverParams
 
 }  // namespace ilqgames

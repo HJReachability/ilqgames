@@ -146,7 +146,7 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 3.0;   // m/s
+static constexpr float kP1InitialSpeed = 4.0;   // m/s
 static constexpr float kP2InitialSpeed = 3.0;   // m/s
 static constexpr float kP3InitialSpeed = 1.25;  // m/s
 
@@ -469,9 +469,8 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p3_cost.AddStateConstraint(p3p2_proximity_constraint);
 
   // Set up solver.
-  LQFeedbackSolver lq_solver;
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
-                              kTimeHorizon, &lq_solver, params));
+                              kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerIntersectionExample::Xs(

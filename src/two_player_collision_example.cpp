@@ -333,9 +333,8 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
   p2_cost.AddStateCost(p2p1_proximity_cost);
 
   // Set up solver.
-  LQFeedbackSolver lq_solver;
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon,
-                              &lq_solver, params));
+  solver_.reset(
+      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> TwoPlayerCollisionExample::Xs(

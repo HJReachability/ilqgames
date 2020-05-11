@@ -183,7 +183,7 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // Solve LQ game.
     current_strategies =
-        lq_solver_->Solve(*dynamics_, linearization_, quadraticization_);
+       lq_solver_->Solve(*dynamics_, linearization_, quadraticization_);
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
