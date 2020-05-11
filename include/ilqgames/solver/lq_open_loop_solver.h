@@ -75,7 +75,38 @@ class LQOpenLoopSolver : public LQSolver {
   LQOpenLoopSolver(
       const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
       size_t num_time_steps)
-      : LQSolver(dynamics, num_time_steps) {}
+      : LQSolver(dynamics, num_time_steps) {
+    // Initialize Ms and ms.
+    Ms_.resize(num_time_steps_);
+    ms_.resize(num_time_steps_);
+    for (size_t kk = 0; kk < num_time_steps_; kk++) {
+      Ms_[kk].resize(dynamics_->NumPlayers(),
+                     MatrixXf::Zero(dynamics_->XDim(), dynamics_->XDim()));
+      ms_[kk].resize(dynamics_->NumPlayers(),
+                     VectorXf::Zero(dynamics_->XDim()));
+    }
+
+    // Initialize other "special" terms and decompositions.
+    capital_lambdas_.resize(
+        num_time_steps_ - 1,
+        MatrixXf::Zero(dynamics_->XDim(), dynamics_->XDim()));
+    qr_capital_lambdas_.resize(
+        num_time_steps_ - 1,
+        Eigen::HouseholderQR<MatrixXf>(dynamics_->XDim(), dynamics_->XDim()));
+
+    std::vector<Eigen::LDLT<MatrixXf>> chol_Rs_element;
+    std::vector<MatrixXf> warped_Bs_element;
+    std::vector<VectorXf> warped_rs_element;
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      chol_Rs_element.emplace_back(dynamics_->UDim(ii));
+      warped_Bs_element.emplace_back(dynamics_->UDim(ii), dynamics_->UDim(ii));
+      warped_rs_element.emplace_back(dynamics_->UDim(ii));
+    }
+
+    chol_Rs_.resize(num_time_steps_ - 1, chol_Rs_element);
+    warped_Bs_.resize(num_time_steps_ - 1, warped_Bs_element);
+    warped_rs_.resize(num_time_steps_ - 1, warped_rs_element);
+  }
 
   // Solve underlying LQ game to a open-loop Nash equilibrium.
   std::vector<Strategy> Solve(
@@ -83,6 +114,19 @@ class LQOpenLoopSolver : public LQSolver {
       const std::vector<std::vector<QuadraticCostApproximation>>&
           quadraticization,
       const VectorXf& x0);
+
+ private:
+  // Initialize Ms and ms.
+  std::vector<std::vector<VectorXf>> ms_;
+  std::vector<std::vector<MatrixXf>> Ms_;
+
+  // Instantiate the rest of the "special" terms and decompositions.
+  std::vector<MatrixXf> capital_lambdas_;
+  std::vector<Eigen::HouseholderQR<MatrixXf>> qr_capital_lambdas_;
+  std::vector<std::vector<Eigen::LDLT<MatrixXf>>> chol_Rs_;
+  std::vector<std::vector<MatrixXf>> warped_Bs_;
+  std::vector<std::vector<VectorXf>> warped_rs_;
+
 };  // LQOpenLoopSolver
 
 }  // namespace ilqgames
