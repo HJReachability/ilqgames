@@ -72,11 +72,13 @@ namespace ilqgames {
 class LQOpenLoopSolver : public LQSolver {
  public:
   ~LQOpenLoopSolver() {}
-  LQOpenLoopSolver() : LQSolver() {}
+  LQOpenLoopSolver(
+      const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
+      size_t num_time_steps)
+      : LQSolver(dynamics, num_time_steps) {}
 
   // Solve underlying LQ game to a open-loop Nash equilibrium.
   std::vector<Strategy> Solve(
-      const MultiPlayerIntegrableSystem& dynamics,
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
           quadraticization,

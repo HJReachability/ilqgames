@@ -71,7 +71,6 @@
 namespace ilqgames {
 
 std::vector<Strategy> LQOpenLoopSolver::Solve(
-    const MultiPlayerIntegrableSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization,
@@ -84,13 +83,13 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
   // affine state error-feedback controller). Since this is an open-loop
   // strategy, we will not change the default zero value of the P matrix.
   std::vector<Strategy> strategies;
-  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
-    strategies.emplace_back(horizon, dynamics.XDim(), dynamics.UDim(ii));
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+    strategies.emplace_back(horizon, dynamics_->XDim(), dynamics_->UDim(ii));
 
   // Initialize m^i and M^i and index first by time and then by player.
   std::vector<std::vector<VectorXf>> ms(horizon);
   std::vector<std::vector<MatrixXf>> Ms(horizon);
-  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
     ms.back().emplace_back(quadraticization.back()[ii].state.grad);
     Ms.back().emplace_back(quadraticization.back()[ii].state.hess);
   }
@@ -113,8 +112,8 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     const auto& next_quad = quadraticization[kk + 1];
 
     // Campute capital lambdas.
-    capital_lambdas[kk] = MatrixXf::Identity(dynamics.XDim(), dynamics.XDim());
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    capital_lambdas[kk] = MatrixXf::Identity(dynamics_->XDim(), dynamics_->XDim());
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       const auto control_iter = quad[ii].control.find(ii);
       CHECK(control_iter != quad[ii].control.end());
 
@@ -131,14 +130,14 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
         Eigen::HouseholderQR<MatrixXf>(capital_lambdas[kk]);
 
     // Compute Ms and ms.
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       Ms[kk].push_back(quad[ii].state.hess +
                        lin.A.transpose() * Ms[kk + 1][ii] *
                            qr_capital_lambdas[kk].solve(lin.A));
 
       // Intermediate term in ms computation.
-      VectorXf intermediary = VectorXf::Zero(dynamics.XDim());
-      for (PlayerIndex jj = 0; jj < dynamics.NumPlayers(); jj++) {
+      VectorXf intermediary = VectorXf::Zero(dynamics_->XDim());
+      for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
         intermediary -= lin.Bs[jj] * (warped_Bs[kk][jj] * ms[kk + 1][ii] +
                                       warped_rs[kk][jj]);
       }
@@ -160,7 +159,7 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
 
     // Intermediate term in u and x computations.
     VectorXf intermediary = lin.A * x_star;
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       intermediary -=
           lin.Bs[ii] * (warped_Bs[kk][ii] * ms[kk + 1][ii] + warped_rs[kk][ii]);
     }
@@ -170,14 +169,14 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     x_star = qr_capital_lambdas[kk].solve(intermediary);
 
     // Compute optimal u and store (sign flipped) in alpha.
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       strategies[ii].alphas[kk] =
           warped_Bs[kk][ii] * (Ms[kk + 1][ii] * x_star + ms[kk + 1][ii]);
     }
 
     // Check dynamic feasibility.
     //   VectorXf check_x = lin.A * last_x_star;
-    //   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+    //   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
     //     check_x -= lin.Bs[ii] * strategies[ii].alphas[kk];
 
     //   CHECK_LE((x_star - check_x).cwiseAbs().maxCoeff(), 1e-1);
