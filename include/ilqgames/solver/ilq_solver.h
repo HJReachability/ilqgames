@@ -46,6 +46,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/solver/game_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
@@ -67,9 +68,8 @@ class ILQSolver : public GameSolver {
   virtual ~ILQSolver() {}
   ILQSolver(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
             const std::vector<PlayerCost>& player_costs, Time time_horizon,
-            LQSolver* lq_solver = nullptr,
             const SolverParams& params = SolverParams())
-      : GameSolver(dynamics, player_costs, time_horizon, lq_solver, params) {}
+      : GameSolver(dynamics, player_costs, time_horizon, params) {}
 
  protected:
   // Populate the given vector with a linearization of the dynamics about

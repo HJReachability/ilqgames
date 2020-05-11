@@ -8,5 +8,6 @@ var searchData=
   ['timeinvariantcost',['TimeInvariantCost',['../classilqgames_1_1_time_invariant_cost.html',1,'ilqgames']]],
   ['topdownrenderableproblem',['TopDownRenderableProblem',['../classilqgames_1_1_top_down_renderable_problem.html',1,'ilqgames']]],
   ['topdownrenderer',['TopDownRenderer',['../classilqgames_1_1_top_down_renderer.html',1,'ilqgames']]],
+  ['twoplayercollisionexample',['TwoPlayerCollisionExample',['../classilqgames_1_1_two_player_collision_example.html',1,'ilqgames']]],
   ['twoplayerunicycle4d',['TwoPlayerUnicycle4D',['../classilqgames_1_1_two_player_unicycle4_d.html',1,'ilqgames']]]
 ];
