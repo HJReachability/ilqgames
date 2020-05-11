@@ -411,9 +411,8 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   // p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Set up solver.
-  LQFeedbackSolver lq_solver;
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
-                              kTimeHorizon, &lq_solver, params));
+                              kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerOvertakingExample::Xs(

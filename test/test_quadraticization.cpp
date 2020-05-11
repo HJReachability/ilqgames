@@ -77,7 +77,7 @@ static constexpr Dimension kInputDimension = 10;
 // Step size for forward differences.
 static constexpr float kGradForwardStep = 1e-3;
 static constexpr float kHessForwardStep = 1e-3;
-static constexpr float kNumericalPrecision = 0.11;
+static constexpr float kNumericalPrecision = 0.15;
 
 // Function to compute numerical gradient of a cost.
 VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {

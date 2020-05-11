@@ -482,9 +482,8 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams& params) {
   //                                           kP3XIdx, kP3YIdx, kP4XIdx,
   //                                           kP4YIdx};
 
-  LQFeedbackSolver lq_solver;
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost, p4_cost},
-                              kTimeHorizon, &lq_solver, params));
+                              kTimeHorizon, params));
 }
 
 inline std::vector<float> RoundaboutMergingExample::Xs(

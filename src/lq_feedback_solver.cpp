@@ -78,7 +78,6 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
   // Unpack horizon.
   const size_t horizon = linearization.size();
   CHECK_EQ(quadraticization.size(), horizon);
-  CHECK_GT(horizon, 0);
 
   // List of player-indexed strategies (each of which is a time-indexed
   // affine state error-feedback controller).

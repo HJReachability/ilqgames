@@ -495,10 +495,9 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   revised_params.trust_region_dimensions = {kP1XIdx, kP1YIdx, kP2XIdx, kP2YIdx,
                                             kP3XIdx, kP3YIdx, kP4XIdx, kP4YIdx};
 
-  LQFeedbackSolver lq_solver;
   solver_.reset(new ILQFlatSolver(dynamics_,
                                   {p1_cost, p2_cost, p3_cost, p4_cost},
-                                  kTimeHorizon, &lq_solver, revised_params));
+                                  kTimeHorizon, revised_params));
 }
 
 inline std::vector<float> FlatRoundaboutMergingExample::Xs(
