@@ -91,36 +91,38 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
   bool is_vertex;
   bool is_endpoint;
   LineSegment2 segment(Point2(0.0, 0.0), Point2(1.0, 1.0));
-  const Point2 closest_point = polyline_.ClosestPoint(
-      current_position, &is_vertex, &segment, &signed_squared_distance, &is_endpoint);
+  const Point2 closest_point =
+      polyline_.ClosestPoint(current_position, &is_vertex, &segment,
+                             &signed_squared_distance, &is_endpoint);
 
   // Check if cost is active.
   if (!IsActive(signed_squared_distance)) return;
 
   // First checks whether the closest point is an endpoint of the polyline
-  if (!is_endpoint) {
-    // Handle cases separately depending on whether or not closest point is
-    // a vertex of the polyline.
-    if (!is_vertex) {
-      const Point2 relative = current_position - segment.FirstPoint();
-      const Point2& unit_segment = segment.UnitDirection();
+  if (is_endpoint) return;
 
-      // Handle Hessian first.
-      (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
-      (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
+  // Handle cases separately depending on whether or not closest point is
+  // a vertex of the polyline.
+  if (!is_vertex) {
+    const Point2 relative = current_position - segment.FirstPoint();
+    const Point2& unit_segment = segment.UnitDirection();
 
-      const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
-      (*hess)(xidx_, yidx_) -= cross_term;
-      (*hess)(yidx_, xidx_) -= cross_term;
+    // Handle Hessian first.
+    (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
+    (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
 
-      // Handle gradient.
-      const float w_cross =
-          weight_ * (relative.x() * unit_segment.y() -
-                     relative.y() * unit_segment.x() - threshold_);
+    const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
+    (*hess)(xidx_, yidx_) -= cross_term;
+    (*hess)(yidx_, xidx_) -= cross_term;
 
-      (*grad)(xidx_) += w_cross * unit_segment.y();
-      (*grad)(yidx_) -= w_cross * unit_segment.x();
-    } else {
+    // Handle gradient.
+    const float w_cross =
+        weight_ * (relative.x() * unit_segment.y() -
+                   relative.y() * unit_segment.x() - threshold_);
+
+    (*grad)(xidx_) += w_cross * unit_segment.y();
+    (*grad)(yidx_) -= w_cross * unit_segment.x();
+  } else {
     // Closest point is a vertex.
     (*hess)(xidx_, xidx_) += weight_;
     (*hess)(yidx_, yidx_) += weight_;
@@ -131,7 +133,6 @@ void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
         weight_ * scaling * (current_position.x() - closest_point.x());
     (*grad)(yidx_) +=
         weight_ * scaling * (current_position.y() - closest_point.y());
-    }
   }
 }
 
