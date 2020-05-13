@@ -110,12 +110,15 @@ class GameSolver {
         player_costs_(player_costs),
         time_horizon_(time_horizon),
         time_step_(dynamics->TimeStep()),
-        num_time_steps_(static_cast<size_t>(time_horizon / time_step_)),
+        num_time_steps_(static_cast<size_t>(
+            (constants::kSmallNumber + time_horizon) / time_step_)),
         linearization_(num_time_steps_),
         quadraticization_(num_time_steps_),
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
+    std::cout << "dt: " << time_step_ << ", T: " << time_horizon_ << std::endl;
+    std::cout << num_time_steps_ << std::endl;
 
     if (!params_.open_loop) lq_solver_.reset(new LQFeedbackSolver());
     //    else

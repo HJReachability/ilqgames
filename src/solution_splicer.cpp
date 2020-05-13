@@ -60,6 +60,7 @@ SolutionSplicer::SolutionSplicer(const SolverLog& log)
 void SolutionSplicer::Splice(const SolverLog& log) {
   CHECK_GE(log.FinalOperatingPoint().t0, operating_point_.t0);
   CHECK_GE(operating_point_.xs.size(), log.NumTimeSteps());
+  CHECK_EQ(log.FinalOperatingPoint().xs.size(), log.NumTimeSteps());
 
   const size_t current_timestep = static_cast<size_t>(
       1e-4 +  // Add a little so that conversion doesn't end up subtracting 1.
@@ -82,7 +83,7 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   // nearest match to guard against off-by-one issues.
   constexpr size_t kNumExtraTimeStepsBeforeSplicingIn = 2;
   const size_t first_timestep_new_solution =
-      kNumExtraTimeStepsBeforeSplicingIn + current_timestep;
+      kNumExtraTimeStepsBeforeSplicingIn + current_timestep + 1;
 
   // (2) Copy over saved part of existing plan.
   for (size_t kk = initial_timestep; kk < first_timestep_new_solution; kk++) {
@@ -100,9 +101,10 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   // NOTE: makes use of default behavior of std::vector<T>.resize() in that it
   // does not delete earlier entries.
   const size_t num_spliced_timesteps =
-      first_timestep_new_solution - initial_timestep + log.NumTimeSteps();
+      current_timestep - initial_timestep + log.NumTimeSteps();
   std::cout << "num spliced tsteps: " << num_spliced_timesteps << std::endl;
-  CHECK_GE(num_spliced_timesteps, log.NumTimeSteps());
+  CHECK_LE(num_spliced_timesteps,
+           log.NumTimeSteps() + kNumPreviousTimeStepsToSave);
 
   operating_point_.xs.resize(num_spliced_timesteps);
   operating_point_.us.resize(num_spliced_timesteps);
@@ -116,12 +118,11 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   }
 
   // Copy over new solution to overwrite existing log after first timestep.
-  CHECK_EQ(first_timestep_new_solution - initial_timestep + log.NumTimeSteps(),
+  CHECK_EQ(current_timestep + log.NumTimeSteps() - initial_timestep,
            operating_point_.xs.size());
   for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn + 1;
        kk < log.NumTimeSteps(); kk++) {
-    const size_t kk_new_solution =
-        first_timestep_new_solution + kk - initial_timestep;
+    const size_t kk_new_solution = current_timestep + kk - initial_timestep;
     operating_point_.xs[kk_new_solution] = log.FinalOperatingPoint().xs[kk];
     operating_point_.us[kk_new_solution] = log.FinalOperatingPoint().us[kk];
 
@@ -132,8 +133,7 @@ void SolutionSplicer::Splice(const SolverLog& log) {
     }
   }
 
-  CHECK_EQ(first_timestep_new_solution + kNumExtraTimeStepsBeforeSplicingIn -
-               initial_timestep,
+  CHECK_EQ(current_timestep + kNumExtraTimeStepsBeforeSplicingIn + 1,
            first_timestep_new_solution);
 }
 

@@ -81,7 +81,9 @@ class SolverLog : private Uncopyable {
   PlayerIndex NumPlayers() const { return strategies_[0].size(); }
   size_t NumIterates() const { return operating_points_.size(); }
   size_t NumTimeSteps() const {
-    return static_cast<size_t>((FinalTime() - InitialTime()) / time_step_);
+    return 1 + static_cast<size_t>(
+                   (constants::kSmallNumber + FinalTime() - InitialTime()) /
+                   time_step_);
   }
 
   const std::vector<Strategy>& FinalStrategies() const {

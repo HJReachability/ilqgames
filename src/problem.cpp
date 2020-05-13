@@ -161,6 +161,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
 
   // Make sure operating point is the right size.
   if (operating_point_->xs.size() != solver_->NumTimeSteps()) {
+    std::cout << "yo" << std::endl;
     operating_point_->xs.resize(solver_->NumTimeSteps());
     operating_point_->us.resize(solver_->NumTimeSteps());
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
