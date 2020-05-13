@@ -61,6 +61,7 @@
 #include <ilqgames/examples/roundabout_lane_center.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_flat_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/initialize_along_route.h>
@@ -453,6 +454,7 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   SolverParams revised_params(params);
   revised_params.trust_region_dimensions = {kP1XIdx, kP1YIdx, kP2XIdx, kP2YIdx,
                                             kP3XIdx, kP3YIdx, kP4XIdx, kP4YIdx};
+
   solver_.reset(new ILQFlatSolver(dynamics_,
                                   {p1_cost, p2_cost, p3_cost, p4_cost},
                                   kTimeHorizon, revised_params));

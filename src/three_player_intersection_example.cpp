@@ -61,6 +61,7 @@
 #include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/solver_log.h>
@@ -145,7 +146,7 @@ static constexpr float kP1InitialHeading = M_PI_2;   // rad
 static constexpr float kP2InitialHeading = -M_PI_2;  // rad
 static constexpr float kP3InitialHeading = 0.0;      // rad
 
-static constexpr float kP1InitialSpeed = 3.0;   // m/s
+static constexpr float kP1InitialSpeed = 4.0;   // m/s
 static constexpr float kP2InitialSpeed = 3.0;   // m/s
 static constexpr float kP3InitialSpeed = 1.25;  // m/s
 

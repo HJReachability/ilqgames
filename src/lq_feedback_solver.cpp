@@ -59,7 +59,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
-#include <ilqgames/solver/solve_lq_game.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -69,7 +69,7 @@
 
 namespace ilqgames {
 
-std::vector<Strategy> SolveLQGame(
+std::vector<Strategy> LQFeedbackSolver::Solve(
     const MultiPlayerIntegrableSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
@@ -77,7 +77,6 @@ std::vector<Strategy> SolveLQGame(
   // Unpack horizon.
   const size_t horizon = linearization.size();
   CHECK_EQ(quadraticization.size(), horizon);
-  CHECK_GT(horizon, 0);
 
   // List of player-indexed strategies (each of which is a time-indexed
   // affine state error-feedback controller).

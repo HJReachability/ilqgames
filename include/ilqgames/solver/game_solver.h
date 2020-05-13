@@ -47,6 +47,8 @@
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
+#include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
@@ -60,6 +62,7 @@
 #include <chrono>
 #include <limits>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace ilqgames {
@@ -112,6 +115,10 @@ class GameSolver {
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
+
+    if (!params_.open_loop) lq_solver_.reset(new LQFeedbackSolver());
+    //    else
+    // lq_solver_.reset(new LQOpenLoopSolver());
 
     // Prepopulate quadraticization.
     for (auto& quads : quadraticization_)
@@ -167,6 +174,9 @@ class GameSolver {
   // quadraticizations' inner vector is indexed by player).
   std::vector<LinearDynamicsApproximation> linearization_;
   std::vector<std::vector<QuadraticCostApproximation>> quadraticization_;
+
+  // Core LQ Solver.
+  std::unique_ptr<LQSolver> lq_solver_;
 
   // Solver parameters.
   const SolverParams params_;

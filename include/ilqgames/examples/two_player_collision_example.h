@@ -36,50 +36,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Parameters for solvers.
+// Two player collision example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLVER_PARAMS_H
-#define ILQGAMES_SOLVER_SOLVER_PARAMS_H
+#ifndef ILQGAMES_EXAMPLES_TWO_PLAYER_COLLISION_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_TWO_PLAYER_COLLISION_EXAMPLE_H
 
-#include <ilqgames/utils/types.h>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
+#include <ilqgames/solver/solver_params.h>
 
 namespace ilqgames {
 
-struct SolverParams {
-  // Consider a solution converged once max elementwise difference is below this
-  // tolerance or solver has exceeded a maximum number of iterations.
-  float convergence_tolerance = 1e-1;
-  size_t max_solver_iters = 1000;
+class TwoPlayerCollisionExample : public TopDownRenderableProblem {
+ public:
+  ~TwoPlayerCollisionExample() {}
+  TwoPlayerCollisionExample(const SolverParams& params);
 
-  // Linesearch parameters. If flag is set 'true', then applied initial alpha
-  // scaling to all strategies and backs off geometrically at the given rate for
-  // the specified number of steps.
-  bool linesearch = true;
-  float initial_alpha_scaling = 0.5;
-  float geometric_alpha_scaling = 0.5;
-  size_t max_backtracking_steps = 10;
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class TwoPlayerCollisionExample
 
-  // Maximum absolute difference between states in the given dimension to
-  // satisfy trust region. Only active if linesearching is on. If dimensions
-  // empty then applies in all dimensions.
-  float trust_region_size = 10.0;
-  std::vector<Dimension> trust_region_dimensions;
-
-  // Number of iterations until each constraint barrier weights are scaled by
-  // the given factor (< 1).
-  size_t barrier_scaling_iters = 10;
-  float geometric_barrier_scaling = 0.5;
-
-  // Whether solver should shoot for an open loop or feedback Nash.
-  bool open_loop = false;
-
-  // Adersarial time: Pure Cooperative (adversarial_time = 0), or
-  // Adversarial-to-Cooperative (adversarial_time != 0)
-  float adversarial_time = 0;
-}; // struct SolverParams
-
-} // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

@@ -36,50 +36,50 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Parameters for solvers.
+// Core LQ game solver from Basar and Olsder, "Preliminary Notation for
+// Corollary 6.1" (pp. 279). All notation matches the text, though we
+// shall assume that `c` (additive drift in dynamics) is always `0`, which
+// holds because these dynamics are for delta x, delta us.
+// Also, we have modified terms slightly to account for linear terms in the
+// stage cost for control, i.e.
+//       control penalty i = 0.5 \sum_j du_j^T R_ij (du_j + 2 r_ij)
+//
+// Solve a time-varying, finite horizon LQ game (finds closed-loop Nash
+// feedback strategies for both players).
+//
+// Assumes that dynamics are given by
+//           ``` dx_{k+1} = A_k dx_k + \sum_i Bs[i]_k du[i]_k ```
+//
+// Returns strategies Ps, alphas.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLVER_PARAMS_H
-#define ILQGAMES_SOLVER_SOLVER_PARAMS_H
+#ifndef ILQGAMES_SOLVER_LQ_FEEDBACK_SOLVER_H
+#define ILQGAMES_SOLVER_LQ_FEEDBACK_SOLVER_H
 
-#include <ilqgames/utils/types.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/utils/strategy.h>
+
+#include <vector>
 
 namespace ilqgames {
 
-struct SolverParams {
-  // Consider a solution converged once max elementwise difference is below this
-  // tolerance or solver has exceeded a maximum number of iterations.
-  float convergence_tolerance = 1e-1;
-  size_t max_solver_iters = 1000;
+class LQFeedbackSolver : public LQSolver {
+ public:
+  ~LQFeedbackSolver() {}
+  LQFeedbackSolver() : LQSolver() {}
 
-  // Linesearch parameters. If flag is set 'true', then applied initial alpha
-  // scaling to all strategies and backs off geometrically at the given rate for
-  // the specified number of steps.
-  bool linesearch = true;
-  float initial_alpha_scaling = 0.5;
-  float geometric_alpha_scaling = 0.5;
-  size_t max_backtracking_steps = 10;
+  // Solve underlying LQ game to a feedback Nash equilibrium.
+  std::vector<Strategy> Solve(
+      const MultiPlayerIntegrableSystem& dynamics,
+      const std::vector<LinearDynamicsApproximation>& linearization,
+      const std::vector<std::vector<QuadraticCostApproximation>>&
+          quadraticization);
+};  // LQFeedbackSolver
 
-  // Maximum absolute difference between states in the given dimension to
-  // satisfy trust region. Only active if linesearching is on. If dimensions
-  // empty then applies in all dimensions.
-  float trust_region_size = 10.0;
-  std::vector<Dimension> trust_region_dimensions;
-
-  // Number of iterations until each constraint barrier weights are scaled by
-  // the given factor (< 1).
-  size_t barrier_scaling_iters = 10;
-  float geometric_barrier_scaling = 0.5;
-
-  // Whether solver should shoot for an open loop or feedback Nash.
-  bool open_loop = false;
-
-  // Adersarial time: Pure Cooperative (adversarial_time = 0), or
-  // Adversarial-to-Cooperative (adversarial_time != 0)
-  float adversarial_time = 0;
-}; // struct SolverParams
-
-} // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

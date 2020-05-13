@@ -36,9 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all iterative LQ game solvers.
-// Structured so that derived classes may only modify the `ModifyLQStrategies`
-// and `HasConverged` virtual functions.
+// Base class for all iterative LQ game solvers. Derives from FeedbackSolver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +46,8 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/solver/game_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
+#include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/operating_point.h>
