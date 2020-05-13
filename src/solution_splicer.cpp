@@ -57,8 +57,10 @@ SolutionSplicer::SolutionSplicer(const SolverLog& log)
     : strategies_(log.FinalStrategies()),
       operating_point_(log.FinalOperatingPoint()) {}
 
-void SolutionSplicer::Splice(const SolverLog& log,
-                             const MultiPlayerIntegrableSystem& dynamics) {
+void SolutionSplicer::Splice(const SolverLog& log) {
+  CHECK_GE(log.FinalOperatingPoint().t0, operating_point_.t0);
+  CHECK_GE(operating_point_.xs.size(), log.NumTimeSteps());
+
   const size_t current_timestep = static_cast<size_t>(
       1e-4 +  // Add a little so that conversion doesn't end up subtracting 1.
       (log.FinalOperatingPoint().t0 - operating_point_.t0) / log.TimeStep());
@@ -99,6 +101,9 @@ void SolutionSplicer::Splice(const SolverLog& log,
   // does not delete earlier entries.
   const size_t num_spliced_timesteps =
       first_timestep_new_solution - initial_timestep + log.NumTimeSteps();
+  std::cout << "num spliced tsteps: " << num_spliced_timesteps << std::endl;
+  CHECK_GE(num_spliced_timesteps, log.NumTimeSteps());
+
   operating_point_.xs.resize(num_spliced_timesteps);
   operating_point_.us.resize(num_spliced_timesteps);
   operating_point_.t0 += initial_timestep * log.TimeStep();
@@ -110,33 +115,26 @@ void SolutionSplicer::Splice(const SolverLog& log,
     strategy.alphas.resize(num_spliced_timesteps);
   }
 
-  // (3) Copy over new solution to overwrite existing log after first timestep.
+  // Copy over new solution to overwrite existing log after first timestep.
   CHECK_EQ(first_timestep_new_solution - initial_timestep + log.NumTimeSteps(),
            operating_point_.xs.size());
-  for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn; kk < log.NumTimeSteps();
-       kk++) {
+  for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn + 1;
+       kk < log.NumTimeSteps(); kk++) {
     const size_t kk_new_solution =
-        kk + first_timestep_new_solution - initial_timestep;
-    DCHECK_LT(kk_new_solution, operating_point_.xs.size());
-    DCHECK_LT(kk_new_solution, operating_point_.us.size());
-    DCHECK_LT(kk, log.FinalOperatingPoint().xs.size());
-    DCHECK_LT(kk, log.FinalOperatingPoint().us.size());
+        first_timestep_new_solution + kk - initial_timestep;
     operating_point_.xs[kk_new_solution] = log.FinalOperatingPoint().xs[kk];
     operating_point_.us[kk_new_solution] = log.FinalOperatingPoint().us[kk];
 
-    DCHECK_EQ(log.NumPlayers(), strategies_.size());
-    DCHECK_EQ(log.NumPlayers(), log.FinalStrategies().size());
     for (PlayerIndex ii = 0; ii < log.NumPlayers(); ii++) {
-      DCHECK_LT(kk_new_solution, strategies_[ii].Ps.size());
-      DCHECK_LT(kk_new_solution, strategies_[ii].alphas.size());
-      DCHECK_LT(kk, log.FinalStrategies()[ii].Ps.size());
-      DCHECK_LT(kk, log.FinalStrategies()[ii].alphas.size());
-
       strategies_[ii].Ps[kk_new_solution] = log.FinalStrategies()[ii].Ps[kk];
       strategies_[ii].alphas[kk_new_solution] =
           log.FinalStrategies()[ii].alphas[kk];
     }
   }
+
+  CHECK_EQ(first_timestep_new_solution + kNumExtraTimeStepsBeforeSplicingIn -
+               initial_timestep,
+           first_timestep_new_solution);
 }
 
 }  // namespace ilqgames

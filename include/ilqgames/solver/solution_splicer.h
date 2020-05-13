@@ -60,8 +60,7 @@ class SolutionSplicer {
   explicit SolutionSplicer(const SolverLog& log);
 
   // Splice in a new solution stored in a solver log.
-  void Splice(const SolverLog& log,
-              const MultiPlayerIntegrableSystem& dynamics);
+  void Splice(const SolverLog& log);
 
   // Accessors.
   const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }

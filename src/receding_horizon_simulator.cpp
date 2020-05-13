@@ -106,7 +106,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     t += elapsed_time;
 
     // Add new solution to splicer.
-    splicer.Splice(*logs.back(), dynamics);
+    splicer.Splice(*logs.back());
 
     // Overwrite problem with spliced solution.
     problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
