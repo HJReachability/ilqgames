@@ -103,7 +103,7 @@ static constexpr float kMinV = 0.0;    // m/s
 static constexpr float kP1MaxV = 35.8; // m/s
 static constexpr float kP2MaxV = 35.8; // m/s
 
-static constexpr float kLaneCostWeight = 0.0;
+static constexpr float kLaneCostWeight = 20.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 2.5;
