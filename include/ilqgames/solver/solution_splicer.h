@@ -59,9 +59,8 @@ class SolutionSplicer {
   ~SolutionSplicer() {}
   explicit SolutionSplicer(const SolverLog& log);
 
-  // Splice in a new solution stored in a solver log. Also prune before the
-  // the current state.
-  void Splice(const SolverLog& log, const VectorXf& x,
+  // Splice in a new solution stored in a solver log.
+  void Splice(const SolverLog& log,
               const MultiPlayerIntegrableSystem& dynamics);
 
   // Accessors.

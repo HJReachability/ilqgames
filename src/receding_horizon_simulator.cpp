@@ -77,10 +77,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
   VLOG(0) << "Solved initial problem in " << elapsed_time << " seconds.";
-
-  // Handy references.
   const auto& dynamics = problem->Solver().Dynamics();
-  const Time time_step = problem->Solver().TimeStep();
 
   // Keep a solution splicer to incorporate new receding horizon solutions.
   SolutionSplicer splicer(*logs.front());
@@ -99,7 +96,8 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
     CHECK_LE(elapsed_time, planner_runtime);
-    VLOG(0) << "Solved warm-started problem in " << elapsed_time << " seconds.";
+    VLOG(0) << "t = " << t << ": Solved warm-started problem in "
+            << elapsed_time << " seconds.";
 
     // Integrate dynamics forward to account for solve time.
     x = dynamics.Integrate(t, t + elapsed_time, x,
@@ -108,7 +106,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     t += elapsed_time;
 
     // Add new solution to splicer.
-    splicer.Splice(*logs.back(), x, dynamics);
+    splicer.Splice(*logs.back(), dynamics);
 
     // Overwrite problem with spliced solution.
     problem->OverwriteSolution(splicer.CurrentOperatingPoint(),

@@ -92,6 +92,7 @@ class GameSolver {
 
   // Accessors.
   Time TimeHorizon() const { return time_horizon_; }
+  size_t NumTimeSteps() const { return num_time_steps_; }
   Time TimeStep() const { return time_step_; }
   const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
   const MultiPlayerIntegrableSystem& Dynamics() const { return *dynamics_; }
