@@ -68,13 +68,15 @@ class Polyline2 {
   // vertex), and the signed squared distance, where right is positive.
   Point2 ClosestPoint(const Point2& query, bool* is_vertex = nullptr,
                       LineSegment2* segment = nullptr,
-                      float* signed_squared_distance = nullptr, bool* is_endpoint = nullptr) const;
+                      float* signed_squared_distance = nullptr,
+                      bool* is_endpoint = nullptr) const;
 
   // Find the point the given distance from the start of the polyline.
   // Optionally returns whether this is a vertex and the line segment which the
   // point belongs to.
   Point2 PointAt(float route_pos, bool* is_vertex = nullptr,
-                 LineSegment2* segment = nullptr, bool* is_endpoint = nullptr) const;
+                 LineSegment2* segment = nullptr,
+                 bool* is_endpoint = nullptr) const;
 
   // Access line segments.
   const std::vector<LineSegment2>& Segments() const { return segments_; }
