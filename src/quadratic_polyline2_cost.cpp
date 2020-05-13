@@ -59,8 +59,9 @@ float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_squared_distance, &is_endpoint);
   if (is_endpoint) {
-    // If the is_endpoint flag is raised, we set the signed_squared_distance to 0.0.
-  	signed_squared_distance = 0.0;
+    // If the is_endpoint flag is raised, we set the signed_squared_distance to
+    // 0.0.
+    signed_squared_distance = 0.0;
   }
 
   return 0.5 * weight_ * std::abs(signed_squared_distance);
@@ -83,39 +84,39 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   bool is_vertex;
   bool is_endpoint;
   LineSegment2 segment(Point2(0.0, 0.0), Point2(1.0, 1.0));
-  const Point2 closest_point =
-      polyline_.ClosestPoint(current_position, &is_vertex, &segment, nullptr, &is_endpoint);
+  const Point2 closest_point = polyline_.ClosestPoint(
+      current_position, &is_vertex, &segment, nullptr, &is_endpoint);
 
   // First check whether the closest point is a endpoint of the polyline.
-  if (!is_endpoint) {
+  if (is_endpoint) return;
+
   // Handle cases separately depending on whether or not closest point is
-  // a vertex of the polyline.    
-    if (!is_vertex) {
-      const Point2 relative = current_position - segment.FirstPoint();
-      const Point2& unit_segment = segment.UnitDirection();
+  // a vertex of the polyline.
+  if (!is_vertex) {
+    const Point2 relative = current_position - segment.FirstPoint();
+    const Point2& unit_segment = segment.UnitDirection();
 
-      // Handle Hessian first.
-      (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
-      (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
+    // Handle Hessian first.
+    (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
+    (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
 
-      const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
-      (*hess)(xidx_, yidx_) -= cross_term;
-      (*hess)(yidx_, xidx_) -= cross_term;
+    const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
+    (*hess)(xidx_, yidx_) -= cross_term;
+    (*hess)(yidx_, xidx_) -= cross_term;
 
-      // Handle gradient.
-      const float w_cross = weight_ * (relative.x() * unit_segment.y() -
-                                       relative.y() * unit_segment.x());
+    // Handle gradient.
+    const float w_cross = weight_ * (relative.x() * unit_segment.y() -
+                                     relative.y() * unit_segment.x());
 
-      (*grad)(xidx_) += w_cross * unit_segment.y();
-      (*grad)(yidx_) -= w_cross * unit_segment.x();
-    } else {
-      (*hess)(xidx_, xidx_) += weight_;
-      (*hess)(yidx_, yidx_) += weight_;
+    (*grad)(xidx_) += w_cross * unit_segment.y();
+    (*grad)(yidx_) -= w_cross * unit_segment.x();
+  } else {
+    (*hess)(xidx_, xidx_) += weight_;
+    (*hess)(yidx_, yidx_) += weight_;
 
-      (*grad)(xidx_) += weight_ * (current_position.x() - closest_point.x());
-      (*grad)(yidx_) += weight_ * (current_position.y() - closest_point.y());   
-    }
-  } 
+    (*grad)(xidx_) += weight_ * (current_position.x() - closest_point.x());
+    (*grad)(yidx_) += weight_ * (current_position.y() - closest_point.y());
+  }
 }
 
 }  // namespace ilqgames
