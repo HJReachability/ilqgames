@@ -153,22 +153,10 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   const size_t after_final_timestep =
       first_timestep_in_new_problem + solver_->NumTimeSteps();
   const size_t timestep_iterator_end =
-      std::min({after_final_timestep, operating_point_->xs.size(),
-                solver_->NumTimeSteps()});
+      std::min(after_final_timestep, operating_point_->xs.size());
 
   std::cout << "initial " << first_timestep_in_new_problem << ", after final "
             << after_final_timestep << std::endl;
-
-  // Make sure operating point is the right size.
-  if (operating_point_->xs.size() != solver_->NumTimeSteps()) {
-    std::cout << "yo" << std::endl;
-    operating_point_->xs.resize(solver_->NumTimeSteps());
-    operating_point_->us.resize(solver_->NumTimeSteps());
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      (*strategies_)[ii].Ps.resize(solver_->NumTimeSteps());
-      (*strategies_)[ii].alphas.resize(solver_->NumTimeSteps());
-    }
-  }
 
   // Populate strategies and opeating point for the remainder of the
   // existing plan, reusing the old operating point when possible.
@@ -189,10 +177,22 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
     }
   }
 
+  // Make sure operating point is the right size.
+  CHECK_GE(operating_point_->xs.size(), solver_->NumTimeSteps());
+  if (operating_point_->xs.size() > solver_->NumTimeSteps()) {
+    std::cout << "yo" << std::endl;
+    operating_point_->xs.resize(solver_->NumTimeSteps());
+    operating_point_->us.resize(solver_->NumTimeSteps());
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      (*strategies_)[ii].Ps.resize(solver_->NumTimeSteps());
+      (*strategies_)[ii].alphas.resize(solver_->NumTimeSteps());
+    }
+  }
+
   // Set new operating point controls and strategies to zero and propagate
   // state forward accordingly.
-  for (size_t kk = timestep_iterator_end - first_timestep_in_new_problem + 1;
-       kk < solver_->NumTimeSteps(); kk++) {
+  for (size_t kk = timestep_iterator_end + 1; kk < solver_->NumTimeSteps();
+       kk++) {
     operating_point_->us[kk].resize(dynamics.NumPlayers());
     for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++) {
       (*strategies_)[ii].Ps[kk].setZero(dynamics.UDim(ii), dynamics.XDim());
@@ -210,6 +210,20 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   CHECK_EQ(operating_point_->xs.size(), solver_->NumTimeSteps());
   CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0),
            solver_->TimeStep());
+
+  // Make sure the ego vehicle's trajectory is always forward.
+  for (size_t kk = 2; kk < solver_->NumTimeSteps(); kk++) {
+    const float dx1 =
+      operating_point_->xs[kk - 1](0) - operating_point_->xs[kk - 2](0);
+    const float dy1 =
+      operating_point_->xs[kk - 1](1) - operating_point_->xs[kk - 2](1);
+    const float dx2 =
+      operating_point_->xs[kk](0) - operating_point_->xs[kk - 1](0);
+    const float dy2 =
+      operating_point_->xs[kk](1) - operating_point_->xs[kk - 1](1);
+    const float dot = dx1 * dx2 + dy1 * dy2;
+    CHECK_GT(dot, 0.0);
+  }
 }
 
 void Problem::OverwriteSolution(const OperatingPoint& operating_point,

@@ -85,6 +85,8 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   const size_t first_timestep_new_solution =
       kNumExtraTimeStepsBeforeSplicingIn + current_timestep + 1;
 
+  std::cout << "first tstep new soln: " << first_timestep_new_solution << std::endl;
+
   // (2) Copy over saved part of existing plan.
   for (size_t kk = initial_timestep; kk < first_timestep_new_solution; kk++) {
     const size_t kk_new_solution = kk - initial_timestep;
@@ -132,9 +134,6 @@ void SolutionSplicer::Splice(const SolverLog& log) {
           log.FinalStrategies()[ii].alphas[kk];
     }
   }
-
-  CHECK_EQ(current_timestep + kNumExtraTimeStepsBeforeSplicingIn + 1,
-           first_timestep_new_solution);
 }
 
 }  // namespace ilqgames
