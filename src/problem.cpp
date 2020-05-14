@@ -175,6 +175,8 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
       strategy.Ps[kk_new_problem] = strategy.Ps[kk];
       strategy.alphas[kk_new_problem] = strategy.alphas[kk];
     }
+
+    std::cout << "kk: " << kk_new_problem << std::endl;
   }
 
   // Make sure operating point is the right size.
@@ -191,8 +193,8 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
 
   // Set new operating point controls and strategies to zero and propagate
   // state forward accordingly.
-  for (size_t kk = timestep_iterator_end + 1; kk < solver_->NumTimeSteps();
-       kk++) {
+  for (size_t kk = timestep_iterator_end - first_timestep_in_new_problem;
+       kk < solver_->NumTimeSteps(); kk++) {
     operating_point_->us[kk].resize(dynamics.NumPlayers());
     for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++) {
       (*strategies_)[ii].Ps[kk].setZero(dynamics.UDim(ii), dynamics.XDim());
@@ -204,6 +206,8 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
         operating_point_->t0 + solver_->ComputeTimeStamp(kk - 1),
         solver_->TimeStep(), operating_point_->xs[kk - 1],
         operating_point_->us[kk - 1]);
+
+    std::cout << "kk: " << kk << std::endl;
   }
 
   // Invariants.
@@ -222,7 +226,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
     const float dy2 =
       operating_point_->xs[kk](1) - operating_point_->xs[kk - 1](1);
     const float dot = dx1 * dx2 + dy1 * dy2;
-    CHECK_GT(dot, 0.0);
+    CHECK_GT(dot, 0.0) << "timestep was: " << kk;
   }
 }
 

@@ -85,7 +85,8 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   const size_t first_timestep_new_solution =
       kNumExtraTimeStepsBeforeSplicingIn + current_timestep + 1;
 
-  std::cout << "first tstep new soln: " << first_timestep_new_solution << std::endl;
+  std::cout << "first tstep new soln: " << first_timestep_new_solution
+            << std::endl;
 
   // (2) Copy over saved part of existing plan.
   for (size_t kk = initial_timestep; kk < first_timestep_new_solution; kk++) {
@@ -133,6 +134,20 @@ void SolutionSplicer::Splice(const SolverLog& log) {
       strategies_[ii].alphas[kk_new_solution] =
           log.FinalStrategies()[ii].alphas[kk];
     }
+  }
+
+  // Make sure the ego vehicle's trajectory is always forward.
+  for (size_t kk = 2; kk < operating_point_.xs.size(); kk++) {
+    const float dx1 =
+        operating_point_.xs[kk - 1](0) - operating_point_.xs[kk - 2](0);
+    const float dy1 =
+        operating_point_.xs[kk - 1](1) - operating_point_.xs[kk - 2](1);
+    const float dx2 =
+        operating_point_.xs[kk](0) - operating_point_.xs[kk - 1](0);
+    const float dy2 =
+        operating_point_.xs[kk](1) - operating_point_.xs[kk - 1](1);
+    const float dot = dx1 * dx2 + dy1 * dy2;
+    CHECK_GT(dot, 0.0) << "timestep was: " << kk;
   }
 }
 
