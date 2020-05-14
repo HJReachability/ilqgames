@@ -88,8 +88,6 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
   Time t = splicer.CurrentOperatingPoint().t0;
 
   while (t < final_time) {
-    std::cout << "problem num tsteps = " << problem->Solver().NumTimeSteps()
-              << std::endl;
     // Set up next receding horizon problem and solve.
     problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
 
@@ -97,11 +95,6 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     logs.push_back(problem->Solve(planner_runtime));
     elapsed_time =
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-
-    std::cout << "solution len = "
-              << logs.back()->FinalOperatingPoint().xs.size() << std::endl;
-    std::cout << "solution len = "
-              << logs.back()->NumTimeSteps() << std::endl;
 
     CHECK_LE(elapsed_time, planner_runtime);
     VLOG(0) << "t = " << t << ": Solved warm-started problem in "

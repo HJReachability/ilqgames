@@ -69,6 +69,18 @@ class SolverLog : private Uncopyable {
     cumulative_runtimes_.push_back(cumulative_runtime);
   }
 
+  // Clear all but first entry. Used by the solver to return initial conditions
+  // upon failure.
+  void ClearAllButFirstIterate() {
+    constexpr size_t kOneIterate = 1;
+
+    CHECK_GE(operating_points_.size(), kOneIterate);
+    operating_points_.resize(kOneIterate, operating_points_.front());
+    strategies_.resize(kOneIterate);
+    total_player_costs_.resize(kOneIterate);
+    cumulative_runtimes_.resize(kOneIterate);
+  }
+
   // Accessors.
   Time TimeStep() const { return time_step_; }
   Time InitialTime() const {
@@ -86,6 +98,12 @@ class SolverLog : private Uncopyable {
                    time_step_);
   }
 
+  const std::vector<Strategy>& InitialStrategies() const {
+    return strategies_.front();
+  }
+  const OperatingPoint& InitialOperatingPoint() const {
+    return operating_points_.front();
+  }
   const std::vector<Strategy>& FinalStrategies() const {
     return strategies_.back();
   }

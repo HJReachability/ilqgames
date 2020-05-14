@@ -66,8 +66,6 @@ void SolutionSplicer::Splice(const SolverLog& log) {
       1e-4 +  // Add a little so that conversion doesn't end up subtracting 1.
       (log.FinalOperatingPoint().t0 - operating_point_.t0) / log.TimeStep());
 
-  std::cout << "current tstep: " << current_timestep << std::endl;
-
   // HACK! If we're close enough to the beginning of the old trajectory, just
   // save the first few steps along it in case a lower-level path follower uses
   // this information.
@@ -77,16 +75,11 @@ void SolutionSplicer::Splice(const SolverLog& log) {
           ? 0
           : current_timestep - kNumPreviousTimeStepsToSave;
 
-  std::cout << "initial timestep: " << initial_timestep << std::endl;
-
   // HACK! Make sure the new solution starts several timesteps after the
   // nearest match to guard against off-by-one issues.
   constexpr size_t kNumExtraTimeStepsBeforeSplicingIn = 2;
   const size_t first_timestep_new_solution =
-      kNumExtraTimeStepsBeforeSplicingIn + current_timestep + 1;
-
-  std::cout << "first tstep new soln: " << first_timestep_new_solution
-            << std::endl;
+      kNumExtraTimeStepsBeforeSplicingIn + current_timestep;
 
   // (2) Copy over saved part of existing plan.
   for (size_t kk = initial_timestep; kk < first_timestep_new_solution; kk++) {
@@ -105,15 +98,12 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   // does not delete earlier entries.
   const size_t num_spliced_timesteps =
       current_timestep - initial_timestep + log.NumTimeSteps();
-  std::cout << "num spliced tsteps: " << num_spliced_timesteps << std::endl;
   CHECK_LE(num_spliced_timesteps,
            log.NumTimeSteps() + kNumPreviousTimeStepsToSave);
 
   operating_point_.xs.resize(num_spliced_timesteps);
   operating_point_.us.resize(num_spliced_timesteps);
   operating_point_.t0 += initial_timestep * log.TimeStep();
-
-  std::cout << "t0 is: " << operating_point_.t0 << std::endl;
 
   for (auto& strategy : strategies_) {
     strategy.Ps.resize(num_spliced_timesteps);
@@ -123,8 +113,8 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   // Copy over new solution to overwrite existing log after first timestep.
   CHECK_EQ(current_timestep + log.NumTimeSteps() - initial_timestep,
            operating_point_.xs.size());
-  for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn + 1;
-       kk < log.NumTimeSteps(); kk++) {
+  for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn; kk < log.NumTimeSteps();
+       kk++) {
     const size_t kk_new_solution = current_timestep + kk - initial_timestep;
     operating_point_.xs[kk_new_solution] = log.FinalOperatingPoint().xs[kk];
     operating_point_.us[kk_new_solution] = log.FinalOperatingPoint().us[kk];
@@ -134,20 +124,6 @@ void SolutionSplicer::Splice(const SolverLog& log) {
       strategies_[ii].alphas[kk_new_solution] =
           log.FinalStrategies()[ii].alphas[kk];
     }
-  }
-
-  // Make sure the ego vehicle's trajectory is always forward.
-  for (size_t kk = 2; kk < operating_point_.xs.size(); kk++) {
-    const float dx1 =
-        operating_point_.xs[kk - 1](0) - operating_point_.xs[kk - 2](0);
-    const float dy1 =
-        operating_point_.xs[kk - 1](1) - operating_point_.xs[kk - 2](1);
-    const float dx2 =
-        operating_point_.xs[kk](0) - operating_point_.xs[kk - 1](0);
-    const float dy2 =
-        operating_point_.xs[kk](1) - operating_point_.xs[kk - 1](1);
-    const float dot = dx1 * dx2 + dy1 * dy2;
-    CHECK_GT(dot, 0.0) << "timestep was: " << kk;
   }
 }
 
