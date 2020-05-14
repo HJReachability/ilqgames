@@ -117,8 +117,6 @@ class GameSolver {
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
-    std::cout << "dt: " << time_step_ << ", T: " << time_horizon_ << std::endl;
-    std::cout << num_time_steps_ << std::endl;
 
     if (!params_.open_loop) lq_solver_.reset(new LQFeedbackSolver());
     //    else
