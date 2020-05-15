@@ -113,7 +113,7 @@ VectorXf MultiPlayerIntegrableSystem::IntegrateToNextTimeStep(
       / time_step_);
   const Time remaining_time_this_step =
       time_step_ * (current_timestep + 1) - relative_t0;
-  CHECK_LT(remaining_time_this_step + constants::kSmallNumber, time_step_);
+  CHECK_LT(remaining_time_this_step, time_step_ + constants::kSmallNumber);
   CHECK_LT(current_timestep, operating_point.xs.size());
 
   // Interpolate x0_ref.
