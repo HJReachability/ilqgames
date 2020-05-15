@@ -99,8 +99,8 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
                            splicer.CurrentStrategies());
 
     // // Overwrite problem with spliced solution.
-    // problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
-    //                            splicer.CurrentStrategies());
+    problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
+                               splicer.CurrentStrategies());
 
     // // Set up next receding horizon problem and solve.
     // problem->SetUpNextRecedingHorizon(x, t, planner_runtime);

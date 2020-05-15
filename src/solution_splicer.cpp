@@ -71,7 +71,7 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   // HACK! If we're close enough to the beginning of the old trajectory, just
   // save the first few steps along it in case a lower-level path follower uses
   // this information.
-  constexpr size_t kNumPreviousTimeStepsToSave = 5;
+  constexpr size_t kNumPreviousTimeStepsToSave = 0;
   const size_t initial_timestep =
       (current_timestep < kNumPreviousTimeStepsToSave)
           ? 0
