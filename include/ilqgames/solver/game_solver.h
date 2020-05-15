@@ -141,6 +141,7 @@ class GameSolver {
   virtual bool ModifyLQStrategies(std::vector<Strategy>* strategies,
                                   OperatingPoint* current_operating_point,
                                   bool* has_converged,
+                                  bool* was_initial_point_feasible,
                                   std::vector<float>* total_costs) const;
 
   // Compute distance (infinity norm) between states in the given dimensions.

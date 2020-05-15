@@ -59,18 +59,18 @@ VectorXf MultiPlayerIntegrableSystem::Integrate(
 
   std::vector<VectorXf> us(NumPlayers());
 
-  // Handle case where 't0' is after 'operating_point.t0' by integrating from
-  // 't0' to the next discrete timestep.
-  VectorXf x(x0);
-  if (t0 > operating_point.t0)
-    x = IntegrateToNextTimeStep(t0, x0, operating_point, strategies);
-
   // Compute current timestep and final timestep.
   const Time relative_t0 = t0 - operating_point.t0;
   const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
 
   const Time relative_t = t - operating_point.t0;
   const size_t final_timestep = static_cast<size_t>(relative_t / time_step_);
+
+  // Handle case where 't0' is after 'operating_point.t0' by integrating from
+  // 't0' to the next discrete timestep.
+  VectorXf x(x0);
+  if (t0 > operating_point.t0)
+    x = IntegrateToNextTimeStep(t0, x0, operating_point, strategies);
 
   // Integrate forward step by step up to timestep including t.
   x = Integrate(current_timestep + 1, final_timestep, x, operating_point,
@@ -107,16 +107,22 @@ VectorXf MultiPlayerIntegrableSystem::IntegrateToNextTimeStep(
 
   // Compute remaining time this timestep.
   const Time relative_t0 = t0 - operating_point.t0;
-  const size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
+  const size_t current_timestep = static_cast<size_t>(
+      (relative_t0 +
+       constants::kSmallNumber)  // Add to avoid inadvertently subtracting 1.
+      / time_step_);
   const Time remaining_time_this_step =
       time_step_ * (current_timestep + 1) - relative_t0;
+  CHECK_LT(remaining_time_this_step + constants::kSmallNumber, time_step_);
+  CHECK_LT(current_timestep, operating_point.xs.size());
 
   // Interpolate x0_ref.
-  CHECK_LT(current_timestep + 1, operating_point.xs.size());
   const float frac = remaining_time_this_step / time_step_;
   const VectorXf x0_ref =
-      frac * operating_point.xs[current_timestep] +
-      (1.0 - frac) * operating_point.xs[current_timestep + 1];
+      (current_timestep + 1 < operating_point.xs.size())
+          ? frac * operating_point.xs[current_timestep] +
+                (1.0 - frac) * operating_point.xs[current_timestep + 1]
+          : operating_point.xs.back();
 
   // Populate controls for each player.
   std::vector<VectorXf> us(NumPlayers());
@@ -135,6 +141,8 @@ VectorXf MultiPlayerIntegrableSystem::IntegrateFromPriorTimeStep(
   const size_t current_timestep = static_cast<size_t>(relative_t / time_step_);
   const Time remaining_time_until_t =
       relative_t - time_step_ * current_timestep;
+  CHECK_LT(current_timestep, operating_point.xs.size()) << t;
+  CHECK_LT(remaining_time_until_t, time_step_);
 
   // Populate controls for each player.
   std::vector<VectorXf> us(NumPlayers());

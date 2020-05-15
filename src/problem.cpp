@@ -76,6 +76,11 @@ std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
   // Store these new strategies/operating point.
   strategies_->swap(final_strategies);
   operating_point_->swap(final_operating_point);
+
+  CHECK_LT((x0_ - operating_point_->xs[0]).cwiseAbs().maxCoeff(),
+           constants::kSmallNumber);
+  CHECK_LT((x0_ - log->FinalOperatingPoint().xs[0]).cwiseAbs().maxCoeff(),
+           constants::kSmallNumber);
   return log;
 }
 
@@ -95,53 +100,60 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // integrate for an integer number of discrete timesteps until by the *next*
   // timestep at least 'planner_runtime' has elapsed (done by rounding).
   const Time relative_t0 = t0 - operating_point_->t0;
-  const size_t first_integration_timestep =
-      static_cast<size_t>(1e-4 +  // Add small amount to avoid truncation error.
-                          relative_t0 / solver_->TimeStep());
+  const size_t current_timestep = static_cast<size_t>(
+      (relative_t0 +
+       constants::kSmallNumber)  // Add  to avoid truncation error.
+      / solver_->TimeStep());
   const Time remaining_time_this_step =
-      (relative_t0 < constants::kSmallNumber)
+      (relative_t0 -
+           static_cast<float>(current_timestep) * solver_->TimeStep() <
+       constants::kSmallNumber)
           ? 0.0
-          : solver_->TimeStep() * (first_integration_timestep + 1) -
-                relative_t0;
+          : solver_->TimeStep() * (current_timestep + 1) - relative_t0;
   CHECK_LT(remaining_time_this_step, solver_->TimeStep());
 
   // Initially, set x to the integrated version of x0 at the next timestep.
   VectorXf x =
       dynamics.IntegrateToNextTimeStep(t0, x0, *operating_point_, *strategies_);
   operating_point_->t0 = t0 + remaining_time_this_step;
-
+  x0_ = operating_point_->xs[current_timestep + 1];
+  size_t first_timestep_in_new_problem = current_timestep + 1;
   if (remaining_time_this_step <= planner_runtime) {
     const size_t num_steps_to_integrate = static_cast<size_t>(
         constants::kSmallNumber +  // Add small amount to avoid truncation
                                    // error.
         (planner_runtime - remaining_time_this_step) / solver_->TimeStep());
     const size_t last_integration_timestep =
-        first_integration_timestep + num_steps_to_integrate;
+        current_timestep + num_steps_to_integrate;
 
-    x = dynamics.Integrate(first_integration_timestep + 1,
-                           last_integration_timestep, x, *operating_point_,
-                           *strategies_);
+    x = dynamics.Integrate(current_timestep + 1, last_integration_timestep, x,
+                           *operating_point_, *strategies_);
     operating_point_->t0 += solver_->TimeStep() * num_steps_to_integrate;
+    x0_ = operating_point_->xs[last_integration_timestep];
+    first_timestep_in_new_problem = last_integration_timestep;
   }
 
-  // Find index of nearest state in the existing plan to this state.
-  const auto nearest_iter =
-      std::min_element(operating_point_->xs.begin(), operating_point_->xs.end(),
-                       [&dynamics, &x](const VectorXf& x1, const VectorXf& x2) {
-                         return dynamics.DistanceBetween(x, x1) <
-                                dynamics.DistanceBetween(x, x2);
-                       });
+  std::cout << "t0 in solver: " << operating_point_->t0 << std::endl;
 
-  // Set initial state to this state.
-  x0_ = dynamics.Stitch(*nearest_iter, x);
+  // Find index of nearest state in the existing plan to this state.
+  // const auto nearest_iter =
+  //     std::min_element(operating_point_->xs.begin(),
+  //     operating_point_->xs.end(),
+  //                      [&dynamics, &x](const VectorXf& x1, const VectorXf&
+  //                      x2) {
+  //                        return dynamics.DistanceBetween(x, x1) <
+  //                               dynamics.DistanceBetween(x, x2);
+  //                      });
+
+  // // Set initial state to this state.
+  // x0_ = dynamics.Stitch(*nearest_iter, x);
 
   // Update all costs to have the correct initial time.
   Cost::ResetInitialTime(operating_point_->t0);
 
   // Set initial time to first timestamp in new problem.
-  const size_t first_timestep_in_new_problem =
-      std::distance(operating_point_->xs.begin(), nearest_iter);
-  CHECK_GT(first_timestep_in_new_problem, 0);
+  //  const size_t first_timestep_in_new_problem =
+  //      std::distance(operating_point_->xs.begin(), nearest_iter);
 
   std::cout << "first tstep new prob: " << first_timestep_in_new_problem
             << std::endl;
@@ -161,8 +173,8 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
     // Set current state and controls in operating point.
     operating_point_->xs[kk_new_problem].swap(operating_point_->xs[kk]);
     operating_point_->us[kk_new_problem].swap(operating_point_->us[kk]);
-    DCHECK_EQ(operating_point_->us[kk_new_problem].size(),
-              dynamics.NumPlayers());
+    CHECK_EQ(operating_point_->us[kk_new_problem].size(),
+             dynamics.NumPlayers());
 
     // Set current stategy.
     for (auto& strategy : *strategies_) {
@@ -207,6 +219,8 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   CHECK_EQ(operating_point_->xs.size(), solver_->NumTimeSteps());
   CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0),
            solver_->TimeStep());
+  CHECK_LT((x0_ - operating_point_->xs[0]).cwiseAbs().maxCoeff(),
+           constants::kSmallNumber);
 }
 
 void Problem::OverwriteSolution(const OperatingPoint& operating_point,

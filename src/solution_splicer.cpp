@@ -66,6 +66,8 @@ void SolutionSplicer::Splice(const SolverLog& log) {
       1e-4 +  // Add a little so that conversion doesn't end up subtracting 1.
       (log.FinalOperatingPoint().t0 - operating_point_.t0) / log.TimeStep());
 
+  std::cout << "current tstep: " << current_timestep << std::endl;
+
   // HACK! If we're close enough to the beginning of the old trajectory, just
   // save the first few steps along it in case a lower-level path follower uses
   // this information.
