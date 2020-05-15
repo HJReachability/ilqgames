@@ -77,7 +77,7 @@ void SolutionSplicer::Splice(const SolverLog& log) {
 
   // HACK! Make sure the new solution starts several timesteps after the
   // nearest match to guard against off-by-one issues.
-  constexpr size_t kNumExtraTimeStepsBeforeSplicingIn = 2;
+  constexpr size_t kNumExtraTimeStepsBeforeSplicingIn = 0;
   const size_t first_timestep_new_solution =
       kNumExtraTimeStepsBeforeSplicingIn + current_timestep;
 

@@ -68,7 +68,8 @@ std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
   if (!solver_->Solve(x0_, *operating_point_, *strategies_,
                       &final_operating_point, &final_strategies, log.get(),
                       max_runtime)) {
-    LOG(WARNING) << "Solver failed.";
+    LOG(WARNING) << "Solver failed. Not updating operating point and "
+                    "strategies to failed solution.";
     return log;
   }
 
@@ -140,6 +141,10 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // Set initial time to first timestamp in new problem.
   const size_t first_timestep_in_new_problem =
       std::distance(operating_point_->xs.begin(), nearest_iter);
+  CHECK_GT(first_timestep_in_new_problem, 0);
+
+  std::cout << "first tstep new prob: " << first_timestep_in_new_problem
+            << std::endl;
 
   // Set final timestep to consider in current operating point.
   const size_t after_final_timestep =
@@ -154,16 +159,18 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
     const size_t kk_new_problem = kk - first_timestep_in_new_problem;
 
     // Set current state and controls in operating point.
-    operating_point_->xs[kk_new_problem] = operating_point_->xs[kk];
+    operating_point_->xs[kk_new_problem].swap(operating_point_->xs[kk]);
     operating_point_->us[kk_new_problem].swap(operating_point_->us[kk]);
-    CHECK_EQ(operating_point_->us[kk_new_problem].size(),
-             dynamics.NumPlayers());
+    DCHECK_EQ(operating_point_->us[kk_new_problem].size(),
+              dynamics.NumPlayers());
 
     // Set current stategy.
     for (auto& strategy : *strategies_) {
-      strategy.Ps[kk_new_problem] = strategy.Ps[kk];
-      strategy.alphas[kk_new_problem] = strategy.alphas[kk];
+      strategy.Ps[kk_new_problem].swap(strategy.Ps[kk]);
+      strategy.alphas[kk_new_problem].swap(strategy.alphas[kk]);
     }
+
+    //    std::cout << "kk: " << kk_new_problem << std::endl;
   }
 
   // Make sure operating point is the right size.
@@ -192,6 +199,8 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
         operating_point_->t0 + solver_->ComputeTimeStamp(kk - 1),
         solver_->TimeStep(), operating_point_->xs[kk - 1],
         operating_point_->us[kk - 1]);
+
+    //    std::cout << "yo kk: " << kk << std::endl;
   }
 
   // Invariants.

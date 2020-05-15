@@ -69,15 +69,16 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
   // Set up a list of solver logs, one per solver invocation.
   std::vector<std::shared_ptr<const SolverLog>> logs;
 
+  const OperatingPoint initial_op = problem->CurrentOperatingPoint();
+  const std::vector<Strategy> initial_strategies = problem->CurrentStrategies();
+
   // Initial run of the solver. Keep track of time in order to know how much to
   // integrate dynamics forward.
   auto solver_call_time = clock::now();
   logs.push_back(problem->Solve());
   Time elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-
   VLOG(0) << "Solved initial problem in " << elapsed_time << " seconds.";
-  const auto& dynamics = problem->Solver().Dynamics();
 
   // Keep a solution splicer to incorporate new receding horizon solutions.
   SolutionSplicer splicer(*logs.front());
@@ -87,9 +88,13 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
   VectorXf x(problem->InitialState());
   Time t = splicer.CurrentOperatingPoint().t0;
 
-  while (t < final_time) {
+  // while (t < final_time) {
+  for (size_t jj = 0; jj < 4; jj++) {
+    // Overwrite problem with spliced solution.
+    problem->OverwriteSolution(initial_op, initial_strategies);
+
     // Set up next receding horizon problem and solve.
-    problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
+    //    problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
 
     solver_call_time = clock::now();
     logs.push_back(problem->Solve(planner_runtime));
@@ -101,24 +106,23 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
             << elapsed_time << " seconds.";
 
     // Integrate dynamics forward to account for solve time.
-    x = dynamics.Integrate(t, t + elapsed_time, x,
-                           splicer.CurrentOperatingPoint(),
-                           splicer.CurrentStrategies());
-    t += elapsed_time;
+    // x = dynamics.Integrate(t, t + elapsed_time, x,
+    //                        splicer.CurrentOperatingPoint(),
+    //                        splicer.CurrentStrategies());
+    // t += elapsed_time;
 
     // Add new solution to splicer.
-    splicer.Splice(*logs.back());
+    //    splicer.Splice(*logs.back());
 
-    // Overwrite problem with spliced solution.
-    problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
-                               splicer.CurrentStrategies());
+    // // Overwrite problem with spliced solution.
+    // problem->OverwriteSolution(initial_op, initial_strategies);
 
     // Integrate a little more.
-    constexpr Time kExtraTime = 0.1;
-    x = dynamics.Integrate(t, t + kExtraTime, x,
-                           splicer.CurrentOperatingPoint(),
-                           splicer.CurrentStrategies());
-    t += kExtraTime;
+    // constexpr Time kExtraTime = 0.1;
+    // x = dynamics.Integrate(t, t + kExtraTime, x,
+    //                        splicer.CurrentOperatingPoint(),
+    //                        splicer.CurrentStrategies());
+    // t += kExtraTime;
   }
 
   return logs;

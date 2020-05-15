@@ -45,6 +45,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/utils/compute_strategy_costs.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
@@ -124,7 +125,15 @@ bool GameSolver::Solve(const VectorXf& x0,
   size_t num_iterations = 0;
   size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
-  std::vector<float> total_costs;
+  std::vector<float> total_costs =
+      ComputeStrategyCosts(player_costs_, current_strategies,
+                           current_operating_point, *dynamics_, x0, time_step_);
+
+  // Log current iterate.
+  if (log) {
+    log->AddSolverIterate(current_operating_point, current_strategies,
+                          total_costs, elapsed_time(solver_call_time));
+  }
 
   // Main loop with timer for anytime execution.
   while (num_iterations < params_.max_solver_iters && !has_converged &&
@@ -154,12 +163,6 @@ bool GameSolver::Solve(const VectorXf& x0,
       CurrentOperatingPoint(last_operating_point, current_strategies,
                             &current_operating_point, &has_converged,
                             &total_costs, false);
-    }
-
-    // Log current iterate.
-    if (log) {
-      log->AddSolverIterate(current_operating_point, current_strategies,
-                            total_costs, elapsed_time(solver_call_time));
     }
 
     // Linearize dynamics and quadraticize costs for all players about the new
@@ -195,12 +198,16 @@ bool GameSolver::Solve(const VectorXf& x0,
                "an infeasible initial operating point.";
       }
 
-      *final_strategies = log->InitialStrategies();
-      *final_operating_point = log->InitialOperatingPoint();
-
-      log->ClearAllButFirstIterate();
       return false;
     }
+
+    // Log current iterate.
+    if (log) {
+      log->AddSolverIterate(current_operating_point, current_strategies,
+                            total_costs, elapsed_time(solver_call_time));
+    }
+
+    std::cout << "has converged: " << has_converged << std::endl;
 
     // Record loop runtime.
     timer_.Toc();
@@ -211,11 +218,12 @@ bool GameSolver::Solve(const VectorXf& x0,
     LOG(WARNING) << "Solver exited after only 1 iteration but passed "
                     "backtracking checks, which may indicate an *almost* "
                     "infeasible initial operating point.";
+    CHECK_LT(
+        (initial_operating_point.xs.back() - current_operating_point.xs.back())
+            .cwiseAbs()
+            .maxCoeff(),
+        params_.convergence_tolerance);
 
-    *final_strategies = log->InitialStrategies();
-    *final_operating_point = log->InitialOperatingPoint();
-
-    log->ClearAllButFirstIterate();
     return false;
   }
 
