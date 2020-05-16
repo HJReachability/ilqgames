@@ -55,7 +55,8 @@ namespace ilqgames {
 
 SolutionSplicer::SolutionSplicer(const SolverLog& log)
     : strategies_(log.FinalStrategies()),
-      operating_point_(log.FinalOperatingPoint()) {}
+      operating_point_(log.FinalOperatingPoint()),
+      time_step_(log.TimeStep()) {}
 
 void SolutionSplicer::Splice(const SolverLog& log) {
   CHECK_GE(log.FinalOperatingPoint().t0, operating_point_.t0);
@@ -66,14 +67,13 @@ void SolutionSplicer::Splice(const SolverLog& log) {
       1e-4 +  // Add a little so that conversion doesn't end up subtracting 1.
       (log.FinalOperatingPoint().t0 - operating_point_.t0) / log.TimeStep());
 
-  std::cout << "current tstep: " << current_timestep << std::endl;
-
   // HACK! If we're close enough to the beginning of the old trajectory, just
   // save the first few steps along it in case a lower-level path follower uses
   // this information.
-  constexpr size_t kNumPreviousTimeStepsToSave = 0;
+  constexpr size_t kNumPreviousTimeStepsToSave = 5;
   const size_t initial_timestep =
-      (current_timestep < kNumPreviousTimeStepsToSave)
+      (static_cast<int>(current_timestep) <
+       static_cast<int>(kNumPreviousTimeStepsToSave))
           ? 0
           : current_timestep - kNumPreviousTimeStepsToSave;
 
@@ -83,15 +83,24 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   const size_t first_timestep_new_solution =
       kNumExtraTimeStepsBeforeSplicingIn + current_timestep;
 
+  std::cout << "first tstep new soln: " << first_timestep_new_solution
+            << std::endl;
+  std::cout << "current tstep: " << current_timestep << std::endl;
+  std::cout << "initial tstep: " << initial_timestep << std::endl;
+  std::cout << "log t0 = " << log.FinalOperatingPoint().t0
+            << ", our t0 = " << operating_point_.t0 << std::endl;
+  // std::cout << "log x0 = \n"
+  //           << log.FinalOperatingPoint().xs[0].transpose() << std::endl;
+
   // (2) Copy over saved part of existing plan.
   for (size_t kk = initial_timestep; kk < first_timestep_new_solution; kk++) {
     const size_t kk_new_solution = kk - initial_timestep;
-    operating_point_.xs[kk_new_solution] = operating_point_.xs[kk];
-    operating_point_.us[kk_new_solution] = operating_point_.us[kk];
+    operating_point_.xs[kk_new_solution].swap(operating_point_.xs[kk]);
+    operating_point_.us[kk_new_solution].swap(operating_point_.us[kk]);
 
     for (auto& strategy : strategies_) {
-      strategy.Ps[kk_new_solution] = strategy.Ps[kk];
-      strategy.alphas[kk_new_solution] = strategy.alphas[kk];
+      strategy.Ps[kk_new_solution].swap(strategy.Ps[kk]);
+      strategy.alphas[kk_new_solution].swap(strategy.alphas[kk]);
     }
   }
 
@@ -126,7 +135,21 @@ void SolutionSplicer::Splice(const SolverLog& log) {
       strategies_[ii].alphas[kk_new_solution] =
           log.FinalStrategies()[ii].alphas[kk];
     }
+
+    // if (kk == 0) {
+    //   std::cout << "should be same as above: \n"
+    //             << operating_point_.xs[kk_new_solution].transpose()
+    //             << std::endl;
+    // }
   }
+
+  // std::cout << "our x0 = \n"
+  //           << operating_point_
+  //                  .xs[current_timestep + kNumExtraTimeStepsBeforeSplicingIn
+  //                  -
+  //                      initial_timestep]
+  //                  .transpose()
+  //           << std::endl;
 }
 
 }  // namespace ilqgames

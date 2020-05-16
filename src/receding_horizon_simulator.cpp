@@ -76,7 +76,8 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
   Time elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
-  VLOG(0) << "Solved initial problem in " << elapsed_time << " seconds.";
+  VLOG(0) << "Solved initial problem in " << elapsed_time << " seconds, with "
+          << logs.back()->NumIterates() << " iterations.";
   const auto& dynamics = problem->Solver().Dynamics();
 
   // Keep a solution splicer to incorporate new receding horizon solutions.
@@ -91,19 +92,22 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     // Break the loop if it's been long enough.
     // Integrate a little more.
     constexpr Time kExtraTime = 0.05;
-    t += kExtraTime;
+    t += kExtraTime;  // + planner_runtime;
 
-    if (t >= final_time) break;
+    if (t >= final_time || !splicer.ContainsTime(t + planner_runtime +
+                                                 problem->Solver().TimeStep()))
+      break;
+
     x = dynamics.Integrate(t - kExtraTime, t, x,
                            splicer.CurrentOperatingPoint(),
                            splicer.CurrentStrategies());
 
-    // // Overwrite problem with spliced solution.
+    // Overwrite problem with spliced solution.
     problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
                                splicer.CurrentStrategies());
 
-    // // Set up next receding horizon problem and solve.
-    // problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
+    // Set up next receding horizon problem and solve.
+    problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
 
     solver_call_time = clock::now();
     logs.push_back(problem->Solve(planner_runtime));
@@ -111,20 +115,21 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
     CHECK_LE(elapsed_time, planner_runtime);
-    VLOG(0) << "t = " << t << ": Solved warm-started problem in "
-            << elapsed_time << " seconds.";
-
-    // Add new solution to splicer.
-    splicer.Splice(*logs.back());
+    VLOG(0) << "t = " << t
+            << ": Solved warm-started problem in " << elapsed_time
+            << " seconds.";
 
     // Break the loop if it's been long enough.
     t += elapsed_time;
-    if (t >= final_time) break;
+    if (t >= final_time || !splicer.ContainsTime(t)) break;
 
     // Integrate dynamics forward to account for solve time.
     x = dynamics.Integrate(t - elapsed_time, t, x,
                            splicer.CurrentOperatingPoint(),
                            splicer.CurrentStrategies());
+
+    // Add new solution to splicer if it converged.
+    if (logs.back()->WasConverged()) splicer.Splice(*logs.back());
   }
 
   return logs;

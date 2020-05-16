@@ -98,12 +98,12 @@ void PlayerCost::AddControlCost(PlayerIndex idx,
 
 void PlayerCost::AddStateConstraint(
     const std::shared_ptr<Constraint>& constraint) {
-  // state_constraints_.emplace_back(constraint);
+  state_constraints_.emplace_back(constraint);
 }
 
 void PlayerCost::AddControlConstraint(
     PlayerIndex idx, const std::shared_ptr<Constraint>& constraint) {
-  // control_constraints_.emplace(idx, constraint);
+  control_constraints_.emplace(idx, constraint);
 }
 
 float PlayerCost::Evaluate(Time t, const VectorXf& x,

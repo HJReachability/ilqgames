@@ -133,7 +133,8 @@ bool GameSolver::Solve(const VectorXf& x0,
   // Log current iterate.
   if (log) {
     log->AddSolverIterate(current_operating_point, current_strategies,
-                          total_costs, elapsed_time(solver_call_time));
+                          total_costs, elapsed_time(solver_call_time),
+                          has_converged);
   }
 
   // Main loop with timer for anytime execution.
@@ -211,7 +212,8 @@ bool GameSolver::Solve(const VectorXf& x0,
     // Log current iterate.
     if (log) {
       log->AddSolverIterate(current_operating_point, current_strategies,
-                            total_costs, elapsed_time(solver_call_time));
+                            total_costs, elapsed_time(solver_call_time),
+                            has_converged);
     }
 
     // Record loop runtime.
@@ -219,7 +221,6 @@ bool GameSolver::Solve(const VectorXf& x0,
   }
 
   // Maybe emit warning if exiting early.
-  CHECK_GT(num_iterations, 0);
   if (num_iterations == 1) {
     LOG(WARNING) << "Solver exited after only 1 iteration but passed "
                     "backtracking checks, which may indicate an almost "

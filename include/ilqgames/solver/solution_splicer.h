@@ -62,6 +62,14 @@ class SolutionSplicer {
   // Splice in a new solution stored in a solver log.
   void Splice(const SolverLog& log);
 
+  // Check if a given time is contained within the current operating point.
+  bool ContainsTime(Time t) const {
+    return (operating_point_.t0 <= t) &&
+           (operating_point_.t0 +
+                (operating_point_.xs.size() - 1) * time_step_ >=
+            t);
+  }
+
   // Accessors.
   const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
   const OperatingPoint& CurrentOperatingPoint() const {
@@ -72,6 +80,9 @@ class SolutionSplicer {
   // Converged strategies and operating points for all players.
   std::vector<Strategy> strategies_;
   OperatingPoint operating_point_;
+
+  // Time step.
+  Time time_step_;
 };  // class SolutionSplicer
 
 }  // namespace ilqgames

@@ -62,11 +62,12 @@ class SolverLog : private Uncopyable {
   void AddSolverIterate(const OperatingPoint& operating_point,
                         const std::vector<Strategy>& strategies,
                         const std::vector<float>& total_costs,
-                        Time cumulative_runtime) {
+                        Time cumulative_runtime, bool was_converged) {
     operating_points_.push_back(operating_point);
     strategies_.push_back(strategies);
     total_player_costs_.push_back(total_costs);
     cumulative_runtimes_.push_back(cumulative_runtime);
+    was_converged_.push_back(was_converged);
   }
 
   // Clear all but first entry. Used by the solver to return initial conditions
@@ -79,9 +80,12 @@ class SolverLog : private Uncopyable {
     strategies_.resize(kOneIterate);
     total_player_costs_.resize(kOneIterate);
     cumulative_runtimes_.resize(kOneIterate);
+    was_converged_.resize(kOneIterate);
   }
 
   // Accessors.
+  bool WasConverged() const { return was_converged_.back(); }
+  bool WasConverged(size_t idx) const { return was_converged_[idx]; }
   Time TimeStep() const { return time_step_; }
   Time InitialTime() const {
     return (NumIterates() > 0) ? operating_points_[0].t0 : 0.0;
@@ -178,6 +182,7 @@ class SolverLog : private Uncopyable {
   std::vector<std::vector<Strategy>> strategies_;
   std::vector<std::vector<float>> total_player_costs_;
   std::vector<Time> cumulative_runtimes_;
+  std::vector<bool> was_converged_;
 };  // class SolverLog
 
 }  // namespace ilqgames
