@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>ilqgames: Member List</title>
+<title>ilqgames: ilqgames::LQOpenLoopSolver Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,23 +82,41 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>ilqgames</b></li><li class="navelem"><a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">LQFeedbackSolver</a></li>  </ul>
+<li class="navelem"><b>ilqgames</b></li><li class="navelem"><a class="el" href="classilqgames_1_1_l_q_open_loop_solver.html">LQOpenLoopSolver</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="classilqgames_1_1_l_q_open_loop_solver-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ilqgames::LQFeedbackSolver Member List</div>  </div>
+<div class="title">ilqgames::LQOpenLoopSolver Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-
-<p>This is the complete list of members for <a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">ilqgames::LQFeedbackSolver</a>, including all inherited members.</p>
-<table class="directory">
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>LQFeedbackSolver</b>() (defined in <a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">ilqgames::LQFeedbackSolver</a>)</td><td class="entry"><a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">ilqgames::LQFeedbackSolver</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
-  <tr bgcolor="#f0f0f0"><td class="entry"><b>LQSolver</b>() (defined in <a class="el" href="classilqgames_1_1_l_q_solver.html">ilqgames::LQSolver</a>)</td><td class="entry"><a class="el" href="classilqgames_1_1_l_q_solver.html">ilqgames::LQSolver</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">private</span></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>Solve</b>(const MultiPlayerIntegrableSystem &amp;dynamics, const std::vector&lt; LinearDynamicsApproximation &gt; &amp;linearization, const std::vector&lt; std::vector&lt; QuadraticCostApproximation &gt;&gt; &amp;quadraticization, const VectorXf &amp;x0) (defined in <a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">ilqgames::LQFeedbackSolver</a>)</td><td class="entry"><a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">ilqgames::LQFeedbackSolver</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
-  <tr bgcolor="#f0f0f0"><td class="entry"><b>~LQFeedbackSolver</b>() (defined in <a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">ilqgames::LQFeedbackSolver</a>)</td><td class="entry"><a class="el" href="classilqgames_1_1_l_q_feedback_solver.html">ilqgames::LQFeedbackSolver</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>~LQSolver</b>() (defined in <a class="el" href="classilqgames_1_1_l_q_solver.html">ilqgames::LQSolver</a>)</td><td class="entry"><a class="el" href="classilqgames_1_1_l_q_solver.html">ilqgames::LQSolver</a></td><td class="entry"><span class="mlabel">inline</span><span class="mlabel">private</span><span class="mlabel">virtual</span></td></tr>
-</table></div><!-- contents -->
+<div class="dynheader">
+Inheritance diagram for ilqgames::LQOpenLoopSolver:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="classilqgames_1_1_l_q_open_loop_solver.png" usemap="#ilqgames::LQOpenLoopSolver_map" alt=""/>
+  <map id="ilqgames::LQOpenLoopSolver_map" name="ilqgames::LQOpenLoopSolver_map">
+<area href="classilqgames_1_1_l_q_solver.html" alt="ilqgames::LQSolver" shape="rect" coords="0,0,179,24"/>
+</map>
+ </div></div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:ad7d6f8df8329934d07ea7c2d1f30a4c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7d6f8df8329934d07ea7c2d1f30a4c6"></a>
+std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &amp;dynamics, const std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; &amp;linearization, const std::vector&lt; std::vector&lt; <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a> &gt;&gt; &amp;quadraticization, const VectorXf &amp;x0)</td></tr>
+<tr class="separator:ad7d6f8df8329934d07ea7c2d1f30a4c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock">
+<p>Definition at line <a class="el" href="lq__open__loop__solver_8h_source.html#l00072">72</a> of file <a class="el" href="lq__open__loop__solver_8h_source.html">lq_open_loop_solver.h</a>.</p>
+</div><hr/>The documentation for this class was generated from the following files:<ul>
+<li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/solver/<a class="el" href="lq__open__loop__solver_8h_source.html">lq_open_loop_solver.h</a></li>
+<li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="lq__open__loop__solver_8cpp_source.html">lq_open_loop_solver.cpp</a></li>
+</ul>
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">

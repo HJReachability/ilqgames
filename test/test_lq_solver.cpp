@@ -50,6 +50,7 @@
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
+#include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -148,10 +149,12 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
 
 }  // anonymous namespace
 
-class LQFeedbackSolverTest : public ::testing::Test {
+template <typename T>
+class LQSolverTest : public ::testing::Test {
  protected:
   void SetUp() {
     dynamics_.reset(new TwoPlayerPointMass1D(kTimeStep));
+    x0_ = VectorXf::Ones(2);
 
     // Set linearization and quadraticizations.
     linearization_ = dynamics_->Linearize(
@@ -210,7 +213,8 @@ class LQFeedbackSolverTest : public ::testing::Test {
         *dynamics_,
         std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),
         std::vector<std::vector<QuadraticCostApproximation>>(
-            kNumTimeSteps, quadraticizations_));
+            kNumTimeSteps, quadraticizations_),
+        x0_);
   }
 
   // Time parameters.
@@ -225,6 +229,9 @@ class LQFeedbackSolverTest : public ::testing::Test {
   // Operating point.
   std::unique_ptr<OperatingPoint> operating_point_;
 
+  // Initial state.
+  VectorXf x0_;
+
   // Player costs.
   std::vector<PlayerCost> player_costs_;
 
@@ -233,11 +240,14 @@ class LQFeedbackSolverTest : public ::testing::Test {
   std::vector<QuadraticCostApproximation> quadraticizations_;
 
   // Core LQ solver.
-  LQFeedbackSolver lq_solver_;
+  T lq_solver_;
 
   // Solution to LQ game.
   std::vector<Strategy> lq_solution_;
-};  // class SolveLQGameTest
+};  // class LQGameTest
+
+class LQFeedbackSolverTest : public LQSolverTest<LQFeedbackSolver> {};
+class LQOpenLoopSolverTest : public LQSolverTest<LQOpenLoopSolver> {};
 
 TEST_F(LQFeedbackSolverTest, MatchesLyapunovIterations) {
   const MatrixXf& A = linearization_.A;
@@ -267,21 +277,14 @@ TEST_F(LQFeedbackSolverTest, MatchesLyapunovIterations) {
 }
 
 TEST_F(LQFeedbackSolverTest, NashEquilibrium) {
-  // Initial state.
-  const VectorXf x0 = VectorXf::Ones(dynamics_->XDim());
-
   // Make sure this is a feedback Nash and not an open loop Nash.
   constexpr float kMaxPerturbation = 0.1;
   EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0, kTimeStep,
-      kMaxPerturbation));
+      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
+      kTimeStep, kMaxPerturbation));
   EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0, kTimeStep,
-      kMaxPerturbation, true));
-
-  // EXPECT_TRUE(CheckSufficientLocalNashEquilibrium(player_costs_,
-  //                                                 operating_point,
-  //                                                 kTimeStep));
+      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
+      kTimeStep, kMaxPerturbation, true));
 }
 
 TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
@@ -291,19 +294,26 @@ TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
   // Solve LQ game.
   QuadraticizeAndSolve();
 
-  // Initial state.
-  const VectorXf x0 = VectorXf::Ones(dynamics_->XDim());
-
   // Make sure this is a feedback Nash and not an open loop Nash.
   constexpr float kMaxPerturbation = 0.1;
   EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0, kTimeStep,
-      kMaxPerturbation));
+      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
+      kTimeStep, kMaxPerturbation));
   EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0, kTimeStep,
-      kMaxPerturbation, true));
+      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
+      kTimeStep, kMaxPerturbation, true));
+}
 
-  // EXPECT_TRUE(CheckSufficientLocalNashEquilibrium(player_costs_,
-  //                                                 operating_point,
-  //                                                 kTimeStep));
+TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
+  // Reset with nonzero nominal values for state and control.
+  ConstructCostsWithNominal(0.5);
+
+  // Solve LQ game.
+  QuadraticizeAndSolve();
+
+  // Make sure this is an open loop Nash.
+  constexpr float kMaxPerturbation = 0.1;
+  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
+      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
+      kTimeStep, kMaxPerturbation, true));
 }

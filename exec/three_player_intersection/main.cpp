@@ -60,6 +60,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 // Optional log saving and visualization.
+DEFINE_bool(open_loop, false, "Use open loop (vs. feedback) solver.");
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
 DEFINE_bool(last_traj, false,
@@ -104,6 +105,7 @@ int main(int argc, char** argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
+  params.open_loop = FLAGS_open_loop;
   params.max_backtracking_steps = 100;
   //  params.max_solver_iters = 10000;
   params.linesearch = FLAGS_linesearch;

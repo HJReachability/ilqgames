@@ -89,7 +89,9 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   CHECK_NOTNULL(strategies_.get());
   CHECK_NOTNULL(operating_point_.get());
   CHECK_GE(planner_runtime, 0.0);
-  CHECK_LE(planner_runtime + t0, operating_point_->t0 + solver_->TimeHorizon());
+  CHECK_LE(
+      planner_runtime + t0,
+      operating_point_->t0 + solver_->TimeStep() * operating_point_->xs.size());
   CHECK_GE(t0, operating_point_->t0);
   CHECK_GE(operating_point_->xs.size(), solver_->NumTimeSteps());
 

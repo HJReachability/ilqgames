@@ -83,15 +83,6 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   const size_t first_timestep_new_solution =
       kNumExtraTimeStepsBeforeSplicingIn + current_timestep;
 
-  std::cout << "first tstep new soln: " << first_timestep_new_solution
-            << std::endl;
-  std::cout << "current tstep: " << current_timestep << std::endl;
-  std::cout << "initial tstep: " << initial_timestep << std::endl;
-  std::cout << "log t0 = " << log.FinalOperatingPoint().t0
-            << ", our t0 = " << operating_point_.t0 << std::endl;
-  // std::cout << "log x0 = \n"
-  //           << log.FinalOperatingPoint().xs[0].transpose() << std::endl;
-
   // (2) Copy over saved part of existing plan.
   for (size_t kk = initial_timestep; kk < first_timestep_new_solution; kk++) {
     const size_t kk_new_solution = kk - initial_timestep;
@@ -135,21 +126,7 @@ void SolutionSplicer::Splice(const SolverLog& log) {
       strategies_[ii].alphas[kk_new_solution] =
           log.FinalStrategies()[ii].alphas[kk];
     }
-
-    // if (kk == 0) {
-    //   std::cout << "should be same as above: \n"
-    //             << operating_point_.xs[kk_new_solution].transpose()
-    //             << std::endl;
-    // }
   }
-
-  // std::cout << "our x0 = \n"
-  //           << operating_point_
-  //                  .xs[current_timestep + kNumExtraTimeStepsBeforeSplicingIn
-  //                  -
-  //                      initial_timestep]
-  //                  .transpose()
-  //           << std::endl;
 }
 
 }  // namespace ilqgames

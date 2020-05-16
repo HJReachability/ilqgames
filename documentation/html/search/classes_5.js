@@ -5,5 +5,6 @@ var searchData=
   ['locallyconvexproximitycost',['LocallyConvexProximityCost',['../classilqgames_1_1_locally_convex_proximity_cost.html',1,'ilqgames']]],
   ['looptimer',['LoopTimer',['../classilqgames_1_1_loop_timer.html',1,'ilqgames']]],
   ['lqfeedbacksolver',['LQFeedbackSolver',['../classilqgames_1_1_l_q_feedback_solver.html',1,'ilqgames']]],
+  ['lqopenloopsolver',['LQOpenLoopSolver',['../classilqgames_1_1_l_q_open_loop_solver.html',1,'ilqgames']]],
   ['lqsolver',['LQSolver',['../classilqgames_1_1_l_q_solver.html',1,'ilqgames']]]
 ];
