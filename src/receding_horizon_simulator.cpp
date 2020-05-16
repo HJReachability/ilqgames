@@ -115,9 +115,8 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
     CHECK_LE(elapsed_time, planner_runtime);
-    VLOG(0) << "t = " << t
-            << ": Solved warm-started problem in " << elapsed_time
-            << " seconds.";
+    VLOG(0) << "t = " << t << ": Solved warm-started problem in "
+            << elapsed_time << " seconds.";
 
     // Break the loop if it's been long enough.
     t += elapsed_time;

@@ -70,7 +70,8 @@ std::vector<float> ComputeStrategyCosts(
   // Walk forward along the trajectory and accumulate total cost.
   std::vector<VectorXf> us(dynamics.NumPlayers());
   std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
-  const size_t num_time_steps = strategies[0].Ps.size();
+  const size_t num_time_steps =
+      (open_loop) ? strategies[0].Ps.size() - 1 : strategies[0].Ps.size();
   for (size_t kk = 0; kk < num_time_steps; kk++) {
     // Update controls.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
@@ -83,12 +84,17 @@ std::vector<float> ComputeStrategyCosts(
     }
 
     // Update costs.
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
-      total_costs[ii] += player_costs[ii].Evaluate(t, x, us);
+    const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
+    const Time next_t = t + time_step;
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      total_costs[ii] +=
+          (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)
+                      : player_costs[ii].Evaluate(t, x, us);
+    }
 
     // Update state and time
-    x = dynamics.Integrate(t, time_step, x, us);
-    t += time_step;
+    x = next_x;
+    t = next_t;
   }
 
   return total_costs;
