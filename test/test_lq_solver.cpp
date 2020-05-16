@@ -49,7 +49,6 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -64,12 +63,6 @@
 using namespace ilqgames;
 
 namespace {
-// Time parameters.
-static constexpr Time kTimeStep = 0.1;
-static constexpr Time kTimeHorizon = 10.0;
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
-
 // Solve two-player infinite horizon (time-invariant) LQ game by Lyapunov
 // iterations.
 void SolveLyapunovIterations(const MatrixXf& A, const MatrixXf& B1,
@@ -154,14 +147,6 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
   VectorXf B1_, B2_;
 };  // class TwoPlayerPointMass1D
 
-// Provide a default constructor to solvers.
-template <typename T>
-class ProvideDefaultConstructor : public T {
- public:
-  ProvideDefaultConstructor()
-      : T(std::make_shared<TwoPlayerPointMass1D>(kTimeStep), kNumTimeSteps) {}
-};  // class ProvideDefaultConstructor
-
 }  // anonymous namespace
 
 template <typename T>
@@ -225,11 +210,18 @@ class LQSolverTest : public ::testing::Test {
         0.0, operating_point_->xs[0], operating_point_->us[0]));
 
     lq_solution_ = lq_solver_.Solve(
+        *dynamics_,
         std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),
         std::vector<std::vector<QuadraticCostApproximation>>(
             kNumTimeSteps, quadraticizations_),
         x0_);
   }
+
+  // Time parameters.
+  static constexpr Time kTimeStep = 0.1;
+  static constexpr Time kTimeHorizon = 10.0;
+  static constexpr size_t kNumTimeSteps =
+      static_cast<size_t>(kTimeHorizon / kTimeStep);
 
   // Dynamics.
   std::unique_ptr<TwoPlayerPointMass1D> dynamics_;
@@ -248,7 +240,7 @@ class LQSolverTest : public ::testing::Test {
   std::vector<QuadraticCostApproximation> quadraticizations_;
 
   // Core LQ solver.
-  ProvideDefaultConstructor<T> lq_solver_;
+  T lq_solver_;
 
   // Solution to LQ game.
   std::vector<Strategy> lq_solution_;

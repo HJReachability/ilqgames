@@ -120,9 +120,9 @@ class GameSolver {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
 
     if (params_.open_loop)
-      lq_solver_.reset(new LQOpenLoopSolver(dynamics_, num_time_steps_));
+      lq_solver_.reset(new LQOpenLoopSolver());
     else
-      lq_solver_.reset(new LQFeedbackSolver(dynamics_, num_time_steps_));
+      lq_solver_.reset(new LQFeedbackSolver());
 
     // Prepopulate quadraticization.
     for (auto& quads : quadraticization_)

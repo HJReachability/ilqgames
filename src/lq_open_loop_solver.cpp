@@ -71,100 +71,113 @@
 namespace ilqgames {
 
 std::vector<Strategy> LQOpenLoopSolver::Solve(
+    const MultiPlayerIntegrableSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization,
     const VectorXf& x0) {
-  CHECK_EQ(linearization.size(), num_time_steps_);
-  CHECK_EQ(quadraticization.size(), num_time_steps_);
+  // Unpack horizon.
+  const size_t horizon = linearization.size();
+  CHECK_EQ(quadraticization.size(), horizon);
 
   // List of player-indexed strategies (each of which is a time-indexed
   // affine state error-feedback controller). Since this is an open-loop
   // strategy, we will not change the default zero value of the P matrix.
   std::vector<Strategy> strategies;
-  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-    strategies.emplace_back(num_time_steps_, dynamics_->XDim(),
-                            dynamics_->UDim(ii));
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+    strategies.emplace_back(horizon, dynamics.XDim(), dynamics.UDim(ii));
 
   // Initialize m^i and M^i and index first by time and then by player.
-  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-    ms_.back()[ii] = quadraticization.back()[ii].state.grad;
-    Ms_.back()[ii] = quadraticization.back()[ii].state.hess;
+  std::vector<std::vector<VectorXf>> ms(horizon);
+  std::vector<std::vector<MatrixXf>> Ms(horizon);
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    ms.back().emplace_back(quadraticization.back()[ii].state.grad);
+    Ms.back().emplace_back(quadraticization.back()[ii].state.hess);
   }
+
+  // Instantiate the rest of the "special" terms and decompositions.
+  std::vector<MatrixXf> capital_lambdas(horizon - 1);
+  std::vector<Eigen::HouseholderQR<MatrixXf>> qr_capital_lambdas(horizon - 1);
+  std::vector<VectorXf> bar_lambdas(horizon - 1);
+  std::vector<std::vector<Eigen::LDLT<MatrixXf>>> chol_Rs(horizon - 1);
+  std::vector<std::vector<MatrixXf>> warped_Bs(horizon - 1);
+  std::vector<std::vector<VectorXf>> warped_rs(horizon - 1);
 
   // (1) Work backward in time and cache "special" terms.
   // NOTE: time starts from the second-to-last entry since we'll treat the
   // final entry as a terminal cost as in Basar and Olsder, ch. 6.
-  for (int kk = num_time_steps_ - 2; kk >= 0; kk--) {
+  for (int kk = horizon - 2; kk >= 0; kk--) {
     // Unpack linearization and quadraticization at this time step.
     const auto& lin = linearization[kk];
     const auto& quad = quadraticization[kk];
     const auto& next_quad = quadraticization[kk + 1];
 
     // Campute capital lambdas.
-    capital_lambdas_[kk] =
-        MatrixXf::Identity(dynamics_->XDim(), dynamics_->XDim());
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+    capital_lambdas[kk] = MatrixXf::Identity(dynamics.XDim(), dynamics.XDim());
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       const auto control_iter = quad[ii].control.find(ii);
       CHECK(control_iter != quad[ii].control.end());
 
-      chol_Rs_[kk][ii].compute(control_iter->second.hess);
-      warped_Bs_[kk][ii] = chol_Rs_[kk][ii].solve(lin.Bs[ii].transpose());
-      warped_rs_[kk][ii] = chol_Rs_[kk][ii].solve(control_iter->second.grad);
-      capital_lambdas_[kk] += lin.Bs[ii] * warped_Bs_[kk][ii] * Ms_[kk + 1][ii];
+      chol_Rs[kk].emplace_back(control_iter->second.hess);
+      warped_Bs[kk].emplace_back(
+          chol_Rs[kk].back().solve(lin.Bs[ii].transpose()));
+      warped_rs[kk].emplace_back(
+          chol_Rs[kk].back().solve(control_iter->second.grad));
+      capital_lambdas[kk] += lin.Bs[ii] * warped_Bs[kk].back() * Ms[kk + 1][ii];
     }
 
     // Compute inv(capital lambda).
-    qr_capital_lambdas_[kk].compute(capital_lambdas_[kk]);
+    qr_capital_lambdas[kk] =
+        Eigen::HouseholderQR<MatrixXf>(capital_lambdas[kk]);
 
     // Compute Ms and ms.
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      Ms_[kk][ii] =
-          quad[ii].state.hess + lin.A.transpose() * Ms_[kk + 1][ii] *
-                                    qr_capital_lambdas_[kk].solve(lin.A);
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      Ms[kk].push_back(quad[ii].state.hess +
+                       lin.A.transpose() * Ms[kk + 1][ii] *
+                           qr_capital_lambdas[kk].solve(lin.A));
 
       // Intermediate term in ms computation.
-      VectorXf intermediary = VectorXf::Zero(dynamics_->XDim());
-      for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
-        intermediary -= lin.Bs[jj] * (warped_Bs_[kk][jj] * ms_[kk + 1][ii] +
-                                      warped_rs_[kk][jj]);
+      VectorXf intermediary = VectorXf::Zero(dynamics.XDim());
+      for (PlayerIndex jj = 0; jj < dynamics.NumPlayers(); jj++) {
+        intermediary -= lin.Bs[jj] * (warped_Bs[kk][jj] * ms[kk + 1][ii] +
+                                      warped_rs[kk][jj]);
       }
 
-      ms_[kk][ii] =
+      ms[kk].push_back(
           next_quad[ii].state.grad +
           lin.A.transpose() *
-              (ms_[kk + 1][ii] +
-               Ms_[kk + 1][ii] * qr_capital_lambdas_[kk].solve(intermediary));
+              (ms[kk + 1][ii] +
+               Ms[kk + 1][ii] * qr_capital_lambdas[kk].solve(intermediary)));
     }
   }
 
   // (2) Now compute optimal state and control trajectory forward in time.
   VectorXf x_star = x0;
   VectorXf last_x_star = x_star;
-  for (size_t kk = 0; kk < num_time_steps_ - 1; kk++) {
+  for (size_t kk = 0; kk < horizon - 1; kk++) {
     // Unpack linearization at this time step.
     const auto& lin = linearization[kk];
 
     // Intermediate term in u and x computations.
     VectorXf intermediary = lin.A * x_star;
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      intermediary -= lin.Bs[ii] * (warped_Bs_[kk][ii] * ms_[kk + 1][ii] +
-                                    warped_rs_[kk][ii]);
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      intermediary -=
+          lin.Bs[ii] * (warped_Bs[kk][ii] * ms[kk + 1][ii] + warped_rs[kk][ii]);
     }
 
     // Compute optimal x.
     last_x_star = x_star;
-    x_star = qr_capital_lambdas_[kk].solve(intermediary);
+    x_star = qr_capital_lambdas[kk].solve(intermediary);
 
     // Compute optimal u and store (sign flipped) in alpha.
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       strategies[ii].alphas[kk] =
-          warped_Bs_[kk][ii] * (Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii]);
+          warped_Bs[kk][ii] * (Ms[kk + 1][ii] * x_star + ms[kk + 1][ii]);
     }
 
     // Check dynamic feasibility.
     //   VectorXf check_x = lin.A * last_x_star;
-    //   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+    //   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
     //     check_x -= lin.Bs[ii] * strategies[ii].alphas[kk];
 
     //   CHECK_LE((x_star - check_x).cwiseAbs().maxCoeff(), 1e-1);

@@ -50,7 +50,6 @@
 #include <ilqgames/utils/strategy.h>
 
 #include <vector>
-#include <glog/logging.h>
 
 namespace ilqgames {
 
@@ -61,21 +60,14 @@ class LQSolver {
   // Solve underlying LQ game to a Nash equilibrium. This will differ in derived
   // classes depending on the information structure of the game.
   virtual std::vector<Strategy> Solve(
+      const MultiPlayerIntegrableSystem& dynamics,
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
           quadraticization,
       const VectorXf& x0) = 0;
 
  protected:
-  LQSolver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-           size_t num_time_steps)
-      : dynamics_(dynamics), num_time_steps_(num_time_steps) {
-    CHECK_NOTNULL(dynamics.get());
-  }
-
-  // Dynamics and number of time steps.
-  const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
-  const size_t num_time_steps_;
+  LQSolver() {}
 };  // class LQSolver
 
 }  // namespace ilqgames

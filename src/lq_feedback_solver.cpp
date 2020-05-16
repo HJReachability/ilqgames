@@ -58,6 +58,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -69,29 +70,64 @@
 namespace ilqgames {
 
 std::vector<Strategy> LQFeedbackSolver::Solve(
+    const MultiPlayerIntegrableSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
-        quadraticization) {
-  CHECK_EQ(linearization.size(), num_time_steps_);
-  CHECK_EQ(quadraticization.size(), num_time_steps_);
+        quadraticization,
+    const VectorXf& x0) {
+  // Unpack horizon.
+  const size_t horizon = linearization.size();
+  CHECK_EQ(quadraticization.size(), horizon);
 
   // List of player-indexed strategies (each of which is a time-indexed
   // affine state error-feedback controller).
   std::vector<Strategy> strategies;
-  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-    strategies.emplace_back(num_time_steps_, dynamics_->XDim(),
-                            dynamics_->UDim(ii));
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+    strategies.emplace_back(horizon, dynamics.XDim(), dynamics.UDim(ii));
+
+  // Cache the total number of control dimensions, since this is inefficient
+  // to compute.
+  const Dimension total_udim = dynamics.TotalUDim();
+
+  // Quadratic/linear components of value function at the current time step in
+  // the dynamic program.
+  // NOTE: since these will be computed by solving a big
+  // linear matrix equation S [Ps, alphas] = [YPs, Yalphas] (i.e., S X = Y), we
+  // will pre-allocate the memory for that equation and define these components
+  // as Eigen::Refs.
+  MatrixXf S(total_udim, total_udim);
+  MatrixXf X(total_udim, dynamics.XDim() + 1);
+  MatrixXf Y(total_udim, dynamics.XDim() + 1);
+
+  std::vector<Eigen::Ref<MatrixXf>> Ps;
+  std::vector<Eigen::Ref<VectorXf>> alphas;
+  Dimension cumulative_udim = 0;
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    Ps.push_back(
+        X.block(cumulative_udim, 0, dynamics.UDim(ii), dynamics.XDim()));
+    alphas.push_back(
+        X.col(dynamics.XDim()).segment(cumulative_udim, dynamics.UDim(ii)));
+
+    // Increment cumulative_udim.
+    cumulative_udim += dynamics.UDim(ii);
+  }
 
   // Initialize Zs and zetas at the final time.
-  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-    Zs_[ii] = quadraticization.back()[ii].state.hess;
-    zetas_[ii] = quadraticization.back()[ii].state.grad;
+  std::vector<MatrixXf> Zs(dynamics.NumPlayers());
+  std::vector<VectorXf> zetas(dynamics.NumPlayers());
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    Zs[ii] = quadraticization.back()[ii].state.hess;
+    zetas[ii] = quadraticization.back()[ii].state.grad;
   }
+
+  // Preallocate memory for intermediate variables F, beta.
+  MatrixXf F(dynamics.XDim(), dynamics.XDim());
+  VectorXf beta(dynamics.XDim());
 
   // Work backward in time and solve the dynamic program.
   // NOTE: time starts from the second-to-last entry since we'll treat the final
   // entry as a terminal cost as in Basar and Olsder, ch. 6.
-  for (int kk = num_time_steps_ - 2; kk >= 0; kk--) {
+  for (int kk = horizon - 2; kk >= 0; kk--) {
     // Unpack linearization and quadraticization at this time step.
     const auto& lin = linearization[kk];
     const auto& quad = quadraticization[kk];
@@ -101,15 +137,15 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
     // NOTE: S is generally dense and asymmetric, though it is symmetric if all
     // players have the same Z.
     Dimension cumulative_udim_row = 0;
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       // Intermediate variable to store B[ii]' * Z[ii].
-      const MatrixXf BiZi = lin.Bs[ii].transpose() * Zs_[ii];
+      const MatrixXf BiZi = lin.Bs[ii].transpose() * Zs[ii];
 
       Dimension cumulative_udim_col = 0;
-      for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
+      for (PlayerIndex jj = 0; jj < dynamics.NumPlayers(); jj++) {
         Eigen::Ref<MatrixXf> S_block =
-            S_.block(cumulative_udim_row, cumulative_udim_col,
-                     dynamics_->UDim(ii), dynamics_->UDim(jj));
+            S.block(cumulative_udim_row, cumulative_udim_col, dynamics.UDim(ii),
+                    dynamics.UDim(jj));
 
         if (ii == jj) {
           // Does player ii's cost depend upon player jj's control?
@@ -122,52 +158,51 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
         }
 
         // Increment cumulative_udim_col.
-        cumulative_udim_col += dynamics_->UDim(jj);
+        cumulative_udim_col += dynamics.UDim(jj);
       }
 
       // Set appropriate blocks of Y.
-      Y_.block(cumulative_udim_row, 0, dynamics_->UDim(ii), dynamics_->XDim()) =
+      Y.block(cumulative_udim_row, 0, dynamics.UDim(ii), dynamics.XDim()) =
           BiZi * lin.A;
-      Y_.col(dynamics_->XDim())
-          .segment(cumulative_udim_row, dynamics_->UDim(ii)) =
-          lin.Bs[ii].transpose() * zetas_[ii] + quad[ii].control.at(ii).grad;
+      Y.col(dynamics.XDim()).segment(cumulative_udim_row, dynamics.UDim(ii)) =
+          lin.Bs[ii].transpose() * zetas[ii] + quad[ii].control.at(ii).grad;
 
       // Increment cumulative_udim_row.
-      cumulative_udim_row += dynamics_->UDim(ii);
+      cumulative_udim_row += dynamics.UDim(ii);
     }
 
     // Solve linear matrix equality S X = Y.
     // NOTE: not 100% sure that this avoids dynamic memory allocation.
-    X_ = S_.householderQr().solve(Y_);
+    X = S.householderQr().solve(Y);
 
     // Set strategy at current time step.
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      strategies[ii].Ps[kk] = Ps_[ii];
-      strategies[ii].alphas[kk] = alphas_[ii];
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      strategies[ii].Ps[kk] = Ps[ii];
+      strategies[ii].alphas[kk] = alphas[ii];
     }
 
     // Compute F and beta.
-    F_ = lin.A;
-    beta_ = VectorXf::Zero(dynamics_->XDim());
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      F_ -= lin.Bs[ii] * Ps_[ii];
-      beta_ -= lin.Bs[ii] * alphas_[ii];
+    F = lin.A;
+    beta = VectorXf::Zero(dynamics.XDim());
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      F -= lin.Bs[ii] * Ps[ii];
+      beta -= lin.Bs[ii] * alphas[ii];
     }
 
     // Update Zs and zetas.
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      zetas_[ii] = (F_.transpose() * (zetas_[ii] + Zs_[ii] * beta_) +
-                    quad[ii].state.grad)
-                       .eval();
-      Zs_[ii] = (F_.transpose() * Zs_[ii] * F_ + quad[ii].state.hess).eval();
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      zetas[ii] =
+          (F.transpose() * (zetas[ii] + Zs[ii] * beta) + quad[ii].state.grad)
+              .eval();
+      Zs[ii] = (F.transpose() * Zs[ii] * F + quad[ii].state.hess).eval();
 
       // Add terms for nonzero Rijs.
       for (const auto& Rij_entry : quad[ii].control) {
         const PlayerIndex jj = Rij_entry.first;
         const MatrixXf& Rij = Rij_entry.second.hess;
         const VectorXf& rij = Rij_entry.second.grad;
-        zetas_[ii] += Ps_[jj].transpose() * (Rij * alphas_[jj] - rij);
-        Zs_[ii] += Ps_[jj].transpose() * Rij * Ps_[jj];
+        zetas[ii] += Ps[jj].transpose() * (Rij * alphas[jj] - rij);
+        Zs[ii] += Ps[jj].transpose() * Rij * Ps[jj];
       }
     }
   }
