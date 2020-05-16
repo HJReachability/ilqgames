@@ -105,9 +105,26 @@ Inheritance diagram for ilqgames::LQOpenLoopSolver:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ad7d6f8df8329934d07ea7c2d1f30a4c6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7d6f8df8329934d07ea7c2d1f30a4c6"></a>
-std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &amp;dynamics, const std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; &amp;linearization, const std::vector&lt; std::vector&lt; <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a> &gt;&gt; &amp;quadraticization, const VectorXf &amp;x0)</td></tr>
-<tr class="separator:ad7d6f8df8329934d07ea7c2d1f30a4c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77e32ee045b0136d5813d3c70c025ca6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77e32ee045b0136d5813d3c70c025ca6"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LQOpenLoopSolver</b> (const std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &gt; &amp;dynamics, size_t num_time_steps)</td></tr>
+<tr class="separator:a77e32ee045b0136d5813d3c70c025ca6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a956833ee7cd4283210a36d94e2e744c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a956833ee7cd4283210a36d94e2e744c2"></a>
+std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (const std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; &amp;linearization, const std::vector&lt; std::vector&lt; <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a> &gt;&gt; &amp;quadraticization, const VectorXf &amp;x0)</td></tr>
+<tr class="separator:a956833ee7cd4283210a36d94e2e744c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pro_methods_classilqgames_1_1_l_q_solver"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classilqgames_1_1_l_q_solver')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classilqgames_1_1_l_q_solver.html">ilqgames::LQSolver</a></td></tr>
+<tr class="memitem:a0f96c7942e604bb26c68a48b2cb9dbc8 inherit pro_methods_classilqgames_1_1_l_q_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f96c7942e604bb26c68a48b2cb9dbc8"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>LQSolver</b> (const std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &gt; &amp;dynamics, size_t num_time_steps)</td></tr>
+<tr class="separator:a0f96c7942e604bb26c68a48b2cb9dbc8 inherit pro_methods_classilqgames_1_1_l_q_solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classilqgames_1_1_l_q_solver"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classilqgames_1_1_l_q_solver')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classilqgames_1_1_l_q_solver.html">ilqgames::LQSolver</a></td></tr>
+<tr class="memitem:a22c4249fdbf20669711fea2896e74fc5 inherit pro_attribs_classilqgames_1_1_l_q_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a22c4249fdbf20669711fea2896e74fc5"></a>
+const std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dynamics_</b></td></tr>
+<tr class="separator:a22c4249fdbf20669711fea2896e74fc5 inherit pro_attribs_classilqgames_1_1_l_q_solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:addcae93427e1ebc2dfa0f44d5dd88569 inherit pro_attribs_classilqgames_1_1_l_q_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="addcae93427e1ebc2dfa0f44d5dd88569"></a>
+const size_t&#160;</td><td class="memItemRight" valign="bottom"><b>num_time_steps_</b></td></tr>
+<tr class="separator:addcae93427e1ebc2dfa0f44d5dd88569 inherit pro_attribs_classilqgames_1_1_l_q_solver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">

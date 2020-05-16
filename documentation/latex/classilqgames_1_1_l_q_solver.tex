@@ -9,7 +9,22 @@ Inheritance diagram for ilqgames\+:\+:L\+Q\+Solver\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-virtual std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ {\bfseries Solve} (const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} \&dynamics, const std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ \&linearization, const std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ \&quadraticization, const Vector\+Xf \&x0)=0\hypertarget{classilqgames_1_1_l_q_solver_af834df3ef93119e3d0af7823b36a83ac}{}\label{classilqgames_1_1_l_q_solver_af834df3ef93119e3d0af7823b36a83ac}
+virtual std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ {\bfseries Solve} (const std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ \&linearization, const std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ \&quadraticization, const Vector\+Xf \&x0)=0\hypertarget{classilqgames_1_1_l_q_solver_ab40242e2a6e8f0749dfa3b9f450ebed0}{}\label{classilqgames_1_1_l_q_solver_ab40242e2a6e8f0749dfa3b9f450ebed0}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries L\+Q\+Solver} (const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ \&dynamics, size\+\_\+t num\+\_\+time\+\_\+steps)\hypertarget{classilqgames_1_1_l_q_solver_a0f96c7942e604bb26c68a48b2cb9dbc8}{}\label{classilqgames_1_1_l_q_solver_a0f96c7942e604bb26c68a48b2cb9dbc8}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ {\bfseries dynamics\+\_\+}\hypertarget{classilqgames_1_1_l_q_solver_a22c4249fdbf20669711fea2896e74fc5}{}\label{classilqgames_1_1_l_q_solver_a22c4249fdbf20669711fea2896e74fc5}
+
+\item 
+const size\+\_\+t {\bfseries num\+\_\+time\+\_\+steps\+\_\+}\hypertarget{classilqgames_1_1_l_q_solver_addcae93427e1ebc2dfa0f44d5dd88569}{}\label{classilqgames_1_1_l_q_solver_addcae93427e1ebc2dfa0f44d5dd88569}
 
 \end{DoxyCompactItemize}
 
@@ -17,7 +32,7 @@ virtual std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ {
 \subsection{Detailed Description}
 
 
-Definition at line 56 of file lq\+\_\+solver.\+h.
+Definition at line 57 of file lq\+\_\+solver.\+h.
 
 
 

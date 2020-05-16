@@ -9,7 +9,13 @@ Inheritance diagram for ilqgames\+:\+:L\+Q\+Feedback\+Solver\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ {\bfseries Solve} (const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} \&dynamics, const std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ \&linearization, const std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ \&quadraticization, const Vector\+Xf \&x0)\hypertarget{classilqgames_1_1_l_q_feedback_solver_a8031056a1aa380f204f78b4f08cd7a0c}{}\label{classilqgames_1_1_l_q_feedback_solver_a8031056a1aa380f204f78b4f08cd7a0c}
+{\bfseries L\+Q\+Feedback\+Solver} (const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ \&dynamics, size\+\_\+t num\+\_\+time\+\_\+steps)\hypertarget{classilqgames_1_1_l_q_feedback_solver_ac320229137060866f2020773657995ba}{}\label{classilqgames_1_1_l_q_feedback_solver_ac320229137060866f2020773657995ba}
+
+\item 
+std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ {\bfseries Solve} (const std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ \&linearization, const std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ \&quadraticization, const Vector\+Xf \&x0)\hypertarget{classilqgames_1_1_l_q_feedback_solver_a946d8c9d03cbcc65ca8a0ae390600890}{}\label{classilqgames_1_1_l_q_feedback_solver_a946d8c9d03cbcc65ca8a0ae390600890}
+
+\item 
+std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ {\bfseries Solve} (const std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ \&linearization, const std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ \&quadraticization)\hypertarget{classilqgames_1_1_l_q_feedback_solver_a93adaa2320f75c9094095582cfdfd160}{}\label{classilqgames_1_1_l_q_feedback_solver_a93adaa2320f75c9094095582cfdfd160}
 
 \end{DoxyCompactItemize}
 
