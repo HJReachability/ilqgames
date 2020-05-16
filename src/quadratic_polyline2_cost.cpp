@@ -58,6 +58,7 @@ float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   bool is_endpoint;
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_squared_distance, &is_endpoint);
+
   if (is_endpoint) {
     // If the is_endpoint flag is raised, we set the signed_squared_distance to
     // 0.0.
