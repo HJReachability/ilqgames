@@ -73,7 +73,8 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
     const MultiPlayerIntegrableSystem& dynamics,
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
-        quadraticization) {
+        quadraticization,
+    const VectorXf& x0) {
   // Unpack horizon.
   const size_t horizon = linearization.size();
   CHECK_EQ(quadraticization.size(), horizon);

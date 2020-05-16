@@ -48,6 +48,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
+#include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
@@ -118,9 +119,10 @@ class GameSolver {
         timer_(kMaxLoopTimesToRecord) {
     CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
 
-    if (!params_.open_loop) lq_solver_.reset(new LQFeedbackSolver());
-    //    else
-    // lq_solver_.reset(new LQOpenLoopSolver());
+    if (params_.open_loop)
+      lq_solver_.reset(new LQOpenLoopSolver());
+    else
+      lq_solver_.reset(new LQFeedbackSolver());
 
     // Prepopulate quadraticization.
     for (auto& quads : quadraticization_)

@@ -65,9 +65,7 @@ class SolutionSplicer {
   // Check if a given time is contained within the current operating point.
   bool ContainsTime(Time t) const {
     return (operating_point_.t0 <= t) &&
-           (operating_point_.t0 +
-                (operating_point_.xs.size() - 1) * time_step_ >=
-            t);
+           (operating_point_.t0 + operating_point_.xs.size() * time_step_ >= t);
   }
 
   // Accessors.

@@ -79,7 +79,7 @@ bool NumericalCheckLocalNashEquilibrium(
   // and if cost decreases then return false.
   std::vector<Strategy> perturbed_strategies(strategies);
   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-    for (size_t kk = 0; kk < num_time_steps; kk++) {
+    for (size_t kk = 0; kk < num_time_steps - 1; kk++) {
       VectorXf& alphak = perturbed_strategies[ii].alphas[kk];
 
       for (size_t jj = 0; jj < alphak.size(); jj++) {

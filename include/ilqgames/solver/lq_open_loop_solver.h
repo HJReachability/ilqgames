@@ -36,68 +36,53 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Compute costs for each player associated with this set of strategies and
-// operating point.
+// Core open-loop LQ game solver based on Basar and Olsder, Chapter 6. All
+// notation matches the text, though we shall assume that `c` (additive drift in
+// dynamics) is always `0`, which holds because these dynamics are for delta x,
+// delta us. Also, we have modified terms slightly to account for linear terms
+// in the stage cost for control, i.e.
+//       control penalty i = 0.5 \sum_j du_j^T R_ij (du_j + 2 r_ij)
+//
+// Solve a time-varying, finite horizon LQ game (finds open-loop Nash
+// feedback strategies for both players).
+//
+// Assumes that dynamics are given by
+//           ``` dx_{k+1} = A_k dx_k + \sum_i Bs[i]_k du[i]_k ```
+//
+// Returns strategies Ps, alphas. Here, all the Ps are zero (by default), and
+// only the alphas are nonzero.
+//
+// Notation is based on derivation which may be found in the PDF included in
+// this repository named "open_loop_lq_derivation.pdf".
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_flat_system.h>
+#ifndef ILQGAMES_SOLVER_LQ_OPEN_LOOP_SOLVER_H
+#define ILQGAMES_SOLVER_LQ_OPEN_LOOP_SOLVER_H
+
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
-#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
-#include <ilqgames/utils/types.h>
-
-#include <glog/logging.h>
-#include <Eigen/Dense>
-#include <random>
 #include <vector>
 
 namespace ilqgames {
 
-// Compute cost of a set of strategies for each player.
-std::vector<float> ComputeStrategyCosts(
-    const std::vector<PlayerCost>& player_costs,
-    const std::vector<Strategy>& strategies,
-    const OperatingPoint& operating_point,
-    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    float time_step, bool open_loop = false) {
-  // Start at the initial state.
-  VectorXf x(x0);
-  Time t = 0.0;
+class LQOpenLoopSolver : public LQSolver {
+ public:
+  ~LQOpenLoopSolver() {}
+  LQOpenLoopSolver() : LQSolver() {}
 
-  // Walk forward along the trajectory and accumulate total cost.
-  std::vector<VectorXf> us(dynamics.NumPlayers());
-  std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
-  const size_t num_time_steps =
-      (open_loop) ? strategies[0].Ps.size() - 1 : strategies[0].Ps.size();
-  for (size_t kk = 0; kk < num_time_steps; kk++) {
-    // Update controls.
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      if (open_loop)
-        us[ii] = strategies[ii](kk, VectorXf::Zero(x.size()),
-                                operating_point.us[kk][ii]);
-      else
-        us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
-                                operating_point.us[kk][ii]);
-    }
-
-    // Update costs.
-    const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
-    const Time next_t = t + time_step;
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      total_costs[ii] +=
-          (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)
-                      : player_costs[ii].Evaluate(t, x, us);
-    }
-
-    // Update state and time
-    x = next_x;
-    t = next_t;
-  }
-
-  return total_costs;
-}
+  // Solve underlying LQ game to a open-loop Nash equilibrium.
+  std::vector<Strategy> Solve(
+      const MultiPlayerIntegrableSystem& dynamics,
+      const std::vector<LinearDynamicsApproximation>& linearization,
+      const std::vector<std::vector<QuadraticCostApproximation>>&
+          quadraticization,
+      const VectorXf& x0);
+};  // LQOpenLoopSolver
 
 }  // namespace ilqgames
+
+#endif

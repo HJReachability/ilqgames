@@ -73,10 +73,13 @@ class PlayerCost {
 
   // Evaluate this cost at the current time, state, and controls, or integrate
   // over an entire trajectory. Does *not* incorporate cost barriers due to
-  // inequality constraints.
+  // inequality constraints. The "Offset" here indicates that state costs will
+  // be evaluated at the next time step.
   float Evaluate(Time t, const VectorXf& x,
                  const std::vector<VectorXf>& us) const;
   float Evaluate(const OperatingPoint& op, Time time_step) const;
+  float EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
+                       const std::vector<VectorXf>& us) const;
 
   // Quadraticize this cost at the given time, state, and controls.
   // *Does* account for cost barriers due to inequality constraints.

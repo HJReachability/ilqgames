@@ -63,7 +63,8 @@ class LQSolver {
       const MultiPlayerIntegrableSystem& dynamics,
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
-          quadraticization) = 0;
+          quadraticization,
+      const VectorXf& x0) = 0;
 
  protected:
   LQSolver() {}
