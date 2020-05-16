@@ -93,6 +93,7 @@ class GameSolver {
 
   // Accessors.
   Time TimeHorizon() const { return time_horizon_; }
+  size_t NumTimeSteps() const { return num_time_steps_; }
   Time TimeStep() const { return time_step_; }
   const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
   const MultiPlayerIntegrableSystem& Dynamics() const { return *dynamics_; }
@@ -110,7 +111,8 @@ class GameSolver {
         player_costs_(player_costs),
         time_horizon_(time_horizon),
         time_step_(dynamics->TimeStep()),
-        num_time_steps_(static_cast<size_t>(time_horizon / time_step_)),
+        num_time_steps_(static_cast<size_t>(
+            (constants::kSmallNumber + time_horizon) / time_step_)),
         linearization_(num_time_steps_),
         quadraticization_(num_time_steps_),
         params_(params),
@@ -141,6 +143,7 @@ class GameSolver {
   virtual bool ModifyLQStrategies(std::vector<Strategy>* strategies,
                                   OperatingPoint* current_operating_point,
                                   bool* has_converged,
+                                  bool* was_initial_point_feasible,
                                   std::vector<float>* total_costs) const;
 
   // Compute distance (infinity norm) between states in the given dimensions.
