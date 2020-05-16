@@ -114,6 +114,9 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (co
 <tr class="memitem:a9fa5328990bd8139c556c09453020e33"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9fa5328990bd8139c556c09453020e33"></a>
 Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeHorizon</b> () const </td></tr>
 <tr class="separator:a9fa5328990bd8139c556c09453020e33"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8234f72d8ee55b7afe4d3557e2c9e117"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8234f72d8ee55b7afe4d3557e2c9e117"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumTimeSteps</b> () const </td></tr>
+<tr class="separator:a8234f72d8ee55b7afe4d3557e2c9e117"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a113252da6aa43d0beb9966277653af04"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a113252da6aa43d0beb9966277653af04"></a>
 Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeStep</b> () const </td></tr>
 <tr class="separator:a113252da6aa43d0beb9966277653af04"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,9 +138,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a4a1772a9bd07347ed28455119b2571fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4a1772a9bd07347ed28455119b2571fe"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeLinearization</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op, std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; *linearization)=0</td></tr>
 <tr class="separator:a4a1772a9bd07347ed28455119b2571fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5dffdeb025d68e884d4172994d21a3c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5dffdeb025d68e884d4172994d21a3c4"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>ModifyLQStrategies</b> (std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged, std::vector&lt; float &gt; *total_costs) const </td></tr>
-<tr class="separator:a5dffdeb025d68e884d4172994d21a3c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb3f6d9e9facd9671d4c37f852c20aea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb3f6d9e9facd9671d4c37f852c20aea"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>ModifyLQStrategies</b> (std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged, bool *was_initial_point_feasible, std::vector&lt; float &gt; *total_costs) const </td></tr>
+<tr class="separator:abb3f6d9e9facd9671d4c37f852c20aea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a413329f89a63805c387e35a99b53ad73"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a413329f89a63805c387e35a99b53ad73"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>StateDistance</b> (const VectorXf &amp;x1, const VectorXf &amp;x2, const std::vector&lt; Dimension &gt; &amp;dims) const </td></tr>
 <tr class="separator:a413329f89a63805c387e35a99b53ad73"><td class="memSeparator" colspan="2">&#160;</td></tr>

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,55 +36,62 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Splice together existing and new solutions to a receding horizon problem.
+// Compute costs for each player associated with this set of strategies and
+// operating point.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLUTION_SPLICER_H
-#define ILQGAMES_SOLVER_SOLUTION_SPLICER_H
-
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/solver_log.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <memory>
+#include <glog/logging.h>
+#include <Eigen/Dense>
+#include <random>
 #include <vector>
 
 namespace ilqgames {
 
-class SolutionSplicer {
- public:
-  ~SolutionSplicer() {}
-  explicit SolutionSplicer(const SolverLog& log);
+// Compute cost of a set of strategies for each player.
+std::vector<float> ComputeStrategyCosts(
+    const std::vector<PlayerCost>& player_costs,
+    const std::vector<Strategy>& strategies,
+    const OperatingPoint& operating_point,
+    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
+    float time_step, bool open_loop = false) {
+  // Start at the initial state.
+  VectorXf x(x0);
+  Time t = 0.0;
 
-  // Splice in a new solution stored in a solver log.
-  void Splice(const SolverLog& log);
+  // Walk forward along the trajectory and accumulate total cost.
+  std::vector<VectorXf> us(dynamics.NumPlayers());
+  std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
+  const size_t num_time_steps = strategies[0].Ps.size();
+  for (size_t kk = 0; kk < num_time_steps; kk++) {
+    // Update controls.
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      if (open_loop)
+        us[ii] = strategies[ii](kk, VectorXf::Zero(x.size()),
+                                operating_point.us[kk][ii]);
+      else
+        us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
+                                operating_point.us[kk][ii]);
+    }
 
-  // Check if a given time is contained within the current operating point.
-  bool ContainsTime(Time t) const {
-    return (operating_point_.t0 <= t) &&
-           (operating_point_.t0 +
-                (operating_point_.xs.size() - 1) * time_step_ >=
-            t);
+    // Update costs.
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+      total_costs[ii] += player_costs[ii].Evaluate(t, x, us);
+
+    // Update state and time
+    x = dynamics.Integrate(t, time_step, x, us);
+    t += time_step;
   }
 
-  // Accessors.
-  const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
-  const OperatingPoint& CurrentOperatingPoint() const {
-    return operating_point_;
-  }
-
- private:
-  // Converged strategies and operating points for all players.
-  std::vector<Strategy> strategies_;
-  OperatingPoint operating_point_;
-
-  // Time step.
-  Time time_step_;
-};  // class SolutionSplicer
+  return total_costs;
+}
 
 }  // namespace ilqgames
-
-#endif

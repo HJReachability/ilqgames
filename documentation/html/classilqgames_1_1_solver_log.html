@@ -108,9 +108,18 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a7cc54ade816d9ab9d8e794f72a8aee64"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7cc54ade816d9ab9d8e794f72a8aee64"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SolverLog</b> (Time time_step)</td></tr>
 <tr class="separator:a7cc54ade816d9ab9d8e794f72a8aee64"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a51b9389f1eb32a9f3e4f7ed271bd0a81"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51b9389f1eb32a9f3e4f7ed271bd0a81"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>AddSolverIterate</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;strategies, const std::vector&lt; float &gt; &amp;total_costs, Time cumulative_runtime)</td></tr>
-<tr class="separator:a51b9389f1eb32a9f3e4f7ed271bd0a81"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abbd4f1c7a064c3ae772633762d60a11e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abbd4f1c7a064c3ae772633762d60a11e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>AddSolverIterate</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;strategies, const std::vector&lt; float &gt; &amp;total_costs, Time cumulative_runtime, bool was_converged)</td></tr>
+<tr class="separator:abbd4f1c7a064c3ae772633762d60a11e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb7c725598ed426c4428bd51ceaa0931"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeb7c725598ed426c4428bd51ceaa0931"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ClearAllButFirstIterate</b> ()</td></tr>
+<tr class="separator:aeb7c725598ed426c4428bd51ceaa0931"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1555d4b57427b3449c28e87a4b999905"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1555d4b57427b3449c28e87a4b999905"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>WasConverged</b> () const </td></tr>
+<tr class="separator:a1555d4b57427b3449c28e87a4b999905"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace7a4654de1ca7e4250ebe3a93adad28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace7a4654de1ca7e4250ebe3a93adad28"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>WasConverged</b> (size_t idx) const </td></tr>
+<tr class="separator:ace7a4654de1ca7e4250ebe3a93adad28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a133c4f7326bc17d88dac054988a8ba2c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a133c4f7326bc17d88dac054988a8ba2c"></a>
 Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeStep</b> () const </td></tr>
 <tr class="separator:a133c4f7326bc17d88dac054988a8ba2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,6 +138,12 @@ size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumIterates</b> () 
 <tr class="memitem:a21898bab7582fcf5ca77fe336479b07b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21898bab7582fcf5ca77fe336479b07b"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumTimeSteps</b> () const </td></tr>
 <tr class="separator:a21898bab7582fcf5ca77fe336479b07b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ac6ab2634e314d3eb7cc556850d7636"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2ac6ab2634e314d3eb7cc556850d7636"></a>
+const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>InitialStrategies</b> () const </td></tr>
+<tr class="separator:a2ac6ab2634e314d3eb7cc556850d7636"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adf4581a26df80a6b69458f2d4f84deac"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf4581a26df80a6b69458f2d4f84deac"></a>
+const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>InitialOperatingPoint</b> () const </td></tr>
+<tr class="separator:adf4581a26df80a6b69458f2d4f84deac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e998ebe01b5437dbea33c1e32739cbe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3e998ebe01b5437dbea33c1e32739cbe"></a>
 const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>FinalStrategies</b> () const </td></tr>
 <tr class="separator:a3e998ebe01b5437dbea33c1e32739cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>

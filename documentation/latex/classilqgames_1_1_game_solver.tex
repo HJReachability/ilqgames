@@ -15,6 +15,9 @@ virtual bool {\bfseries Solve} (const Vector\+Xf \&x0, const \hyperlink{structil
 Time {\bfseries Time\+Horizon} () const \hypertarget{classilqgames_1_1_game_solver_a9fa5328990bd8139c556c09453020e33}{}\label{classilqgames_1_1_game_solver_a9fa5328990bd8139c556c09453020e33}
 
 \item 
+size\+\_\+t {\bfseries Num\+Time\+Steps} () const \hypertarget{classilqgames_1_1_game_solver_a8234f72d8ee55b7afe4d3557e2c9e117}{}\label{classilqgames_1_1_game_solver_a8234f72d8ee55b7afe4d3557e2c9e117}
+
+\item 
 Time {\bfseries Time\+Step} () const \hypertarget{classilqgames_1_1_game_solver_a113252da6aa43d0beb9966277653af04}{}\label{classilqgames_1_1_game_solver_a113252da6aa43d0beb9966277653af04}
 
 \item 
@@ -36,7 +39,7 @@ Time {\bfseries Compute\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hyper
 virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)=0\hypertarget{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}{}\label{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}
 
 \item 
-virtual bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged, std\+::vector$<$ float $>$ $\ast$total\+\_\+costs) const \hypertarget{classilqgames_1_1_game_solver_a5dffdeb025d68e884d4172994d21a3c4}{}\label{classilqgames_1_1_game_solver_a5dffdeb025d68e884d4172994d21a3c4}
+virtual bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged, bool $\ast$was\+\_\+initial\+\_\+point\+\_\+feasible, std\+::vector$<$ float $>$ $\ast$total\+\_\+costs) const \hypertarget{classilqgames_1_1_game_solver_abb3f6d9e9facd9671d4c37f852c20aea}{}\label{classilqgames_1_1_game_solver_abb3f6d9e9facd9671d4c37f852c20aea}
 
 \item 
 virtual float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}{}\label{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}
