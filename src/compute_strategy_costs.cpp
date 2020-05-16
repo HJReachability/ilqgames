@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,57 +36,62 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Polyline2 class for piecewise linear paths in 2D.
+// Compute costs for each player associated with this set of strategies and
+// operating point.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GEOMETRY_POLYLINE2_H
-#define ILQGAMES_GEOMETRY_POLYLINE2_H
-
-#include <ilqgames/geometry/line_segment2.h>
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <math.h>
+#include <Eigen/Dense>
+#include <random>
+#include <vector>
 
 namespace ilqgames {
 
-class Polyline2 {
- public:
-  // Construct from a list of points. This list must contain at least 2 points!
-  Polyline2(const PointList2& points);
-  ~Polyline2() {}
+// Compute cost of a set of strategies for each player.
+std::vector<float> ComputeStrategyCosts(
+    const std::vector<PlayerCost>& player_costs,
+    const std::vector<Strategy>& strategies,
+    const OperatingPoint& operating_point,
+    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
+    float time_step, bool open_loop = false) {
+  // Start at the initial state.
+  VectorXf x(x0);
+  Time t = 0.0;
 
-  // Add a new point to the end of the polyline.
-  void AddPoint(const Point2& point);
+  // Walk forward along the trajectory and accumulate total cost.
+  std::vector<VectorXf> us(dynamics.NumPlayers());
+  std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
+  const size_t num_time_steps = strategies[0].Ps.size();
+  for (size_t kk = 0; kk < num_time_steps; kk++) {
+    // Update controls.
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+      if (open_loop)
+        us[ii] = strategies[ii](kk, VectorXf::Zero(x.size()),
+                                operating_point.us[kk][ii]);
+      else
+        us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
+                                operating_point.us[kk][ii]);
+    }
 
-  // Compute length.
-  float Length() const { return length_; }
+    // Update costs.
+    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+      total_costs[ii] += player_costs[ii].Evaluate(t, x, us);
 
-  // Find closest point on this line segment to a given point, and optionally
-  // the line segment that point belongs to (and flag for whether it is a
-  // vertex), and the signed squared distance, where right is positive.
-  Point2 ClosestPoint(const Point2& query, bool* is_vertex = nullptr,
-                      LineSegment2* segment = nullptr,
-                      float* signed_squared_distance = nullptr,
-                      bool* is_endpoint = nullptr) const;
+    // Update state and time
+    x = dynamics.Integrate(t, time_step, x, us);
+    t += time_step;
+  }
 
-  // Find the point the given distance from the start of the polyline.
-  // Optionally returns whether this is a vertex and the line segment which the
-  // point belongs to.
-  Point2 PointAt(float route_pos, bool* is_vertex = nullptr,
-                 LineSegment2* segment = nullptr,
-                 bool* is_endpoint = nullptr) const;
-
-  // Access line segments.
-  const std::vector<LineSegment2>& Segments() const { return segments_; }
-
- private:
-  std::vector<LineSegment2> segments_;
-  std::vector<float> cumulative_lengths_;
-  float length_;
-};  // struct Polyline2
+  return total_costs;
+}
 
 }  // namespace ilqgames
-
-#endif

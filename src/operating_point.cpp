@@ -49,8 +49,8 @@
 
 namespace ilqgames {
 
-OperatingPoint::OperatingPoint(
-    size_t num_time_steps, PlayerIndex num_players, Time initial_time)
+OperatingPoint::OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
+                               Time initial_time)
     : xs(num_time_steps), us(num_time_steps), t0(initial_time) {
   for (auto& entry : us) entry.resize(num_players);
 }

@@ -44,6 +44,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/utils/compute_strategy_costs.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -55,53 +56,6 @@
 #include <vector>
 
 namespace ilqgames {
-
-namespace {
-// Compute cost of a set of strategies for each player.
-std::vector<float> ComputeStrategyCosts(
-    const std::vector<PlayerCost>& player_costs,
-    const std::vector<Strategy>& strategies,
-    const OperatingPoint& operating_point,
-    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    float time_step, bool open_loop = false) {
-  // Start at the initial state.
-  VectorXf x(x0);
-  Time t = 0.0;
-
-  // Walk forward along the trajectory and accumulate total cost.
-  std::vector<VectorXf> us(dynamics.NumPlayers());
-  std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
-  const size_t num_time_steps =
-      (open_loop) ? strategies[0].Ps.size() - 1 : strategies[0].Ps.size();
-  for (size_t kk = 0; kk < num_time_steps; kk++) {
-    // Update controls.
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      if (open_loop)
-        us[ii] = strategies[ii](kk, VectorXf::Zero(x.size()),
-                                operating_point.us[kk][ii]);
-      else
-        us[ii] = strategies[ii](kk, x - operating_point.xs[kk],
-                                operating_point.us[kk][ii]);
-    }
-
-    // Update costs.
-    const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
-    const Time next_t = t + time_step;
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      total_costs[ii] +=
-          (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)
-                      : player_costs[ii].Evaluate(t, x, us);
-    }
-
-    // Update state and time
-    x = next_x;
-    t = next_t;
-  }
-
-  return total_costs;
-}
-
-}  // anonymous namespace
 
 bool NumericalCheckLocalNashEquilibrium(
     const std::vector<PlayerCost>& player_costs,

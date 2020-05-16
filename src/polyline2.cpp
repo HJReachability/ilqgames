@@ -89,27 +89,23 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
                  remaining > segments_[idx].Length();
   }
 
-  const Point2 return_point = segments_[idx].FirstPoint() +
-         remaining * segments_[idx].UnitDirection();
+  const Point2 return_point =
+      segments_[idx].FirstPoint() + remaining * segments_[idx].UnitDirection();
   if (is_endpoint) {
-    if (idx == 0) {
-      if (return_point == segments_[idx].FirstPoint())
-        *is_endpoint = true;
-    }
-    else if (idx == segments_.size()-1) {
-      if (return_point == segments_[idx].SecondPoint())
-        *is_endpoint = true;
-    }
-    else
+    if (idx != 0 && idx != segments_.size() - 1)
       *is_endpoint = false;
+    else
+      *is_endpoint = (return_point == segments_.front().FirstPoint()) ||
+                     (return_point == segments_.back().SecondPoint());
   }
 
   return return_point;
-}
+}  // namespace ilqgames
 
 Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
                                LineSegment2* segment,
-                               float* signed_squared_distance, bool* is_endpoint) const {
+                               float* signed_squared_distance,
+                               bool* is_endpoint) const {
   // Walk along each line segment and remember which was closest.
   float closest_signed_squared_distance = constants::kInfinity;
   Point2 closest_point;
@@ -119,8 +115,8 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
   int segment_counter = 0;
   for (const auto& s : segments_) {
     bool is_segment_endpoint;
-    const Point2 current_point =
-        s.ClosestPoint(query, &is_segment_endpoint, &current_signed_squared_distance);
+    const Point2 current_point = s.ClosestPoint(
+        query, &is_segment_endpoint, &current_signed_squared_distance);
 
     if (std::abs(current_signed_squared_distance) <
         std::abs(closest_signed_squared_distance)) {
@@ -132,38 +128,25 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
       segment_ind = segment_counter;
     }
 
-    segment_counter++; 
+    segment_counter++;
   }
-
-  // Check if the closest point occurs at an endpoint for the polyline.
-  if (is_endpoint) {
-    // Check if the closest point is on the first or last segment of the polyline. 
-    if (segment_ind == 0) {
-      // Check if the closest point is also an endpoint for the adjacent line segment.
-      bool check_vertex;
-      segments_[segment_ind + 1].ClosestPoint(query, &check_vertex, nullptr);
-      if (!check_vertex) {
-        // If the closest point is not an internal endpoint (vertex) then return true.
-        *is_endpoint = true;
-      }
-    } else if (segment_ind == segments_.size()-1) {
-      // Check if the closest point is also an endpoint for the adjacent line segment.
-      bool check_vertex;
-      segments_[segment_ind - 1].ClosestPoint(query, &check_vertex, nullptr);
-      if (!check_vertex) {
-        // If the closest point is not an internal endpoint (vertex) then return true.
-        *is_endpoint = true;
-      }
-    } else
-     *is_endpoint = false; 
-  } 
-
 
   // Maybe set signed_squared_distance.
   if (signed_squared_distance)
     *signed_squared_distance = closest_signed_squared_distance;
 
+  // Check if the closest point occurs at an endpoint for the polyline.
+  if (is_endpoint) {
+    auto is_same_point = [](const Point2& p1, const Point2& p2) {
+      return (p1 - p2).squaredNorm() < constants::kSmallNumber;
+    };  // is_same_point
+
+    *is_endpoint =
+        is_same_point(closest_point, segments_.front().FirstPoint()) ||
+        is_same_point(closest_point, segments_.back().SecondPoint());
+  }
+
   return closest_point;
-}
+}  // namespace ilqgames
 
 }  // namespace ilqgames
