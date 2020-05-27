@@ -40,6 +40,7 @@
 // Oncoming example.
 //
 ///////////////////////////////////////////////////////////////////////////////
+
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/constraint/single_dimension_constraint.h>
@@ -81,7 +82,7 @@ namespace {
 
 // Time.
 static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 10.0; // s
+static constexpr Time kTimeHorizon = 15.0; // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -122,19 +123,18 @@ static constexpr bool kConstraintOrientedInside = false;
 static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 15.0; // m/s
-static constexpr float kP2NominalV = 10.0; // m/s
-static constexpr float kP3NominalV = 10.0; // m/s
+static constexpr float kP1NominalV = 5.0; // m/s
+static constexpr float kP2NominalV = 5.0; // m/s
 
 // Nominal heading
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
 static constexpr float kP1InitialX = 2.5;   // m
-static constexpr float kP1InitialY = -45.0; // m
+static constexpr float kP1InitialY = -55.0; // m
 
 static constexpr float kP2InitialX = 0.0;              // m
-static constexpr float kP2InitialY = 30.0;             // m
+static constexpr float kP2InitialY = 40.0;             // m
 static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;              // rad
@@ -250,12 +250,11 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   // p3_cost.AddStateCost(p3_nominal_orientation_cost);
 
   // Stay in lanes.
+
   const Polyline2 lane1(
       {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
   const Polyline2 lane2(
       {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
-
-  // Modify below:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
@@ -283,11 +282,10 @@ OncomingExample::OncomingExample(const SolverParams &params) {
       new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
                                             kLaneHalfWidth, !kOrientedRight,
                                             "LaneLeftBoundary"));
-  p2_cost.AddStateCost(p2_lane_cost);
-  p2_cost.AddStateConstraint(p2_lane_r_constraint);
-  p2_cost.AddStateConstraint(p2_lane_l_constraint);
+  // p2_cost.AddStateCost(p2_lane_cost);
+  // p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  // p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
-  // Modify above.
 
   // Max/min/nominal speed costs.
 
@@ -296,7 +294,7 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
       kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
+      kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");\
   p1_cost.AddStateConstraint(p1_min_v_constraint);
   p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);

@@ -52,8 +52,8 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <algorithm>
+#include <glog/logging.h>
 #include <memory>
 #include <vector>
 
@@ -62,29 +62,30 @@ namespace ilqgames {
 namespace {
 
 // Multiply all alphas in a set of strategies by the given constant.
-void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
+void ScaleAlphas(float scaling, std::vector<Strategy> *strategies) {
   CHECK_NOTNULL(strategies);
 
-  for (auto& strategy : *strategies) {
-    for (auto& alpha : strategy.alphas) alpha *= scaling;
+  for (auto &strategy : *strategies) {
+    for (auto &alpha : strategy.alphas)
+      alpha *= scaling;
   }
 }
 
-}  // anonymous namespace
+} // anonymous namespace
 
-bool GameSolver::Solve(const VectorXf& x0,
-                       const OperatingPoint& initial_operating_point,
-                       const std::vector<Strategy>& initial_strategies,
-                       OperatingPoint* final_operating_point,
-                       std::vector<Strategy>* final_strategies, SolverLog* log,
+bool GameSolver::Solve(const VectorXf &x0,
+                       const OperatingPoint &initial_operating_point,
+                       const std::vector<Strategy> &initial_strategies,
+                       OperatingPoint *final_operating_point,
+                       std::vector<Strategy> *final_strategies, SolverLog *log,
                        Time max_runtime) {
   // Start a stopwatch.
   const auto solver_call_time = clock::now();
 
   // Keep iterating until convergence.
-  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
+  auto elapsed_time = [](const std::chrono::time_point<clock> &start) {
     return std::chrono::duration<Time>(clock::now() - start).count();
-  };  // elapsed_time
+  }; // elapsed_time
 
   // Chech return pointers not null.
   CHECK_NOTNULL(final_strategies);
@@ -94,7 +95,7 @@ bool GameSolver::Solve(const VectorXf& x0,
   DCHECK_EQ(dynamics_->NumPlayers(), initial_strategies.size());
   DCHECK(std::accumulate(
       initial_strategies.begin(), initial_strategies.end(), true,
-      [this](bool correct_so_far, const Strategy& strategy) {
+      [this](bool correct_so_far, const Strategy &strategy) {
         return correct_so_far &=
                strategy.Ps.size() == this->num_time_steps_ &&
                strategy.alphas.size() == this->num_time_steps_;
@@ -117,7 +118,8 @@ bool GameSolver::Solve(const VectorXf& x0,
   std::vector<Strategy> current_strategies(initial_strategies);
 
   // Reset all constraint barrier weights to unity.
-  for (PlayerCost& cost : player_costs_) cost.ResetConstraintBarrierWeights();
+  for (PlayerCost &cost : player_costs_)
+    cost.ResetConstraintBarrierWeights();
 
   // Number of iterations, whether or not the solver has converged, and total
   // costs for all players.
@@ -141,7 +143,7 @@ bool GameSolver::Solve(const VectorXf& x0,
     if (num_iterations_since_barrier_rescaling >
         params_.barrier_scaling_iters) {
       num_iterations_since_barrier_rescaling = 0;
-      for (PlayerCost& cost : player_costs_)
+      for (PlayerCost &cost : player_costs_)
         cost.ScaleConstraintBarrierWeights(params_.geometric_barrier_scaling);
     }
 
@@ -170,26 +172,28 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     for (size_t kk = 0; kk < num_time_steps_; kk++) {
       const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
-      const auto& x = current_operating_point.xs[kk];
-      const auto& us = current_operating_point.us[kk];
+      const auto &x = current_operating_point.xs[kk];
+      const auto &us = current_operating_point.us[kk];
 
       // Quadraticize costs.
       std::transform(player_costs_.begin(), player_costs_.end(),
                      quadraticization_[kk].begin(),
-                     [&t, &x, &us](const PlayerCost& cost) {
+                     [&t, &x, &us](const PlayerCost &cost) {
                        return cost.Quadraticize(t, x, us);
                      });
     }
 
     // Print out quadraticization per iteration.
-    // std::cout << quadraticization_[0][1].state.grad << std::endl << std::endl;
-    // std::cout << quadraticization_[0][1].state.hess << std::endl << std::endl;
+    // std::cout << quadraticization_[0][1].state.grad << std::endl <<
+    // std::endl; std::cout << quadraticization_[0][1].state.hess << std::endl
+    // << std::endl;
 
     // Solve LQ game.
     current_strategies =
-       lq_solver_->Solve(*dynamics_, linearization_, quadraticization_);
+        lq_solver_->Solve(*dynamics_, linearization_, quadraticization_);
 
-    std::cout << current_strategies[1].alphas[0].transpose() << std::endl << std::endl;
+    std::cout << current_strategies[1].alphas[0].transpose() << std::endl
+              << std::endl;
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
@@ -225,10 +229,10 @@ bool GameSolver::Solve(const VectorXf& x0,
 }
 
 bool GameSolver::CurrentOperatingPoint(
-    const OperatingPoint& last_operating_point,
-    const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point, bool* has_converged,
-    std::vector<float>* total_costs, bool check_trust_region) const {
+    const OperatingPoint &last_operating_point,
+    const std::vector<Strategy> &current_strategies,
+    OperatingPoint *current_operating_point, bool *has_converged,
+    std::vector<float> *total_costs, bool check_trust_region) const {
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
   CHECK_NOTNULL(total_costs);
@@ -246,8 +250,8 @@ bool GameSolver::CurrentOperatingPoint(
 
     // Unpack.
     const VectorXf delta_x = x - last_operating_point.xs[kk];
-    const auto& last_us = last_operating_point.us[kk];
-    auto& current_us = current_operating_point->us[kk];
+    const auto &last_us = last_operating_point.us[kk];
+    auto &current_us = current_operating_point->us[kk];
 
     // Accumulate costs.
     for (size_t ii = 0; ii < player_costs_.size(); ii++)
@@ -259,12 +263,13 @@ bool GameSolver::CurrentOperatingPoint(
         x, last_operating_point.xs[kk], params_.trust_region_dimensions);
     *has_converged &= (delta_x_distance < params_.convergence_tolerance);
 
-    auto check_all_constraints = [this](Time t, const VectorXf& x) {
-      for (const auto& cost : this->player_costs_) {
-        if (!cost.CheckConstraints(t, x)) return false;
+    auto check_all_constraints = [this](Time t, const VectorXf &x) {
+      for (const auto &cost : this->player_costs_) {
+        if (!cost.CheckConstraints(t, x))
+          return false;
       }
       return true;
-    };  // check_all_constraints
+    }; // check_all_constraints
 
     if (check_trust_region && (delta_x_distance > params_.trust_region_size ||
                                !check_all_constraints(t, x)))
@@ -275,7 +280,7 @@ bool GameSolver::CurrentOperatingPoint(
 
     // Compute and record control for each player.
     for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
-      const auto& strategy = current_strategies[jj];
+      const auto &strategy = current_strategies[jj];
       current_us[jj] = strategy(kk, delta_x, last_us[jj]);
     }
 
@@ -287,20 +292,22 @@ bool GameSolver::CurrentOperatingPoint(
   return true;
 }
 
-float GameSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
-                                const std::vector<Dimension>& dims) const {
-  if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
+float GameSolver::StateDistance(const VectorXf &x1, const VectorXf &x2,
+                                const std::vector<Dimension> &dims) const {
+  if (dims.empty())
+    return (x1 - x2).cwiseAbs().maxCoeff();
 
   float distance = 0.0;
-  for (const Dimension dim : dims) distance += std::abs(x1(dim) - x2(dim));
+  for (const Dimension dim : dims)
+    distance += std::abs(x1(dim) - x2(dim));
 
   return distance;
 }
 
-bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
-                                    OperatingPoint* current_operating_point,
-                                    bool* has_converged,
-                                    std::vector<float>* total_costs) const {
+bool GameSolver::ModifyLQStrategies(std::vector<Strategy> *strategies,
+                                    OperatingPoint *current_operating_point,
+                                    bool *has_converged,
+                                    std::vector<float> *total_costs) const {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
@@ -315,11 +322,13 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
       last_operating_point, *strategies, current_operating_point, has_converged,
       total_costs);
 
-  if (!params_.linesearch) return true;
+  if (!params_.linesearch)
+    return true;
 
   // Keep reducing alphas until we satisfy the trust region constraint.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
-    if (satisfies_trust_region) return true;
+    if (satisfies_trust_region)
+      return true;
 
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
     satisfies_trust_region = CurrentOperatingPoint(
@@ -332,4 +341,4 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   return false;
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames
