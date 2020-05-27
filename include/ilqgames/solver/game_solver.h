@@ -162,7 +162,12 @@ class GameSolver {
                              OperatingPoint* current_operating_point,
                              bool* has_converged,
                              std::vector<float>* total_costs,
-                             bool check_trust_region = true) const;
+                             bool check_trust_region = true,
+                             bool* satisfies_constraints = nullptr) const;
+
+  // Check if a given operating point's state trajectory satisfies all
+  // constraints.
+  bool CheckConstraints(const OperatingPoint& op) const;
 
   // Dynamical system.
   const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;

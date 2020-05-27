@@ -39,6 +39,10 @@
 // Base class for all constraints. We assume that all constraints are
 // *inequalities*, which support a check for satisfaction. All constraints must
 // also implement the cost interface corresponding to a barrier function.
+// Further, all constraints also must have a corresponding cost associated to
+// them which, unlike a log barrier which *forces* iterates to remain feasible,
+// merely *encourages* iterates to become feasible. This is useful, e.g., when
+// initial guesses are not feasible.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +52,8 @@
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
 
 namespace ilqgames {
@@ -75,11 +81,21 @@ class Constraint : public Cost {
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad) const = 0;
 
-  // Access the name of this cost.
+  // Accessors.
   const std::string& Name() const { return name_; }
+  const Cost& EquivalentCost() const {
+    CHECK_NOTNULL(equivalent_cost_.get());
+    return *equivalent_cost_;
+  }
 
  protected:
   explicit Constraint(const std::string& name = "") : Cost(1.0, name) {}
+
+  // "Equivalent" well-defined cost to encourage constraint satisfaction, e.g.,
+  // when an initial iterate is infeasible.
+  std::unique_ptr<const Cost> equivalent_cost_;
+  static constexpr float kEquivalentCostWeight = 100.0;
+  static constexpr float kCostBuffer = 1.0;
 };  //\class Constraint
 
 }  // namespace ilqgames

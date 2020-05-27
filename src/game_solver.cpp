@@ -42,6 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/lq_solver.h>
@@ -108,10 +109,10 @@ bool GameSolver::Solve(const VectorXf& x0,
   const bool is_initial_operating_point_zero =
       initial_operating_point.xs[0].squaredNorm() < constants::kSmallNumber;
 
-  // Last and current operating points.
+  // Last and current operating points. Make sure the last one starts from the
+  // current state so that the current one will start there as well.
   OperatingPoint last_operating_point(initial_operating_point);
   OperatingPoint current_operating_point(initial_operating_point);
-  current_operating_point.xs[0] = x0;
   last_operating_point.xs[0] = x0;
 
   // Current strategies.
@@ -120,12 +121,27 @@ bool GameSolver::Solve(const VectorXf& x0,
   // Reset all constraint barrier weights to unity.
   for (PlayerCost& cost : player_costs_) cost.ResetConstraintBarrierWeights();
 
-  // Number of iterations, whether or not the solver has converged, and total
-  // costs for all players.
+  // Things to keep track of during each iteration.
   size_t num_iterations = 0;
   size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
-  bool was_initial_point_feasible = true;
+
+  // If the initial operating point is infeasible then use cost version of
+  // constraints.
+  auto turn_constraints_on = [this]() {
+    for (auto& cost : player_costs_) cost.TurnConstraintsOn();
+  };  // turn_constraints_on
+
+  auto turn_constraints_off = [this]() {
+    for (auto& cost : player_costs_) cost.TurnConstraintsOff();
+  };  // turn_constraints_on
+
+  bool was_operating_point_feasible = CheckConstraints(initial_operating_point);
+  if (!was_operating_point_feasible)
+    turn_constraints_off();
+  else
+    turn_constraints_on();
+
   std::vector<float> total_costs =
       ComputeStrategyCosts(player_costs_, current_strategies,
                            current_operating_point, *dynamics_, x0, time_step_);
@@ -164,8 +180,15 @@ bool GameSolver::Solve(const VectorXf& x0,
       last_operating_point.swap(current_operating_point);
       CurrentOperatingPoint(last_operating_point, current_strategies,
                             &current_operating_point, &has_converged,
-                            &total_costs, false);
+                            &total_costs, false, &was_operating_point_feasible);
     }
+
+    // If operating point is feasible, turn on constraints. If it is
+    // not feasible, then turn them off.
+    if (was_operating_point_feasible)
+      turn_constraints_on();
+    else
+      turn_constraints_off();
 
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point, only if the system can't be treated as linear from the
@@ -192,19 +215,20 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
-                            &has_converged, &was_initial_point_feasible,
+                            &has_converged, &was_operating_point_feasible,
                             &total_costs)) {
       // Maybe emit warning if exiting early.
       if (num_iterations == 1) {
         LOG(WARNING)
             << "Solver exited after during first iteration, which may indicate "
                "an infeasible initial operating point.";
-      }
 
-      if (was_initial_point_feasible)
-        LOG(INFO) << "Previous operating point was feasible.";
-      else
-        LOG(INFO) << "Previous operating point was infeasible.";
+        if (was_operating_point_feasible)
+          LOG(INFO) << "Previous operating point was feasible.";
+        else {
+          LOG(INFO) << "Previous operating point was infeasible.";
+        }
+      }
 
       return false;
     }
@@ -239,11 +263,23 @@ bool GameSolver::Solve(const VectorXf& x0,
   return true;
 }
 
+bool GameSolver::CheckConstraints(const OperatingPoint& op) const {
+  for (size_t kk = 0; kk < op.xs.size(); kk++) {
+    const Time t = op.t0 + static_cast<Time>(kk) * time_step_;
+    for (const auto& cost : player_costs_) {
+      if (cost.CheckConstraints(t, op.xs[kk])) return false;
+    }
+  }
+
+  return true;
+}
+
 bool GameSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
     OperatingPoint* current_operating_point, bool* has_converged,
-    std::vector<float>* total_costs, bool check_trust_region) const {
+    std::vector<float>* total_costs, bool check_trust_region,
+    bool* satisfies_constraints) const {
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
   CHECK_NOTNULL(total_costs);
@@ -281,9 +317,21 @@ bool GameSolver::CurrentOperatingPoint(
       return true;
     };  // check_all_constraints
 
-    if (check_trust_region && (delta_x_distance > params_.trust_region_size ||
-                               !check_all_constraints(t, x)))
-      return false;
+    if (check_trust_region) {
+      const bool checked_constraints = check_all_constraints(t, x);
+      if (satisfies_constraints) *satisfies_constraints = checked_constraints;
+
+      if (delta_x_distance > params_.trust_region_size ||
+          !checked_constraints) {
+        // If we still satisfy constraints then log a warning. This shouldn't
+        // really ever lead to a fault though since the solver should be
+        // backtracking if this returns false anyway.
+        if (checked_constraints)
+          LOG(WARNING) << "Failed trust region on time step " << kk
+                       << " but satisfied constraints up till then.";
+        return false;
+      }
+    }
 
     // Record state.
     current_operating_point->xs[kk] = x;
@@ -330,10 +378,8 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   const OperatingPoint last_operating_point(*current_operating_point);
   bool satisfies_trust_region = CurrentOperatingPoint(
       last_operating_point, *strategies, current_operating_point, has_converged,
-      total_costs);
+      total_costs, was_initial_point_feasible);
 
-  if (was_initial_point_feasible)
-    *was_initial_point_feasible = satisfies_trust_region;
   if (!params_.linesearch) return true;
 
   // Keep reducing alphas until we satisfy the trust region constraint.

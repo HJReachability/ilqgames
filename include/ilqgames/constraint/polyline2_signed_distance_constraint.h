@@ -46,6 +46,7 @@
 #define ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/cost/semiquadratic_polyline2_cost.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
@@ -65,7 +66,14 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
         signed_threshold_sq_(sgn(threshold) * threshold * threshold),
         oriented_right_(oriented_right),
         xidx_(position_idxs.first),
-        yidx_(position_idxs.second) {}
+        yidx_(position_idxs.second) {
+    // Set equivalent cost pointer.
+    const float new_threshold =
+      (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
+    equivalent_cost_.reset(new SemiquadraticPolyline2Cost(
+        kEquivalentCostWeight, polyline, position_idxs, new_threshold,
+        !oriented_right, name + "/Cost"));
+  }
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.

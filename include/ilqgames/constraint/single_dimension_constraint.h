@@ -46,6 +46,7 @@
 #define ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
@@ -60,7 +61,15 @@ class SingleDimensionConstraint : public TimeInvariantConstraint {
       : TimeInvariantConstraint(name),
         dimension_(dimension),
         threshold_(threshold),
-        oriented_right_(oriented_right) {}
+        oriented_right_(oriented_right) {
+    // Set equivalent cost pointer.
+    const float new_threshold =
+        (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
+    CHECK_GE(dimension, 0);
+    equivalent_cost_.reset(
+        new SemiquadraticCost(kEquivalentCostWeight, dimension, new_threshold,
+                              !oriented_right, name + "/Cost"));
+  }
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.

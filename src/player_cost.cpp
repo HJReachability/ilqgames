@@ -56,12 +56,12 @@ namespace ilqgames {
 namespace {
 
 // Accumulate control costs into the given quadratic approximation.
-// NOTE: templated to allow use with constraints as well.
+// If used with constraints, can specify a Boolean flag to use equivelent cost.
 template <typename T>
 void AccumulateControlCosts(const CostMap<T>& costs, Time t,
                             const std::vector<VectorXf>& us,
-                            float regularization,
-                            QuadraticCostApproximation* q) {
+                            float regularization, QuadraticCostApproximation* q,
+                            bool is_constraint_on = true) {
   for (const auto& pair : costs) {
     const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
@@ -80,8 +80,15 @@ void AccumulateControlCosts(const CostMap<T>& costs, Time t,
       iter = inserted_pair.first;
     }
 
-    cost->Quadraticize(t, us[player], &(iter->second.hess),
-                       &(iter->second.grad));
+    if (is_constraint_on) {
+      cost->Quadraticize(t, us[player], &(iter->second.hess),
+                         &(iter->second.grad));
+    } else {
+      const Constraint& constraint =
+          *static_cast<const Constraint*>(cost.get());
+      constraint.EquivalentCost().Quadraticize(
+          t, us[player], &(iter->second.hess), &(iter->second.grad));
+    }
   }
 }
 
@@ -165,11 +172,16 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
   // Accumulate state and control constraint barriers.
   // NOTE: these are *not* considered when evaluating costs, since the barriers
   // are only intended to enforce inequality constraints.
-  for (const auto& constraint : state_constraints_)
-    constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
+  for (const auto& constraint : state_constraints_) {
+    if (are_constraints_on_)
+      constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
+    else
+      constraint->EquivalentCost().Quadraticize(t, x, &q.state.hess,
+                                                &q.state.grad);
+  }
 
   AccumulateControlCosts(control_constraints_, t, us, control_regularization_,
-                         &q);
+                         &q, are_constraints_on_);
 
   return q;
 }

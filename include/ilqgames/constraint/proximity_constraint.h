@@ -47,6 +47,7 @@
 #define ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
@@ -66,7 +67,14 @@ class ProximityConstraint : public TimeInvariantConstraint {
         xidx1_(position_idxs1.first),
         yidx1_(position_idxs1.second),
         xidx2_(position_idxs2.first),
-        yidx2_(position_idxs2.second) {}
+        yidx2_(position_idxs2.second) {
+    // Set equivalent cost pointer.
+    const float new_threshold = threshold - kCostBuffer;
+    CHECK_GT(new_threshold, 0.0);
+    equivalent_cost_.reset(new ProximityCost(kEquivalentCostWeight,
+                                             position_idxs1, position_idxs2,
+                                             new_threshold, name + "/Cost"));
+  }
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.

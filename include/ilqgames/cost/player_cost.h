@@ -60,7 +60,8 @@ class PlayerCost {
   explicit PlayerCost(float state_regularization = 0.0,
                       float control_regularization = 0.0)
       : state_regularization_(state_regularization),
-        control_regularization_(control_regularization) {}
+        control_regularization_(control_regularization),
+        are_constraints_on_(true) {}
 
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
@@ -85,6 +86,11 @@ class PlayerCost {
   // *Does* account for cost barriers due to inequality constraints.
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
+
+  // Turn all constraints either "on" or "off" (in which case they are replaced
+  // with their"equivalent" costs).
+  void TurnConstraintsOn() { are_constraints_on_ = true; }
+  void TurnConstraintsOff() { are_constraints_on_ = false; }
 
   // Check whether constraints are satisfied at the given time and state.
   bool CheckConstraints(Time t, const VectorXf& x) const;
@@ -117,6 +123,7 @@ class PlayerCost {
   // this player's input.
   std::vector<std::shared_ptr<Constraint>> state_constraints_;
   CostMap<Constraint> control_constraints_;
+  bool are_constraints_on_;
 
   // Regularization on costs.
   const float state_regularization_, control_regularization_;
