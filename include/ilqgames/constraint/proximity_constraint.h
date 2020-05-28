@@ -52,6 +52,7 @@
 
 #include <string>
 #include <utility>
+#include <math.h>
 
 namespace ilqgames {
 
@@ -69,8 +70,7 @@ class ProximityConstraint : public TimeInvariantConstraint {
         xidx2_(position_idxs2.first),
         yidx2_(position_idxs2.second) {
     // Set equivalent cost pointer.
-    const float new_threshold = threshold - kCostBuffer;
-    CHECK_GT(new_threshold, 0.0);
+    const float new_threshold = std::max<float>(threshold - kCostBuffer, 0.0);
     equivalent_cost_.reset(new ProximityCost(kEquivalentCostWeight,
                                              position_idxs1, position_idxs2,
                                              new_threshold, name + "/Cost"));

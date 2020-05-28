@@ -126,8 +126,7 @@ bool GameSolver::Solve(const VectorXf& x0,
   size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
 
-  // If the initial operating point is infeasible then use cost version of
-  // constraints.
+  // Turn constraints on.
   auto turn_constraints_on = [this]() {
     for (auto& cost : player_costs_) cost.TurnConstraintsOn();
   };  // turn_constraints_on
@@ -136,12 +135,8 @@ bool GameSolver::Solve(const VectorXf& x0,
     for (auto& cost : player_costs_) cost.TurnConstraintsOff();
   };  // turn_constraints_on
 
-  bool was_operating_point_feasible = CheckConstraints(initial_operating_point);
-  if (!was_operating_point_feasible)
-    turn_constraints_off();
-  else
-    turn_constraints_on();
-
+  turn_constraints_on();
+  bool was_operating_point_feasible = true;
   std::vector<float> total_costs =
       ComputeStrategyCosts(player_costs_, current_strategies,
                            current_operating_point, *dynamics_, x0, time_step_);
@@ -189,6 +184,9 @@ bool GameSolver::Solve(const VectorXf& x0,
       turn_constraints_on();
     else
       turn_constraints_off();
+
+    std::cout << "operating point feasible: " << was_operating_point_feasible
+              << std::endl;
 
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point, only if the system can't be treated as linear from the
