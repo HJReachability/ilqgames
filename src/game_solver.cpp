@@ -111,8 +111,11 @@ bool GameSolver::Solve(const VectorXf& x0,
 
   // Last and current operating points. Make sure the last one starts from the
   // current state so that the current one will start there as well.
+  // NOTE: setting the current operating point to start at x0 is critical to the
+  // constraint satisfaction check at the first iteration.
   OperatingPoint last_operating_point(initial_operating_point);
   OperatingPoint current_operating_point(initial_operating_point);
+  current_operating_point.xs[0] = x0;
   last_operating_point.xs[0] = x0;
 
   // Current strategies.
@@ -184,9 +187,6 @@ bool GameSolver::Solve(const VectorXf& x0,
       turn_constraints_on();
     else
       turn_constraints_off();
-
-    std::cout << "operating point feasible: " << was_operating_point_feasible
-              << std::endl;
 
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point, only if the system can't be treated as linear from the
@@ -325,8 +325,8 @@ bool GameSolver::CurrentOperatingPoint(
         // really ever lead to a fault though since the solver should be
         // backtracking if this returns false anyway.
         if (checked_constraints)
-          LOG(WARNING) << "Failed trust region on time step " << kk
-                       << " but satisfied constraints up till then.";
+          VLOG(2) << "Failed trust region on time step " << kk
+                  << " but satisfied constraints up till then.";
         return false;
       }
     }
