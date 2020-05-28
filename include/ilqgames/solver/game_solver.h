@@ -142,8 +142,8 @@ class GameSolver {
   // costs for all players at the new operating point.
   virtual bool ModifyLQStrategies(std::vector<Strategy>* strategies,
                                   OperatingPoint* current_operating_point,
+                                  bool* is_new_operating_point_feasible,
                                   bool* has_converged,
-                                  bool* was_initial_point_feasible,
                                   std::vector<float>* total_costs) const;
 
   // Compute distance (infinity norm) between states in the given dimensions.
@@ -164,10 +164,6 @@ class GameSolver {
                              std::vector<float>* total_costs,
                              bool check_trust_region = true,
                              bool* satisfies_constraints = nullptr) const;
-
-  // Check if a given operating point's state trajectory satisfies all
-  // constraints.
-  bool CheckConstraints(const OperatingPoint& op) const;
 
   // Dynamical system.
   const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
