@@ -253,7 +253,7 @@ bool GameSolver::Solve(const VectorXf& x0,
         params_.convergence_tolerance);
   }
 
-  CHECK(was_operating_point_feasible) << "has_converged is: " << has_converged;
+  CHECK(!has_converged || (has_converged && was_operating_point_feasible));
 
   // Set final strategies and operating point.
   final_strategies->swap(current_strategies);
