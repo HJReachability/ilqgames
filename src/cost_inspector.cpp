@@ -57,13 +57,29 @@ namespace ilqgames {
 
 void CostInspector::Render() const {
   // Extract player costs.
-  const auto& costs = player_costs_[sliders_->LogIndex()];
+  const auto& costs =
+      player_costs_[selected_problem_][sliders_->LogIndex(selected_problem_)];
 
   // Do nothing if log is empty.
   if (costs.Log().NumIterates() == 0) return;
 
   // Set up main window.
   ImGui::Begin("Cost Inspector");
+
+  // Combo box to select problem.
+  if (ImGui::BeginCombo("Problem",
+                        std::to_string(selected_problem_ + 1).c_str())) {
+    for (size_t problem_idx = 0; problem_idx < sliders_->NumProblems();
+         problem_idx++) {
+      const bool is_selected = (selected_problem_ == problem_idx);
+      if (ImGui::Selectable(std::to_string(problem_idx + 1).c_str(),
+                            is_selected))
+        selected_problem_ = problem_idx;
+      if (is_selected) ImGui::SetItemDefaultFocus();
+    }
+
+    ImGui::EndCombo();
+  }
 
   // Combo box to select player.
   if (ImGui::BeginCombo("Player",
@@ -96,14 +112,15 @@ void CostInspector::Render() const {
     const std::string label = "Player " + std::to_string(selected_player_ + 1) +
                               ": " + selected_cost_name_;
     if (costs.PlayerHasCost(selected_player_, selected_cost_name_)) {
-      const std::vector<float>& values = costs.EvaluatedCost(
-          sliders_->SolverIterate(), selected_player_, selected_cost_name_);
+      const std::vector<float>& values =
+          costs.EvaluatedCost(sliders_->SolverIterate(selected_problem_),
+                              selected_player_, selected_cost_name_);
       ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0,
                        label.c_str(), FLT_MAX, FLT_MAX,
                        ImGui::GetWindowContentRegionMax());
 
       // Show a vertical line at the current time.
-      const float time = sliders_->InterpolationTime();
+      const float time = sliders_->InterpolationTime(selected_problem_);
       const ImU32 color =
           ImColor(ImVec4(234.0 / 255.0, 110.0 / 255.0, 110.0 / 255.0, 0.5));
       constexpr float kLineThickness = 2.0;
