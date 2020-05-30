@@ -59,21 +59,19 @@ class TopDownRenderer {
  public:
   ~TopDownRenderer() {}
 
-  // Takes in a log and lists of x/y/heading indices in
-  // the state vector.
+  // Takes in a log and lists of x/y/heading indices in the state vector.
   TopDownRenderer(
       const std::shared_ptr<const ControlSliders>& sliders,
-      const std::vector<std::shared_ptr<const SolverLog>>& logs,
-      const std::shared_ptr<const TopDownRenderableProblem>& problem)
+      const std::vector<std::shared_ptr<const TopDownRenderableProblem>>&
+          problems)
       : sliders_(sliders),
-        logs_(logs),
-        problem_(problem),
+        problems_(problems),
         center_delta_(0.0, 0.0),
         last_mouse_position_(0.0, 0.0),
         pixel_to_meter_ratio_(5.0) {
     CHECK_NOTNULL(sliders_.get());
-    CHECK_NOTNULL(problem_.get());
-    for (const auto& log : logs) CHECK_NOTNULL(log.get());
+    CHECK_EQ(problems_.size(), sliders_->NumProblems());
+    for (const auto& problem : problems_) CHECK_NOTNULL(problem.get());
   }
 
   // Render the log in a top-down view.
@@ -93,12 +91,9 @@ class TopDownRenderer {
   // Control sliders.
   const std::shared_ptr<const ControlSliders> sliders_;
 
-  // Log to render.
-  const std::vector<std::shared_ptr<const SolverLog>> logs_;
-
   // Renderable problem. Used to map from states along an operating point to
   // position and heading.
-  const std::shared_ptr<const TopDownRenderableProblem> problem_;
+  const std::vector<std::shared_ptr<const TopDownRenderableProblem>> problems_;
 
   // Difference from center of the window in world coordinates.
   ImVec2 center_delta_;

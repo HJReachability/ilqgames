@@ -66,15 +66,19 @@ class CostInspector {
   // Takes in a log and lists of x/y/heading indices in
   // the state vector.
   CostInspector(const std::shared_ptr<const ControlSliders>& sliders,
-                const std::vector<std::shared_ptr<const SolverLog>>& logs,
-                const std::vector<PlayerCost>& player_costs)
+                const std::vector<std::vector<PlayerCost>>& player_costs)
       : sliders_(sliders),
         selected_player_(0),
         selected_cost_name_("<Please select a cost>") {
     CHECK_NOTNULL(sliders_.get());
+    CHECK_EQ(player_costs.size(), sliders_->NumProblems());
 
-    for (const auto& log : logs)
-      player_costs_.emplace_back(log, player_costs);
+    player_costs_.resize(sliders_->NumProblems());
+    for (size_t problem_idx = 0; problem_idx < sliders_->NumProblems();
+         problem_idx++) {
+      for (const auto& log : sliders_->LogsForEachProblem()[problem_idx])
+        player_costs_[problem_idx].emplace_back(log, player_costs[problem_idx]);
+    }
   }
 
   // Render the appropriate costs.
@@ -84,10 +88,11 @@ class CostInspector {
   // Control sliders.
   const std::shared_ptr<const ControlSliders> sliders_;
 
-  // Player cost cache for each log.
-  std::vector<PlayerCostCache> player_costs_;
+  // Player cost cache for each log, for each problem.
+  std::vector<std::vector<PlayerCostCache>> player_costs_;
 
-  // Currently selected player and cost name.
+  // Currently selected problem, player and cost name.
+  mutable size_t selected_problem_;
   mutable PlayerIndex selected_player_;
   mutable std::string selected_cost_name_;
 };  // class CostInspector
