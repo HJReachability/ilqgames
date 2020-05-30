@@ -308,9 +308,11 @@ bool GameSolver::CurrentOperatingPoint(
 
     const float delta_x_distance = StateDistance(
         x, last_operating_point.xs[kk], params_.trust_region_dimensions);
+    std::cout << "satisfies constraints pointer is not null: "
+              << static_cast<bool>(satisfies_constraints) << std::endl;
     const bool checked_constraints =
-        (satisfies_constraints) ? check_all_constraints(t, x, current_us)
-                                : true;
+        check_all_constraints(t, x, current_us) || !satisfies_constraints;
+
     *has_converged &= (delta_x_distance < params_.convergence_tolerance &&
                        checked_constraints);
 
