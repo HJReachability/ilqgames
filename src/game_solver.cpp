@@ -192,8 +192,8 @@ bool GameSolver::Solve(const VectorXf &x0,
     current_strategies =
         lq_solver_->Solve(*dynamics_, linearization_, quadraticization_);
 
-    std::cout << current_strategies[1].alphas[0].transpose() << std::endl
-              << std::endl;
+    // std::cout << current_strategies[1].alphas[0].transpose() << std::endl
+    //           << std::endl;
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,

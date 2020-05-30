@@ -80,7 +80,7 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 15.0; // s
+static constexpr Time kTimeHorizon = 20.0; // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -862,7 +862,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       dynamics, {p4_cost, p2_cost, p1_cost, p3_cost, p5_cost, p6_cost},
       kTimeHorizon, params));
 
-  std::cout << x0_.transpose() << std::endl;
+  // std::cout << x0_.transpose() << std::endl;
 }
 
 inline std::vector<float> HighwayMergingExample::Xs(const VectorXf &x) const {
