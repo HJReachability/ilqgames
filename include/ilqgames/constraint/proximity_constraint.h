@@ -78,7 +78,7 @@ class ProximityConstraint : public TimeInvariantConstraint {
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfied(const VectorXf& input, float* level = nullptr) const;
+  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
 
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.

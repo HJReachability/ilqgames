@@ -61,7 +61,7 @@ template <typename T>
 void AccumulateControlCosts(const CostMap<T>& costs, Time t,
                             const std::vector<VectorXf>& us,
                             float regularization, QuadraticCostApproximation* q,
-                            bool is_constraint_on = true) {
+                            bool are_constraints_on = true) {
   for (const auto& pair : costs) {
     const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
@@ -80,7 +80,7 @@ void AccumulateControlCosts(const CostMap<T>& costs, Time t,
       iter = inserted_pair.first;
     }
 
-    if (is_constraint_on) {
+    if (are_constraints_on) {
       cost->Quadraticize(t, us[player], &(iter->second.hess),
                          &(iter->second.grad));
     } else {
@@ -186,9 +186,14 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
   return q;
 }
 
-bool PlayerCost::CheckConstraints(Time t, const VectorXf& x) const {
+bool PlayerCost::CheckConstraints(Time t, const VectorXf& x,
+                                  const std::vector<VectorXf>& us) const {
   for (const auto& constraint : state_constraints_) {
     if (!constraint->IsSatisfied(t, x)) return false;
+  }
+
+  for (const auto& pair : control_constraints_) {
+    if (!pair.second->IsSatisfied(t, us[pair.first])) return false;
   }
 
   return true;

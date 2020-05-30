@@ -92,8 +92,11 @@ class PlayerCost {
   void TurnConstraintsOn() { are_constraints_on_ = true; }
   void TurnConstraintsOff() { are_constraints_on_ = false; }
 
-  // Check whether constraints are satisfied at the given time and state.
-  bool CheckConstraints(Time t, const VectorXf& x) const;
+  // Check whether constraints are satisfied at the given time.
+  bool CheckConstraints(Time t, const VectorXf& x,
+                        const std::vector<VectorXf>& us) const;
+  size_t NumStateConstraints() const { return state_constraints_.size(); }
+  size_t NumControlConstraints() const { return control_constraints_.size(); }
 
   // Scale all weights associated with all constraint barriers by the given
   // multiplier, which ought to be less than 1.0. Can also reset all weights

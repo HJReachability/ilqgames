@@ -182,10 +182,13 @@ bool GameSolver::Solve(const VectorXf& x0,
 
     // If operating point is feasible, turn on constraints. If it is
     // not feasible, then turn them off.
-    if (was_operating_point_feasible)
+    if (was_operating_point_feasible) {
       turn_constraints_on();
-    else
+      std::cout << "constraints are on" << std::endl;
+    } else {
       turn_constraints_off();
+      std::cout << "constraints are off" << std::endl;
+    }
 
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point, only if the system can't be treated as linear from the
@@ -295,9 +298,10 @@ bool GameSolver::CurrentOperatingPoint(
 
     // Check convergence and trust region (including explicit inequality
     // constraints).
-    auto check_all_constraints = [this](Time t, const VectorXf& x) {
+    auto check_all_constraints = [this](Time t, const VectorXf& x,
+                                        const std::vector<VectorXf>& us) {
       for (const auto& cost : this->player_costs_) {
-        if (!cost.CheckConstraints(t, x)) return false;
+        if (!cost.CheckConstraints(t, x, us)) return false;
       }
       return true;
     };  // check_all_constraints
@@ -305,12 +309,16 @@ bool GameSolver::CurrentOperatingPoint(
     const float delta_x_distance = StateDistance(
         x, last_operating_point.xs[kk], params_.trust_region_dimensions);
     const bool checked_constraints =
-        (satisfies_constraints) ? check_all_constraints(t, x) : true;
+        (satisfies_constraints) ? check_all_constraints(t, x, current_us)
+                                : true;
     *has_converged &= (delta_x_distance < params_.convergence_tolerance &&
                        checked_constraints);
 
     if (check_trust_region) {
       if (satisfies_constraints) *satisfies_constraints &= checked_constraints;
+
+      if (!checked_constraints)
+        std::cout << "does not satisfy constraints" << std::endl;
 
       if (delta_x_distance > params_.trust_region_size ||
           !checked_constraints) {
@@ -381,6 +389,8 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
     satisfies_trust_region = CurrentOperatingPoint(
         last_operating_point, *strategies, current_operating_point,
         has_converged, total_costs, is_new_operating_point_feasible);
+
+    std::cout << "backtracking" << std::endl;
   }
 
   // Output a warning. Solver should revert to last valid operating point.

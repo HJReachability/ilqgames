@@ -70,8 +70,12 @@ class Constraint : public Cost {
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.
-  virtual bool IsSatisfied(Time t, const VectorXf& input,
-                           float* level = nullptr) const = 0;
+  virtual bool IsSatisfiedLevel(Time t, const VectorXf& input,
+                                float* level) const = 0;
+  bool IsSatisfied(Time t, const VectorXf& input) const {
+    float level;
+    return IsSatisfiedLevel(t, input, &level);
+  }
 
   // Evaluate the barrier at the current time and input.
   float Evaluate(Time t, const VectorXf& input) const;
@@ -82,7 +86,6 @@ class Constraint : public Cost {
                             VectorXf* grad) const = 0;
 
   // Accessors.
-  const std::string& Name() const { return name_; }
   const Cost& EquivalentCost() const {
     CHECK_NOTNULL(equivalent_cost_.get());
     return *equivalent_cost_;
