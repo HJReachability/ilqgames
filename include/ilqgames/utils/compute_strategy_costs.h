@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,47 +36,36 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Base class for all LQ game solvers. For further details please refer to
-//  derived class comments.
+// Compute costs for each player associated with this set of strategies and
+// operating point.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_LQ_SOLVER_H
-#define ILQGAMES_SOLVER_LQ_SOLVER_H
+#ifndef ILQGAMES_UTILS_COMPUTE_STRATEGY_COSTS_H
+#define ILQGAMES_UTILS_COMPUTE_STRATEGY_COSTS_H
 
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
+#include <ilqgames/utils/types.h>
 
-#include <vector>
 #include <glog/logging.h>
+#include <Eigen/Dense>
+#include <random>
+#include <vector>
 
 namespace ilqgames {
 
-class LQSolver {
- public:
-  virtual ~LQSolver() {}
-
-  // Solve underlying LQ game to a Nash equilibrium. This will differ in derived
-  // classes depending on the information structure of the game.
-  virtual std::vector<Strategy> Solve(
-      const std::vector<LinearDynamicsApproximation>& linearization,
-      const std::vector<std::vector<QuadraticCostApproximation>>&
-          quadraticization,
-      const VectorXf& x0) = 0;
-
- protected:
-  LQSolver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-           size_t num_time_steps)
-      : dynamics_(dynamics), num_time_steps_(num_time_steps) {
-    CHECK_NOTNULL(dynamics.get());
-  }
-
-  // Dynamics and number of time steps.
-  const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
-  const size_t num_time_steps_;
-};  // class LQSolver
+// Compute cost of a set of strategies for each player.
+std::vector<float> ComputeStrategyCosts(
+    const std::vector<PlayerCost>& player_costs,
+    const std::vector<Strategy>& strategies,
+    const OperatingPoint& operating_point,
+    const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
+    float time_step, bool open_loop = false);
 
 }  // namespace ilqgames
 

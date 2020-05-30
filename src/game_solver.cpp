@@ -45,6 +45,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/utils/compute_strategy_costs.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
@@ -126,7 +127,17 @@ bool GameSolver::Solve(const VectorXf &x0,
   size_t num_iterations = 0;
   size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
-  std::vector<float> total_costs;
+  bool was_initial_point_feasible = true;
+  std::vector<float> total_costs =
+      ComputeStrategyCosts(player_costs_, current_strategies,
+                           current_operating_point, *dynamics_, x0, time_step_);
+
+  // Log current iterate.
+  if (log) {
+    log->AddSolverIterate(current_operating_point, current_strategies,
+                          total_costs, elapsed_time(solver_call_time),
+                          has_converged);
+  }
 
   // Main loop with timer for anytime execution.
   while (num_iterations < params_.max_solver_iters && !has_converged &&
@@ -158,12 +169,6 @@ bool GameSolver::Solve(const VectorXf &x0,
                             &total_costs, false);
     }
 
-    // Log current iterate.
-    if (log) {
-      log->AddSolverIterate(current_operating_point, current_strategies,
-                            total_costs, elapsed_time(solver_call_time));
-    }
-
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point, only if the system can't be treated as linear from the
     // outset, in which case we've already linearized it.
@@ -190,24 +195,32 @@ bool GameSolver::Solve(const VectorXf &x0,
 
     // Solve LQ game.
     current_strategies =
-        lq_solver_->Solve(*dynamics_, linearization_, quadraticization_);
-
-    // std::cout << current_strategies[1].alphas[0].transpose() << std::endl
-    //           << std::endl;
+        lq_solver_->Solve(linearization_, quadraticization_, x0);
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
-                            &has_converged, &total_costs)) {
+                            &has_converged, &was_initial_point_feasible,
+                            &total_costs)) {
       // Maybe emit warning if exiting early.
-      if (num_iterations <= 1) {
+      if (num_iterations == 1) {
         LOG(WARNING)
-            << "Solver exited after only 1 iteration, which may indicate "
+            << "Solver exited after during first iteration, which may indicate "
                "an infeasible initial operating point.";
       }
 
-      final_strategies->swap(current_strategies);
-      final_operating_point->swap(last_operating_point);
+      if (was_initial_point_feasible)
+        LOG(INFO) << "Previous operating point was feasible.";
+      else
+        LOG(INFO) << "Previous operating point was infeasible.";
+
       return false;
+    }
+
+    // Log current iterate.
+    if (log) {
+      log->AddSolverIterate(current_operating_point, current_strategies,
+                            total_costs, elapsed_time(solver_call_time),
+                            has_converged);
     }
 
     // Record loop runtime.
@@ -215,10 +228,15 @@ bool GameSolver::Solve(const VectorXf &x0,
   }
 
   // Maybe emit warning if exiting early.
-  if (num_iterations <= 1) {
+  if (num_iterations == 1) {
     LOG(WARNING) << "Solver exited after only 1 iteration but passed "
-                    "backtracking checks, which may indicate an *almost* "
-                    "infeasible initial operating point.";
+                    "backtracking checks, which may indicate an almost "
+                    "converged initial operating point and strategies.";
+    CHECK_LT(
+        (initial_operating_point.xs.back() - current_operating_point.xs.back())
+            .cwiseAbs()
+            .maxCoeff(),
+        params_.convergence_tolerance);
   }
 
   // Set final strategies and operating point.
@@ -304,16 +322,25 @@ float GameSolver::StateDistance(const VectorXf &x1, const VectorXf &x2,
   return distance;
 }
 
+<<<<<<< HEAD
 bool GameSolver::ModifyLQStrategies(std::vector<Strategy> *strategies,
                                     OperatingPoint *current_operating_point,
                                     bool *has_converged,
                                     std::vector<float> *total_costs) const {
+=======
+bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
+                                    OperatingPoint* current_operating_point,
+                                    bool* has_converged,
+                                    bool* was_initial_point_feasible,
+                                    std::vector<float>* total_costs) const {
+>>>>>>> master
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
   CHECK_NOTNULL(total_costs);
 
-  // Initially scale alphas by a fixed amount to avoid unnecessary backtracking.
+  // Initially scale alphas by a fixed amount to avoid unnecessary
+  // backtracking.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
 
   // Compute next operating point.
@@ -322,8 +349,14 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy> *strategies,
       last_operating_point, *strategies, current_operating_point, has_converged,
       total_costs);
 
+<<<<<<< HEAD
   if (!params_.linesearch)
     return true;
+=======
+  if (was_initial_point_feasible)
+    *was_initial_point_feasible = satisfies_trust_region;
+  if (!params_.linesearch) return true;
+>>>>>>> master
 
   // Keep reducing alphas until we satisfy the trust region constraint.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {

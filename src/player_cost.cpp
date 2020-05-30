@@ -133,6 +133,24 @@ float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
   return cost;
 }
 
+float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
+                                 const std::vector<VectorXf>& us) const {
+  float total_cost = 0.0;
+
+  // State costs.
+  for (const auto& cost : state_costs_)
+    total_cost += cost->Evaluate(next_t, next_x);
+
+  // Control costs.
+  for (const auto& pair : control_costs_) {
+    const PlayerIndex& player = pair.first;
+    const auto& cost = pair.second;
+    total_cost += cost->Evaluate(t, us[player]);
+  }
+
+  return total_cost;
+}
+
 QuadraticCostApproximation PlayerCost::Quadraticize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   QuadraticCostApproximation q(x.size(), state_regularization_);
