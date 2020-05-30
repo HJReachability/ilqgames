@@ -218,9 +218,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost(kStateRegularization, kControlRegularization);
-  PlayerCost p2_cost(kStateRegularization, kControlRegularization);
-  PlayerCost p3_cost(kStateRegularization, kControlRegularization);
+  PlayerCost p1_cost("P1", kStateRegularization, kControlRegularization);
+  PlayerCost p2_cost("P2", kStateRegularization, kControlRegularization);
+  PlayerCost p3_cost("P3", kStateRegularization, kControlRegularization);
 
   // Stay in lanes.
   const Polyline2 lane1(

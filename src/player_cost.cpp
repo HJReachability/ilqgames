@@ -189,12 +189,20 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
 bool PlayerCost::CheckConstraints(Time t, const VectorXf& x,
                                   const std::vector<VectorXf>& us) const {
   for (const auto& constraint : state_constraints_) {
-    if (!constraint->IsSatisfied(t, x)) return false;
+    if (!constraint->IsSatisfied(t, x)) {
+      VLOG(2) << name_ << ": failed to satisfy constraint "
+              << constraint->Name();
+      return false;
+    }
   }
 
-  for (const auto& pair : control_constraints_) {
-    if (!pair.second->IsSatisfied(t, us[pair.first])) return false;
-  }
+  // for (const auto& pair : control_constraints_) {
+  //   if (!pair.second->IsSatisfied(t, us[pair.first])) {
+  //     VLOG(2) << name_ + ": Failed to satisfy constraint "
+  //             << pair.second->Name();
+  //     return false;
+  //   }
+  // }
 
   return true;
 }

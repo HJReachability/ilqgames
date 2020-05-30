@@ -57,9 +57,11 @@ namespace ilqgames {
 class PlayerCost {
  public:
   ~PlayerCost() {}
-  explicit PlayerCost(float state_regularization = 0.0,
+  explicit PlayerCost(const std::string& name = "",
+                      float state_regularization = 0.0,
                       float control_regularization = 0.0)
-      : state_regularization_(state_regularization),
+      : name_(name),
+        state_regularization_(state_regularization),
         control_regularization_(control_regularization),
         are_constraints_on_(true) {}
 
@@ -91,6 +93,7 @@ class PlayerCost {
   // with their"equivalent" costs).
   void TurnConstraintsOn() { are_constraints_on_ = true; }
   void TurnConstraintsOff() { are_constraints_on_ = false; }
+  bool AreConstraintsOn() const { return are_constraints_on_; }
 
   // Check whether constraints are satisfied at the given time.
   bool CheckConstraints(Time t, const VectorXf& x,
@@ -117,6 +120,9 @@ class PlayerCost {
   }
 
  private:
+  // Name to be used with error msgs.
+  const std::string name_;
+
   // State costs and control costs.
   std::vector<std::shared_ptr<Cost>> state_costs_;
   CostMap<Cost> control_costs_;
