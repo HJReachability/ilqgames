@@ -50,9 +50,9 @@
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <math.h>
 #include <string>
 #include <utility>
-#include <math.h>
 
 namespace ilqgames {
 
@@ -70,7 +70,9 @@ class ProximityConstraint : public TimeInvariantConstraint {
         xidx2_(position_idxs2.first),
         yidx2_(position_idxs2.second) {
     // Set equivalent cost pointer.
-    const float new_threshold = std::max<float>(threshold - kCostBuffer, 0.0);
+    CHECK(!inside) << "Right now we only have a cost that supports outside "
+                      "oriented constraints.";
+    const float new_threshold = threshold - kCostBuffer;
     equivalent_cost_.reset(new ProximityCost(kEquivalentCostWeight,
                                              position_idxs1, position_idxs2,
                                              new_threshold, name + "/Cost"));

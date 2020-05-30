@@ -99,8 +99,8 @@ class Constraint : public Cost {
   // when an initial iterate is infeasible.
   std::unique_ptr<const Cost> equivalent_cost_;
   static constexpr float kBarrierWeight = 0.1;
-  static constexpr float kEquivalentCostWeight = 10.0;
-  static constexpr float kCostBuffer = 3.0;
+  static constexpr float kEquivalentCostWeight = 10000.0;
+  static constexpr float kCostBuffer = 1.0;
 };  //\class Constraint
 
 }  // namespace ilqgames
