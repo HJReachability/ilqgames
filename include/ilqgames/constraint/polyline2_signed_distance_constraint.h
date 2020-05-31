@@ -71,7 +71,7 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
     const float new_threshold =
       (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
     equivalent_cost_.reset(new SemiquadraticPolyline2Cost(
-        kEquivalentCostWeight, polyline, position_idxs, new_threshold,
+        kInitialEquivalentCostWeight, polyline, position_idxs, new_threshold,
         !oriented_right, name + "/Cost"));
   }
 

@@ -73,7 +73,7 @@ class ProximityConstraint : public TimeInvariantConstraint {
     CHECK(!inside) << "Right now we only have a cost that supports outside "
                       "oriented constraints.";
     const float new_threshold = threshold - kCostBuffer;
-    equivalent_cost_.reset(new ProximityCost(kEquivalentCostWeight,
+    equivalent_cost_.reset(new ProximityCost(kInitialEquivalentCostWeight,
                                              position_idxs1, position_idxs2,
                                              new_threshold, name + "/Cost"));
   }

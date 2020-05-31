@@ -67,8 +67,8 @@ class SingleDimensionConstraint : public TimeInvariantConstraint {
         (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
     CHECK_GE(dimension, 0);
     equivalent_cost_.reset(
-        new SemiquadraticCost(kEquivalentCostWeight, dimension, new_threshold,
-                              !oriented_right, name + "/Cost"));
+        new SemiquadraticCost(kInitialEquivalentCostWeight, dimension,
+                              new_threshold, !oriented_right, name + "/Cost"));
   }
 
   // Check if this constraint is satisfied, and optionally return the value of a

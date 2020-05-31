@@ -143,7 +143,6 @@ bool GameSolver::Solve(const VectorXf& x0,
   // which occurs after solving the LQ game.
   bool was_operating_point_feasible;
   std::vector<float> total_costs;
-
   last_operating_point.swap(current_operating_point);
   CurrentOperatingPoint(last_operating_point, current_strategies,
                         &current_operating_point, &has_converged, &total_costs,

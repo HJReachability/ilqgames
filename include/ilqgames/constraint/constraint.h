@@ -93,13 +93,13 @@ class Constraint : public Cost {
 
  protected:
   explicit Constraint(const std::string& name = "")
-      : Cost(kBarrierWeight, name) {}
+      : Cost(kInitialBarrierWeight, name) {}
 
   // "Equivalent" well-defined cost to encourage constraint satisfaction, e.g.,
   // when an initial iterate is infeasible.
   std::unique_ptr<const Cost> equivalent_cost_;
-  static constexpr float kBarrierWeight = 0.1;
-  static constexpr float kEquivalentCostWeight = 10000.0;
+  static constexpr float kInitialBarrierWeight = 1.0;
+  static constexpr float kInitialEquivalentCostWeight = 1.0;
   static constexpr float kCostBuffer = 1.0;
 };  //\class Constraint
 
