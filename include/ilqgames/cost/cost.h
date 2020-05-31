@@ -68,6 +68,10 @@ class Cost {
   // Reset the initial time associated to this cost.
   static void ResetInitialTime(Time t0) { initial_time_ = t0; };
 
+  // Reset and scale weight.
+  void SetWeight(float weight) { weight_ = weight; }
+  void ScaleWeight(float scale) { weight_ *= scale; }
+
  protected:
   explicit Cost(float weight, const std::string& name = "")
       : weight_(weight), name_(name) {}

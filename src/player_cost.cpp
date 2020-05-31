@@ -101,10 +101,8 @@ void AccumulateControlConstraints(const CostMap<Constraint>& constraints,
   auto f = [&are_constraints_on](const Constraint& constraint, Time t,
                                  const VectorXf& u, MatrixXf* hess,
                                  VectorXf* grad) {
-    //    const Constraint& constraint = *static_cast<const Constraint*>(&cost);
     if (are_constraints_on) constraint.Quadraticize(t, u, hess, grad);
-    if (!constraint.IsSatisfied(t, u))
-      constraint.EquivalentCost().Quadraticize(t, u, hess, grad);
+    constraint.EquivalentCost().Quadraticize(t, u, hess, grad);
   };
   AccumulateControlCostsBase(constraints, t, us, regularization, q, f);
 }
@@ -193,10 +191,8 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
       constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
 
     // Add some equivalent cost in to help us stay feasible.
-    if (!constraint->IsSatisfied(t, x)) {
-      constraint->EquivalentCost().Quadraticize(t, x, &q.state.hess,
-                                                &q.state.grad);
-    }
+    constraint->EquivalentCost().Quadraticize(t, x, &q.state.hess,
+                                              &q.state.grad);
   }
 
   // Account for control constraints.
@@ -217,13 +213,13 @@ bool PlayerCost::CheckConstraints(Time t, const VectorXf& x,
     }
   }
 
-  // for (const auto& pair : control_constraints_) {
-  //   if (!pair.second->IsSatisfied(t, us[pair.first])) {
-  //     VLOG(2) << name_ + ": Failed to satisfy constraint "
-  //             << pair.second->Name();
-  //     return false;
-  //   }
-  // }
+  for (const auto& pair : control_constraints_) {
+    if (!pair.second->IsSatisfied(t, us[pair.first])) {
+      VLOG(2) << name_ + ": Failed to satisfy constraint "
+              << pair.second->Name();
+      return false;
+    }
+  }
 
   return true;
 }
@@ -240,8 +236,8 @@ void PlayerCost::ScaleConstraintBarrierWeights(float scale) {
 }
 
 void PlayerCost::ResetConstraintBarrierWeights() {
-  for (auto& constraint : state_constraints_) constraint->SetBarrierWeight(1.0);
-  for (auto& pair : control_constraints_) pair.second->SetBarrierWeight(1.0);
+  for (auto& constraint : state_constraints_) constraint->ResetBarrierWeight();
+  for (auto& pair : control_constraints_) pair.second->ResetBarrierWeight();
 }
 
 }  // namespace ilqgames

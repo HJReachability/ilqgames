@@ -102,13 +102,6 @@ bool GameSolver::Solve(const VectorXf& x0,
                strategy.alphas.size() == this->num_time_steps_;
       }));
 
-  // Flag for whether or not the initial operating point is all zeros.
-  // If it is all zeros, we will populate it with the initial state unrolled
-  // with the initial strategies in the first iteration of the solver, but
-  // otherwise we will leave it alone.
-  const bool is_initial_operating_point_zero =
-      initial_operating_point.xs[0].squaredNorm() < constants::kSmallNumber;
-
   // Last and current operating points. Make sure the last one starts from the
   // current state so that the current one will start there as well.
   // NOTE: setting the current operating point to start at x0 is critical to the
@@ -235,6 +228,9 @@ bool GameSolver::Solve(const VectorXf& x0,
     timer_.Toc();
   }
 
+  CHECK(!player_costs_.front().AreConstraintsOn() ||
+        was_operating_point_feasible);
+
   // Maybe emit warning if exiting early.
   if (num_iterations == 1) {
     VLOG(1) << "Solver exited after only 1 iteration but passed "
@@ -247,8 +243,10 @@ bool GameSolver::Solve(const VectorXf& x0,
         params_.convergence_tolerance);
   }
 
-  CHECK(!player_costs_.front().AreConstraintsOn() ||
-        was_operating_point_feasible);
+  if (!was_operating_point_feasible) {
+    VLOG(1) << "Solver found an infeasible solution. Failing.";
+    return false;
+  }
 
   // Set final strategies and operating point.
   final_strategies->swap(current_strategies);
@@ -303,18 +301,18 @@ bool GameSolver::CurrentOperatingPoint(
     const bool checked_constraints =
         check_all_constraints(t, x, current_us) || !satisfies_constraints;
 
-    *has_converged &= (delta_x_distance < params_.convergence_tolerance &&
-                       checked_constraints);
+    *has_converged &= delta_x_distance < params_.convergence_tolerance;
 
     if (check_trust_region) {
       if (satisfies_constraints) *satisfies_constraints &= checked_constraints;
 
       if (delta_x_distance > params_.trust_region_size ||
-          (player_costs_.front().AreConstraintsOn() && !checked_constraints)) {
+          (player_costs_.front().AreConstraintsOn() &&
+           params_.enforce_constraints_in_linesearch && !checked_constraints)) {
         // If we still satisfy constraints then log a warning. This shouldn't
         // really ever lead to a fault though since the solver should be
         // backtracking if this returns false anyway.
-        if (checked_constraints)
+        if (params_.enforce_constraints_in_linesearch && checked_constraints)
           VLOG(2) << "Failed trust region on time step " << kk
                   << " but satisfied constraints up till then.";
         return false;

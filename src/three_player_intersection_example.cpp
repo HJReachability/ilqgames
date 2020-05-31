@@ -93,18 +93,11 @@ static constexpr float kJerkCostWeight = 0.1;
 static constexpr float kMaxOmega = 1.0;
 
 static constexpr float kACostWeight = 0.1;
-static constexpr float kCurvatureCostWeight = 1.0;
-static constexpr float kMaxVCostWeight = 10.0;
 static constexpr float kNominalVCostWeight = 100.0;
 
-static constexpr float kGoalCostWeight = 0.1;
 static constexpr float kLaneCostWeight = 25.0;
-static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 6.0;
-static constexpr float kP1ProximityCostWeight = 50.0;
-static constexpr float kP2ProximityCostWeight = 50.0;
-static constexpr float kP3ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
@@ -112,16 +105,6 @@ static constexpr bool kConstraintOrientedInside = false;
 
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5;  // m
-
-// Goal points.
-static constexpr float kP1GoalX = -6.0;   // m
-static constexpr float kP1GoalY = 600.0;  // m
-
-static constexpr float kP2GoalX = 500.0;  // m
-static constexpr float kP2GoalY = 12.0;   // m
-
-static constexpr float kP3GoalX = 100.0;  // m
-static constexpr float kP3GoalY = 16.0;   // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0;  // m/s

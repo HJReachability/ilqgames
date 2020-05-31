@@ -65,8 +65,15 @@ class Constraint : public Cost {
   // Set or multiplicatively scale the barrier weight. This will typically
   // decrease with successive solves in order to improve the approximation of
   // the barrier-free objective.
-  void SetBarrierWeight(float weight) { weight_ = weight; }
-  void ScaleBarrierWeight(float scale) { weight_ *= scale; }
+  void ResetBarrierWeight() {
+    weight_ = kInitialBarrierWeight;
+    if (equivalent_cost_.get())
+      equivalent_cost_->SetWeight(kInitialEquivalentCostWeight);
+  }
+  void ScaleBarrierWeight(float scale) {
+    weight_ *= scale;
+    if (equivalent_cost_.get()) equivalent_cost_->ScaleWeight(scale);
+  }
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.
@@ -97,9 +104,9 @@ class Constraint : public Cost {
 
   // "Equivalent" well-defined cost to encourage constraint satisfaction, e.g.,
   // when an initial iterate is infeasible.
-  std::unique_ptr<const Cost> equivalent_cost_;
-  static constexpr float kInitialBarrierWeight = 1.0;
-  static constexpr float kInitialEquivalentCostWeight = 1.0;
+  std::unique_ptr<Cost> equivalent_cost_;
+  static constexpr float kInitialBarrierWeight = 100.0;
+  static constexpr float kInitialEquivalentCostWeight = 10.0;
   static constexpr float kCostBuffer = 1.0;
 };  //\class Constraint
 
