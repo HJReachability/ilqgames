@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,40 +36,31 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Roundabout merging example for feedback linearizable systems.
+// Two Dubins cars. One tries to follow other one, which is trying to get to the
+// origin. Both also have penalties on control input, and we are interested in
+// the difference between open-loop and feedback Nash strategies for this
+// situation. Example conceived by Forrest Laine ( forrest.laine@berkeley.edu ).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLES_ROUNDABOUT_MERGING_EXAMPLE_H
-#define ILQGAMES_EXAMPLES_ROUNDABOUT_MERGING_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLES_DUBINS_ORIGIN_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_DUBINS_ORIGIN_EXAMPLE_H
 
-#include <ilqgames/dynamics/multi_player_flat_system.h>
-#include <ilqgames/dynamics/concatenated_flat_system.h>
-#include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-class FlatRoundaboutMergingExample : public TopDownRenderableProblem {
+class DubinsOriginExample : public TopDownRenderableProblem {
  public:
-  ~FlatRoundaboutMergingExample() {}
-  FlatRoundaboutMergingExample(const SolverParams& params);
+  ~DubinsOriginExample() {}
+  DubinsOriginExample(const SolverParams& params);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf& xi) const;
-  std::vector<float> Ys(const VectorXf& xi) const;
-  std::vector<float> Thetas(const VectorXf& xi) const;
-
-  // Dynamics as shared ptr.
-  std::shared_ptr<const ConcatenatedFlatSystem> Dynamics() const {
-    return dynamics_;
-  }
-
- private:
-  // Dynamics as shared ptr.
-  std::shared_ptr<const ConcatenatedFlatSystem> dynamics_;
-};  // class FlatRoundaboutMergingExample
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class RoundaboutMergingExample
 
 }  // namespace ilqgames
 

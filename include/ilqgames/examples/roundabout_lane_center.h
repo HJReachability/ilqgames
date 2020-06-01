@@ -40,6 +40,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef ILQGAMES_EXAMPLES_ROUNDABOUT_LANE_CENTER_H
+#define ILQGAMES_EXAMPLES_ROUNDABOUT_LANE_CENTER_H
+
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -53,3 +56,5 @@ PointList2 RoundaboutLaneCenter(float entrance_angle, float exit_angle,
                                 float distance_from_roundabout);
 
 }  // namespace ilqgames
+
+#endif
