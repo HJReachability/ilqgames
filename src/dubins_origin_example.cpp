@@ -44,6 +44,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_dubins_car.h>
 #include <ilqgames/examples/dubins_origin_example.h>
@@ -67,6 +68,7 @@ static constexpr size_t kNumTimeSteps =
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 1.0;
+static constexpr float kAttractionCostWeight = 10.0;
 static constexpr float kGoalCostWeight = 10.0;
 
 // Initial state.
@@ -130,7 +132,11 @@ DubinsOriginExample::DubinsOriginExample(const SolverParams& params) {
   PlayerCost p1_cost("P1"), p2_cost("P2");
 
   // Attract P2 to P1.
-  //  const auto p2_attraction_cost = std::make_shared<
+  const std::shared_ptr<QuadraticDifferenceCost> p2_attraction_cost =
+      std::shared_ptr<QuadraticDifferenceCost>(
+          new QuadraticDifferenceCost(kAttractionCostWeight, {kP1XIdx, kP1YIdx},
+                                      {kP2XIdx, kP2YIdx}, "AttractionCost"));
+  p2_cost.AddStateCost(p2_attraction_cost);
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
