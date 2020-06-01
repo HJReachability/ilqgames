@@ -236,11 +236,6 @@ bool GameSolver::Solve(const VectorXf& x0,
     VLOG(1) << "Solver exited after only 1 iteration but passed "
                "backtracking checks, which may indicate an almost "
                "converged initial operating point and strategies.";
-    CHECK_LT(
-        (initial_operating_point.xs.back() - current_operating_point.xs.back())
-            .cwiseAbs()
-            .maxCoeff(),
-        params_.convergence_tolerance);
   }
 
   if (!was_operating_point_feasible) {

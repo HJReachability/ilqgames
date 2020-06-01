@@ -68,6 +68,7 @@ class CostInspector {
   CostInspector(const std::shared_ptr<const ControlSliders>& sliders,
                 const std::vector<std::vector<PlayerCost>>& player_costs)
       : sliders_(sliders),
+        selected_problem_(0),
         selected_player_(0),
         selected_cost_name_("<Please select a cost>") {
     CHECK_NOTNULL(sliders_.get());
