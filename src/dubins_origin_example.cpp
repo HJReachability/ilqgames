@@ -67,7 +67,7 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 1.0;
+static constexpr float kOmegaCostWeight = 100.0;
 static constexpr float kAttractionCostWeight = 10.0;
 static constexpr float kGoalCostWeight = 10.0;
 
