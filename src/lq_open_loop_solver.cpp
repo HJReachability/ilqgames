@@ -117,18 +117,16 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     qr_capital_lambdas_[kk].compute(capital_lambdas_[kk]);
 
     // Compute Ms and ms.
+    VectorXf intermediary = VectorXf::Zero(dynamics_->XDim());
+    for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
+      intermediary -= lin.Bs[jj] * (warped_Bs_[kk][jj] * ms_[kk + 1][jj] +
+                                    warped_rs_[kk][jj]);
+    }
+
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       Ms_[kk][ii] =
           quad[ii].state.hess + lin.A.transpose() * Ms_[kk + 1][ii] *
                                     qr_capital_lambdas_[kk].solve(lin.A);
-
-      // Intermediate term in ms computation.
-      VectorXf intermediary = VectorXf::Zero(dynamics_->XDim());
-      for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
-        intermediary -= lin.Bs[jj] * (warped_Bs_[kk][jj] * ms_[kk + 1][ii] +
-                                      warped_rs_[kk][jj]);
-      }
-
       ms_[kk][ii] =
           quad[ii].state.grad +
           lin.A.transpose() *
