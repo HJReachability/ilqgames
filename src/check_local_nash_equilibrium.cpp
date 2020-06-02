@@ -77,21 +77,28 @@ bool NumericalCheckLocalNashEquilibrium(
 
   // For each player, perturb strategies with Gaussian noise a bunch of times
   // and if cost decreases then return false.
-  std::vector<Strategy> perturbed_strategies(strategies);
+  std::vector<Strategy> perturbed_strategies_lower(strategies);
+  std::vector<Strategy> perturbed_strategies_upper(strategies);
   for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
     for (size_t kk = 0; kk < num_time_steps - 1; kk++) {
-      VectorXf& alphak = perturbed_strategies[ii].alphas[kk];
+      VectorXf& alphak_lower = perturbed_strategies_lower[ii].alphas[kk];
+      VectorXf& alphak_upper = perturbed_strategies_upper[ii].alphas[kk];
 
-      for (size_t jj = 0; jj < alphak.size(); jj++) {
-        alphak(jj) += max_perturbation;
+      for (size_t jj = 0; jj < alphak_lower.size(); jj++) {
+        alphak_lower(jj) -= max_perturbation;
+        alphak_upper(jj) += max_perturbation;
 
         // Compute new costs.
-        const std::vector<float> perturbed_costs = ComputeStrategyCosts(
-            player_costs, perturbed_strategies, operating_point, dynamics, x0,
-            time_step, open_loop);
+        const std::vector<float> perturbed_costs_lower = ComputeStrategyCosts(
+            player_costs, perturbed_strategies_lower, operating_point, dynamics,
+            x0, time_step, open_loop);
+        const std::vector<float> perturbed_costs_upper = ComputeStrategyCosts(
+            player_costs, perturbed_strategies_upper, operating_point, dynamics,
+            x0, time_step, open_loop);
 
         // Check Nash condition.
-        if (perturbed_costs[ii] < nominal_costs[ii]) {
+        if (std::min(perturbed_costs_lower[ii], perturbed_costs_upper[ii]) <
+            nominal_costs[ii]) {
           // std::printf("player %hu, timestep %zu: nominal %f > perturbed
           // %f\n",
           //             ii, kk, nominal_costs[ii], perturbed_costs[ii]);
@@ -104,7 +111,8 @@ bool NumericalCheckLocalNashEquilibrium(
         }
 
         // Reset this alpha.
-        alphak = strategies[ii].alphas[kk];
+        alphak_lower = strategies[ii].alphas[kk];
+        alphak_upper = strategies[ii].alphas[kk];
       }
     }
   }
