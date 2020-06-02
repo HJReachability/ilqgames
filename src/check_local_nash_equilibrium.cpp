@@ -109,7 +109,7 @@ bool NumericalCheckLocalNashEquilibrium(
           //           << strategies[ii].alphas[kk].transpose()
           //           << ", vs. perturbed " << alphak_lower.transpose()
           //           << std::endl;
-          // return false;
+          return false;
         }
 
         // Reset this alpha.
