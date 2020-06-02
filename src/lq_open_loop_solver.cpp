@@ -101,8 +101,7 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     const auto& quad = quadraticization[kk];
 
     // Campute capital lambdas.
-    capital_lambdas_[kk] =
-        MatrixXf::Identity(dynamics_->XDim(), dynamics_->XDim());
+    capital_lambdas_[kk].setIdentity();
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       const auto control_iter = quad[ii].control.find(ii);
       CHECK(control_iter != quad[ii].control.end());
