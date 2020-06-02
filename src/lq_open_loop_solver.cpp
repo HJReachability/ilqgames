@@ -117,7 +117,7 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     qr_capital_lambdas_[kk].compute(capital_lambdas_[kk]);
 
     // Compute Ms and ms.
-    intermediate_terms_[kk] = VectorXf::Zero(dynamics_->XDim());
+    intermediate_terms_[kk].setZero();
     for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
       intermediate_terms_[kk] -=
           lin.Bs[jj] *

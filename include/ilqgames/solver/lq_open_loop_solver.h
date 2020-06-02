@@ -87,7 +87,8 @@ class LQOpenLoopSolver : public LQSolver {
     }
 
     // Initialize other "special" terms and decompositions.
-    intermediate_terms_.resize(num_time_steps_ - 1);
+    intermediate_terms_.resize(num_time_steps_ - 1,
+                               VectorXf::Zero(dynamics_->XDim()));
     capital_lambdas_.resize(
         num_time_steps_ - 1,
         MatrixXf::Zero(dynamics_->XDim(), dynamics_->XDim()));
