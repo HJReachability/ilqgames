@@ -146,6 +146,8 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     const auto& lin = linearization[kk];
 
     // Intermediate term in u and x computations.
+    // TODO: this is the same term from above, basically. Perhaps there's some
+    // way to reuse the computation.
     VectorXf intermediary = lin.A * x_star;
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       intermediary -= lin.Bs[ii] * (warped_Bs_[kk][ii] * ms_[kk + 1][ii] +
@@ -159,7 +161,8 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     // Compute optimal u and store (sign flipped) in alpha.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       strategies[ii].alphas[kk] =
-          warped_Bs_[kk][ii] * (Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii]);
+          warped_Bs_[kk][ii] * (Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii]) +
+          warped_rs_[kk][ii];
     }
 
     // Check dynamic feasibility.
