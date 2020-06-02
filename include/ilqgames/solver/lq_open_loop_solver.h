@@ -87,6 +87,7 @@ class LQOpenLoopSolver : public LQSolver {
     }
 
     // Initialize other "special" terms and decompositions.
+    intermediate_terms_.resize(num_time_steps_ - 1);
     capital_lambdas_.resize(
         num_time_steps_ - 1,
         MatrixXf::Zero(dynamics_->XDim(), dynamics_->XDim()));
@@ -121,6 +122,7 @@ class LQOpenLoopSolver : public LQSolver {
   std::vector<std::vector<MatrixXf>> Ms_;
 
   // Instantiate the rest of the "special" terms and decompositions.
+  std::vector<VectorXf> intermediate_terms_;
   std::vector<MatrixXf> capital_lambdas_;
   std::vector<Eigen::HouseholderQR<MatrixXf>> qr_capital_lambdas_;
   std::vector<std::vector<Eigen::LDLT<MatrixXf>>> chol_Rs_;

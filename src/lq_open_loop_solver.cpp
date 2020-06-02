@@ -117,10 +117,11 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     qr_capital_lambdas_[kk].compute(capital_lambdas_[kk]);
 
     // Compute Ms and ms.
-    VectorXf intermediary = VectorXf::Zero(dynamics_->XDim());
+    intermediate_terms_[kk] = VectorXf::Zero(dynamics_->XDim());
     for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
-      intermediary -= lin.Bs[jj] * (warped_Bs_[kk][jj] * ms_[kk + 1][jj] +
-                                    warped_rs_[kk][jj]);
+      intermediate_terms_[kk] -=
+          lin.Bs[jj] *
+          (warped_Bs_[kk][jj] * ms_[kk + 1][jj] + warped_rs_[kk][jj]);
     }
 
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
@@ -129,9 +130,9 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
                                     qr_capital_lambdas_[kk].solve(lin.A);
       ms_[kk][ii] =
           quad[ii].state.grad +
-          lin.A.transpose() *
-              (ms_[kk + 1][ii] +
-               Ms_[kk + 1][ii] * qr_capital_lambdas_[kk].solve(intermediary));
+          lin.A.transpose() * (ms_[kk + 1][ii] +
+                               Ms_[kk + 1][ii] * qr_capital_lambdas_[kk].solve(
+                                                     intermediate_terms_[kk]));
     }
   }
 
@@ -142,18 +143,10 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     // Unpack linearization at this time step.
     const auto& lin = linearization[kk];
 
-    // Intermediate term in u and x computations.
-    // TODO: this is the same term from above, basically. Perhaps there's some
-    // way to reuse the computation.
-    VectorXf intermediary = lin.A * x_star;
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      intermediary -= lin.Bs[ii] * (warped_Bs_[kk][ii] * ms_[kk + 1][ii] +
-                                    warped_rs_[kk][ii]);
-    }
-
     // Compute optimal x.
     last_x_star = x_star;
-    x_star = qr_capital_lambdas_[kk].solve(intermediary);
+    x_star = qr_capital_lambdas_[kk].solve(lin.A * last_x_star +
+                                           intermediate_terms_[kk]);
 
     // Compute optimal u and store (sign flipped) in alpha.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
