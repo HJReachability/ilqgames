@@ -99,15 +99,17 @@ bool NumericalCheckLocalNashEquilibrium(
         // Check Nash condition.
         if (std::min(perturbed_costs_lower[ii], perturbed_costs_upper[ii]) <
             nominal_costs[ii]) {
-          // std::printf("player %hu, timestep %zu: nominal %f > perturbed
-          // %f\n",
-          //             ii, kk, nominal_costs[ii], perturbed_costs[ii]);
+          // std::printf(
+          //     "player %hu, timestep %zu: nominal %f > perturbed %f\n ", ii,
+          //     kk, nominal_costs[ii], std::min(perturbed_costs_lower[ii],
+          //     perturbed_costs_lower[ii]));
           // std::cout << "nominal u: " <<
           // operating_point.us[kk][ii].transpose()
           //           << ", alpha original: "
           //           << strategies[ii].alphas[kk].transpose()
-          //           << ", vs. perturbed " << alphak.transpose() << std::endl;
-          return false;
+          //           << ", vs. perturbed " << alphak_lower.transpose()
+          //           << std::endl;
+          // return false;
         }
 
         // Reset this alpha.
