@@ -99,7 +99,6 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     // Unpack linearization and quadraticization at this time step.
     const auto& lin = linearization[kk];
     const auto& quad = quadraticization[kk];
-    const auto& next_quad = quadraticization[kk + 1];
 
     // Campute capital lambdas.
     capital_lambdas_[kk] =
@@ -131,7 +130,7 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
       }
 
       ms_[kk][ii] =
-          next_quad[ii].state.grad +
+          quad[ii].state.grad +
           lin.A.transpose() *
               (ms_[kk + 1][ii] +
                Ms_[kk + 1][ii] * qr_capital_lambdas_[kk].solve(intermediary));
@@ -166,11 +165,11 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     }
 
     // Check dynamic feasibility.
-    //   VectorXf check_x = lin.A * last_x_star;
-    //   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-    //     check_x -= lin.Bs[ii] * strategies[ii].alphas[kk];
+    // VectorXf check_x = lin.A * last_x_star;
+    // for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+    //   check_x -= lin.Bs[ii] * strategies[ii].alphas[kk];
 
-    //   CHECK_LE((x_star - check_x).cwiseAbs().maxCoeff(), 1e-1);
+    // CHECK_LE((x_star - check_x).cwiseAbs().maxCoeff(), 1e-1);
   }
 
   return strategies;
