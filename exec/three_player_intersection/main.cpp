@@ -113,6 +113,7 @@ int main(int argc, char** argv) {
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
+  //  params.open_loop = true;
   auto problem =
       std::make_shared<ilqgames::ThreePlayerIntersectionExample>(params);
 

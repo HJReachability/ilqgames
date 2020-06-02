@@ -296,14 +296,12 @@ bool GameSolver::CurrentOperatingPoint(
     const bool checked_constraints =
         check_all_constraints(t, x, current_us) || !satisfies_constraints;
 
-    *has_converged &= delta_x_distance < params_.convergence_tolerance;
+    *has_converged &= delta_x_distance <= params_.convergence_tolerance;
+    if (satisfies_constraints) *satisfies_constraints &= checked_constraints;
 
     if (check_trust_region) {
-      if (satisfies_constraints) *satisfies_constraints &= checked_constraints;
-
       if (delta_x_distance > params_.trust_region_size ||
-          (player_costs_.front().AreConstraintsOn() &&
-           params_.enforce_constraints_in_linesearch && !checked_constraints)) {
+          (params_.enforce_constraints_in_linesearch && !checked_constraints)) {
         // If we still satisfy constraints then log a warning. This shouldn't
         // really ever lead to a fault though since the solver should be
         // backtracking if this returns false anyway.
@@ -371,14 +369,11 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
     satisfies_trust_region = CurrentOperatingPoint(
         last_operating_point, *strategies, current_operating_point,
         has_converged, total_costs, true, is_new_operating_point_feasible);
-
-    if (*has_converged && player_costs_.front().AreConstraintsOn())
-      CHECK(*is_new_operating_point_feasible);
   }
 
   // Output a warning. Solver should revert to last valid operating point.
   VLOG(1) << "Exceeded maximum number of backtracking steps.";
-  CHECK(!*has_converged);
+  if (!params_.enforce_constraints_in_linesearch) CHECK(!*has_converged);
   return false;
 }
 
