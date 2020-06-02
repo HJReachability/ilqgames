@@ -106,9 +106,6 @@ bool NumericalCheckLocalNashEquilibrium(
         // Reset this alpha.
         alphak = strategies[ii].alphas[kk];
       }
-
-      // Reset player ii's strategy.
-      //      perturbed_strategies[ii] = strategies[ii];
     }
   }
 

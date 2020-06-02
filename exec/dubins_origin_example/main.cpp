@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
     if (FLAGS_experiment_name == "") {
       CHECK(log->Save(FLAGS_last_traj));
     } else {
-      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name + "_open_loop"));
     }
   }
 
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
     if (FLAGS_experiment_name == "") {
       CHECK(log->Save(FLAGS_last_traj));
     } else {
-      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name + "_feedback"));
     }
   }
 
