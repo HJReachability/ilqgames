@@ -232,11 +232,11 @@ bool GameSolver::Solve(const VectorXf &x0,
     LOG(WARNING) << "Solver exited after only 1 iteration but passed "
                     "backtracking checks, which may indicate an almost "
                     "converged initial operating point and strategies.";
-    CHECK_LT(
-        (initial_operating_point.xs.back() - current_operating_point.xs.back())
-            .cwiseAbs()
-            .maxCoeff(),
-        params_.convergence_tolerance);
+    // CHECK_LT(
+    //     (initial_operating_point.xs.back() - current_operating_point.xs.back())
+    //         .cwiseAbs()
+    //         .maxCoeff(),
+    //     params_.convergence_tolerance);
   }
 
   // Set final strategies and operating point.
@@ -322,18 +322,12 @@ float GameSolver::StateDistance(const VectorXf &x1, const VectorXf &x2,
   return distance;
 }
 
-<<<<<<< HEAD
-bool GameSolver::ModifyLQStrategies(std::vector<Strategy> *strategies,
-                                    OperatingPoint *current_operating_point,
-                                    bool *has_converged,
-                                    std::vector<float> *total_costs) const {
-=======
 bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
                                     OperatingPoint* current_operating_point,
                                     bool* has_converged,
                                     bool* was_initial_point_feasible,
                                     std::vector<float>* total_costs) const {
->>>>>>> master
+
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
@@ -349,14 +343,11 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
       last_operating_point, *strategies, current_operating_point, has_converged,
       total_costs);
 
-<<<<<<< HEAD
-  if (!params_.linesearch)
-    return true;
-=======
+
   if (was_initial_point_feasible)
     *was_initial_point_feasible = satisfies_trust_region;
   if (!params_.linesearch) return true;
->>>>>>> master
+
 
   // Keep reducing alphas until we satisfy the trust region constraint.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {

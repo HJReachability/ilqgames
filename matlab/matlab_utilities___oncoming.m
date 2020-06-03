@@ -47,8 +47,8 @@ function plot_trajectory(trajectory)
     num_dots = 5;
     x_min = -15;
     x_max = 15;
-    y_min = -80;
-    y_max = 60;    
+    y_min = -40;
+    y_max = 40;    
     
     % Player 1's trajectory:
     x = trajectory(:,1);
@@ -160,7 +160,7 @@ function test_region_size_vs_alpha_scaling(exec)
     experiment_arg = "-experiment_name=";
     
     num_figs = 3;
-    range_for_adversarial_time = linspace(0, 2, num_figs);
+    range_for_adversarial_time = linspace(1, 2, num_figs);
     j = 1;
     for adversarial_time=range_for_adversarial_time
         % Convert parameters loop parameters to strings for names
@@ -174,8 +174,8 @@ function test_region_size_vs_alpha_scaling(exec)
         if ~exists
             % Stitch together the command for the executable.
             instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
-                          + " -trust_region_size=1.0 -viz=false -save=true -last_traj=true " + ...
-                          experiment_name;
+                          + " -trust_region_size=5.0 -initial_alpha_scaling=0.1 -viz=false -save=true -last_traj=true " ...
+                          + experiment_name;  
             system(char(instruction));
         end
 
@@ -187,7 +187,7 @@ function test_region_size_vs_alpha_scaling(exec)
         subplot(1,num_figs,j);
 
         runtime = plot_experiment_traj(char(prefix+"/"+tmp));
-        title("Adversarial time = " + string_adversarial_time + " s");
+%         title("Adversarial time = " + string_adversarial_time + " s");
 %         title("adv_time=" + string_adversarial_time + "(" +num2str(runtime)+ ")");
         j = j+1;
     end

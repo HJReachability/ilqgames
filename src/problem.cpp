@@ -202,15 +202,10 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
         operating_point_->us[kk - 1]);
   }
 
-<<<<<<< HEAD
-  // Update any threshold time costs.
-  UpdateThresholdTimes(change_in_initial_time);
-=======
   // Invariants.
   CHECK_EQ(operating_point_->xs.size(), solver_->NumTimeSteps());
   CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0),
            solver_->TimeStep());
->>>>>>> master
 }
 
 void Problem::OverwriteSolution(const OperatingPoint& operating_point,

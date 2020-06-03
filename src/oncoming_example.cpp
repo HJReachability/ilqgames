@@ -104,17 +104,17 @@ static constexpr float kMinV = 0.0;    // m/s
 static constexpr float kP1MaxV = 35.8; // m/s
 static constexpr float kP2MaxV = 35.8; // m/s
 
-static constexpr float kLaneCostWeight = 20.0;
-static constexpr float kLaneBoundaryCostWeight = 100.0;
+static constexpr float kLaneCostWeight = 10.0;
+static constexpr float kLaneBoundaryCostWeight = 5.0;
 
-static constexpr float kMinProximity = 2.5;
-static constexpr float kP1ProximityCostWeight = 100.0;
-static constexpr float kP2ProximityCostWeight = 100.0;
+static constexpr float kMinProximity = 5.0;
+static constexpr float kP1ProximityCostWeight = 300.0;
+static constexpr float kP2ProximityCostWeight = 1000.0;
 // static constexpr float kP3ProximityCostWeight = 100.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kNominalHeadingCostWeight = 150.0;
+static constexpr float kNominalHeadingCostWeight = 50.0;
 
 static constexpr bool kOrientedRight = true;
 static constexpr bool kConstraintOrientedInside = false;
@@ -130,19 +130,19 @@ static constexpr float kP2NominalV = 5.0; // m/s
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 2.5;   // m
-static constexpr float kP1InitialY = -55.0; // m
+static constexpr float kP1InitialX = 5.0;   // m
+static constexpr float kP1InitialY = -25.0; // m
 
 static constexpr float kP2InitialX = 0.0;              // m
-static constexpr float kP2InitialY = 40.0;             // m
-static constexpr float kP2InitialYAntiparallel = 55.0; // m
+static constexpr float kP2InitialY = 25.0;             // m
+// static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;              // rad
 static constexpr float kP2InitialHeading = -M_PI_2;             // rad
 static constexpr float kP2InitialHeadingAntiparallel = -M_PI_2; // rad
 
-static constexpr float kP1InitialSpeed = 10.0; // m/s
-static constexpr float kP2InitialSpeed = 10.0; // m/s
+static constexpr float kP1InitialSpeed = 5.1; // m/s
+static constexpr float kP2InitialSpeed = 5.1; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -282,10 +282,9 @@ OncomingExample::OncomingExample(const SolverParams &params) {
       new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
                                             kLaneHalfWidth, !kOrientedRight,
                                             "LaneLeftBoundary"));
-  // p2_cost.AddStateCost(p2_lane_cost);
-  // p2_cost.AddStateConstraint(p2_lane_r_constraint);
-  // p2_cost.AddStateConstraint(p2_lane_l_constraint);
-
+  p2_cost.AddStateCost(p2_lane_cost);
+  p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
   // Max/min/nominal speed costs.
 
@@ -294,7 +293,7 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
       kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");\
+      kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
   p1_cost.AddStateConstraint(p1_min_v_constraint);
   p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);
@@ -337,37 +336,6 @@ OncomingExample::OncomingExample(const SolverParams &params) {
                               "ProximityConstraintP2"));
 
   p1_cost.AddStateConstraint(p1p2_proximity_constraint);
-
-  // Original: If Statement with params.scenario with 0 or 1
-
-  // if(params.scenario == 0) {
-  //   const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-  //       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-  //                    {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  //   p2_cost.AddStateCost(p2p1_proximity_cost);
-  // } else {
-  //   const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
-  //       new InitialTimeCost(std::shared_ptr<QuadraticDifferenceCost>(
-  //                               new QuadraticDifferenceCost(
-  //                                   kP2ProximityCostWeight, {kP2XIdx,
-  //                                   kP2YIdx}, {kP1XIdx, kP1YIdx})),
-  //                           FLAGS_adversarial_time,
-  //                           "InitialProximityCostP1"));
-  //   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
-  //   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
-
-  //   const std::shared_ptr<FinalTimeCost> p2p1_final_proximity_cost(
-  //       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
-  //                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-  //                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-
-  //                         FLAGS_adversarial_time, "FinalProximityCostP1"));
-  //   p2_cost.AddStateCost(p2p1_final_proximity_cost);
-  //   final_time_costs_.push_back(p2p1_final_proximity_cost);
-  // }
-
-  // Modified: Rename "scenario" as "adversarial_time", and use it in place of
-  // "FLAGS_adversarial_time".
 
   const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
       new InitialTimeCost(
