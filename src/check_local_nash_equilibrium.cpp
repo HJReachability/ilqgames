@@ -74,6 +74,7 @@ bool NumericalCheckLocalNashEquilibrium(
   const std::vector<float> nominal_costs =
       ComputeStrategyCosts(player_costs, strategies, operating_point, dynamics,
                            x0, time_step, open_loop);
+  std::cout << "----------" << std::endl;
 
   // For each player, perturb strategies with Gaussian noise a bunch of times
   // and if cost decreases then return false.

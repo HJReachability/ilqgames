@@ -272,6 +272,14 @@ TEST_F(LQFeedbackSolverTest, MatchesLyapunovIterations) {
   const MatrixXf& R21 = quadraticizations_[1].control.at(0).hess;
   const MatrixXf& R22 = quadraticizations_[1].control.at(1).hess;
 
+  std::cout << "A: " << A << std::endl;
+  std::cout << "B1: " << B1 << std::endl;
+  std::cout << "B2: " << B2 << std::endl;
+  std::cout << "Q1: " << Q1 << std::endl;
+  std::cout << "Q2: " << Q2 << std::endl;
+  std::cout << "R1: " << R11 << std::endl;
+  std::cout << "R2: " << R22 << std::endl;
+
   // Solve with Lyapunov iterations.
   MatrixXf P1(1, 2);
   MatrixXf P2(1, 2);
@@ -314,7 +322,7 @@ TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
 
 TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
   // Reset with nonzero nominal values for state and control.
-  ConstructCostsWithNominal(0.5);
+  ConstructCostsWithNominal(0.0);
 
   // Solve LQ game.
   QuadraticizeAndSolve();

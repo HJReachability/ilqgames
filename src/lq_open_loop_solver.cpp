@@ -117,10 +117,10 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
 
     // Compute Ms and ms.
     intermediate_terms_[kk].setZero();
-    for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       intermediate_terms_[kk] -=
-          lin.Bs[jj] *
-          (warped_Bs_[kk][jj] * ms_[kk + 1][jj] + warped_rs_[kk][jj]);
+          lin.Bs[ii] *
+          (warped_Bs_[kk][ii] * ms_[kk + 1][ii] + warped_rs_[kk][ii]);
     }
 
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
@@ -137,7 +137,7 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
 
   // (2) Now compute optimal state and control trajectory forward in time.
   VectorXf x_star = x0;
-  VectorXf last_x_star = x_star;
+  VectorXf last_x_star;
   for (size_t kk = 0; kk < num_time_steps_ - 1; kk++) {
     // Unpack linearization at this time step.
     const auto& lin = linearization[kk];
@@ -152,6 +152,12 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
       strategies[ii].alphas[kk] =
           warped_Bs_[kk][ii] * (Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii]) +
           warped_rs_[kk][ii];
+    }
+
+    if (kk + static_cast<size_t>(2) == num_time_steps_) {
+      std::cout << "next x: " << x_star.transpose() << std::endl;
+      std::cout << "u1: " << -strategies[0].alphas[kk].transpose() << std::endl;
+      std::cout << "u2: " << -strategies[1].alphas[kk].transpose() << std::endl;
     }
 
     // Check dynamic feasibility.
