@@ -66,7 +66,7 @@ using namespace ilqgames;
 namespace {
 // Time parameters.
 static constexpr Time kTimeStep = 0.1;
-static constexpr Time kTimeHorizon = 0.5;
+static constexpr Time kTimeHorizon = 10.0;
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 

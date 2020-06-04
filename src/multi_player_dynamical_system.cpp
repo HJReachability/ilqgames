@@ -45,27 +45,36 @@
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+
 namespace ilqgames {
 
 VectorXf MultiPlayerDynamicalSystem::Integrate(
     Time t0, Time time_interval, const VectorXf& x0,
     const std::vector<VectorXf>& us) const {
-  // Number of integration steps and corresponding time step.
-  constexpr size_t kNumIntegrationSteps = 2;
-  const double dt = time_interval / static_cast<Time>(kNumIntegrationSteps);
+  // // Number of integration steps and corresponding time step.
+  // constexpr size_t kNumIntegrationSteps = 2;
+  // const double dt = time_interval / static_cast<Time>(kNumIntegrationSteps);
 
-  // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods for
-  // further details.
-  VectorXf x(x0);
-  for (Time t = t0; t < t0 + time_interval - 0.5 * dt; t += dt) {
-    const VectorXf k1 = dt * Evaluate(t, x, us);
-    const VectorXf k2 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k1, us);
-    const VectorXf k3 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k2, us);
-    const VectorXf k4 = dt * Evaluate(t + dt, x + k3, us);
+  // // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods
+  // for
+  // // further details.
+  // VectorXf x(x0);
+  // for (Time t = t0; t < t0 + time_interval - 0.5 * dt; t += dt) {
+  //   const VectorXf k1 = dt * Evaluate(t, x, us);
+  //   const VectorXf k2 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k1, us);
+  //   const VectorXf k3 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k2, us);
+  //   const VectorXf k4 = dt * Evaluate(t + dt, x + k3, us);
 
-    x += (k1 + 2.0 * (k2 + k3) + k4) / 6.0;
-  }
+  //   x += (k1 + 2.0 * (k2 + k3) + k4) / 6.0;
+  // }
 
+  VectorXf x = x0 + time_interval * Evaluate(t0, x0, us);
+  // const LinearDynamicsApproximation lin = Linearize(t0, x, us);
+  // CHECK_LT((lin.A * x0 + lin.Bs[0] * us[0] + lin.Bs[1] * us[1] - x)
+  //           .cwiseAbs()
+  //           .maxCoeff(),
+  //       constants::kSmallNumber);
   return x;
 }
 

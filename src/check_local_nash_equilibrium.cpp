@@ -101,6 +101,9 @@ bool NumericalCheckLocalNashEquilibrium(
             player_costs, perturbed_strategies_upper, operating_point, dynamics,
             x0, time_step, open_loop);
 
+        // std::cout << perturbed_costs_lower[ii] << ", " << nominal_costs[ii]
+        //           << ", " << perturbed_costs_upper[ii] << std::endl;
+
         // Check Nash condition.
         if (std::min(perturbed_costs_lower[ii], perturbed_costs_upper[ii]) <
             nominal_costs[ii]) {

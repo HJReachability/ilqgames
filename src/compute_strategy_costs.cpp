@@ -90,12 +90,12 @@ std::vector<float> ComputeStrategyCosts(
     // Update costs.
     if (true) {//kk + 1 == num_time_steps) {
       std::cout << "next x: " << next_x.transpose() << std::endl;
-      std::cout << "u1: " << us[0].transpose() << std::endl;
-      std::cout << "alpha1: " << strategies[0].alphas[kk].transpose()
-                << std::endl;
-      std::cout << "u2: " << us[1].transpose() << std::endl;
-      std::cout << "alpha2: " << strategies[1].alphas[kk].transpose()
-                << std::endl;
+      // std::cout << "u1: " << us[0].transpose() << std::endl;
+      // std::cout << "alpha1: " << strategies[0].alphas[kk].transpose()
+      //           << std::endl;
+      // std::cout << "u2: " << us[1].transpose() << std::endl;
+      // std::cout << "alpha2: " << strategies[1].alphas[kk].transpose()
+      //           << std::endl;
     }
 
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {

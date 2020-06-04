@@ -90,6 +90,8 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
     ms_.back()[ii] = quadraticization.back()[ii].state.grad;
     Ms_.back()[ii] = quadraticization.back()[ii].state.hess;
+    std::cout << "m" << ii << ": " << ms_.back()[ii].transpose() << std::endl;
+    std::cout << "M" << ii << ": \n" << Ms_.back()[ii] << std::endl;
   }
 
   // (1) Work backward in time and cache "special" terms.
@@ -134,10 +136,14 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
                                                      intermediate_terms_[kk]));
     }
 
-    if (kk + static_cast<size_t>(2) == num_time_steps_) {
-      std::cout << "eta: " << intermediate_terms_[kk].transpose() << std::endl;
-      std::cout << "m1: " << ms_[kk][0].transpose() << std::endl;
-      std::cout << "M1: \n" << Ms_[kk][0].transpose() << std::endl;
+    if (true) {  // kk + static_cast<size_t>(2) == num_time_steps_) {
+      std::cout << kk << ", eta: " << intermediate_terms_[kk].transpose()
+                << std::endl;
+      std::cout << kk << ", m1: " << ms_[kk][0].transpose() << std::endl;
+      std::cout << kk << ", M1: \n" << Ms_[kk][0].transpose() << std::endl;
+      std::cout << kk << ", lambda: \n" << capital_lambdas_[kk] << std::endl;
+      std::cout << kk << ", warped_B1: \n" << warped_Bs_[kk][0] << std::endl;
+      std::cout << kk << ", warped_r1: \n" << warped_rs_[kk][0] << std::endl;
     }
   }
 
@@ -160,11 +166,12 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
           warped_rs_[kk][ii];
     }
 
-    if (kk + static_cast<size_t>(2) == num_time_steps_) {
-      std::cout << "next x: " << x_star.transpose() << std::endl;
-      std::cout << "u1: " << -strategies[0].alphas[kk].transpose() << std::endl;
-      std::cout << "u2: " << -strategies[1].alphas[kk].transpose() << std::endl;
-    }
+    std::cout << kk << ", next x: " << x_star.transpose() << std::endl;
+    std::cout << kk << ", in parens 1: " << (Ms_[kk + 1][0] * x_star).transpose() << std::endl;
+    std::cout << kk << ", u1: " << -strategies[0].alphas[kk].transpose()
+              << std::endl;
+    std::cout << kk << ", u2: " << -strategies[1].alphas[kk].transpose()
+              << std::endl;
 
     // Check dynamic feasibility.
     // VectorXf check_x = lin.A * last_x_star;
