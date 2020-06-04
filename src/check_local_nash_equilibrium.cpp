@@ -71,10 +71,14 @@ bool NumericalCheckLocalNashEquilibrium(
   CHECK_EQ(num_time_steps, strategies[0].alphas.size());
 
   // Compute nominal equilibrium cost.
+  std::cout << " -- Nash check --" << std::endl;
+  std::cout << "u0: " << strategies[0].alphas[num_time_steps - 2].transpose()
+            << std::endl;
+  std::cout << "u1: " << strategies[1].alphas[num_time_steps - 2].transpose()
+            << std::endl;
   const std::vector<float> nominal_costs =
       ComputeStrategyCosts(player_costs, strategies, operating_point, dynamics,
                            x0, time_step, open_loop);
-  std::cout << "----------" << std::endl;
 
   // For each player, perturb strategies with Gaussian noise a bunch of times
   // and if cost decreases then return false.
@@ -101,10 +105,11 @@ bool NumericalCheckLocalNashEquilibrium(
         if (std::min(perturbed_costs_lower[ii], perturbed_costs_upper[ii]) <
             nominal_costs[ii]) {
           // std::printf(
-          //     "player %hu, timestep %zu: nominal %f > perturbed %f\n ", ii, kk,
-          //     nominal_costs[ii],
-          //     std::min(perturbed_costs_lower[ii], perturbed_costs_lower[ii]));
-          // std::cout << "nominal u: " << operating_point.us[kk][ii].transpose()
+          //     "player %hu, timestep %zu: nominal %f > perturbed %f\n ", ii,
+          //     kk, nominal_costs[ii], std::min(perturbed_costs_lower[ii],
+          //     perturbed_costs_lower[ii]));
+          // std::cout << "nominal u: " <<
+          // operating_point.us[kk][ii].transpose()
           //           << ", alpha original: "
           //           << strategies[ii].alphas[kk].transpose()
           //           << ", vs. perturbed " << alphak_lower.transpose()

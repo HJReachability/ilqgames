@@ -133,6 +133,12 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
                                Ms_[kk + 1][ii] * qr_capital_lambdas_[kk].solve(
                                                      intermediate_terms_[kk]));
     }
+
+    if (kk + static_cast<size_t>(2) == num_time_steps_) {
+      std::cout << "eta: " << intermediate_terms_[kk].transpose() << std::endl;
+      std::cout << "m1: " << ms_[kk][0].transpose() << std::endl;
+      std::cout << "M1: \n" << Ms_[kk][0].transpose() << std::endl;
+    }
   }
 
   // (2) Now compute optimal state and control trajectory forward in time.

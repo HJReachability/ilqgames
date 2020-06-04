@@ -72,11 +72,8 @@ std::vector<float> ComputeStrategyCosts(
   std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
   const size_t num_time_steps =
       (open_loop) ? strategies[0].Ps.size() - 1 : strategies[0].Ps.size();
+  std::cout << " -- computing costs -- "<< std::endl;
   for (size_t kk = 0; kk < num_time_steps; kk++) {
-    // Don't evaluate last time step if open loop, because state costs are
-    // offset by one time step.
-    if (open_loop && kk + 1 == num_time_steps) return total_costs;
-
     // Update controls.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       if (open_loop)
@@ -87,9 +84,12 @@ std::vector<float> ComputeStrategyCosts(
                                 operating_point.us[kk][ii]);
     }
 
+    const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
+    const Time next_t = t + time_step;
+
     // Update costs.
-    if (kk + 2 == num_time_steps) {
-      std::cout << "x: " << x.transpose() << std::endl;
+    if (true) {//kk + 1 == num_time_steps) {
+      std::cout << "next x: " << next_x.transpose() << std::endl;
       std::cout << "u1: " << us[0].transpose() << std::endl;
       std::cout << "alpha1: " << strategies[0].alphas[kk].transpose()
                 << std::endl;
@@ -98,8 +98,6 @@ std::vector<float> ComputeStrategyCosts(
                 << std::endl;
     }
 
-    const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
-    const Time next_t = t + time_step;
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       total_costs[ii] +=
           (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)

@@ -101,7 +101,7 @@ class LQOpenLoopSolver : public LQSolver {
     std::vector<VectorXf> warped_rs_element;
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       chol_Rs_element.emplace_back(dynamics_->UDim(ii));
-      warped_Bs_element.emplace_back(dynamics_->UDim(ii), dynamics_->UDim(ii));
+      warped_Bs_element.emplace_back(dynamics_->UDim(ii), dynamics_->XDim());
       warped_rs_element.emplace_back(dynamics_->UDim(ii));
     }
 

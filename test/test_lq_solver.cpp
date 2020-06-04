@@ -66,7 +66,7 @@ using namespace ilqgames;
 namespace {
 // Time parameters.
 static constexpr Time kTimeStep = 0.1;
-static constexpr Time kTimeHorizon = 10.0;
+static constexpr Time kTimeHorizon = 0.5;
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -326,6 +326,12 @@ TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
 
   // Solve LQ game.
   QuadraticizeAndSolve();
+
+  std::cout << "-- solution --" << std::endl;
+  std::cout << "u0: " << lq_solution_[0].alphas[kNumTimeSteps - 2].transpose()
+            << std::endl;
+  std::cout << "u1: " << lq_solution_[1].alphas[kNumTimeSteps - 2].transpose()
+            << std::endl;
 
   // Make sure this is an open loop Nash.
   constexpr float kMaxPerturbation = 0.1;
