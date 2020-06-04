@@ -72,13 +72,13 @@ static constexpr float kAttractionCostWeight = 10.0;
 static constexpr float kGoalCostWeight = 10.0;
 
 // Initial state.
-static constexpr float kP1InitialX = 0.0;               // m
+static constexpr float kP1InitialX = 10.0;              // m
 static constexpr float kP1InitialY = -10.0;              // m
-static constexpr float kP1InitialHeading = M_PI;  // rad
+static constexpr float kP1InitialHeading = 0.75 * M_PI;  // rad
 
-static constexpr float kP2InitialX = 0.0;               // m
+static constexpr float kP2InitialX = 10.0;               // m
 static constexpr float kP2InitialY = 10.0;               // m
-static constexpr float kP2InitialHeading = 1.5 * M_PI;  // rad
+static constexpr float kP2InitialHeading = 1.25 * M_PI;  // rad
 
 static constexpr float kSpeed = 1.0;  // m/s
 
@@ -149,9 +149,9 @@ DubinsOriginExample::DubinsOriginExample(const SolverParams& params) {
 
   // Goal cost.
   const auto p1_goalx_cost = std::make_shared<QuadraticCost>(
-      kGoalCostWeight, kP2XIdx, kP2GoalX, "GoalX");
+      kGoalCostWeight, kP1XIdx, kP2GoalX, "GoalX");
   const auto p1_goaly_cost = std::make_shared<QuadraticCost>(
-      kGoalCostWeight, kP2YIdx, kP2GoalY, "GoalY");
+      kGoalCostWeight, kP1YIdx, kP2GoalY, "GoalY");
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
 
