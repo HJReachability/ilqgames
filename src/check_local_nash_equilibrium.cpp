@@ -70,7 +70,9 @@ bool NumericalCheckLocalNashEquilibrium(
   const size_t num_time_steps = strategies[0].Ps.size();
   CHECK_EQ(num_time_steps, strategies[0].alphas.size());
 
-  // Compute nominal equilibrium cost.
+  // Compute nominal equilibrium cost and be sure to use only 1-step Euler
+  // integration.
+  MultiPlayerIntegrableSystem::IntegrateUsingEuler();
   std::cout << " -- Nash check --" << std::endl;
   std::cout << "u0: " << strategies[0].alphas[num_time_steps - 2].transpose()
             << std::endl;
@@ -117,6 +119,9 @@ bool NumericalCheckLocalNashEquilibrium(
           //           << strategies[ii].alphas[kk].transpose()
           //           << ", vs. perturbed " << alphak_lower.transpose()
           //           << std::endl;
+
+          // Other users will likely want RK4 integration.
+          MultiPlayerIntegrableSystem::IntegrateUsingRK4();
           return false;
         }
 
@@ -127,6 +132,8 @@ bool NumericalCheckLocalNashEquilibrium(
     }
   }
 
+  // Other users will likely want RK4 integration.
+  MultiPlayerIntegrableSystem::IntegrateUsingRK4();
   return true;
 }
 

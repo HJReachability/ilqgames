@@ -50,6 +50,8 @@
 
 namespace ilqgames {
 
+bool MultiPlayerIntegrableSystem::integrate_using_euler_ = false;
+
 VectorXf MultiPlayerIntegrableSystem::Integrate(
     Time t0, Time t, const VectorXf& x0, const OperatingPoint& operating_point,
     const std::vector<Strategy>& strategies) const {
