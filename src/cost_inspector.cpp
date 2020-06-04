@@ -108,6 +108,13 @@ void CostInspector::Render() const {
   }
 
   // Plot the given cost.
+  std::cout << "Showing iterate " << sliders_->SolverIterate(selected_problem_)
+            << " for problem " << selected_problem_ << " which has "
+            << costs.Log().NumIterates() << " iterates." << std::endl;
+  // for (size_t ii = 0; ii < player_costs_.size(); ii++) {
+  //   std::cout << "Problem " << ii << " has " << player_costs_[ii][]
+  // }
+
   if (ImGui::BeginChild("Cost over time", ImVec2(0, 0), false)) {
     const std::string label = "Player " + std::to_string(selected_player_ + 1) +
                               ": " + selected_cost_name_;
@@ -115,6 +122,7 @@ void CostInspector::Render() const {
       const std::vector<float>& values =
           costs.EvaluatedCost(sliders_->SolverIterate(selected_problem_),
                               selected_player_, selected_cost_name_);
+      std::cout << &values << std::endl;
       ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0,
                        label.c_str(), FLT_MAX, FLT_MAX,
                        ImGui::GetWindowContentRegionMax());

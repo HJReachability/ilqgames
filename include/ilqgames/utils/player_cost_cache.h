@@ -81,6 +81,9 @@ class PlayerCostCache {
   }
   const std::vector<float>& EvaluatedCost(size_t iterate, PlayerIndex player,
                                           const std::string& name) const {
+    CHECK(PlayerHasCost(player, name));
+    CHECK_LT(iterate, evaluated_player_costs_[player].at(name).size());
+
     return evaluated_player_costs_[player].at(name)[iterate];
   }
 

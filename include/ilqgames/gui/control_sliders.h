@@ -126,7 +126,8 @@ class ControlSliders {
   // Keep track of the max number of log indices across all problems.
   int max_log_index_;
 
-  // List of all logs we might want to inspect, indexed by problem..
+  // List of all logs we might want to inspect, indexed by problem, then by
+  // receding horizon invocation.
   const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
       logs_for_each_problem_;
 };  // class ControlSliders
