@@ -111,9 +111,13 @@ void CostInspector::Render() const {
   std::cout << "Showing iterate " << sliders_->SolverIterate(selected_problem_)
             << " for problem " << selected_problem_ << " which has "
             << costs.Log().NumIterates() << " iterates." << std::endl;
-  // for (size_t ii = 0; ii < player_costs_.size(); ii++) {
-  //   std::cout << "Problem " << ii << " has " << player_costs_[ii][]
-  // }
+  for (size_t ii = 0; ii < player_costs_.size(); ii++) {
+    std::cout << "Problem " << ii << " has "
+              << player_costs_[ii][sliders_->LogIndex(selected_problem_)]
+                     .Log()
+                     .NumIterates()
+              << " iterates." << std::endl;
+  }
 
   if (ImGui::BeginChild("Cost over time", ImVec2(0, 0), false)) {
     const std::string label = "Player " + std::to_string(selected_player_ + 1) +
