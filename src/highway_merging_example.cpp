@@ -80,7 +80,7 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 20.0; // s
+static constexpr Time kTimeHorizon = 15.0; // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -101,7 +101,7 @@ static constexpr float kP5NominalVCostWeight = 0.1;
 static constexpr float kP6NominalVCostWeight = 0.1;
 
 // Newly added, 05-23-2020 19:18 p.m.
-static constexpr float kMinV = 0.0;    // m/s
+static constexpr float kMinV = 0.0; // m/s
 static constexpr float kP1MaxV = 35.8; // m/s
 static constexpr float kP2MaxV = 35.8; // m/s
 static constexpr float kP4MaxV = 35.8; // m/s
