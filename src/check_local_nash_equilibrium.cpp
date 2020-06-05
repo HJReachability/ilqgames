@@ -73,11 +73,6 @@ bool NumericalCheckLocalNashEquilibrium(
   // Compute nominal equilibrium cost and be sure to use only 1-step Euler
   // integration.
   MultiPlayerIntegrableSystem::IntegrateUsingEuler();
-  std::cout << " -- Nash check --" << std::endl;
-  std::cout << "u0: " << strategies[0].alphas[num_time_steps - 2].transpose()
-            << std::endl;
-  std::cout << "u1: " << strategies[1].alphas[num_time_steps - 2].transpose()
-            << std::endl;
   const std::vector<float> nominal_costs =
       ComputeStrategyCosts(player_costs, strategies, operating_point, dynamics,
                            x0, time_step, open_loop);
@@ -102,9 +97,6 @@ bool NumericalCheckLocalNashEquilibrium(
         const std::vector<float> perturbed_costs_upper = ComputeStrategyCosts(
             player_costs, perturbed_strategies_upper, operating_point, dynamics,
             x0, time_step, open_loop);
-
-        // std::cout << perturbed_costs_lower[ii] << ", " << nominal_costs[ii]
-        //           << ", " << perturbed_costs_upper[ii] << std::endl;
 
         // Check Nash condition.
         if (std::min(perturbed_costs_lower[ii], perturbed_costs_upper[ii]) <
