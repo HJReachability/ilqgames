@@ -272,14 +272,6 @@ TEST_F(LQFeedbackSolverTest, MatchesLyapunovIterations) {
   const MatrixXf& R21 = quadraticizations_[1].control.at(0).hess;
   const MatrixXf& R22 = quadraticizations_[1].control.at(1).hess;
 
-  std::cout << "A: " << A << std::endl;
-  std::cout << "B1: " << B1 << std::endl;
-  std::cout << "B2: " << B2 << std::endl;
-  std::cout << "Q1: " << Q1 << std::endl;
-  std::cout << "Q2: " << Q2 << std::endl;
-  std::cout << "R1: " << R11 << std::endl;
-  std::cout << "R2: " << R22 << std::endl;
-
   // Solve with Lyapunov iterations.
   MatrixXf P1(1, 2);
   MatrixXf P2(1, 2);
@@ -322,15 +314,37 @@ TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
 
 TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
   // Reset with nonzero nominal values for state and control.
-  ConstructCostsWithNominal(0.0);
+  ConstructCostsWithNominal(0.5);
 
   // Solve LQ game.
   QuadraticizeAndSolve();
 
-  std::cout << "-- solution --" << std::endl;
-  std::cout << "u0: " << lq_solution_[0].alphas[kNumTimeSteps - 2].transpose()
+  const MatrixXf& A = linearization_.A;
+  const MatrixXf& B1 = linearization_.Bs[0];
+  const MatrixXf& B2 = linearization_.Bs[1];
+
+  const MatrixXf& Q1 = quadraticizations_[0].state.hess;
+  const MatrixXf& Q2 = quadraticizations_[1].state.hess;
+  const VectorXf& l1 = quadraticizations_[0].state.grad;
+  const VectorXf& l2 = quadraticizations_[1].state.grad;
+
+  const MatrixXf& R11 = quadraticizations_[0].control.at(0).hess;
+  const MatrixXf& R12 = quadraticizations_[0].control.at(1).hess;
+  const MatrixXf& R21 = quadraticizations_[1].control.at(0).hess;
+  const MatrixXf& R22 = quadraticizations_[1].control.at(1).hess;
+
+  std::cout << "A: " << A << std::endl;
+  std::cout << "B1: " << B1 << std::endl;
+  std::cout << "B2: " << B2 << std::endl;
+  std::cout << "Q1: " << Q1 << std::endl;
+  std::cout << "Q2: " << Q2 << std::endl;
+  std::cout << "l1: " << l1.transpose() << std::endl;
+  std::cout << "l2: " << l2.transpose() << std::endl;
+  std::cout << "R1: " << R11 << std::endl;
+  std::cout << "R2: " << R22 << std::endl;
+  std::cout << "r1: " << quadraticizations_[0].control.at(0).grad.transpose()
             << std::endl;
-  std::cout << "u1: " << lq_solution_[1].alphas[kNumTimeSteps - 2].transpose()
+  std::cout << "r2: " << quadraticizations_[1].control.at(1).grad.transpose()
             << std::endl;
 
   // Make sure this is an open loop Nash.

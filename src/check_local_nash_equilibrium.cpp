@@ -168,12 +168,6 @@ bool CheckSufficientLocalNashEquilibrium(
                      return cost.Quadraticize(t, x, us);
                    });
 
-    // NOTE: we do *not* want to change cost coordinates back to xi, vs because
-    // we're interested in whether the operating point is a local Nash for x, us
-    // (the original problem).
-    // if (dynamics.get()) dynamics->ChangeCostCoordinates(x,
-    // &quadraticization);
-
     // Check if Q, Rs PSD.
     constexpr float kErrorMargin = 1e-4;
     for (const auto& q : quadraticization) {

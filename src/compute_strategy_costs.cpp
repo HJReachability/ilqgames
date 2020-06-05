@@ -72,7 +72,7 @@ std::vector<float> ComputeStrategyCosts(
   std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
   const size_t num_time_steps =
       (open_loop) ? strategies[0].Ps.size() - 1 : strategies[0].Ps.size();
-  std::cout << " -- computing costs -- "<< std::endl;
+  // std::cout << " -- computing costs -- "<< std::endl;
   for (size_t kk = 0; kk < num_time_steps; kk++) {
     // Update controls.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
@@ -89,7 +89,7 @@ std::vector<float> ComputeStrategyCosts(
 
     // Update costs.
     if (true) {//kk + 1 == num_time_steps) {
-      std::cout << "next x: " << next_x.transpose() << std::endl;
+      // std::cout << "next x: " << next_x.transpose() << std::endl;
       // std::cout << "u1: " << us[0].transpose() << std::endl;
       // std::cout << "alpha1: " << strategies[0].alphas[kk].transpose()
       //           << std::endl;

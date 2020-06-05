@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
   if (is_local_nash)
     LOG(INFO) << "Open-loop solution is a local Nash.";
   else
-    LOG(INFO) << "Open-loop solution is not be a local Nash.";
+    LOG(INFO) << "Open-loop solution is not a local Nash.";
 
   if (FLAGS_save) {
     if (FLAGS_experiment_name == "") {
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
   if (is_local_nash)
     LOG(INFO) << "Feedback solution is a local Nash.";
   else
-    LOG(INFO) << "Feedback solution is not be a local Nash.";
+    LOG(INFO) << "Feedback solution is not a local Nash.";
 
   // Dump the logs and/or exit.
   if (FLAGS_save) {
