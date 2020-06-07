@@ -118,7 +118,7 @@ static constexpr float kLaneBoundaryCostWeight = 100.0;
 // static constexpr float kLaneCostWeight = 0.0;
 // static constexpr float kLaneBoundaryCostWeight = 0.0;
 
-static constexpr float kMinProximity = 4.0;
+static constexpr float kMinProximity = 4.75;
 static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
@@ -154,23 +154,41 @@ static constexpr float kP6NominalV = 5.0; // m/s
 
 // Initial state.
 
+// static constexpr float kP1InitialX = 0.0;   // m
+// static constexpr float kP1InitialY = -20.0; // m
+
+// static constexpr float kP2InitialX = 12.0;  // m
+// static constexpr float kP2InitialY = -10.0; // m
+
+// static constexpr float kP3InitialX = 0.0;  // m
+// static constexpr float kP3InitialY = 20.0; // m
+
+// static constexpr float kP4InitialX = 6.0; // m
+// static constexpr float kP4InitialY = 0.0; // m
+
+// static constexpr float kP5InitialX = -5.0; // m
+// static constexpr float kP5InitialY = 20.0; // m
+
+// static constexpr float kP6InitialX = -5.0;  // m
+// static constexpr float kP6InitialY = -20.0; // m
+
 static constexpr float kP1InitialX = 0.0;   // m
 static constexpr float kP1InitialY = -20.0; // m
 
-static constexpr float kP2InitialX = 12.0;  // m
+static constexpr float kP2InitialX = 9.0;  // m
 static constexpr float kP2InitialY = -10.0; // m
 
 static constexpr float kP3InitialX = 0.0;  // m
-static constexpr float kP3InitialY = 20.0; // m
+static constexpr float kP3InitialY = 15.0; // m
 
 static constexpr float kP4InitialX = 6.0; // m
 static constexpr float kP4InitialY = 0.0; // m
 
 static constexpr float kP5InitialX = -5.0; // m
-static constexpr float kP5InitialY = 20.0; // m
+static constexpr float kP5InitialY = 15.0; // m
 
 static constexpr float kP6InitialX = -5.0;  // m
-static constexpr float kP6InitialY = -20.0; // m
+static constexpr float kP6InitialY = -15.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;       // rad
 static constexpr float kP2InitialHeading = M_PI * 2 / 3; // rad
@@ -769,16 +787,16 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   final_time_costs_.push_back(p4p1_final_proximity_cost);
 
   const std::shared_ptr<ProxCost> p4p2_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP4XIdx, kP4YIdx},
+      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   const std::shared_ptr<ProxCost> p4p3_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP4XIdx, kP4YIdx},
+      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   const std::shared_ptr<ProxCost> p4p5_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP4XIdx, kP4YIdx},
+      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP5XIdx, kP5YIdx}, kMinProximity, "ProximityP5"));
   const std::shared_ptr<ProxCost> p4p6_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP4XIdx, kP4YIdx},
+      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP6XIdx, kP6YIdx}, kMinProximity, "ProximityP6"));
   p4_cost.AddStateCost(p4p2_proximity_cost);
   p4_cost.AddStateCost(p4p3_proximity_cost);

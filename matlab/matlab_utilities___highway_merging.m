@@ -45,20 +45,20 @@ function plot_trajectory(trajectory)
     xy_indices = [1,2,7,8,13,14,19,20,25,26,31,32];
     traj_length = size(trajectory, 1);
     num_dots = 5;
-    x_min = -15;
+    x_min = -10;
     x_max = 15;
-    y_min = -35;
-    y_max = 75;
+    y_min = -25;
+    y_max = 35;
     
     % Player 1's trajectory:
     x = trajectory(:,1);
     y = trajectory(:,2);
-    plot(x,y,'b', 'MarkerSize', 2); 
+    plot(x,y,'r', 'MarkerSize', 2); 
     hold on
-    plot(trajectory(1,1), trajectory(1,2), 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
+    plot(trajectory(1,1), trajectory(1,2), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
     for i = 1:num_dots
         plot(trajectory(round(traj_length*i/num_dots),1), trajectory(round(traj_length*i/num_dots),2), ...
-        'bo', 'MarkerSize', 5, 'MarkerFaceColor', 'b');
+        'ro', 'MarkerSize', 5, 'MarkerFaceColor', 'r');
     end
     xlim([x_min x_max]);
     ylim([y_min y_max]);
@@ -106,13 +106,13 @@ function plot_trajectory(trajectory)
     % Player 4's trajectory:
     x = trajectory(:,19);
     y = trajectory(:,20);
-    plot(x,y,'r', 'MarkerSize', 2);
+    plot(x,y,'b', 'MarkerSize', 2);
     hold on
-    plot(trajectory(1,19), trajectory(1,20), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+    plot(trajectory(1,19), trajectory(1,20), 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
     for i = 1:num_dots
         plot(trajectory(round(traj_length*i/num_dots),19), ...
             trajectory(round(traj_length*i/num_dots),20), ...
-            'ro', 'MarkerSize', 5, 'MarkerFaceColor', 'r');
+            'bo', 'MarkerSize', 5, 'MarkerFaceColor', 'b');
     end
     xlim([x_min x_max]);
     ylim([y_min y_max]);
@@ -255,12 +255,11 @@ function test_region_size_vs_alpha_scaling(exec)
         
         if ~exists
             % Stitch together the command for the executable.
-            instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
-                          + " -initial_alpha_scaling=1.0 -trust_region_size=1.0 " ...
-                          + " -viz=false -save=true -last_traj=true " + experiment_name;
 %             instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
-%                           + " -viz=false -save=true -last_traj=true " + ...
-%                           experiment_name;
+%                           + " -initial_alpha_scaling=1.0 -trust_region_size=1.0 " ...
+%                           + " -viz=false -save=true -last_traj=true " + experiment_name;
+            instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
+                          + " -viz=false -save=true -last_traj=true " + experiment_name;
             system(char(instruction));
         end
 
