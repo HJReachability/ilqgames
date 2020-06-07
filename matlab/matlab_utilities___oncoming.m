@@ -45,8 +45,8 @@ function plot_trajectory(trajectory)
     xy_indices = [1,2,7,8,13,14,19,20,25,26,31,32];
     traj_length = size(trajectory, 1);
     num_dots = 5;
-    x_min = -15;
-    x_max = 15;
+    x_min = -5;
+    x_max = 10;
     y_min = -40;
     y_max = 40;    
     
@@ -187,7 +187,7 @@ function test_region_size_vs_alpha_scaling(exec)
         subplot(1,num_figs,j);
 
         runtime = plot_experiment_traj(char(prefix+"/"+tmp));
-%         title("Adversarial time = " + string_adversarial_time + " s");
+        title("Adversarial time = " + string_adversarial_time + " s");
 %         title("adv_time=" + string_adversarial_time + "(" +num2str(runtime)+ ")");
         j = j+1;
     end
