@@ -118,7 +118,7 @@ static constexpr float kLaneBoundaryCostWeight = 100.0;
 // static constexpr float kLaneCostWeight = 0.0;
 // static constexpr float kLaneBoundaryCostWeight = 0.0;
 
-static constexpr float kMinProximity = 4.75;
+static constexpr float kMinProximity = 4.5;
 static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
@@ -154,41 +154,31 @@ static constexpr float kP6NominalV = 5.0; // m/s
 
 // Initial state.
 
-// static constexpr float kP1InitialX = 0.0;   // m
-// static constexpr float kP1InitialY = -20.0; // m
-
-// static constexpr float kP2InitialX = 12.0;  // m
-// static constexpr float kP2InitialY = -10.0; // m
-
-// static constexpr float kP3InitialX = 0.0;  // m
-// static constexpr float kP3InitialY = 20.0; // m
-
-// static constexpr float kP4InitialX = 6.0; // m
-// static constexpr float kP4InitialY = 0.0; // m
-
-// static constexpr float kP5InitialX = -5.0; // m
-// static constexpr float kP5InitialY = 20.0; // m
-
-// static constexpr float kP6InitialX = -5.0;  // m
-// static constexpr float kP6InitialY = -20.0; // m
-
 static constexpr float kP1InitialX = 0.0;   // m
 static constexpr float kP1InitialY = -20.0; // m
-
-static constexpr float kP2InitialX = 9.0;  // m
+static constexpr float kP2InitialX = 12.0;  // m
 static constexpr float kP2InitialY = -10.0; // m
-
 static constexpr float kP3InitialX = 0.0;  // m
-static constexpr float kP3InitialY = 15.0; // m
-
+static constexpr float kP3InitialY = 20.0; // m
 static constexpr float kP4InitialX = 6.0; // m
 static constexpr float kP4InitialY = 0.0; // m
-
 static constexpr float kP5InitialX = -5.0; // m
-static constexpr float kP5InitialY = 15.0; // m
-
+static constexpr float kP5InitialY = 20.0; // m
 static constexpr float kP6InitialX = -5.0;  // m
-static constexpr float kP6InitialY = -15.0; // m
+static constexpr float kP6InitialY = -20.0; // m
+
+// static constexpr float kP1InitialX = 0.0;   // m
+// static constexpr float kP1InitialY = -20.0; // m
+// static constexpr float kP2InitialX = 9.0;  // m
+// static constexpr float kP2InitialY = -10.0; // m
+// static constexpr float kP3InitialX = 0.0;  // m
+// static constexpr float kP3InitialY = 15.0; // m
+// static constexpr float kP4InitialX = 6.0; // m
+// static constexpr float kP4InitialY = 0.0; // m
+// static constexpr float kP5InitialX = -5.0; // m
+// static constexpr float kP5InitialY = 15.0; // m
+// static constexpr float kP6InitialX = -5.0;  // m
+// static constexpr float kP6InitialY = -20.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;       // rad
 static constexpr float kP2InitialHeading = M_PI * 2 / 3; // rad
