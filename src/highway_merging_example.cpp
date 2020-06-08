@@ -178,7 +178,7 @@ static constexpr float kP4InitialY = 0.0; // m
 static constexpr float kP5InitialX = -5.0; // m
 static constexpr float kP5InitialY = 15.0; // m
 static constexpr float kP6InitialX = -5.0;  // m
-static constexpr float kP6InitialY = -15.0; // m
+static constexpr float kP6InitialY = -25.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;       // rad
 static constexpr float kP2InitialHeading = M_PI * 2 / 3; // rad
