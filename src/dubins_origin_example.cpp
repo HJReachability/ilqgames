@@ -74,7 +74,7 @@ static constexpr float kGoalCostWeight = 10.0;
 // Initial state.
 static constexpr float kP1InitialX = 0.0;         // m
 static constexpr float kP1InitialY = -10.0;       // m
-static constexpr float kP1InitialHeading = M_PI;  // rad
+static constexpr float kP1InitialHeading = M_PI - 0.01;  // rad
 
 static constexpr float kP2InitialX = 0.0;               // m
 static constexpr float kP2InitialY = 10.0;              // m
