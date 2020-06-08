@@ -46,7 +46,7 @@ function plot_trajectory(trajectory)
     traj_length = size(trajectory, 1);
     num_dots = 5;
     x_min = -10;
-    x_max = 10;
+    x_max = 15;
     y_min = -25;
     y_max = 35;
     
@@ -83,18 +83,25 @@ function plot_trajectory(trajectory)
     xlabel('x (m)');
     ylabel('y (m)');
     
+    % Default Colors from Matlab used here: 'b', 'k', 'r'
+    % Custom Colors come from: https://htmlcolorcodes.com
+    
+    green_color = [30, 132, 73]*1/255;
+    yellow_color = [241, 196, 15]*1/255;
+    purple_color = [142, 58, 173]*1/255;
+    
     hold on
     
     % Player 3's trajectory:
     x = trajectory(:,13);
     y = trajectory(:,14);
-    plot(x,y,'b', 'MarkerSize', 2); 
+    plot(x,y,'k', 'MarkerSize', 2); 
     hold on
-    plot(trajectory(1,13), trajectory(1,14), 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
+    plot(trajectory(1,13), trajectory(1,14), 'ko', 'MarkerSize', 10, 'MarkerFaceColor', 'k');
     for i = 1:num_dots
         plot(trajectory(round(traj_length*i/num_dots),13), ...
             trajectory(round(traj_length*i/num_dots),14), ...
-            'bo', 'MarkerSize', 5, 'MarkerFaceColor', 'b');
+            'ko', 'MarkerSize', 5, 'MarkerFaceColor', 'k');
     end
     xlim([x_min x_max]);
     ylim([y_min y_max]);
@@ -106,13 +113,13 @@ function plot_trajectory(trajectory)
     % Player 4's trajectory:
     x = trajectory(:,19);
     y = trajectory(:,20);
-    plot(x,y,'b', 'MarkerSize', 2);
+    plot(x,y, 'Color', green_color, 'MarkerSize', 2);
     hold on
-    plot(trajectory(1,19), trajectory(1,20), 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
+    plot(trajectory(1,19), trajectory(1,20), 'o', 'MarkerEdge', green_color, 'MarkerSize', 10, 'MarkerFaceColor', green_color);
     for i = 1:num_dots
         plot(trajectory(round(traj_length*i/num_dots),19), ...
             trajectory(round(traj_length*i/num_dots),20), ...
-            'bo', 'MarkerSize', 5, 'MarkerFaceColor', 'b');
+            'o', 'MarkerEdge', green_color, 'MarkerSize', 5, 'MarkerFaceColor', green_color);
     end
     xlim([x_min x_max]);
     ylim([y_min y_max]);
@@ -124,13 +131,13 @@ function plot_trajectory(trajectory)
     % Player 5's trajectory:
     x = trajectory(:,25);
     y = trajectory(:,26);
-    plot(x,y,'b', 'MarkerSize', 2); 
+    plot(x,y,'Color', yellow_color, 'MarkerSize', 2); 
     hold on
-    plot(trajectory(1,25), trajectory(1,26), 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
+    plot(trajectory(1,25), trajectory(1,26), 'o', 'MarkerEdge', yellow_color, 'MarkerSize', 10, 'MarkerFaceColor', yellow_color);
     for i = 1:num_dots
         plot(trajectory(round(traj_length*i/num_dots),25), ...
             trajectory(round(traj_length*i/num_dots),26), ...
-            'bo', 'MarkerSize', 5, 'MarkerFaceColor', 'b');
+            'o', 'MarkerEdge', yellow_color, 'MarkerSize', 5, 'MarkerFaceColor', yellow_color);
     end
     xlim([x_min x_max]);
     ylim([y_min y_max]);
@@ -142,13 +149,13 @@ function plot_trajectory(trajectory)
     % Player 6's trajectory:
     x = trajectory(:,31);
     y = trajectory(:,32);
-    plot(x,y,'b', 'MarkerSize', 2);
+    plot(x,y,'Color', purple_color, 'MarkerSize', 2);
     hold on
-    plot(trajectory(1,31), trajectory(1,32), 'bo', 'MarkerSize', 10, 'MarkerFaceColor', 'b');
+    plot(trajectory(1,31), trajectory(1,32), 'o', 'MarkerEdge', purple_color, 'MarkerSize', 10, 'MarkerFaceColor', purple_color);
     for i = 1:num_dots
         plot(trajectory(round(traj_length*i/num_dots),31), ...
             trajectory(round(traj_length*i/num_dots),32), ...
-            'bo', 'MarkerSize', 5, 'MarkerFaceColor', 'b');
+            'o', 'MarkerEdge', purple_color, 'MarkerSize', 5, 'MarkerFaceColor', purple_color);
     end
     xlim([x_min x_max]);
     ylim([y_min y_max]);
@@ -256,7 +263,7 @@ function test_region_size_vs_alpha_scaling(exec)
         if ~exists
             % Stitch together the command for the executable.
             instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
-                          + " -trust_region_size=8.0 " ...
+                          + " -trust_region_size=10.0 " ...
                           + " -viz=false -save=true -last_traj=true " + experiment_name;
 %             instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
 %                           + " -viz=false -save=true -last_traj=true " + experiment_name;
