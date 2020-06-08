@@ -46,7 +46,7 @@ function plot_trajectory(trajectory)
     traj_length = size(trajectory, 1);
     num_dots = 5;
     x_min = -10;
-    x_max = 15;
+    x_max = 10;
     y_min = -25;
     y_max = 35;
     
@@ -64,6 +64,7 @@ function plot_trajectory(trajectory)
     ylim([y_min y_max]);
     xlabel('x (m)');
     ylabel('y (m)');
+    xticks([-10 0 10]);
     
     hold on
     
@@ -82,6 +83,7 @@ function plot_trajectory(trajectory)
     ylim([y_min y_max]);
     xlabel('x (m)');
     ylabel('y (m)');
+    xticks([-10 0 10]);
     
     % Default Colors from Matlab used here: 'b', 'k', 'r'
     % Custom Colors come from: https://htmlcolorcodes.com
@@ -107,6 +109,7 @@ function plot_trajectory(trajectory)
     ylim([y_min y_max]);
     xlabel('x (m)');
     ylabel('y (m)');
+    xticks([-10 0 10]);
     
     hold on
     
@@ -125,6 +128,7 @@ function plot_trajectory(trajectory)
     ylim([y_min y_max]);
     xlabel('x (m)');
     ylabel('y (m)');
+    xticks([-10 0 10]);
     
     hold on
     
@@ -143,6 +147,7 @@ function plot_trajectory(trajectory)
     ylim([y_min y_max]);
     xlabel('x (m)');
     ylabel('y (m)');
+    xticks([-10 0 10]);
     
     hold on
     
@@ -161,6 +166,7 @@ function plot_trajectory(trajectory)
     ylim([y_min y_max]);
     xlabel('x (m)');
     ylabel('y (m)');
+    xticks([-10 0 10]);
     
     hold on
     
