@@ -46,7 +46,7 @@ function plot_trajectory(trajectory)
     traj_length = size(trajectory, 1);
     num_dots = 5;
     x_min = -5;
-    x_max = 10;
+    x_max = 5;
     y_min = -40;
     y_max = 40;    
     
@@ -159,8 +159,9 @@ function test_region_size_vs_alpha_scaling(exec)
     flag_adversarial_time = " -adversarial_time=";
     experiment_arg = "-experiment_name=";
     
-    num_figs = 3;
-    range_for_adversarial_time = linspace(1, 2, num_figs);
+    range_for_adversarial_time = [0, 5, 10];
+    size_adv_time = size(range_for_adversarial_time);
+    num_figs = size_adv_time(1, 2);
     j = 1;
     for adversarial_time=range_for_adversarial_time
         % Convert parameters loop parameters to strings for names
@@ -174,7 +175,7 @@ function test_region_size_vs_alpha_scaling(exec)
         if ~exists
             % Stitch together the command for the executable.
             instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
-                          + " -trust_region_size=5.0 -initial_alpha_scaling=0.1 -viz=false -save=true -last_traj=true " ...
+                          + " -trust_region_size=10.0 -initial_alpha_scaling=0.5 -viz=false -save=true -last_traj=true " ...
                           + experiment_name;  
             system(char(instruction));
         end

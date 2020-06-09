@@ -74,7 +74,7 @@ DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
 DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 
 // Adversarial Time.
-DEFINE_double(adversarial_time, 2.0,
+DEFINE_double(adversarial_time, 0.0,
               "Amount of time other agents are assumed to be adversarial");
 
 

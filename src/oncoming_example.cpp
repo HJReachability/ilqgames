@@ -96,18 +96,21 @@ static constexpr float kJerkCostWeight = 50.0;
 
 static constexpr float kACostWeight = 50.0;
 static constexpr float kP1NominalVCostWeight = 10.0;
-static constexpr float kP2NominalVCostWeight = 10.0;
+static constexpr float kP2NominalVCostWeight = 5.0;
 // static constexpr float kP3NominalVCostWeight = 1.0;
 
 // Newly added, 10-16-2019 20:33 p.m.
 static constexpr float kMinV = 0.0;    // m/s
-static constexpr float kP1MaxV = 35.8; // m/s
-static constexpr float kP2MaxV = 35.8; // m/s
+// static constexpr float kP1MaxV = 35.8; // m/s
+// static constexpr float kP2MaxV = 35.8; // m/s
+
+static constexpr float kP1MaxV = 10.0; // m/s
+static constexpr float kP2MaxV = 10.0; // m/s
 
 static constexpr float kLaneCostWeight = 10.0;
 static constexpr float kLaneBoundaryCostWeight = 5.0;
 
-static constexpr float kMinProximity = 5.0;
+static constexpr float kMinProximity = 3.0;
 static constexpr float kP1ProximityCostWeight = 300.0;
 static constexpr float kP2ProximityCostWeight = 1000.0;
 // static constexpr float kP3ProximityCostWeight = 100.0;
@@ -130,11 +133,11 @@ static constexpr float kP2NominalV = 5.0; // m/s
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 5.0;   // m
-static constexpr float kP1InitialY = -25.0; // m
+static constexpr float kP1InitialX = 1.5;   // m
+static constexpr float kP1InitialY = -35.0; // m
 
-static constexpr float kP2InitialX = 0.0;              // m
-static constexpr float kP2InitialY = 25.0;             // m
+static constexpr float kP2InitialX = -1.5;  // m
+static constexpr float kP2InitialY = 35.0; // m
 // static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;              // rad
