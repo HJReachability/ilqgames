@@ -81,7 +81,7 @@ static constexpr float kNumericalPrecision = 0.15;
 static constexpr float kNumericalPrecisionFraction = 0.1;
 
 // Exponential constant in costs.
-static constexpr float kExponentialConstant = 5.0;
+static constexpr float kExponentialConstant = 0.1;
 
 // Function to compute numerical gradient of a cost.
 VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
@@ -313,6 +313,12 @@ void CheckQuadraticization(const Cost& cost) {
 
 TEST(QuadraticCostTest, QuadraticizesCorrectly) {
   QuadraticCost cost(kCostWeight, -1, 1.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(QuadraticCostTest, QuadraticizesExponentialCorrectly) {
+  QuadraticCost cost(kCostWeight, -1, 1.0);
+  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 

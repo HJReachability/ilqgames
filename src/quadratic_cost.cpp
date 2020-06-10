@@ -44,6 +44,7 @@
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <numeric>
 
 namespace ilqgames {
 
@@ -73,16 +74,54 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), grad->size());
 
   // Handle single dimension case first.
+  const float aw = exponential_constant_ * weight_;
+
   if (dimension_ >= 0) {
-    (*hess)(dimension_, dimension_) += weight_;
-    (*grad)(dimension_) += weight_ * (input(dimension_) - nominal_);
+    const float delta = input(dimension_) - nominal_;
+    float dx = weight_ * delta;
+    float ddx = weight_;
+
+    if (IsExponentiated()) {
+      const float aw_delta = aw * delta;
+      const float exp_cost = std::exp(0.5 * aw_delta * delta);
+
+      dx = aw_delta * exp_cost;
+      ddx = aw * (aw * dx * dx + 1.0) * exp_cost;
+    }
+
+    (*grad)(dimension_) += dx;
+    (*hess)(dimension_, dimension_) += ddx;
   }
 
   // Handle dimension < 0 case.
   else {
-    hess->diagonal() =
-        hess->diagonal() + VectorXf::Constant(input.size(), weight_);
-    *grad += weight_ * (input - VectorXf::Constant(input.size(), nominal_));
+    const VectorXf delta = input - VectorXf::Constant(input.size(), nominal_);
+
+    if (IsExponentiated()) {
+      const float exp_cost = std::exp(0.5 * aw * delta.squaredNorm());
+      const float aw_sq = aw * aw;
+      VectorXf delta_sq(delta.size());
+
+      *grad += aw * delta * exp_cost;
+
+      for (size_t ii = 0; ii < hess->rows(); ii++) {
+        delta_sq(ii) = delta(ii) * delta(ii);
+
+        for (size_t jj = 0; jj < hess->cols(); jj++) {
+          if (ii == jj) continue;
+          (*hess)(ii, jj) += aw_sq * delta(ii) * delta(jj) * exp_cost;
+        }
+      }
+
+      hess->diagonal() =
+          hess->diagonal() +
+          exp_cost * aw *
+              (aw * delta_sq + VectorXf::Constant(delta.size(), 1.0));
+    } else {
+      *grad += weight_ * delta;
+      hess->diagonal() =
+          hess->diagonal() + VectorXf::Constant(input.size(), weight_);
+    }
   }
 }
 
