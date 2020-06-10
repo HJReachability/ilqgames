@@ -78,6 +78,10 @@ static constexpr Dimension kInputDimension = 10;
 static constexpr float kGradForwardStep = 1e-3;
 static constexpr float kHessForwardStep = 1e-3;
 static constexpr float kNumericalPrecision = 0.15;
+static constexpr float kNumericalPrecisionFraction = 0.1;
+
+// Exponential constant in costs.
+static constexpr float kExponentialConstant = 5.0;
 
 // Function to compute numerical gradient of a cost.
 VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
@@ -87,10 +91,14 @@ VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
   VectorXf query(input);
   for (size_t ii = 0; ii < input.size(); ii++) {
     query(ii) += kGradForwardStep;
-    const float hi = cost.Evaluate(t, query);
+    const float hi = (cost.IsExponentiated())
+                         ? cost.EvaluateExponential(t, query)
+                         : cost.Evaluate(t, query);
 
     query(ii) = input(ii) - kGradForwardStep;
-    const float lo = cost.Evaluate(t, query);
+    const float lo = (cost.IsExponentiated())
+                         ? cost.EvaluateExponential(t, query)
+                         : cost.Evaluate(t, query);
 
     grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
     query(ii) = input(ii);
@@ -177,7 +185,7 @@ void CheckQuadraticization(const Cost& cost) {
   std::default_random_engine rng(0);
   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
   std::bernoulli_distribution sign_distribution;
-  std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
+  std::uniform_real_distribution<float> entry_distribution(0.5, 5.0);
 
   // Try a bunch of random points.
   constexpr size_t kNumRandomPoints = 20;
@@ -199,9 +207,13 @@ void CheckQuadraticization(const Cost& cost) {
 
 #if 1
     if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
-            kNumericalPrecision ||
+            std::max(kNumericalPrecision,
+                     kNumericalPrecisionFraction *
+                         hess_analytic.cwiseAbs().maxCoeff()) ||
         (grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>() >=
-            kNumericalPrecision) {
+            std::max(kNumericalPrecision,
+                     kNumericalPrecisionFraction *
+                         grad_analytic.cwiseAbs().maxCoeff())) {
       std::cout << "input: " << input.transpose() << std::endl;
       std::cout << "numeric hess: \n" << hess_numerical << std::endl;
       std::cout << "analytic hess: \n" << hess_analytic << std::endl;
@@ -210,10 +222,14 @@ void CheckQuadraticization(const Cost& cost) {
     }
 #endif
 
-    EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
-              kNumericalPrecision);
-    EXPECT_LT((grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
-              kNumericalPrecision);
+    EXPECT_LT(
+        (hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
+        std::max(kNumericalPrecision, kNumericalPrecisionFraction *
+                                          hess_analytic.cwiseAbs().maxCoeff()));
+    EXPECT_LT(
+        (grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
+        std::max(kNumericalPrecision, kNumericalPrecisionFraction *
+                                          grad_analytic.cwiseAbs().maxCoeff()));
   }
 }
 
@@ -340,6 +356,12 @@ TEST(CurvatureCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(CurvatureCostTest, QuadraticizesExponentialCorrectly) {
+  CurvatureCost cost(kCostWeight, 0, 1);
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
 TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
   NominalPathLengthCost cost(kCostWeight, 0, 1.0);
   CheckQuadraticization(cost);
@@ -347,6 +369,12 @@ TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
 
 TEST(ProximityCostTest, QuadraticizesCorrectly) {
   ProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(ProximityCostTest, QuadraticizesExponentialCorrectly) {
+  ProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
+  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 

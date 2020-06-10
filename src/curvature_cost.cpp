@@ -66,18 +66,41 @@ void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   // Populate Hessian and gradient.
   const float v = input(v_idx_);
   const float omega = input(omega_idx_);
-  const float one_over_vsq = 1.0 / (v * v);
+  const float vsq = v * v;
+  const float one_over_vsq = 1.0 / vsq;
+  const float omega_sq = omega * omega;
   const float weight_over_vsq = weight_ * one_over_vsq;
   const float weight_omega_over_vsq = omega * weight_over_vsq;
-  (*hess)(omega_idx_, omega_idx_) += weight_over_vsq;
 
-  const float cross_term = -2.0 * weight_omega_over_vsq / v;
-  (*hess)(omega_idx_, v_idx_) += cross_term;
-  (*hess)(v_idx_, omega_idx_) += cross_term;
-  (*hess)(v_idx_, v_idx_) += 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
+  float domega = weight_omega_over_vsq;
+  float dv = -weight_omega_over_vsq * omega / v;
+  float ddomega = weight_over_vsq;
+  float ddv = 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
+  float domega_dv = -2.0 * weight_omega_over_vsq / v;
 
-  (*grad)(omega_idx_) += weight_omega_over_vsq;
-  (*grad)(v_idx_) -= weight_omega_over_vsq * omega / v;
+  // Handle separate case where cost is exponentiated.
+  if (IsExponentiated()) {
+    const float a = exponential_constant_;
+    const float w = weight_;
+    const float weight_omegasq_over_vsq = omega * weight_omega_over_vsq;
+    const float expcost = std::exp(0.5 * a * weight_omegasq_over_vsq);
+
+    domega = a * omega * w * expcost * one_over_vsq;
+    dv = -a * weight_omegasq_over_vsq * expcost / v;
+    ddomega = a * weight_over_vsq * (a * w * omega_sq + vsq) * expcost / vsq;
+    ddv = a * omega * weight_omega_over_vsq * (a * w * omega_sq + 3.0 * vsq) *
+          expcost / (vsq * vsq);
+    domega_dv = -a * weight_omega_over_vsq * (a * w * omega_sq + 2.0 * vsq) *
+                expcost / (v * vsq);
+  }
+
+  (*grad)(omega_idx_) += domega;
+  (*grad)(v_idx_) += dv;
+
+  (*hess)(omega_idx_, omega_idx_) += ddomega;
+  (*hess)(omega_idx_, v_idx_) += domega_dv;
+  (*hess)(v_idx_, omega_idx_) += domega_dv;
+  (*hess)(v_idx_, v_idx_) += ddv;
 }
 
 }  // namespace ilqgames

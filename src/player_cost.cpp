@@ -240,4 +240,9 @@ void PlayerCost::ResetConstraintBarrierWeights() {
   for (auto& pair : control_constraints_) pair.second->ResetBarrierWeight();
 }
 
+void PlayerCost::SetExponentialConstant(float a) {
+  for (auto& cost : state_costs_) cost->SetExponentialConstant(a);
+  for (auto& pair : control_costs_) pair.second->SetExponentialConstant(a);
+}
+
 }  // namespace ilqgames
