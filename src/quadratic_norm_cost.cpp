@@ -69,19 +69,48 @@ void QuadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), hess->cols());
   CHECK_EQ(input.size(), grad->size());
 
-  // Populate hessian and, optionally, gradient.
-  const float norm = std::hypot(input(dim1_), input(dim2_));
-  const float norm_3 = norm * norm * norm;
-  (*hess)(dim1_, dim1_) +=
-      weight_ - (nominal_ * input(dim2_) * input(dim2_) * weight_) / norm_3;
-  (*hess)(dim2_, dim2_) +=
-      weight_ - (nominal_ * input(dim1_) * input(dim1_) * weight_) / norm_3;
-  (*hess)(dim1_, dim2_) +=
-      nominal_ * input(dim1_) * input(dim2_) * weight_ / norm_3;
-  (*hess)(dim2_, dim1_) += (*hess)(dim1_, dim2_);
+  // Populate Hessian and gradient.
+  const float x = input(dim1_);
+  const float y = input(dim2_);
+  const float x_sq = x * x;
+  const float y_sq = y * y;
+  const float norm_sq = x_sq + y_sq;
+  const float norm = std::sqrt(norm_sq);
+  const float norm_3 = norm * norm_sq;
 
-  (*grad)(dim1_) += -weight_ * input(dim1_) * (-1.0 + nominal_ / norm);
-  (*grad)(dim2_) += -weight_ * input(dim2_) * (-1.0 + nominal_ / norm);
+  float dx = -weight_ * x * (-1.0 + nominal_ / norm);
+  float dy = -weight_ * y * (-1.0 + nominal_ / norm);
+  float ddx = weight_ - (nominal_ * y_sq * weight_) / norm_3;
+  float ddy = weight_ - (nominal_ * x_sq * weight_) / norm_3;
+  float dxdy = nominal_ * x * y * weight_ / norm_3;
+
+  if (IsExponentiated()) {
+    const float aw = exponential_constant_ * weight_;
+    const float diff = norm - nominal_;
+    const float aw_diff_sq = aw * diff * diff;
+    const float exp_cost = std::exp(0.5 * aw_diff_sq);
+
+    dx = aw * x * diff * exp_cost / norm;
+    dy = aw * y * diff * exp_cost / norm;
+
+    ddx =
+        -aw *
+        (x_sq * (diff * norm - norm_sq * (aw_diff_sq + 1.0)) - diff * norm_3) *
+        exp_cost / (norm_sq * norm_sq);
+    ddy =
+        -aw *
+        (y_sq * (diff * norm - norm_sq * (aw_diff_sq + 1.0)) - diff * norm_3) *
+        exp_cost / (norm_sq * norm_sq);
+    dxdy = -aw * x * y * (diff - norm * (aw_diff_sq + 1.0)) * exp_cost / norm_3;
+  }
+
+  (*hess)(dim1_, dim1_) += ddx;
+  (*hess)(dim2_, dim2_) += ddy;
+  (*hess)(dim1_, dim2_) += dxdy;
+  (*hess)(dim2_, dim1_) += dxdy;
+
+  (*grad)(dim1_) += dx;
+  (*grad)(dim2_) += dy;
 }
 
 }  // namespace ilqgames

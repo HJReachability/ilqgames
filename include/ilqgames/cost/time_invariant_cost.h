@@ -59,6 +59,9 @@ class TimeInvariantCost : public Cost {
   float Evaluate(Time t, const VectorXf& input) const {
     return Evaluate(input);
   }
+  virtual float EvaluateExponential(const VectorXf& input) const {
+    return Cost::EvaluateExponential(0.0, input);
+  }
 
   // Quadraticize this cost at the given input, and add to the running set of
   // sum of gradients and Hessians.

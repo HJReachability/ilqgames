@@ -45,7 +45,6 @@
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
-#include <ilqgames/cost/orientation_flat_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
@@ -214,20 +213,6 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
 
   // Set up costs for all players.
   PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
-
-  // Orientation cost
-  const std::shared_ptr<OrientationFlatCost> p1_nominal_heading(
-      new OrientationFlatCost(kNominalHeadingCostWeight, {kP1VxIdx, kP1VyIdx},
-                              kP1NominalHeading, "NominalHeadingP1"));
-  // p1_cost.AddStateCost(p1_nominal_heading);
-  const std::shared_ptr<OrientationFlatCost> p2_nominal_heading(
-      new OrientationFlatCost(kNominalHeadingCostWeight, {kP2VxIdx, kP2VyIdx},
-                              kP1NominalHeading, "NominalHeadingP2"));
-  // p2_cost.AddStateCost(p2_nominal_heading);
-  const std::shared_ptr<OrientationFlatCost> p3_nominal_heading(
-      new OrientationFlatCost(kNominalHeadingCostWeight, {kP3VxIdx, kP3VyIdx},
-                              kP1NominalHeading, "NominalHeadingP3"));
-  // p3_cost.AddStateCost(p3_nominal_heading);
 
   // Stay in lanes.
   const Polyline2 lane1(

@@ -47,7 +47,6 @@
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
-#include <ilqgames/cost/orientation_flat_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
@@ -269,7 +268,6 @@ void CheckQuadraticization(const Cost& cost) {
 //     VectorXf grad_xi_analytic(VectorXf::Zero(xdim));
 //     cost.Quadraticize(t, xi, v, &hess_v_analytic, &hess_xi_analytic,
 //                       &grad_xi_analytic);
-
 //     // Numerical xi derivatives.
 //     const MatrixXf hess_xi_numerical = NumericalStateHessian(cost, t, xi, v);
 //     const VectorXf grad_xi_numerical = NumericalStateGradient(cost, t, xi,
@@ -327,13 +325,31 @@ TEST(QuadraticNormCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(QuadraticNormCostTest, QuadraticizesExponentialCorrectly) {
+  QuadraticNormCost cost(kCostWeight, {1, 2}, 1.0);
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
 TEST(SemiquadraticCostTest, QuadraticizesCorrectly) {
   SemiquadraticCost cost(kCostWeight, 0, 0.0, true);
   CheckQuadraticization(cost);
 }
 
+TEST(SemiquadraticCostTest, QuadraticizesExponentialCorrectly) {
+  SemiquadraticCost cost(kCostWeight, 0, 0.0, true);
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
 TEST(SemiquadraticNormCostTest, QuadraticizesCorrectly) {
   SemiquadraticNormCost cost(kCostWeight, {1, 2}, 1.0, true);
+  CheckQuadraticization(cost);
+}
+
+TEST(SemiquadraticNormCostTest, QuadraticizesExponentialCorrectly) {
+  SemiquadraticNormCost cost(kCostWeight, {1, 2}, 1.0, true);
+  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -347,6 +363,14 @@ TEST(RouteProgressCostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   constexpr float kNominalSpeed = 0.1;
   RouteProgressCost cost(kCostWeight, kNominalSpeed, polyline, {0, 1});
+  CheckQuadraticization(cost);
+}
+
+TEST(RouteProgressCostTest, QuadraticizesExponentialCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  constexpr float kNominalSpeed = 0.1;
+  RouteProgressCost cost(kCostWeight, kNominalSpeed, polyline, {0, 1});
+  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -391,11 +415,6 @@ TEST(LocallyConvexProximityCostTest, QuadraticizesCorrectly) {
 
 TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
   WeightedConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 4, 5, 0.0);
-  CheckQuadraticization(cost);
-}
-
-TEST(OrientationFlatCostTest, QuadraticizesCorrectly) {
-  OrientationFlatCost cost(kCostWeight, {1, 2}, 1.0);
   CheckQuadraticization(cost);
 }
 

@@ -63,9 +63,9 @@ class Cost {
   }
 
   // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians (if non-null).
+  // sum of gradients and Hessians.
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad = nullptr) const = 0;
+                            VectorXf* grad) const = 0;
 
   // Access the name of this cost.
   const std::string& Name() const { return name_; }
