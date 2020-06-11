@@ -404,6 +404,12 @@ TEST(OrientationCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(OrientationCostTest, QuadraticizesExponentialCorrectly) {
+  OrientationCost cost(kCostWeight, 1, M_PI_2);
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
 TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
   ProximityConstraint outside_constraint({0, 1}, {2, 3}, 0.0, false);
   CheckQuadraticization(outside_constraint);
