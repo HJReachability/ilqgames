@@ -68,8 +68,22 @@ void NominalPathLengthCost::Quadraticize(Time t, const VectorXf& input,
   CHECK_EQ(input.size(), grad->size());
 
   // Populate Hessian and gradient.
-  (*hess)(dimension_, dimension_) += weight_;
-  (*grad)(dimension_) += weight_ * (input(dimension_) - t * nominal_speed_);
+  const float delta = input(dimension_) - t * nominal_speed_;
+
+  float dx = weight_ * delta;
+  float ddx = weight_;
+
+  if (IsExponentiated()) {
+    const float aw = exponential_constant_ * weight_;
+    const float aw_delta_sq = aw * delta * delta;
+    const float exp_cost = std::exp(0.5 * aw_delta_sq);
+
+    dx = aw * delta * exp_cost;
+    ddx = aw * (aw_delta_sq + 1.0) * exp_cost;
+  }
+
+  (*grad)(dimension_) += dx;
+  (*hess)(dimension_, dimension_) += ddx;
 }
 
 }  // namespace ilqgames

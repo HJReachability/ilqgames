@@ -397,6 +397,12 @@ TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(NominalPathLengthCostTest, QuadraticizesExponentialCorrectly) {
+  NominalPathLengthCost cost(kCostWeight, 0, 1.0);
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
 TEST(ProximityCostTest, QuadraticizesCorrectly) {
   ProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
   CheckQuadraticization(cost);
