@@ -59,7 +59,7 @@ class TimeInvariantCost : public Cost {
   float Evaluate(Time t, const VectorXf& input) const {
     return Evaluate(input);
   }
-  virtual float EvaluateExponential(const VectorXf& input) const {
+  float EvaluateExponential(const VectorXf& input) const {
     return Cost::EvaluateExponential(0.0, input);
   }
 
@@ -75,6 +75,13 @@ class TimeInvariantCost : public Cost {
  protected:
   explicit TimeInvariantCost(float weight, const std::string& name = "")
       : Cost(weight, name) {}
+
+  // Modify existing derivatives if exponentiated.
+  void ModifyDerivatives(const VectorXf& input, float* dx, float* ddx,
+                         float* dy = nullptr, float* ddy = nullptr,
+                         float* dxdy = nullptr) const {
+    Cost::ModifyDerivatives(0.0, input, dx, ddx, dy, ddy, dxdy);
+  }
 };  //\class TimeInvariantCost
 
 }  // namespace ilqgames

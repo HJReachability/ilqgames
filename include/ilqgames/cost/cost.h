@@ -108,6 +108,11 @@ class Cost {
   // NOTE: When this is nearly zero, we just assume that exponentiated costs are
   // not active and resort to regular (non-exponentiated costs).
   float exponential_constant_;
+
+  // Modify existing derivatives if exponentiated.
+  void ModifyDerivatives(Time t, const VectorXf& input, float* dx, float* ddx,
+                         float* dy = nullptr, float* ddy = nullptr,
+                         float* dxdy = nullptr) const;
 };  //\class Cost
 
 }  // namespace ilqgames

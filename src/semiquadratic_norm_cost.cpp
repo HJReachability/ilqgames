@@ -89,23 +89,7 @@ void SemiquadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float ddy = weight_ - (threshold_ * x * x * weight_) / norm_3;
   float dxdy = threshold_ * x * y * weight_ / norm_3;
 
-  if (IsExponentiated()) {
-    const float aw = exponential_constant_ * weight_;
-    const float diff = norm - threshold_;
-    const float aw_diff = aw * diff;
-    const float exp_cost = std::exp(0.5 * aw_diff * diff);
-
-    dx = x * aw_diff * exp_cost / norm;
-    dy = y * aw_diff * exp_cost / norm;
-    ddx = aw *
-          (x * x * (-diff + norm * (aw_diff * diff + 1.0)) + diff * norm_2) *
-          exp_cost / norm_3;
-    ddy = aw *
-          (y * y * (-diff + norm * (aw_diff * diff + 1.0)) + diff * norm_2) *
-          exp_cost / norm_3;
-    dxdy = aw * x * y * (-diff * norm_2 + norm_3 * (aw_diff * diff + 1.0)) *
-           exp_cost / (norm_2 * norm_3);
-  }
+  ModifyDerivatives(input, &dx, &ddx, &dy, &ddy, &dxdy);
 
   (*grad)(dim1_) += dx;
   (*grad)(dim2_) += dy;

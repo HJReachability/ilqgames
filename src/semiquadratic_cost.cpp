@@ -79,14 +79,8 @@ void SemiquadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   // Compute gradient and Hessian.
   float dx = weight_ * diff;
   float ddx = weight_;
-  if (IsExponentiated()) {
-    const float aw = exponential_constant_ * weight_;
-    const float aw_diff_sq = aw * diff * diff;
-    const float exp_cost = std::exp(0.5 * aw_diff_sq);
 
-    dx = aw * diff * exp_cost;
-    ddx = aw * (aw_diff_sq + 1.0) * exp_cost;
-  }
+  ModifyDerivatives(input, &dx, &ddx);
 
   (*grad)(dimension_) += dx;
   (*hess)(dimension_, dimension_) += ddx;

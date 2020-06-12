@@ -93,31 +93,38 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
 
   // Handle cases separately depending on whether or not closest point is
   // a vertex of the polyline.
+  float ddx = weight_;
+  float ddy = weight_;
+  float dxdy = 0.0;
+  float dx = weight_ * (current_position.x() - closest_point.x());
+  float dy = weight_ * (current_position.y() - closest_point.y());
+
   if (!is_vertex) {
     const Point2 relative = current_position - segment.FirstPoint();
     const Point2& unit_segment = segment.UnitDirection();
 
     // Handle Hessian first.
-    (*hess)(xidx_, xidx_) += weight_ * unit_segment.y() * unit_segment.y();
-    (*hess)(yidx_, yidx_) += weight_ * unit_segment.x() * unit_segment.x();
-
-    const float cross_term = weight_ * unit_segment.x() * unit_segment.y();
-    (*hess)(xidx_, yidx_) -= cross_term;
-    (*hess)(yidx_, xidx_) -= cross_term;
+    ddx = weight_ * unit_segment.y() * unit_segment.y();
+    ddy = weight_ * unit_segment.x() * unit_segment.x();
+    dxdy = -weight_ * unit_segment.x() * unit_segment.y();
 
     // Handle gradient.
     const float w_cross = weight_ * (relative.x() * unit_segment.y() -
                                      relative.y() * unit_segment.x());
 
-    (*grad)(xidx_) += w_cross * unit_segment.y();
-    (*grad)(yidx_) -= w_cross * unit_segment.x();
-  } else {
-    (*hess)(xidx_, xidx_) += weight_;
-    (*hess)(yidx_, yidx_) += weight_;
-
-    (*grad)(xidx_) += weight_ * (current_position.x() - closest_point.x());
-    (*grad)(yidx_) += weight_ * (current_position.y() - closest_point.y());
+    dx = w_cross * unit_segment.y();
+    dy = -w_cross * unit_segment.x();
   }
+
+  ModifyDerivatives(input, &dx, &ddx, &dy, &ddy, &dxdy);
+
+  (*grad)(xidx_) += dx;
+  (*grad)(yidx_) += dy;
+
+  (*hess)(xidx_, xidx_) += ddx;
+  (*hess)(yidx_, yidx_) += ddy;
+  (*hess)(xidx_, yidx_) += dxdy;
+  (*hess)(yidx_, xidx_) += dxdy;
 }
 
 }  // namespace ilqgames

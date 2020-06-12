@@ -90,28 +90,17 @@ void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
   float dy = weight_ * diff_y;
   float ddx = weight_;
   float ddy = weight_;
+  float dxdy = 0.0;
 
-  if (IsExponentiated()) {
-    const float aw = exponential_constant_ * weight_;
-    const float aw_diff_xsq = aw * diff_x * diff_x;
-    const float aw_diff_ysq = aw * diff_y * diff_y;
-    const float aw_diff_sq = aw_diff_xsq + aw_diff_ysq;
-    const float exp_cost = std::exp(0.5 * aw_diff_sq);
-
-    dx = aw * diff_x * exp_cost;
-    dy = aw * diff_y * exp_cost;
-    ddx = aw * (aw_diff_xsq + 1.0) * exp_cost;
-    ddy = aw * (aw_diff_ysq + 1.0) * exp_cost;
-
-    (*hess)(xidx_, yidx_) += aw * aw * diff_x * diff_y * exp_cost;
-    (*hess)(yidx_, xidx_) += (*hess)(xidx_, yidx_);
-  }
+  ModifyDerivatives(t, input, &dx, &ddx, &dy, &ddy, &dxdy);
 
   (*grad)(xidx_) += dx;
   (*grad)(yidx_) += dy;
 
   (*hess)(xidx_, xidx_) += ddx;
   (*hess)(yidx_, yidx_) += ddy;
+  (*hess)(xidx_, yidx_) += dxdy;
+  (*hess)(yidx_, xidx_) += dxdy;
 }
 
 }  // namespace ilqgames

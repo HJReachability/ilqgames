@@ -66,9 +66,7 @@ void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   // Populate Hessian and gradient.
   const float v = input(v_idx_);
   const float omega = input(omega_idx_);
-  const float vsq = v * v;
-  const float one_over_vsq = 1.0 / vsq;
-  const float omega_sq = omega * omega;
+  const float one_over_vsq = 1.0 / (v * v);
   const float weight_over_vsq = weight_ * one_over_vsq;
   const float weight_omega_over_vsq = omega * weight_over_vsq;
 
@@ -78,21 +76,7 @@ void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float ddv = 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
   float domega_dv = -2.0 * weight_omega_over_vsq / v;
 
-  // Handle separate case where cost is exponentiated.
-  if (IsExponentiated()) {
-    const float a = exponential_constant_;
-    const float w = weight_;
-    const float weight_omegasq_over_vsq = omega * weight_omega_over_vsq;
-    const float expcost = std::exp(0.5 * a * weight_omegasq_over_vsq);
-
-    domega = a * omega * w * expcost * one_over_vsq;
-    dv = -a * weight_omegasq_over_vsq * expcost / v;
-    ddomega = a * weight_over_vsq * (a * w * omega_sq + vsq) * expcost / vsq;
-    ddv = a * omega * weight_omega_over_vsq * (a * w * omega_sq + 3.0 * vsq) *
-          expcost / (vsq * vsq);
-    domega_dv = -a * weight_omega_over_vsq * (a * w * omega_sq + 2.0 * vsq) *
-                expcost / (v * vsq);
-  }
+  ModifyDerivatives(input, &domega, &ddomega, &dv, &ddv, &domega_dv);
 
   (*grad)(omega_idx_) += domega;
   (*grad)(v_idx_) += dv;

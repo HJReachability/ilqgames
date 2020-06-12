@@ -84,33 +84,15 @@ void QuadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float ddy = weight_ - (nominal_ * x_sq * weight_) / norm_3;
   float dxdy = nominal_ * x * y * weight_ / norm_3;
 
-  if (IsExponentiated()) {
-    const float aw = exponential_constant_ * weight_;
-    const float diff = norm - nominal_;
-    const float aw_diff_sq = aw * diff * diff;
-    const float exp_cost = std::exp(0.5 * aw_diff_sq);
+  ModifyDerivatives(input, &dx, &ddx, &dy, &ddy, &dxdy);
 
-    dx = aw * x * diff * exp_cost / norm;
-    dy = aw * y * diff * exp_cost / norm;
-
-    ddx =
-        -aw *
-        (x_sq * (diff * norm - norm_sq * (aw_diff_sq + 1.0)) - diff * norm_3) *
-        exp_cost / (norm_sq * norm_sq);
-    ddy =
-        -aw *
-        (y_sq * (diff * norm - norm_sq * (aw_diff_sq + 1.0)) - diff * norm_3) *
-        exp_cost / (norm_sq * norm_sq);
-    dxdy = -aw * x * y * (diff - norm * (aw_diff_sq + 1.0)) * exp_cost / norm_3;
-  }
+  (*grad)(dim1_) += dx;
+  (*grad)(dim2_) += dy;
 
   (*hess)(dim1_, dim1_) += ddx;
   (*hess)(dim2_, dim2_) += ddy;
   (*hess)(dim1_, dim2_) += dxdy;
   (*hess)(dim2_, dim1_) += dxdy;
-
-  (*grad)(dim1_) += dx;
-  (*grad)(dim2_) += dy;
 }
 
 }  // namespace ilqgames

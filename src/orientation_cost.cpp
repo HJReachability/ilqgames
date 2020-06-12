@@ -75,14 +75,7 @@ void OrientationCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float dx = weight_ * angle_diff;
   float ddx = weight_;
 
-  if (IsExponentiated()) {
-    const float aw = exponential_constant_ * weight_;
-    const float angle_diff_sq = angle_diff * angle_diff;
-    const float exp_cost = std::exp(0.5 * aw * angle_diff_sq);
-
-    dx = aw * angle_diff * exp_cost;
-    ddx = aw * (aw * angle_diff_sq + 1.0) * exp_cost;
-  }
+  ModifyDerivatives(input, &dx, &ddx);
 
   (*grad)(dim_) += dx;
   (*hess)(dim_, dim_) += ddx;

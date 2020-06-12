@@ -47,4 +47,29 @@ namespace ilqgames {
 
 Time Cost::initial_time_ = 0.0;
 
+void Cost::ModifyDerivatives(Time t, const VectorXf& input, float* dx,
+                             float* ddx, float* dy, float* ddy,
+                             float* dxdy) const {
+  if (!IsExponentiated()) return;
+
+  const float exp_cost = EvaluateExponential(t, input);
+  const float modified_dx = exponential_constant_ * *dx * exp_cost;
+  const float modified_ddx = exponential_constant_ * exp_cost *
+                             (*ddx + exponential_constant_ * *dx * *dx);
+
+  if (dy && ddy && dxdy) {
+    const float modified_dy = exponential_constant_ * *dy * exp_cost;
+    const float modified_ddy = exponential_constant_ * exp_cost *
+                               (*ddy + exponential_constant_ * *dy * *dy);
+    const float modified_dxdy = exponential_constant_ * exp_cost *
+                                (*dxdy + exponential_constant_ * *dx * *dy);
+
+    *dy = modified_dy;
+    *ddy = modified_ddy;
+    *dxdy = modified_dxdy;
+  }
+
+  *dx = modified_dx;
+  *ddx = modified_ddx;
+}
 }  // namespace ilqgames
