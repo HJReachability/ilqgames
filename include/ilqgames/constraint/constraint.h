@@ -39,6 +39,10 @@
 // Base class for all constraints. We assume that all constraints are
 // *inequalities*, which support a check for satisfaction. All constraints must
 // also implement the cost interface corresponding to a barrier function.
+// Further, all constraints also must have a corresponding cost associated to
+// them which, unlike a log barrier which *forces* iterates to remain feasible,
+// merely *encourages* iterates to become feasible. This is useful, e.g., when
+// initial guesses are not feasible.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +52,8 @@
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
 
 namespace ilqgames {
@@ -59,13 +65,24 @@ class Constraint : public Cost {
   // Set or multiplicatively scale the barrier weight. This will typically
   // decrease with successive solves in order to improve the approximation of
   // the barrier-free objective.
-  void SetBarrierWeight(float weight) { weight_ = weight; }
-  void ScaleBarrierWeight(float scale) { weight_ *= scale; }
+  void ResetBarrierWeight() {
+    weight_ = kInitialBarrierWeight;
+    if (equivalent_cost_.get())
+      equivalent_cost_->SetWeight(kInitialEquivalentCostWeight);
+  }
+  void ScaleBarrierWeight(float scale) {
+    weight_ *= scale;
+    if (equivalent_cost_.get()) equivalent_cost_->ScaleWeight(scale);
+  }
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.
-  virtual bool IsSatisfied(Time t, const VectorXf& input,
-                           float* level = nullptr) const = 0;
+  virtual bool IsSatisfiedLevel(Time t, const VectorXf& input,
+                                float* level) const = 0;
+  bool IsSatisfied(Time t, const VectorXf& input) const {
+    float level;
+    return IsSatisfiedLevel(t, input, &level);
+  }
 
   // Evaluate the barrier at the current time and input.
   float Evaluate(Time t, const VectorXf& input) const;
@@ -75,11 +92,22 @@ class Constraint : public Cost {
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad) const = 0;
 
-  // Access the name of this cost.
-  const std::string& Name() const { return name_; }
+  // Accessors.
+  const Cost& EquivalentCost() const {
+    CHECK_NOTNULL(equivalent_cost_.get());
+    return *equivalent_cost_;
+  }
 
  protected:
-  explicit Constraint(const std::string& name = "") : Cost(1.0, name) {}
+  explicit Constraint(const std::string& name = "")
+      : Cost(kInitialBarrierWeight, name) {}
+
+  // "Equivalent" well-defined cost to encourage constraint satisfaction, e.g.,
+  // when an initial iterate is infeasible.
+  std::unique_ptr<Cost> equivalent_cost_;
+  static constexpr float kInitialBarrierWeight = 100.0;
+  static constexpr float kInitialEquivalentCostWeight = 10.0;
+  static constexpr float kCostBuffer = 1.0;
 };  //\class Constraint
 
 }  // namespace ilqgames

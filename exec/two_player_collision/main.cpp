@@ -61,7 +61,8 @@
 // Optional log saving and visualization.
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
-DEFINE_bool(last_traj, false, "Should the solver only dump the last trajectory?");
+DEFINE_bool(last_traj, false,
+            "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
@@ -104,11 +105,11 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
+  params.enforce_constraints_in_linesearch = true;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  auto problem =
-      std::make_shared<ilqgames::TwoPlayerCollisionExample>(params);
+  auto problem = std::make_shared<ilqgames::TwoPlayerCollisionExample>(params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
@@ -130,21 +131,21 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Solution may not be a local Nash.";
 
   // Dump the logs and/or exit.
-  if (FLAGS_save) { 
-    if (FLAGS_experiment_name == "") { 
-          CHECK(log->Save(FLAGS_last_traj)); 
-    }
-    else { 
-      CHECK(log->Save(FLAGS_last_traj,FLAGS_experiment_name)); 
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(log->Save(FLAGS_last_traj));
+    } else {
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
     }
   }
   if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
-  auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
-  ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
-  ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem->Solver().PlayerCosts());
+  std::shared_ptr<ilqgames::ControlSliders> sliders(
+      new ilqgames::ControlSliders({logs}));
+  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
+  ilqgames::CostInspector cost_inspector(sliders,
+                                         {problem->Solver().PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

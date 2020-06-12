@@ -88,8 +88,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pro-methods">Protected Member Functions</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
+<a href="#pro-static-attribs">Static Protected Attributes</a> &#124;
 <a href="classilqgames_1_1_multi_player_integrable_system-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">ilqgames::MultiPlayerIntegrableSystem Class Reference<span class="mlabels"><span class="mlabel">abstract</span></span></div>  </div>
@@ -151,6 +153,15 @@ virtual PlayerIndex&#160;</td><td class="memItemRight" valign="bottom"><b>NumPla
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>DistanceBetween</b> (const VectorXf &amp;x0, const VectorXf &amp;x1) const </td></tr>
 <tr class="separator:af25dee45970bc4e53a3844084bc3fad4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:afbe59f8e51163913a0ef03b84bf6b33b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbe59f8e51163913a0ef03b84bf6b33b"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrateUsingEuler</b> ()</td></tr>
+<tr class="separator:afbe59f8e51163913a0ef03b84bf6b33b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8623ddb41f2ea72b1838d5f8292fe091"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8623ddb41f2ea72b1838d5f8292fe091"></a>
+static void&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrateUsingRK4</b> ()</td></tr>
+<tr class="separator:a8623ddb41f2ea72b1838d5f8292fe091"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
 <tr class="memitem:a7b66a8aa057ed007006d884b5fe333af"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b66a8aa057ed007006d884b5fe333af"></a>
@@ -165,6 +176,12 @@ const Dimension&#160;</td><td class="memItemRight" valign="bottom"><b>xdim_</b><
 <tr class="memitem:adbd2c27a82e441fab50201f583a869f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbd2c27a82e441fab50201f583a869f2"></a>
 const Time&#160;</td><td class="memItemRight" valign="bottom"><b>time_step_</b></td></tr>
 <tr class="separator:adbd2c27a82e441fab50201f583a869f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-static-attribs"></a>
+Static Protected Attributes</h2></td></tr>
+<tr class="memitem:a45d12b2d86a80f04fac29bd88eb8179a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a45d12b2d86a80f04fac29bd88eb8179a"></a>
+static bool&#160;</td><td class="memItemRight" valign="bottom"><b>integrate_using_euler_</b> = false</td></tr>
+<tr class="separator:a45d12b2d86a80f04fac29bd88eb8179a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">

@@ -213,7 +213,7 @@ ThreePlayerFlatOvertakingExample::ThreePlayerFlatOvertakingExample(
       kNumTimeSteps, dynamics_->NumPlayers(), 0.0, dynamics_));
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost;
+  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
 
   // Orientation cost
   const std::shared_ptr<OrientationFlatCost> p1_nominal_heading(

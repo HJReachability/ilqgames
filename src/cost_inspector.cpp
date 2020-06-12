@@ -57,18 +57,39 @@ namespace ilqgames {
 
 void CostInspector::Render() const {
   // Extract player costs.
-  const auto& costs = player_costs_[sliders_->LogIndex()];
+  // NOTE: need to redo this all the time to ensure that we're always using the
+  // most up to date log for each GUI widget.
+  const auto& costs1 =
+      player_costs_[selected_problem_][sliders_->LogIndex(selected_problem_)];
 
   // Do nothing if log is empty.
-  if (costs.Log().NumIterates() == 0) return;
+  if (costs1.Log().NumIterates() == 0) return;
 
   // Set up main window.
   ImGui::Begin("Cost Inspector");
 
+  // Combo box to select problem.
+  if (ImGui::BeginCombo("Problem",
+                        std::to_string(selected_problem_ + 1).c_str())) {
+    for (size_t problem_idx = 0; problem_idx < sliders_->NumProblems();
+         problem_idx++) {
+      const bool is_selected = (selected_problem_ == problem_idx);
+      if (ImGui::Selectable(std::to_string(problem_idx + 1).c_str(),
+                            is_selected))
+        selected_problem_ = problem_idx;
+      if (is_selected) ImGui::SetItemDefaultFocus();
+    }
+
+    ImGui::EndCombo();
+  }
+
   // Combo box to select player.
+  const auto& costs2 =
+      player_costs_[selected_problem_][sliders_->LogIndex(selected_problem_)];
+
   if (ImGui::BeginCombo("Player",
                         std::to_string(selected_player_ + 1).c_str())) {
-    for (PlayerIndex ii = 0; ii < costs.NumPlayers(); ii++) {
+    for (PlayerIndex ii = 0; ii < costs2.NumPlayers(); ii++) {
       const bool is_selected = (selected_player_ == ii);
       if (ImGui::Selectable(std::to_string(ii + 1).c_str(), is_selected))
         selected_player_ = ii;
@@ -79,8 +100,11 @@ void CostInspector::Render() const {
   }
 
   // Combo box to select cost.
+  const auto& costs3 =
+      player_costs_[selected_problem_][sliders_->LogIndex(selected_problem_)];
+
   if (ImGui::BeginCombo("Cost", selected_cost_name_.c_str())) {
-    for (const auto& entry : costs.EvaluatedCosts(selected_player_)) {
+    for (const auto& entry : costs3.EvaluatedCosts(selected_player_)) {
       const std::string& cost_name = entry.first;
       const bool is_selected = (selected_cost_name_ == cost_name);
       if (ImGui::Selectable(cost_name.c_str(), is_selected))
@@ -92,18 +116,21 @@ void CostInspector::Render() const {
   }
 
   // Plot the given cost.
+  const auto& costs4 =
+      player_costs_[selected_problem_][sliders_->LogIndex(selected_problem_)];
   if (ImGui::BeginChild("Cost over time", ImVec2(0, 0), false)) {
     const std::string label = "Player " + std::to_string(selected_player_ + 1) +
                               ": " + selected_cost_name_;
-    if (costs.PlayerHasCost(selected_player_, selected_cost_name_)) {
-      const std::vector<float>& values = costs.EvaluatedCost(
-          sliders_->SolverIterate(), selected_player_, selected_cost_name_);
+    if (costs4.PlayerHasCost(selected_player_, selected_cost_name_)) {
+      const std::vector<float>& values =
+          costs4.EvaluatedCost(sliders_->SolverIterate(selected_problem_),
+                               selected_player_, selected_cost_name_);
       ImGui::PlotLines(label.c_str(), values.data(), values.size(), 0,
                        label.c_str(), FLT_MAX, FLT_MAX,
                        ImGui::GetWindowContentRegionMax());
 
       // Show a vertical line at the current time.
-      const float time = sliders_->InterpolationTime();
+      const float time = sliders_->InterpolationTime(selected_problem_);
       const ImU32 color =
           ImColor(ImVec4(234.0 / 255.0, 110.0 / 255.0, 110.0 / 255.0, 0.5));
       constexpr float kLineThickness = 2.0;
@@ -112,7 +139,7 @@ void CostInspector::Render() const {
       const float line_y_lower = window_top_left.y + ImGui::GetWindowHeight();
       const float line_y_upper = window_top_left.y;
       const float line_x = window_top_left.x + ImGui::GetWindowWidth() * time /
-                                                   costs.Log().FinalTime();
+                                                   costs4.Log().FinalTime();
 
       ImDrawList* draw_list = ImGui::GetWindowDrawList();
       draw_list->AddLine(ImVec2(line_x, line_y_lower),

@@ -9,13 +9,16 @@ Inheritance diagram for ilqgames\+:\+:Constraint\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-void {\bfseries Set\+Barrier\+Weight} (float weight)\hypertarget{classilqgames_1_1_constraint_a9a0278d47a5c2309174ce27567cd7a2e}{}\label{classilqgames_1_1_constraint_a9a0278d47a5c2309174ce27567cd7a2e}
+void {\bfseries Reset\+Barrier\+Weight} ()\hypertarget{classilqgames_1_1_constraint_af282fb2fae6fa61301c1f900899a388c}{}\label{classilqgames_1_1_constraint_af282fb2fae6fa61301c1f900899a388c}
 
 \item 
 void {\bfseries Scale\+Barrier\+Weight} (float scale)\hypertarget{classilqgames_1_1_constraint_a6474f6bbb0b2170254491062312e70f1}{}\label{classilqgames_1_1_constraint_a6474f6bbb0b2170254491062312e70f1}
 
 \item 
-virtual bool {\bfseries Is\+Satisfied} (Time t, const Vector\+Xf \&input, float $\ast$level=nullptr) const =0\hypertarget{classilqgames_1_1_constraint_acde97673b03d18973c9495ba6b17ec67}{}\label{classilqgames_1_1_constraint_acde97673b03d18973c9495ba6b17ec67}
+virtual bool {\bfseries Is\+Satisfied\+Level} (Time t, const Vector\+Xf \&input, float $\ast$level) const =0\hypertarget{classilqgames_1_1_constraint_a1b2c7e1b5b29c9728502cc51a82d0edb}{}\label{classilqgames_1_1_constraint_a1b2c7e1b5b29c9728502cc51a82d0edb}
+
+\item 
+bool {\bfseries Is\+Satisfied} (Time t, const Vector\+Xf \&input) const \hypertarget{classilqgames_1_1_constraint_a2a7322945a8a57720c7fa48cf48eadb0}{}\label{classilqgames_1_1_constraint_a2a7322945a8a57720c7fa48cf48eadb0}
 
 \item 
 float {\bfseries Evaluate} (Time t, const Vector\+Xf \&input) const \hypertarget{classilqgames_1_1_constraint_aa9d8f8f9cf80d4de4e861c00d8e04df8}{}\label{classilqgames_1_1_constraint_aa9d8f8f9cf80d4de4e861c00d8e04df8}
@@ -24,7 +27,7 @@ float {\bfseries Evaluate} (Time t, const Vector\+Xf \&input) const \hypertarget
 virtual void {\bfseries Quadraticize} (Time t, const Vector\+Xf \&input, Matrix\+Xf $\ast$hess, Vector\+Xf $\ast$grad) const =0\hypertarget{classilqgames_1_1_constraint_a94538ad0da7e881d1a3bd4009c43f775}{}\label{classilqgames_1_1_constraint_a94538ad0da7e881d1a3bd4009c43f775}
 
 \item 
-const std\+::string \& {\bfseries Name} () const \hypertarget{classilqgames_1_1_constraint_acfd5c87edfefcb710716e72045684e84}{}\label{classilqgames_1_1_constraint_acfd5c87edfefcb710716e72045684e84}
+const \hyperlink{classilqgames_1_1_cost}{Cost} \& {\bfseries Equivalent\+Cost} () const \hypertarget{classilqgames_1_1_constraint_a01d415fabb97d12b0c8b6f88bfc29f6f}{}\label{classilqgames_1_1_constraint_a01d415fabb97d12b0c8b6f88bfc29f6f}
 
 \end{DoxyCompactItemize}
 \subsection*{Protected Member Functions}
@@ -33,13 +36,31 @@ const std\+::string \& {\bfseries Name} () const \hypertarget{classilqgames_1_1_
 {\bfseries Constraint} (const std\+::string \&name=\char`\"{}\char`\"{})\hypertarget{classilqgames_1_1_constraint_a845ad9283a9921452afa22c34404302c}{}\label{classilqgames_1_1_constraint_a845ad9283a9921452afa22c34404302c}
 
 \end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+std\+::unique\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ {\bfseries equivalent\+\_\+cost\+\_\+}\hypertarget{classilqgames_1_1_constraint_aa33d6b05a13fe556b844656f07753e37}{}\label{classilqgames_1_1_constraint_aa33d6b05a13fe556b844656f07753e37}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static constexpr float {\bfseries k\+Initial\+Barrier\+Weight} = 100.\+0\hypertarget{classilqgames_1_1_constraint_a1c1566fc2fa74e58b54fae57c07b7af8}{}\label{classilqgames_1_1_constraint_a1c1566fc2fa74e58b54fae57c07b7af8}
+
+\item 
+static constexpr float {\bfseries k\+Initial\+Equivalent\+Cost\+Weight} = 10.\+0\hypertarget{classilqgames_1_1_constraint_a64fd12449a7f42d19c68b568140699a3}{}\label{classilqgames_1_1_constraint_a64fd12449a7f42d19c68b568140699a3}
+
+\item 
+static constexpr float {\bfseries k\+Cost\+Buffer} = 1.\+0\hypertarget{classilqgames_1_1_constraint_aaef1da643690381eca61569190863129}{}\label{classilqgames_1_1_constraint_aaef1da643690381eca61569190863129}
+
+\end{DoxyCompactItemize}
 \subsection*{Additional Inherited Members}
 
 
 \subsection{Detailed Description}
 
 
-Definition at line 55 of file constraint.\+h.
+Definition at line 61 of file constraint.\+h.
 
 
 

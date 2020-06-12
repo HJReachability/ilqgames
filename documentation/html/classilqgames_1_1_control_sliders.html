@@ -96,21 +96,33 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a28de3681d7982dcd675f40e51231ed8d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a28de3681d7982dcd675f40e51231ed8d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ControlSliders</b> (const std::vector&lt; std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_solver_log.html">ilqgames::SolverLog</a> &gt;&gt; &amp;logs)</td></tr>
-<tr class="separator:a28de3681d7982dcd675f40e51231ed8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a87f44ac674d284ac368daca4c1fff949"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a87f44ac674d284ac368daca4c1fff949"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ControlSliders</b> (const std::vector&lt; std::vector&lt; std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_solver_log.html">ilqgames::SolverLog</a> &gt;&gt;&gt; &amp;logs_for_each_problem)</td></tr>
+<tr class="separator:a87f44ac674d284ac368daca4c1fff949"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a06886eb116592138d8f9340430e4d30d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a06886eb116592138d8f9340430e4d30d"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Render</b> ()</td></tr>
 <tr class="separator:a06886eb116592138d8f9340430e4d30d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bb85832068975ed74580832736bc04d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7bb85832068975ed74580832736bc04d"></a>
-Time&#160;</td><td class="memItemRight" valign="bottom"><b>InterpolationTime</b> () const </td></tr>
-<tr class="separator:a7bb85832068975ed74580832736bc04d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6842d4890a86dcd3968f50a12c13045b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6842d4890a86dcd3968f50a12c13045b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>SolverIterate</b> () const </td></tr>
-<tr class="separator:a6842d4890a86dcd3968f50a12c13045b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4ac8700f707710484aa7057e78ae5239"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ac8700f707710484aa7057e78ae5239"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>LogIndex</b> () const </td></tr>
-<tr class="separator:a4ac8700f707710484aa7057e78ae5239"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae3752e7499e913dc3bbb46e19061cf11"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae3752e7499e913dc3bbb46e19061cf11"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumProblems</b> () const </td></tr>
+<tr class="separator:ae3752e7499e913dc3bbb46e19061cf11"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a255c57dd31398f88b808fd9bf936b2b1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a255c57dd31398f88b808fd9bf936b2b1"></a>
+const std::vector&lt; std::vector&lt; std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &gt; &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>LogsForEachProblem</b> () const </td></tr>
+<tr class="separator:a255c57dd31398f88b808fd9bf936b2b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ade4d6dab5db6ca493881c769e2ce9944"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade4d6dab5db6ca493881c769e2ce9944"></a>
+std::vector&lt; std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>LogForEachProblem</b> () const </td></tr>
+<tr class="separator:ade4d6dab5db6ca493881c769e2ce9944"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7619ee44e6ce84b5df323a6493338a72"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7619ee44e6ce84b5df323a6493338a72"></a>
+Time&#160;</td><td class="memItemRight" valign="bottom"><b>InterpolationTime</b> (size_t problem_idx) const </td></tr>
+<tr class="separator:a7619ee44e6ce84b5df323a6493338a72"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1963e1ac97100303f6d0ad8483e7340f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1963e1ac97100303f6d0ad8483e7340f"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>SolverIterate</b> (size_t problem_idx) const </td></tr>
+<tr class="separator:a1963e1ac97100303f6d0ad8483e7340f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae5dd8db5d88f8d8c1d8e2a23b25e1ab5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae5dd8db5d88f8d8c1d8e2a23b25e1ab5"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>LogIndex</b> (size_t problem_idx) const </td></tr>
+<tr class="separator:ae5dd8db5d88f8d8c1d8e2a23b25e1ab5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a370e35a28a451951d9cadcd58172b853"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a370e35a28a451951d9cadcd58172b853"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>MaxLogIndex</b> () const </td></tr>
+<tr class="separator:a370e35a28a451951d9cadcd58172b853"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">

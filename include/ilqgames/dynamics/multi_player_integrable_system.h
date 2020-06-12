@@ -87,6 +87,11 @@ class MultiPlayerIntegrableSystem {
     return x_ego;
   }
 
+  // Integrate using single step Euler or not, see below for more extensive
+  // description.
+  static void IntegrateUsingEuler() { integrate_using_euler_ = true; }
+  static void IntegrateUsingRK4() { integrate_using_euler_ = false; }
+
   // Getters.
   Time TimeStep() const { return time_step_; }
   Dimension XDim() const { return xdim_; }
@@ -113,6 +118,11 @@ class MultiPlayerIntegrableSystem {
 
   // Time step.
   const Time time_step_;
+
+  // Whether to use single Euler during integration. Typically this is false but
+  // it is typically used either for testing (we only derive Nash typically in
+  // this case) or for speed.
+  static bool integrate_using_euler_;
 };  //\class MultiPlayerIntegrableSystem
 
 }  // namespace ilqgames

@@ -99,11 +99,9 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     // Unpack linearization and quadraticization at this time step.
     const auto& lin = linearization[kk];
     const auto& quad = quadraticization[kk];
-    const auto& next_quad = quadraticization[kk + 1];
 
     // Campute capital lambdas.
-    capital_lambdas_[kk] =
-        MatrixXf::Identity(dynamics_->XDim(), dynamics_->XDim());
+    capital_lambdas_[kk].setIdentity();
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       const auto control_iter = quad[ii].control.find(ii);
       CHECK(control_iter != quad[ii].control.end());
@@ -118,56 +116,50 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     qr_capital_lambdas_[kk].compute(capital_lambdas_[kk]);
 
     // Compute Ms and ms.
+    intermediate_terms_[kk].setZero();
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      intermediate_terms_[kk] -=
+          lin.Bs[ii] *
+          (warped_Bs_[kk][ii] * ms_[kk + 1][ii] + warped_rs_[kk][ii]);
+    }
+
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       Ms_[kk][ii] =
           quad[ii].state.hess + lin.A.transpose() * Ms_[kk + 1][ii] *
                                     qr_capital_lambdas_[kk].solve(lin.A);
-
-      // Intermediate term in ms computation.
-      VectorXf intermediary = VectorXf::Zero(dynamics_->XDim());
-      for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
-        intermediary -= lin.Bs[jj] * (warped_Bs_[kk][jj] * ms_[kk + 1][ii] +
-                                      warped_rs_[kk][jj]);
-      }
-
       ms_[kk][ii] =
-          next_quad[ii].state.grad +
-          lin.A.transpose() *
-              (ms_[kk + 1][ii] +
-               Ms_[kk + 1][ii] * qr_capital_lambdas_[kk].solve(intermediary));
+          quad[ii].state.grad +
+          lin.A.transpose() * (ms_[kk + 1][ii] +
+                               Ms_[kk + 1][ii] * qr_capital_lambdas_[kk].solve(
+                                                     intermediate_terms_[kk]));
     }
   }
 
   // (2) Now compute optimal state and control trajectory forward in time.
   VectorXf x_star = x0;
-  VectorXf last_x_star = x_star;
+  VectorXf last_x_star;
   for (size_t kk = 0; kk < num_time_steps_ - 1; kk++) {
     // Unpack linearization at this time step.
     const auto& lin = linearization[kk];
 
-    // Intermediate term in u and x computations.
-    VectorXf intermediary = lin.A * x_star;
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      intermediary -= lin.Bs[ii] * (warped_Bs_[kk][ii] * ms_[kk + 1][ii] +
-                                    warped_rs_[kk][ii]);
-    }
-
     // Compute optimal x.
     last_x_star = x_star;
-    x_star = qr_capital_lambdas_[kk].solve(intermediary);
+    x_star = qr_capital_lambdas_[kk].solve(lin.A * last_x_star +
+                                           intermediate_terms_[kk]);
 
     // Compute optimal u and store (sign flipped) in alpha.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       strategies[ii].alphas[kk] =
-          warped_Bs_[kk][ii] * (Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii]);
+          warped_Bs_[kk][ii] * (Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii]) +
+          warped_rs_[kk][ii];
     }
 
     // Check dynamic feasibility.
-    //   VectorXf check_x = lin.A * last_x_star;
-    //   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-    //     check_x -= lin.Bs[ii] * strategies[ii].alphas[kk];
+    // VectorXf check_x = lin.A * last_x_star;
+    // for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+    //   check_x -= lin.Bs[ii] * strategies[ii].alphas[kk];
 
-    //   CHECK_LE((x_star - check_x).cwiseAbs().maxCoeff(), 1e-1);
+    // CHECK_LE((x_star - check_x).cwiseAbs().maxCoeff(), 1e-1);
   }
 
   return strategies;

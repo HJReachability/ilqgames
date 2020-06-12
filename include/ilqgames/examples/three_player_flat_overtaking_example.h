@@ -40,8 +40,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_FLAT_OVERTAKING_EXAMPLE_H
-#define ILQGAMES_EXAMPLE_THREE_PLAYER_FLAT_OVERTAKING_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLES_THREE_PLAYER_FLAT_OVERTAKING_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_THREE_PLAYER_FLAT_OVERTAKING_EXAMPLE_H
 
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/problem.h>

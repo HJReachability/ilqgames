@@ -47,8 +47,10 @@
 #define ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <math.h>
 #include <string>
 #include <utility>
 
@@ -66,11 +68,19 @@ class ProximityConstraint : public TimeInvariantConstraint {
         xidx1_(position_idxs1.first),
         yidx1_(position_idxs1.second),
         xidx2_(position_idxs2.first),
-        yidx2_(position_idxs2.second) {}
+        yidx2_(position_idxs2.second) {
+    // Set equivalent cost pointer.
+    CHECK(!inside) << "Right now we only have a cost that supports outside "
+                      "oriented constraints.";
+    const float new_threshold = threshold + kCostBuffer;
+    equivalent_cost_.reset(new ProximityCost(kInitialEquivalentCostWeight,
+                                             position_idxs1, position_idxs2,
+                                             new_threshold, name + "/Cost"));
+  }
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfied(const VectorXf& input, float* level = nullptr) const;
+  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
 
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.

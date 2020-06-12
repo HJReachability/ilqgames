@@ -45,8 +45,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLE_RECEDING_HORIZON_SIMULATOR_H
-#define ILQGAMES_EXAMPLE_RECEDING_HORIZON_SIMULATOR_H
+#ifndef ILQGAMES_EXAMPLES_RECEDING_HORIZON_SIMULATOR_H
+#define ILQGAMES_EXAMPLES_RECEDING_HORIZON_SIMULATOR_H
 
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/solver_log.h>

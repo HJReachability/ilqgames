@@ -110,16 +110,16 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac9f91e5938602c15b23b48756866b84e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac9f91e5938602c15b23b48756866b84e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>SingleDimensionConstraint</b> (Dimension dimension, float threshold, bool oriented_right, const std::string &amp;name=&quot;&quot;)</td></tr>
 <tr class="separator:ac9f91e5938602c15b23b48756866b84e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17cf10a6380cd6bf93523e3da37b1701"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a17cf10a6380cd6bf93523e3da37b1701"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsSatisfied</b> (const VectorXf &amp;input, float *level=nullptr) const </td></tr>
-<tr class="separator:a17cf10a6380cd6bf93523e3da37b1701"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a84f2eb8c9c3e8a8b4a49ce998a189808"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a84f2eb8c9c3e8a8b4a49ce998a189808"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsSatisfiedLevel</b> (const VectorXf &amp;input, float *level) const </td></tr>
+<tr class="separator:a84f2eb8c9c3e8a8b4a49ce998a189808"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4079f6f9af8858c0520d60133a5ef3fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4079f6f9af8858c0520d60133a5ef3fb"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (const VectorXf &amp;input, MatrixXf *hess, VectorXf *grad) const </td></tr>
 <tr class="separator:a4079f6f9af8858c0520d60133a5ef3fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classilqgames_1_1_time_invariant_constraint"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classilqgames_1_1_time_invariant_constraint')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classilqgames_1_1_time_invariant_constraint.html">ilqgames::TimeInvariantConstraint</a></td></tr>
-<tr class="memitem:aaae76d623a396948712806881aafceca inherit pub_methods_classilqgames_1_1_time_invariant_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaae76d623a396948712806881aafceca"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsSatisfied</b> (Time t, const VectorXf &amp;input, float *level=nullptr) const </td></tr>
-<tr class="separator:aaae76d623a396948712806881aafceca inherit pub_methods_classilqgames_1_1_time_invariant_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0efa7c3412a2340dcc277db4a869a35 inherit pub_methods_classilqgames_1_1_time_invariant_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab0efa7c3412a2340dcc277db4a869a35"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsSatisfiedLevel</b> (Time t, const VectorXf &amp;input, float *level) const </td></tr>
+<tr class="separator:ab0efa7c3412a2340dcc277db4a869a35 inherit pub_methods_classilqgames_1_1_time_invariant_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e1b3d7fbe55250677bfe61c394dd06f inherit pub_methods_classilqgames_1_1_time_invariant_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2e1b3d7fbe55250677bfe61c394dd06f"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (const VectorXf &amp;input) const </td></tr>
 <tr class="separator:a2e1b3d7fbe55250677bfe61c394dd06f inherit pub_methods_classilqgames_1_1_time_invariant_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -127,22 +127,31 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (const 
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (Time t, const VectorXf &amp;input, MatrixXf *hess, VectorXf *grad) const </td></tr>
 <tr class="separator:ae8244c5a37225511e93a920126df8b7d inherit pub_methods_classilqgames_1_1_time_invariant_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classilqgames_1_1_constraint"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classilqgames_1_1_constraint')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classilqgames_1_1_constraint.html">ilqgames::Constraint</a></td></tr>
-<tr class="memitem:a9a0278d47a5c2309174ce27567cd7a2e inherit pub_methods_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9a0278d47a5c2309174ce27567cd7a2e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>SetBarrierWeight</b> (float weight)</td></tr>
-<tr class="separator:a9a0278d47a5c2309174ce27567cd7a2e inherit pub_methods_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af282fb2fae6fa61301c1f900899a388c inherit pub_methods_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af282fb2fae6fa61301c1f900899a388c"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ResetBarrierWeight</b> ()</td></tr>
+<tr class="separator:af282fb2fae6fa61301c1f900899a388c inherit pub_methods_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6474f6bbb0b2170254491062312e70f1 inherit pub_methods_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6474f6bbb0b2170254491062312e70f1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ScaleBarrierWeight</b> (float scale)</td></tr>
 <tr class="separator:a6474f6bbb0b2170254491062312e70f1 inherit pub_methods_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a7322945a8a57720c7fa48cf48eadb0 inherit pub_methods_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a7322945a8a57720c7fa48cf48eadb0"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsSatisfied</b> (Time t, const VectorXf &amp;input) const </td></tr>
+<tr class="separator:a2a7322945a8a57720c7fa48cf48eadb0 inherit pub_methods_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa9d8f8f9cf80d4de4e861c00d8e04df8 inherit pub_methods_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa9d8f8f9cf80d4de4e861c00d8e04df8"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (Time t, const VectorXf &amp;input) const </td></tr>
 <tr class="separator:aa9d8f8f9cf80d4de4e861c00d8e04df8 inherit pub_methods_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfd5c87edfefcb710716e72045684e84 inherit pub_methods_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acfd5c87edfefcb710716e72045684e84"></a>
-const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>Name</b> () const </td></tr>
-<tr class="separator:acfd5c87edfefcb710716e72045684e84 inherit pub_methods_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a01d415fabb97d12b0c8b6f88bfc29f6f inherit pub_methods_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01d415fabb97d12b0c8b6f88bfc29f6f"></a>
+const <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>EquivalentCost</b> () const </td></tr>
+<tr class="separator:a01d415fabb97d12b0c8b6f88bfc29f6f inherit pub_methods_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classilqgames_1_1_cost"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classilqgames_1_1_cost')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classilqgames_1_1_cost.html">ilqgames::Cost</a></td></tr>
 <tr class="memitem:a7e21af3d7f23aee0d913ad5e2e0292cb inherit pub_methods_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7e21af3d7f23aee0d913ad5e2e0292cb"></a>
 const std::string &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>Name</b> () const </td></tr>
 <tr class="separator:a7e21af3d7f23aee0d913ad5e2e0292cb inherit pub_methods_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a099e8ab748c378007cd63293ba928cae inherit pub_methods_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a099e8ab748c378007cd63293ba928cae"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>SetWeight</b> (float weight)</td></tr>
+<tr class="separator:a099e8ab748c378007cd63293ba928cae inherit pub_methods_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abcf058c9ca728990f8f5b3c6acf4ead2 inherit pub_methods_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcf058c9ca728990f8f5b3c6acf4ead2"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ScaleWeight</b> (float scale)</td></tr>
+<tr class="separator:abcf058c9ca728990f8f5b3c6acf4ead2 inherit pub_methods_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -162,6 +171,10 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>ResetInitialTi
 <tr class="memitem:a9b30ac1d7733741609a3c8d6522a925b inherit pro_methods_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9b30ac1d7733741609a3c8d6522a925b"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Cost</b> (float weight, const std::string &amp;name=&quot;&quot;)</td></tr>
 <tr class="separator:a9b30ac1d7733741609a3c8d6522a925b inherit pro_methods_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classilqgames_1_1_constraint"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classilqgames_1_1_constraint')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classilqgames_1_1_constraint.html">ilqgames::Constraint</a></td></tr>
+<tr class="memitem:aa33d6b05a13fe556b844656f07753e37 inherit pro_attribs_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa33d6b05a13fe556b844656f07753e37"></a>
+std::unique_ptr&lt; <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>equivalent_cost_</b></td></tr>
+<tr class="separator:aa33d6b05a13fe556b844656f07753e37 inherit pro_attribs_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classilqgames_1_1_cost"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classilqgames_1_1_cost')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classilqgames_1_1_cost.html">ilqgames::Cost</a></td></tr>
 <tr class="memitem:a03c98f733c0e722960dad9e80e235652 inherit pro_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03c98f733c0e722960dad9e80e235652"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>weight_</b></td></tr>
@@ -169,6 +182,16 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>weight_</b></td></tr
 <tr class="memitem:a36d7d9ee9585912fc98fca10d9c81614 inherit pro_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a36d7d9ee9585912fc98fca10d9c81614"></a>
 const std::string&#160;</td><td class="memItemRight" valign="bottom"><b>name_</b></td></tr>
 <tr class="separator:a36d7d9ee9585912fc98fca10d9c81614 inherit pro_attribs_classilqgames_1_1_cost"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_static_attribs_classilqgames_1_1_constraint"><td colspan="2" onclick="javascript:toggleInherit('pro_static_attribs_classilqgames_1_1_constraint')"><img src="closed.png" alt="-"/>&#160;Static Protected Attributes inherited from <a class="el" href="classilqgames_1_1_constraint.html">ilqgames::Constraint</a></td></tr>
+<tr class="memitem:a1c1566fc2fa74e58b54fae57c07b7af8 inherit pro_static_attribs_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1c1566fc2fa74e58b54fae57c07b7af8"></a>
+static constexpr float&#160;</td><td class="memItemRight" valign="bottom"><b>kInitialBarrierWeight</b> = 100.0</td></tr>
+<tr class="separator:a1c1566fc2fa74e58b54fae57c07b7af8 inherit pro_static_attribs_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64fd12449a7f42d19c68b568140699a3 inherit pro_static_attribs_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a64fd12449a7f42d19c68b568140699a3"></a>
+static constexpr float&#160;</td><td class="memItemRight" valign="bottom"><b>kInitialEquivalentCostWeight</b> = 10.0</td></tr>
+<tr class="separator:a64fd12449a7f42d19c68b568140699a3 inherit pro_static_attribs_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaef1da643690381eca61569190863129 inherit pro_static_attribs_classilqgames_1_1_constraint"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaef1da643690381eca61569190863129"></a>
+static constexpr float&#160;</td><td class="memItemRight" valign="bottom"><b>kCostBuffer</b> = 1.0</td></tr>
+<tr class="separator:aaef1da643690381eca61569190863129 inherit pro_static_attribs_classilqgames_1_1_constraint"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_static_attribs_classilqgames_1_1_cost"><td colspan="2" onclick="javascript:toggleInherit('pro_static_attribs_classilqgames_1_1_cost')"><img src="closed.png" alt="-"/>&#160;Static Protected Attributes inherited from <a class="el" href="classilqgames_1_1_cost.html">ilqgames::Cost</a></td></tr>
 <tr class="memitem:ab86100ec9752b36fd5b6a338964f73cc inherit pro_static_attribs_classilqgames_1_1_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab86100ec9752b36fd5b6a338964f73cc"></a>
 static Time&#160;</td><td class="memItemRight" valign="bottom"><b>initial_time_</b> = 0.0</td></tr>
@@ -176,7 +199,7 @@ static Time&#160;</td><td class="memItemRight" valign="bottom"><b>initial_time_<
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="single__dimension__constraint_8h_source.html#l00056">56</a> of file <a class="el" href="single__dimension__constraint_8h_source.html">single_dimension_constraint.h</a>.</p>
+<p>Definition at line <a class="el" href="single__dimension__constraint_8h_source.html#l00057">57</a> of file <a class="el" href="single__dimension__constraint_8h_source.html">single_dimension_constraint.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/constraint/<a class="el" href="single__dimension__constraint_8h_source.html">single_dimension_constraint.h</a></li>
 <li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="single__dimension__constraint_8cpp_source.html">single_dimension_constraint.cpp</a></li>

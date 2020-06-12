@@ -106,6 +106,7 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
+  params.enforce_constraints_in_linesearch = true;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
@@ -141,10 +142,11 @@ int main(int argc, char** argv) {
   if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
-  auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
-  ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
-  ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem->Solver().PlayerCosts());
+  std::shared_ptr<ilqgames::ControlSliders> sliders(
+      new ilqgames::ControlSliders({logs}));
+  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
+  ilqgames::CostInspector cost_inspector(sliders,
+                                         {problem->Solver().PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

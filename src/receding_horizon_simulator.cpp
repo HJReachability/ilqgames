@@ -91,7 +91,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
   while (true) {
     // Break the loop if it's been long enough.
     // Integrate a little more.
-    constexpr Time kExtraTime = 0.05;
+    constexpr Time kExtraTime = 0.25;
     t += kExtraTime;  // + planner_runtime;
 
     if (t >= final_time || !splicer.ContainsTime(t + planner_runtime +

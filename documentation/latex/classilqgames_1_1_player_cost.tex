@@ -3,7 +3,7 @@
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-{\bfseries Player\+Cost} (float state\+\_\+regularization=0.\+0, float control\+\_\+regularization=0.\+0)\hypertarget{classilqgames_1_1_player_cost_a983c96844cf283233a3c041b58453349}{}\label{classilqgames_1_1_player_cost_a983c96844cf283233a3c041b58453349}
+{\bfseries Player\+Cost} (const std\+::string \&name=\char`\"{}\char`\"{}, float state\+\_\+regularization=0.\+0, float control\+\_\+regularization=0.\+0)\hypertarget{classilqgames_1_1_player_cost_a271f96af8eeac9138b0832239ca62437}{}\label{classilqgames_1_1_player_cost_a271f96af8eeac9138b0832239ca62437}
 
 \item 
 void {\bfseries Add\+State\+Cost} (const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \&cost)\hypertarget{classilqgames_1_1_player_cost_a3135d5f4c7722edc1ae385e0ecafcc87}{}\label{classilqgames_1_1_player_cost_a3135d5f4c7722edc1ae385e0ecafcc87}
@@ -30,7 +30,22 @@ float {\bfseries Evaluate\+Offset} (Time t, Time next\+\_\+t, const Vector\+Xf \
 \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} {\bfseries Quadraticize} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_ad3962847f8eda8bcfecf2096e6abccb6}{}\label{classilqgames_1_1_player_cost_ad3962847f8eda8bcfecf2096e6abccb6}
 
 \item 
-bool {\bfseries Check\+Constraints} (Time t, const Vector\+Xf \&x) const \hypertarget{classilqgames_1_1_player_cost_aecd3478584357f4ea5d743c14b842e71}{}\label{classilqgames_1_1_player_cost_aecd3478584357f4ea5d743c14b842e71}
+void {\bfseries Turn\+Constraints\+On} ()\hypertarget{classilqgames_1_1_player_cost_a6afcddbb08549f6e9e1167fdbe335306}{}\label{classilqgames_1_1_player_cost_a6afcddbb08549f6e9e1167fdbe335306}
+
+\item 
+void {\bfseries Turn\+Constraints\+Off} ()\hypertarget{classilqgames_1_1_player_cost_a24a3d61475539dfab3263b9cb30c4fa6}{}\label{classilqgames_1_1_player_cost_a24a3d61475539dfab3263b9cb30c4fa6}
+
+\item 
+bool {\bfseries Are\+Constraints\+On} () const \hypertarget{classilqgames_1_1_player_cost_acc8c6a6a143b8fd090d3087ac14eeb96}{}\label{classilqgames_1_1_player_cost_acc8c6a6a143b8fd090d3087ac14eeb96}
+
+\item 
+bool {\bfseries Check\+Constraints} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_a7c3268b3d9f2d1768096ac0c3adb7cb9}{}\label{classilqgames_1_1_player_cost_a7c3268b3d9f2d1768096ac0c3adb7cb9}
+
+\item 
+size\+\_\+t {\bfseries Num\+State\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a3b3e0bac90840bac45c57b74c9efcf19}{}\label{classilqgames_1_1_player_cost_a3b3e0bac90840bac45c57b74c9efcf19}
+
+\item 
+size\+\_\+t {\bfseries Num\+Control\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a61ab18fcd64b4fb99014ef14178f61d1}{}\label{classilqgames_1_1_player_cost_a61ab18fcd64b4fb99014ef14178f61d1}
 
 \item 
 void {\bfseries Scale\+Constraint\+Barrier\+Weights} (float scale=0.\+5)\hypertarget{classilqgames_1_1_player_cost_a01099622def541cf226c94140c38d485}{}\label{classilqgames_1_1_player_cost_a01099622def541cf226c94140c38d485}

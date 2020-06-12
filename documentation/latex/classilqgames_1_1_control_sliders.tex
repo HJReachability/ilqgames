@@ -3,19 +3,31 @@
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-{\bfseries Control\+Sliders} (const std\+::vector$<$ std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_solver_log}{ilqgames\+::\+Solver\+Log} $>$$>$ \&logs)\hypertarget{classilqgames_1_1_control_sliders_a28de3681d7982dcd675f40e51231ed8d}{}\label{classilqgames_1_1_control_sliders_a28de3681d7982dcd675f40e51231ed8d}
+{\bfseries Control\+Sliders} (const std\+::vector$<$ std\+::vector$<$ std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_solver_log}{ilqgames\+::\+Solver\+Log} $>$$>$$>$ \&logs\+\_\+for\+\_\+each\+\_\+problem)\hypertarget{classilqgames_1_1_control_sliders_a87f44ac674d284ac368daca4c1fff949}{}\label{classilqgames_1_1_control_sliders_a87f44ac674d284ac368daca4c1fff949}
 
 \item 
 void {\bfseries Render} ()\hypertarget{classilqgames_1_1_control_sliders_a06886eb116592138d8f9340430e4d30d}{}\label{classilqgames_1_1_control_sliders_a06886eb116592138d8f9340430e4d30d}
 
 \item 
-Time {\bfseries Interpolation\+Time} () const \hypertarget{classilqgames_1_1_control_sliders_a7bb85832068975ed74580832736bc04d}{}\label{classilqgames_1_1_control_sliders_a7bb85832068975ed74580832736bc04d}
+size\+\_\+t {\bfseries Num\+Problems} () const \hypertarget{classilqgames_1_1_control_sliders_ae3752e7499e913dc3bbb46e19061cf11}{}\label{classilqgames_1_1_control_sliders_ae3752e7499e913dc3bbb46e19061cf11}
 
 \item 
-int {\bfseries Solver\+Iterate} () const \hypertarget{classilqgames_1_1_control_sliders_a6842d4890a86dcd3968f50a12c13045b}{}\label{classilqgames_1_1_control_sliders_a6842d4890a86dcd3968f50a12c13045b}
+const std\+::vector$<$ std\+::vector$<$ std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ $>$ $>$ \& {\bfseries Logs\+For\+Each\+Problem} () const \hypertarget{classilqgames_1_1_control_sliders_a255c57dd31398f88b808fd9bf936b2b1}{}\label{classilqgames_1_1_control_sliders_a255c57dd31398f88b808fd9bf936b2b1}
 
 \item 
-int {\bfseries Log\+Index} () const \hypertarget{classilqgames_1_1_control_sliders_a4ac8700f707710484aa7057e78ae5239}{}\label{classilqgames_1_1_control_sliders_a4ac8700f707710484aa7057e78ae5239}
+std\+::vector$<$ std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ $>$ {\bfseries Log\+For\+Each\+Problem} () const \hypertarget{classilqgames_1_1_control_sliders_ade4d6dab5db6ca493881c769e2ce9944}{}\label{classilqgames_1_1_control_sliders_ade4d6dab5db6ca493881c769e2ce9944}
+
+\item 
+Time {\bfseries Interpolation\+Time} (size\+\_\+t problem\+\_\+idx) const \hypertarget{classilqgames_1_1_control_sliders_a7619ee44e6ce84b5df323a6493338a72}{}\label{classilqgames_1_1_control_sliders_a7619ee44e6ce84b5df323a6493338a72}
+
+\item 
+int {\bfseries Solver\+Iterate} (size\+\_\+t problem\+\_\+idx) const \hypertarget{classilqgames_1_1_control_sliders_a1963e1ac97100303f6d0ad8483e7340f}{}\label{classilqgames_1_1_control_sliders_a1963e1ac97100303f6d0ad8483e7340f}
+
+\item 
+int {\bfseries Log\+Index} (size\+\_\+t problem\+\_\+idx) const \hypertarget{classilqgames_1_1_control_sliders_ae5dd8db5d88f8d8c1d8e2a23b25e1ab5}{}\label{classilqgames_1_1_control_sliders_ae5dd8db5d88f8d8c1d8e2a23b25e1ab5}
+
+\item 
+int {\bfseries Max\+Log\+Index} () const \hypertarget{classilqgames_1_1_control_sliders_a370e35a28a451951d9cadcd58172b853}{}\label{classilqgames_1_1_control_sliders_a370e35a28a451951d9cadcd58172b853}
 
 \end{DoxyCompactItemize}
 

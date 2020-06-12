@@ -48,23 +48,31 @@
 
 #include <imgui/imgui.h>
 #include <math.h>
+#include <algorithm>
 #include <vector>
 
 namespace ilqgames {
 
 namespace {
-// Zoom paramters.
+// Zoom parameters.
 static constexpr float kPixelsToZoomConversion = 1.0 / 20.0;
 static constexpr float kMinZoom = 2.0;
 }  // anonymous namespace
 
 void TopDownRenderer::Render() {
   // Extract current log.
-  const auto& log = logs_[sliders_->LogIndex()];
+  const auto& logs = sliders_->LogForEachProblem();
 
   // Do nothing if no iterates yet.
-  if (log->NumIterates() == 0) return;
-  const size_t num_agents = problem_->Solver().Dynamics().NumPlayers();
+  if (sliders_->MaxLogIndex() == 1) return;
+
+  // Get the number of agents in each problem.
+  std::vector<size_t> num_agents(problems_.size());
+  std::transform(
+      problems_.begin(), problems_.end(), num_agents.begin(),
+      [](const std::shared_ptr<const TopDownRenderableProblem>& problem) {
+        return problem->Solver().Dynamics().NumPlayers();
+      });
 
   // Set up main top-down viewer window.
   ImGui::Begin("Top-Down View");
@@ -103,60 +111,75 @@ void TopDownRenderer::Render() {
 
   // Get the draw list for this window.
   ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
-  // (1) Draw this trajectory iterate.
   const ImU32 trajectory_color = ImColor(ImVec4(1.0, 1.0, 1.0, 0.5));
   const float trajectory_thickness = std::min(1.0f, LengthToPixels(0.5));
 
-  std::vector<ImVec2> points(log->NumTimeSteps());
-  for (size_t ii = 0; ii < num_agents; ii++) {
-    for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-      const VectorXf x = log->State(sliders_->SolverIterate(), kk);
-      points[kk] =
-          PositionToWindowCoordinates(problem_->Xs(x)[ii], problem_->Ys(x)[ii]);
+  // Loop over all problems and render one at a time.
+  for (size_t problem_idx = 0; problem_idx < problems_.size(); problem_idx++) {
+    const auto& problem = problems_[problem_idx];
+    const auto& log = logs[problem_idx];
+
+    // (1) Draw this trajectory iterate.
+    std::vector<ImVec2> points(log->NumTimeSteps());
+    for (size_t ii = 0; ii < num_agents[problem_idx]; ii++) {
+      for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
+        const VectorXf x = log->State(sliders_->SolverIterate(problem_idx), kk);
+        points[kk] =
+            PositionToWindowCoordinates(problem->Xs(x)[ii], problem->Ys(x)[ii]);
+      }
+
+      constexpr bool kPolylineIsClosed = false;
+      draw_list->AddPolyline(points.data(), log->NumTimeSteps(),
+                             trajectory_color, kPolylineIsClosed,
+                             trajectory_thickness);
     }
 
-    constexpr bool kPolylineIsClosed = false;
-    draw_list->AddPolyline(points.data(), log->NumTimeSteps(), trajectory_color,
-                           kPolylineIsClosed, trajectory_thickness);
-  }
+    // Agent colors will all be greenish. Also specify circle radius and
+    // triangle base and height (in pixels).
+    constexpr float kMinGreen = 0.15;
+    constexpr float kMaxGreen = 1.0 - kMinGreen;
+    const float color_scaling = (1.0 - 2.0 * kMinGreen) *
+                                static_cast<float>(problem_idx + 1) /
+                                static_cast<float>(problems_.size());
 
-  // Agent colors will all be greenish. Also specify circle radius and triangle
-  // base and height (in pixels).
-  const ImU32 agent_color = ImColor(ImVec4(0.0, 0.75, 0.15, 1.0));
-  const float agent_radius = std::max(5.0f, LengthToPixels(2.5));
-  const float agent_base = std::max(6.0f, LengthToPixels(2.5));
-  const float agent_height = std::max(10.0f, LengthToPixels(3.0));
+    const ImU32 agent_color =
+        ImColor(ImVec4(0.15, kMinGreen + color_scaling,
+                       kMinGreen + kMaxGreen - color_scaling, 1.0));
+    const float agent_radius = std::max(5.0f, LengthToPixels(2.5));
+    const float agent_base = std::max(6.0f, LengthToPixels(2.5));
+    const float agent_height = std::max(10.0f, LengthToPixels(3.0));
 
-  // Draw each position as either an isosceles triangle (if heading idx is
-  // >= 0) or a circle (if heading idx < 0).
-  const VectorXf current_x = log->InterpolateState(
-      sliders_->SolverIterate(), sliders_->InterpolationTime());
-  const std::vector<float> current_pxs = problem_->Xs(current_x);
-  const std::vector<float> current_pys = problem_->Ys(current_x);
-  const std::vector<float> current_thetas = problem_->Thetas(current_x);
-  for (size_t ii = 0; ii < num_agents; ii++) {
-    const ImVec2 p =
-        PositionToWindowCoordinates(current_pxs[ii], current_pys[ii]);
+    // Draw each position as either an isosceles triangle (if heading idx is
+    // >= 0) or a circle (if heading idx < 0).
+    const VectorXf current_x =
+        log->InterpolateState(sliders_->SolverIterate(problem_idx),
+                              sliders_->InterpolationTime(problem_idx));
+    const std::vector<float> current_pxs = problem->Xs(current_x);
+    const std::vector<float> current_pys = problem->Ys(current_x);
+    const std::vector<float> current_thetas = problem->Thetas(current_x);
+    for (size_t ii = 0; ii < num_agents[problem_idx]; ii++) {
+      const ImVec2 p =
+          PositionToWindowCoordinates(current_pxs[ii], current_pys[ii]);
 
-    if (ii >= current_thetas.size())
-      draw_list->AddCircleFilled(p, agent_radius, agent_color);
-    else {
-      const float heading = HeadingToWindowCoordinates(current_thetas[ii]);
-      const float cheading = std::cos(heading);
-      const float sheading = std::sin(heading);
+      if (ii >= current_thetas.size())
+        draw_list->AddCircleFilled(p, agent_radius, agent_color);
+      else {
+        const float heading = HeadingToWindowCoordinates(current_thetas[ii]);
+        const float cheading = std::cos(heading);
+        const float sheading = std::sin(heading);
 
-      // Triangle vertices (top, bottom left, bottom right in Frenet frame).
-      // NOTE: this may not be in CCW order. Not sure if that matters.
-      const ImVec2 top(p.x + agent_height * cheading,
-                       p.y + agent_height * sheading);
-      const ImVec2 bl(p.x - 0.5 * agent_base * sheading,
-                      p.y + 0.5 * agent_base * cheading);
-      const ImVec2 br(p.x + 0.5 * agent_base * sheading,
-                      p.y - 0.5 * agent_base * cheading);
+        // Triangle vertices (top, bottom left, bottom right in Frenet frame).
+        // NOTE: this may not be in CCW order. Not sure if that matters.
+        const ImVec2 top(p.x + agent_height * cheading,
+                         p.y + agent_height * sheading);
+        const ImVec2 bl(p.x - 0.5 * agent_base * sheading,
+                        p.y + 0.5 * agent_base * cheading);
+        const ImVec2 br(p.x + 0.5 * agent_base * sheading,
+                        p.y - 0.5 * agent_base * cheading);
 
-      draw_list->AddTriangleFilled(bl, br, top, agent_color);
-      draw_list->AddCircle(p, agent_radius, agent_color);
+        draw_list->AddTriangleFilled(bl, br, top, agent_color);
+        draw_list->AddCircle(p, agent_radius, agent_color);
+      }
     }
   }
 

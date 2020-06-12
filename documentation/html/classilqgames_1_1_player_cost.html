@@ -96,9 +96,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a983c96844cf283233a3c041b58453349"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a983c96844cf283233a3c041b58453349"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>PlayerCost</b> (float state_regularization=0.0, float control_regularization=0.0)</td></tr>
-<tr class="separator:a983c96844cf283233a3c041b58453349"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a271f96af8eeac9138b0832239ca62437"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a271f96af8eeac9138b0832239ca62437"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>PlayerCost</b> (const std::string &amp;name=&quot;&quot;, float state_regularization=0.0, float control_regularization=0.0)</td></tr>
+<tr class="separator:a271f96af8eeac9138b0832239ca62437"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3135d5f4c7722edc1ae385e0ecafcc87"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3135d5f4c7722edc1ae385e0ecafcc87"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>AddStateCost</b> (const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &gt; &amp;cost)</td></tr>
 <tr class="separator:a3135d5f4c7722edc1ae385e0ecafcc87"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,9 +123,24 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>EvaluateOffset</b> (
 <tr class="memitem:ad3962847f8eda8bcfecf2096e6abccb6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3962847f8eda8bcfecf2096e6abccb6"></a>
 <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
 <tr class="separator:ad3962847f8eda8bcfecf2096e6abccb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecd3478584357f4ea5d743c14b842e71"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aecd3478584357f4ea5d743c14b842e71"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>CheckConstraints</b> (Time t, const VectorXf &amp;x) const </td></tr>
-<tr class="separator:aecd3478584357f4ea5d743c14b842e71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6afcddbb08549f6e9e1167fdbe335306"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6afcddbb08549f6e9e1167fdbe335306"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>TurnConstraintsOn</b> ()</td></tr>
+<tr class="separator:a6afcddbb08549f6e9e1167fdbe335306"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24a3d61475539dfab3263b9cb30c4fa6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a24a3d61475539dfab3263b9cb30c4fa6"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>TurnConstraintsOff</b> ()</td></tr>
+<tr class="separator:a24a3d61475539dfab3263b9cb30c4fa6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc8c6a6a143b8fd090d3087ac14eeb96"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acc8c6a6a143b8fd090d3087ac14eeb96"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>AreConstraintsOn</b> () const </td></tr>
+<tr class="separator:acc8c6a6a143b8fd090d3087ac14eeb96"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7c3268b3d9f2d1768096ac0c3adb7cb9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c3268b3d9f2d1768096ac0c3adb7cb9"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>CheckConstraints</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
+<tr class="separator:a7c3268b3d9f2d1768096ac0c3adb7cb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3b3e0bac90840bac45c57b74c9efcf19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b3e0bac90840bac45c57b74c9efcf19"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumStateConstraints</b> () const </td></tr>
+<tr class="separator:a3b3e0bac90840bac45c57b74c9efcf19"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61ab18fcd64b4fb99014ef14178f61d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61ab18fcd64b4fb99014ef14178f61d1"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumControlConstraints</b> () const </td></tr>
+<tr class="separator:a61ab18fcd64b4fb99014ef14178f61d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01099622def541cf226c94140c38d485"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01099622def541cf226c94140c38d485"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ScaleConstraintBarrierWeights</b> (float scale=0.5)</td></tr>
 <tr class="separator:a01099622def541cf226c94140c38d485"><td class="memSeparator" colspan="2">&#160;</td></tr>
