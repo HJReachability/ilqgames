@@ -36,44 +36,50 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all multi-player dynamical systems. Supports (discrete-time)
-// linearization and integration.
+// Quadratic cost on pairwise differences between dimensions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 
 namespace ilqgames {
 
-VectorXf MultiPlayerDynamicalSystem::Integrate(
-    Time t0, Time time_interval, const VectorXf& x0,
-    const std::vector<VectorXf>& us) const {
-  VectorXf x(x0);
-
-  if (integrate_using_euler_) {
-    x += time_interval * Evaluate(t0, x0, us);
-  } else {
-    // Number of integration steps and corresponding time step.
-    constexpr size_t kNumIntegrationSteps = 2;
-    const double dt = time_interval / static_cast<Time>(kNumIntegrationSteps);
-
-    // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods
-    // for further details.
-    for (Time t = t0; t < t0 + time_interval - 0.5 * dt; t += dt) {
-      const VectorXf k1 = dt * Evaluate(t, x, us);
-      const VectorXf k2 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k1, us);
-      const VectorXf k3 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k2, us);
-      const VectorXf k4 = dt * Evaluate(t + dt, x + k3, us);
-
-      x += (k1 + 2.0 * (k2 + k3) + k4) / 6.0;
-    }
+float QuadraticDifferenceCost::Evaluate(const VectorXf& input) const {
+  float total = 0.0;
+  for (size_t ii = 0; ii < dims1_.size(); ii++) {
+    const float diff = input(dims1_[ii]) - input(dims2_[ii]);
+    total += diff * diff;
   }
 
-  return x;
+  // Otherwise, cost is squared 2-norm of entire input.
+  return 0.5 * weight_ * total;
+}
+
+void QuadraticDifferenceCost::Quadraticize(const VectorXf& input,
+                                           MatrixXf* hess,
+                                           VectorXf* grad) const {
+  CHECK_NOTNULL(hess);
+
+  // Check dimensions.
+  CHECK_EQ(input.size(), hess->rows());
+  CHECK_EQ(input.size(), hess->cols());
+
+  if (grad) CHECK_EQ(input.size(), grad->size());
+
+  for (size_t ii = 0; ii < dims1_.size(); ii++) {
+    (*hess)(dims1_[ii], dims1_[ii]) += weight_;
+    (*hess)(dims2_[ii], dims2_[ii]) += weight_;
+    (*hess)(dims1_[ii], dims2_[ii]) -= weight_;
+    (*hess)(dims2_[ii], dims1_[ii]) -= weight_;
+
+    if (grad) {
+      (*grad)(dims1_[ii]) += weight_ * (input(dims1_[ii]) - input(dims2_[ii]));
+      (*grad)(dims2_[ii]) -= weight_ * (input(dims1_[ii]) - input(dims2_[ii]));
+    }
+  }
 }
 
 }  // namespace ilqgames

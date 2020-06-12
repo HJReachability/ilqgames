@@ -36,44 +36,45 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all multi-player dynamical systems. Supports (discrete-time)
-// linearization and integration.
+// Quadratic cost on pairwise differences between dimensions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
+#ifndef ILQGAMES_COST_QUADRATIC_DIFFERENCE_COST_H
+#define ILQGAMES_COST_QUADRATIC_DIFFERENCE_COST_H
+
+#include <ilqgames/cost/time_invariant_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <string>
 
 namespace ilqgames {
 
-VectorXf MultiPlayerDynamicalSystem::Integrate(
-    Time t0, Time time_interval, const VectorXf& x0,
-    const std::vector<VectorXf>& us) const {
-  VectorXf x(x0);
-
-  if (integrate_using_euler_) {
-    x += time_interval * Evaluate(t0, x0, us);
-  } else {
-    // Number of integration steps and corresponding time step.
-    constexpr size_t kNumIntegrationSteps = 2;
-    const double dt = time_interval / static_cast<Time>(kNumIntegrationSteps);
-
-    // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods
-    // for further details.
-    for (Time t = t0; t < t0 + time_interval - 0.5 * dt; t += dt) {
-      const VectorXf k1 = dt * Evaluate(t, x, us);
-      const VectorXf k2 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k1, us);
-      const VectorXf k3 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k2, us);
-      const VectorXf k4 = dt * Evaluate(t + dt, x + k3, us);
-
-      x += (k1 + 2.0 * (k2 + k3) + k4) / 6.0;
-    }
+class QuadraticDifferenceCost : public TimeInvariantCost {
+ public:
+  // Construct from a multiplicative weight and the dimensions in which to apply
+  // the quadratic difference cost.
+  QuadraticDifferenceCost(float weight, const std::vector<Dimension>& dims1,
+                          const std::vector<Dimension>& dims2,
+                          const std::string& name = "")
+      : TimeInvariantCost(weight, name), dims1_(dims1), dims2_(dims2) {
+    CHECK_EQ(dims1_.size(), dims2_.size());
   }
 
-  return x;
-}
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
+
+  // Quadraticize this cost at the given input, and add to the running=
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad = nullptr) const;
+
+ private:
+  // Sets of dimensions whose pairwise differences will constitute the cost.
+  const std::vector<Dimension> dims1_, dims2_;
+};  //\class QuadraticDifferenceCost
 
 }  // namespace ilqgames
+
+#endif

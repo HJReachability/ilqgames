@@ -53,32 +53,68 @@ namespace ilqgames {
 class ControlSliders {
  public:
   ~ControlSliders() {}
-  ControlSliders(
-      const std::vector<std::shared_ptr<const ilqgames::SolverLog>>& logs)
+  ControlSliders(const std::vector<
+                 std::vector<std::shared_ptr<const ilqgames::SolverLog>>>&
+                     logs_for_each_problem)
       : interpolation_time_(0.0),
         solver_iterate_(0),
         log_index_(0),
-        logs_(logs) {}
+        max_log_index_(0),
+        logs_for_each_problem_(logs_for_each_problem) {
+    for (const auto& logs : logs_for_each_problem_) {
+      for (const auto& log : logs) CHECK_NOTNULL(log.get());
+    }
+
+    // Compute max log index.
+    for (const auto& logs : logs_for_each_problem_) {
+      if (logs.size() > static_cast<size_t>(max_log_index_) + 1)
+        max_log_index_ = logs.size() - 1;
+    }
+  }
 
   // Render all the sliders in a separate window.
   void Render();
 
   // Accessors.
-  Time InterpolationTime() const {
-    return std::max(std::min(static_cast<Time>(interpolation_time_),
-                             logs_[LogIndex()]->FinalTime()),
-                    logs_[LogIndex()]->InitialTime());
+  size_t NumProblems() const { return logs_for_each_problem_.size(); }
+  const std::vector<std::vector<std::shared_ptr<const SolverLog>>>&
+  LogsForEachProblem() const {
+    return logs_for_each_problem_;
   }
-  int SolverIterate() const {
-    return std::min(solver_iterate_,
-                    static_cast<int>(logs_[LogIndex()]->NumIterates() - 1));
-  }
-  int LogIndex() const {
-    return std::min(log_index_, static_cast<int>(logs_.size() - 1));
+  std::vector<std::shared_ptr<const SolverLog>> LogForEachProblem() const {
+    std::vector<std::shared_ptr<const SolverLog>> logs(NumProblems());
+    for (size_t ii = 0; ii < NumProblems(); ii++)
+      logs[ii] = logs_for_each_problem_[ii][LogIndex(ii)];
+    return logs;
   }
 
+  Time InterpolationTime(size_t problem_idx) const {
+    CHECK_LT(problem_idx, NumProblems());
+
+    const auto& logs = logs_for_each_problem_[problem_idx];
+    const int log_idx = LogIndex(problem_idx);
+    return std::max(std::min(static_cast<Time>(interpolation_time_),
+                             logs[log_idx]->FinalTime()),
+                    logs[log_idx]->InitialTime());
+  }
+  int SolverIterate(size_t problem_idx) const {
+    CHECK_LT(problem_idx, NumProblems());
+
+    const auto& logs = logs_for_each_problem_[problem_idx];
+    const int log_idx = LogIndex(problem_idx);
+    return std::min(solver_iterate_,
+                    static_cast<int>(logs[log_idx]->NumIterates() - 1));
+  }
+  int LogIndex(size_t problem_idx) const {
+    CHECK_LT(problem_idx, NumProblems());
+
+    const auto& logs = logs_for_each_problem_[problem_idx];
+    return std::min(log_index_, static_cast<int>(logs.size() - 1));
+  }
+  int MaxLogIndex() const { return max_log_index_; }
+
  private:
-  // Time at which to interpolate trajectory.
+  // Time at which to interpolate each trajectory.
   float interpolation_time_;
 
   // Solver iterate to display.
@@ -87,8 +123,13 @@ class ControlSliders {
   // Log index to render for receding horizon problems.
   int log_index_;
 
-  // List of all logs we might want to inspect.
-  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_;
+  // Keep track of the max number of log indices across all problems.
+  int max_log_index_;
+
+  // List of all logs we might want to inspect, indexed by problem, then by
+  // receding horizon invocation.
+  const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
+      logs_for_each_problem_;
 };  // class ControlSliders
 
 }  // namespace ilqgames
