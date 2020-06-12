@@ -82,7 +82,8 @@ class TimeInvariantCost : public Cost {
                          float* dxdy = nullptr, float* dz = nullptr,
                          float* ddz = nullptr, float* dxdz = nullptr,
                          float* dydz = nullptr) const {
-    Cost::ModifyDerivatives(0.0, input, dx, ddx, dy, ddy, dxdy, dz, ddz, dxdz, dydz);
+    Cost::ModifyDerivatives(0.0, input, dx, ddx, dy, ddy, dxdy, dz, ddz, dxdz,
+                            dydz);
   }
 };  //\class TimeInvariantCost
 
