@@ -51,14 +51,14 @@
 
 namespace ilqgames {
 
-bool SingleDimensionConstraint::IsSatisfied(const VectorXf& input,
-                                            float* level) const {
+bool SingleDimensionConstraint::IsSatisfiedLevel(const VectorXf& input,
+                                                 float* level) const {
   // Sign corresponding to the orientation of this constraint.
   const float sign = (oriented_right_) ? 1.0 : -1.0;
 
   // Maybe populate level.
   const float delta = threshold_ - input(dimension_);
-  if (level) *level = sign * delta;
+  *level = sign * delta;
 
   return (oriented_right_) ? delta < 0.0 : delta > 0.0;
 }

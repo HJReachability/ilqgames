@@ -62,7 +62,7 @@ std::vector<float> ComputeStrategyCosts(
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    float time_step, bool open_loop = false) {
+    float time_step, bool open_loop) {
   // Start at the initial state.
   VectorXf x(x0);
   Time t = 0.0;

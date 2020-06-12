@@ -57,12 +57,11 @@ class TimeInvariantConstraint : public Constraint {
 
   // Check if this constraint is satisfied, and optionally return the value of a
   // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfied(Time t, const VectorXf& input,
-                   float* level = nullptr) const {
-    return IsSatisfied(input, level);
+  bool IsSatisfiedLevel(Time t, const VectorXf& input, float* level) const {
+    CHECK_NOTNULL(level);
+    return IsSatisfiedLevel(input, level);
   };
-  virtual bool IsSatisfied(const VectorXf& input,
-                           float* level = nullptr) const = 0;
+  virtual bool IsSatisfiedLevel(const VectorXf& input, float* level) const = 0;
 
   // Evaluate the barrier at the current input (use base class implementation
   // and provide arbitrary time).

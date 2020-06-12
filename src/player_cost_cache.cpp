@@ -107,6 +107,49 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         }
       }
     }
+
+    // Handle constraints.
+    for (const auto& constraint : player_cost.StateConstraints()) {
+      auto e = evaluated_costs.emplace(constraint->EquivalentCost().Name(),
+                                       std::vector<std::vector<float>>());
+      LOG_IF(WARNING, !e.second)
+          << "Player " << ii << " has duplicate constraint with name: "
+          << constraint->EquivalentCost().Name();
+
+      auto& entry = e.first->second;
+      entry.resize(log->NumIterates());
+      for (size_t jj = 0; jj < log->NumIterates(); jj++) {
+        entry[jj].resize(log->NumTimeSteps());
+
+        for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
+          const VectorXf x = log->State(jj, kk);
+          entry[jj][kk] =
+              constraint->EquivalentCost().Evaluate(log->IndexToTime(kk), x);
+        }
+      }
+    }
+
+    // Now handle control constraints.
+    for (const auto& constraint_pair : player_cost.ControlConstraints()) {
+      const auto other_player = constraint_pair.first;
+      const auto& constraint = constraint_pair.second;
+      auto e = evaluated_costs.emplace(constraint->EquivalentCost().Name(),
+                                       std::vector<std::vector<float>>());
+      LOG_IF(WARNING, !e.second)
+          << "Player " << ii << " has duplicate constraint with name: "
+          << constraint->EquivalentCost().Name();
+
+      auto& entry = e.first->second;
+      entry.resize(log->NumIterates());
+      for (size_t jj = 0; jj < log->NumIterates(); jj++) {
+        entry[jj].resize(log->NumTimeSteps());
+
+        for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
+          entry[jj][kk] = constraint->EquivalentCost().Evaluate(
+              log->IndexToTime(kk), log->Control(jj, kk, other_player));
+        }
+      }
+    }
   }
 }
 

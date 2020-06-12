@@ -52,7 +52,7 @@ namespace ilqgames {
 
 float Constraint::Evaluate(Time t, const VectorXf& input) const {
   float level = 0.0;
-  CHECK(IsSatisfied(t, input, &level));
+  CHECK(IsSatisfiedLevel(t, input, &level));
   CHECK_LT(level, 0.0);
 
   // For a concise introduction to log barrier methods, please refer to
