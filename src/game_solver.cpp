@@ -88,7 +88,7 @@ bool GameSolver::Solve(const VectorXf& x0,
     return std::chrono::duration<Time>(clock::now() - start).count();
   };  // elapsed_time
 
-  // Chech return pointers not null.
+  // Check return pointers not null.
   CHECK_NOTNULL(final_strategies);
   CHECK_NOTNULL(final_operating_point);
 
@@ -122,14 +122,14 @@ bool GameSolver::Solve(const VectorXf& x0,
   size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
 
-  // Turn constraints on.
+  // Turn constraints on/off.
   auto turn_constraints_on = [this]() {
     for (auto& cost : player_costs_) cost.TurnConstraintsOn();
   };  // turn_constraints_on
 
   auto turn_constraints_off = [this]() {
     for (auto& cost : player_costs_) cost.TurnConstraintsOff();
-  };  // turn_constraints_on
+  };  // turn_constraints_off
 
   // Swap operating points and compute new current operating point. Future
   // operating points will be computed during the call to `ModifyLQStrategies`
