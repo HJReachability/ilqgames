@@ -86,72 +86,79 @@ void WeightedConvexProximityCost::Quadraticize(const VectorXf& input,
 
   const bool is_x_active = delta_x * delta_x < delta_y * delta_y;
 
+  float dv1dv2 = 0.0;
   if (is_x_active) {
+    float dx1 = -weight_ * delta_x * vv;
+    float dv1 = -weight_ * input(vidx1_) * delta_x * delta_x;
+    float dv2 = -weight_ * input(vidx2_) * delta_x * delta_x;
+    float ddx1 = weight_;
+    float ddv1 = weight_ * delta_x * delta_x;
+    float ddv2 = ddv1;
+    float dx1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dx);
+    float dx1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dx);
+
+    ModifyDerivatives(input, &dx1, &ddx1, &dv1, &ddv1, &dx1dv1, &dv2, &ddv2,
+                      &dx1dv2, &dv1dv2);
+
     // Hessian.
-    const float hess_v1v1 = weight_ * delta_x * delta_x;
-    (*hess)(vidx1_, vidx1_) += hess_v1v1;
-    (*hess)(vidx2_, vidx2_) += hess_v1v1;
-
-    const float hess_x1v1 = -2.0 * weight_ * input(vidx1_) * sgn(dx);
-    const float hess_x1v2 = -2.0 * weight_ * input(vidx2_) * sgn(dx);
-    const float hess_x2v1 = 2.0 * weight_ * input(vidx1_) * sgn(dx);
-    const float hess_x2v2 = 2.0 * weight_ * input(vidx2_) * sgn(dx);
-    (*hess)(xidx1_, vidx1_) += hess_x1v1;
-    (*hess)(xidx1_, vidx2_) += hess_x1v2;
-    (*hess)(xidx2_, vidx1_) += hess_x2v1;
-    (*hess)(xidx2_, vidx2_) += hess_x2v2;
-    (*hess)(vidx1_, xidx1_) += (*hess)(xidx1_, vidx1_);
-    (*hess)(vidx1_, xidx2_) += (*hess)(xidx2_, vidx1_);
-    (*hess)(vidx2_, xidx1_) += (*hess)(xidx1_, vidx2_);
-    (*hess)(vidx2_, xidx2_) += (*hess)(xidx2_, vidx2_);
-
-    (*hess)(xidx1_, xidx1_) += weight_;
-    (*hess)(xidx1_, xidx2_) -= weight_;
-    (*hess)(xidx2_, xidx1_) -= weight_;
-    (*hess)(xidx2_, xidx2_) += weight_;
+    (*hess)(xidx1_, xidx1_) += ddx1;
+    (*hess)(xidx1_, xidx2_) -= ddx1;
+    (*hess)(xidx2_, xidx1_) -= ddx1;
+    (*hess)(xidx2_, xidx2_) += ddx1;
+    (*hess)(xidx1_, vidx1_) += dx1dv1;
+    (*hess)(xidx1_, vidx2_) += dx1dv2;
+    (*hess)(xidx2_, vidx1_) -= dx1dv1;
+    (*hess)(xidx2_, vidx2_) -= dx1dv2;
+    (*hess)(vidx1_, xidx1_) += dx1dv1;
+    (*hess)(vidx1_, xidx2_) -= dx1dv1;
+    (*hess)(vidx1_, vidx1_) += ddv1;
+    (*hess)(vidx1_, vidx2_) += dv1dv2;
+    (*hess)(vidx2_, xidx1_) += dx1dv2;
+    (*hess)(vidx2_, xidx2_) -= dx1dv2;
+    (*hess)(vidx2_, vidx1_) += dv1dv2;
+    (*hess)(vidx2_, vidx2_) += ddv2;
 
     // Gradient.
-    const float ddx1 = -weight_ * delta_x * vv;
-    (*grad)(xidx1_) += ddx1;
-    (*grad)(xidx2_) -= ddx1;
-
-    const float ddv1 = weight_ * input(vidx1_) * delta_x * delta_x;
-    const float ddv2 = weight_ * input(vidx2_) * delta_x * delta_x;
-    (*grad)(vidx1_) += ddv1;
-    (*grad)(vidx2_) += ddv2;
+    (*grad)(xidx1_) += dx1;
+    (*grad)(xidx2_) -= dx1;
+    (*grad)(vidx1_) += dv1;
+    (*grad)(vidx2_) += dv2;
   } else {
+    float dy1 = -weight_ * delta_y * vv;
+    float dv1 = -weight_ * input(vidx1_) * delta_y * delta_y;
+    float dv2 = -weight_ * input(vidx2_) * delta_y * delta_y;
+    float ddy1 = weight_;
+    float ddv1 = weight_ * delta_y * delta_y;
+    float ddv2 = ddv1;
+    float dy1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dy);
+    float dy1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dy);
+
+    ModifyDerivatives(input, &dy1, &ddy1, &dv1, &ddv1, &dy1dv1, &dv2, &ddv2,
+                      &dy1dv2, &dv1dv2);
+
     // Hessian.
-    const float hess_v1v1 = weight_ * delta_y * delta_y;
-    (*hess)(vidx1_, vidx1_) += hess_v1v1;
-    (*hess)(vidx2_, vidx2_) += hess_v1v1;
-
-    const float hess_y1v1 = -2.0 * weight_ * input(vidx1_) * sgn(dy);
-    const float hess_y1v2 = -2.0 * weight_ * input(vidx2_) * sgn(dy);
-    const float hess_y2v1 = 2.0 * weight_ * input(vidx1_) * sgn(dy);
-    const float hess_y2v2 = 2.0 * weight_ * input(vidx2_) * sgn(dy);
-    (*hess)(yidx1_, vidx1_) += hess_y1v1;
-    (*hess)(yidx1_, vidx2_) += hess_y1v2;
-    (*hess)(yidx2_, vidx1_) += hess_y2v1;
-    (*hess)(yidx2_, vidx2_) += hess_y2v2;
-    (*hess)(vidx1_, yidx1_) += (*hess)(yidx1_, vidx1_);
-    (*hess)(vidx1_, yidx2_) += (*hess)(yidx2_, vidx1_);
-    (*hess)(vidx2_, yidx1_) += (*hess)(yidx1_, vidx2_);
-    (*hess)(vidx2_, yidx2_) += (*hess)(yidx2_, vidx2_);
-
-    (*hess)(yidx1_, yidx1_) += weight_;
-    (*hess)(yidx1_, yidx2_) -= weight_;
-    (*hess)(yidx2_, yidx1_) -= weight_;
-    (*hess)(yidx2_, yidx2_) += weight_;
+    (*hess)(yidx1_, yidx1_) += ddy1;
+    (*hess)(yidx1_, yidx2_) -= ddy1;
+    (*hess)(yidx2_, yidx1_) -= ddy1;
+    (*hess)(yidx2_, yidx2_) += ddy1;
+    (*hess)(yidx1_, vidx1_) += dy1dv1;
+    (*hess)(yidx1_, vidx2_) += dy1dv2;
+    (*hess)(yidx2_, vidx1_) -= dy1dv1;
+    (*hess)(yidx2_, vidx2_) -= dy1dv2;
+    (*hess)(vidx1_, yidx1_) += dy1dv1;
+    (*hess)(vidx1_, yidx2_) -= dy1dv1;
+    (*hess)(vidx1_, vidx1_) += ddv1;
+    (*hess)(vidx1_, vidx2_) += dv1dv2;
+    (*hess)(vidx2_, yidx1_) += dy1dv2;
+    (*hess)(vidx2_, yidx2_) -= dy1dv2;
+    (*hess)(vidx2_, vidx1_) += dv1dv2;
+    (*hess)(vidx2_, vidx2_) += ddv2;
 
     // Gradient.
-    const float ddy1 = -weight_ * delta_y * vv;
-    (*grad)(yidx1_) += ddy1;
-    (*grad)(yidx2_) -= ddy1;
-
-    const float ddv1 = weight_ * input(vidx1_) * delta_y * delta_y;
-    const float ddv2 = weight_ * input(vidx2_) * delta_y * delta_y;
-    (*grad)(vidx1_) += ddv1;
-    (*grad)(vidx2_) += ddv2;
+    (*grad)(yidx1_) += dy1;
+    (*grad)(yidx2_) -= dy1;
+    (*grad)(vidx1_) += dv1;
+    (*grad)(vidx2_) += dv2;
   }
 }
 

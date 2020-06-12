@@ -112,7 +112,9 @@ class Cost {
   // Modify existing derivatives if exponentiated.
   void ModifyDerivatives(Time t, const VectorXf& input, float* dx, float* ddx,
                          float* dy = nullptr, float* ddy = nullptr,
-                         float* dxdy = nullptr) const;
+                         float* dxdy = nullptr, float* dz = nullptr,
+                         float* ddz = nullptr, float* dxdz = nullptr,
+                         float* dydz = nullptr) const;
 };  //\class Cost
 
 }  // namespace ilqgames

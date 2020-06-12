@@ -359,6 +359,13 @@ TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(QuadraticPolyline2CostTest, QuadraticizesExponentialCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  QuadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1});
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
 TEST(RouteProgressCostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   constexpr float kNominalSpeed = 0.1;
@@ -378,6 +385,14 @@ TEST(SemiquadraticPolyline2CostTest, QuadraticizesCorrectly) {
   Polyline2 polyline(
       {Point2(-200.0, -200.0), Point2(0.5, 1.0), Point2(200.0, 200.0)});
   SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.5, true);
+  CheckQuadraticization(cost);
+}
+
+TEST(SemiquadraticPolyline2CostTest, QuadraticizesExponentialCorrectly) {
+  Polyline2 polyline(
+      {Point2(-200.0, -200.0), Point2(0.5, 1.0), Point2(200.0, 200.0)});
+  SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.5, true);
+  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -419,8 +434,20 @@ TEST(LocallyConvexProximityCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(LocallyConvexProximityCostTest, QuadraticizesExponentialCorrectly) {
+  LocallyConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
 TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
   WeightedConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 4, 5, 0.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(WeightedConvexProximityCostTest, QuadraticizesExponentialCorrectly) {
+  WeightedConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 4, 5, 0.0);
+  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 

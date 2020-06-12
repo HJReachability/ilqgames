@@ -83,23 +83,29 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
   const bool is_x_active = delta_x * delta_x < delta_y * delta_y;
 
   if (is_x_active) {
-    (*hess)(xidx1_, xidx1_) += weight_;
-    (*hess)(xidx1_, xidx2_) -= weight_;
-    (*hess)(xidx2_, xidx1_) -= weight_;
-    (*hess)(xidx2_, xidx2_) += weight_;
+    float dx1 = -weight_ * delta_x;
+    float ddx1 = weight_;
+    ModifyDerivatives(input, &dx1, &ddx1);
 
-    const float ddx1 = -weight_ * delta_x;
-    (*grad)(xidx1_) += ddx1;
-    (*grad)(xidx2_) -= ddx1;
+    (*grad)(xidx1_) += dx1;
+    (*grad)(xidx2_) -= dx1;
+
+    (*hess)(xidx1_, xidx1_) += ddx1;
+    (*hess)(xidx2_, xidx2_) += ddx1;
+    (*hess)(xidx1_, xidx2_) -= ddx1;
+    (*hess)(xidx2_, xidx1_) -= ddx1;
   } else {
-    (*hess)(yidx1_, yidx1_) += weight_;
-    (*hess)(yidx1_, yidx2_) -= weight_;
-    (*hess)(yidx2_, yidx1_) -= weight_;
-    (*hess)(yidx2_, yidx2_) += weight_;
+    float dy1 = -weight_ * delta_y;
+    float ddy1 = weight_;
+    ModifyDerivatives(input, &dy1, &ddy1);
 
-    const float ddy1 = -weight_ * delta_y;
-    (*grad)(yidx1_) += ddy1;
-    (*grad)(yidx2_) -= ddy1;
+    (*grad)(yidx1_) += dy1;
+    (*grad)(yidx2_) -= dy1;
+
+    (*hess)(yidx1_, yidx1_) += ddy1;
+    (*hess)(yidx2_, yidx2_) += ddy1;
+    (*hess)(yidx1_, yidx2_) -= ddy1;
+    (*hess)(yidx2_, yidx1_) -= ddy1;
   }
 }
 

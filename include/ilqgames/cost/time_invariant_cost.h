@@ -79,8 +79,10 @@ class TimeInvariantCost : public Cost {
   // Modify existing derivatives if exponentiated.
   void ModifyDerivatives(const VectorXf& input, float* dx, float* ddx,
                          float* dy = nullptr, float* ddy = nullptr,
-                         float* dxdy = nullptr) const {
-    Cost::ModifyDerivatives(0.0, input, dx, ddx, dy, ddy, dxdy);
+                         float* dxdy = nullptr, float* dz = nullptr,
+                         float* ddz = nullptr, float* dxdz = nullptr,
+                         float* dydz = nullptr) const {
+    Cost::ModifyDerivatives(0.0, input, dx, ddx, dy, ddy, dxdy, dz, ddz, dxdz, dydz);
   }
 };  //\class TimeInvariantCost
 
