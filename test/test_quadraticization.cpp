@@ -47,6 +47,7 @@
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
+#include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
@@ -485,4 +486,17 @@ TEST(SingleDimensionConstraintTest, SingleDimensionCorrectly) {
 
   SingleDimensionConstraint right_constraint(0, -10.0, true);
   CheckQuadraticization(right_constraint);
+}
+
+TEST(Polyline2SignedDistanceCostTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  Polyline2SignedDistanceCost cost(polyline, {0, 1});
+  CheckQuadraticization(cost);
+}
+
+TEST(Polyline2SignedDistanceCostTest, QuadraticizesExponentialCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  Polyline2SignedDistanceCost cost(polyline, {0, 1});
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
 }
