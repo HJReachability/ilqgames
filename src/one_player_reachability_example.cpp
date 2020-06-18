@@ -62,20 +62,20 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 15.0;  // s
+static constexpr Time kTimeHorizon = 10.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Exponential constant.
-static constexpr float kExponentialConstant = 1.0;
+static constexpr float kExponentialConstant = 0.1;
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 1.0;
+static constexpr float kOmegaCostWeight = 0.1;
 
 // Initial state.
-static constexpr float kP1InitialX = 0.0;                // m
-static constexpr float kP1InitialY = -10.0;              // m
-static constexpr float kP1InitialHeading = M_PI - 0.01;  // rad
+static constexpr float kP1InitialX = 0.0;         // m
+static constexpr float kP1InitialY = -10.0;       // m
+static constexpr float kP1InitialHeading = M_PI;  // rad
 
 static constexpr float kSpeed = 1.0;  // m/s
 
