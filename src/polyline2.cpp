@@ -139,12 +139,6 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
 
         CHECK((current_signed_squared_distance > 0.0 && shortcut.Side(query)) ||
               (current_signed_squared_distance < 0.0 && !shortcut.Side(query)));
-
-        // CHECK_GT(current_signed_squared_distance, 0.0)
-        //     << "closest: " << closest_point.transpose()
-        //     << " and query: " << query.transpose()
-        //     << " and shortcut.p = " << shortcut.FirstPoint().transpose()
-        //     << ", shortcut.q = " << shortcut.SecondPoint().transpose();
       }
 
       closest_signed_squared_distance = current_signed_squared_distance;
@@ -155,10 +149,6 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
     }
 
     segment_counter++;
-  }
-
-  if (closest_signed_squared_distance < 0.0) {
-    std::cout << "closest pt: " << closest_point.transpose() << std::endl;
   }
 
   // Maybe set segment.
