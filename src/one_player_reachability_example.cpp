@@ -61,8 +61,8 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
+static constexpr Time kTimeStep = 0.1;     // s
+static constexpr Time kTimeHorizon = 5.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -74,7 +74,7 @@ static constexpr float kOmegaCostWeight = 0.1;
 
 // Initial state.
 static constexpr float kP1InitialX = 0.0;         // m
-static constexpr float kP1InitialY = -10.0;       // m
+static constexpr float kP1InitialY = -5.0;        // m
 static constexpr float kP1InitialHeading = M_PI;  // rad
 
 static constexpr float kSpeed = 1.0;  // m/s
@@ -129,10 +129,17 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_goal_cost(
       new Polyline2SignedDistanceCost(square, {kP1XIdx, kP1YIdx}, true,
                                       "Goal"));
+  // const auto p1_goal_cost =
+  //     std::make_shared<QuadraticCost>(1.0, -1, 0.0, "Goal");
+
   p1_cost.AddStateCost(p1_goal_cost);
 
   // Make sure costs are exponentiated.
   p1_cost.SetExponentialConstant(kExponentialConstant);
+
+  // Integrate using Euler integration so that open loop and feedback solutions
+  // coincide with one another.
+  //  MultiPlayerIntegrableSystem::IntegrateUsingEuler();
 
   // Set up solver.
   solver_.reset(new ILQSolver(dynamics, {p1_cost}, kTimeHorizon, params));

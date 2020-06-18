@@ -137,8 +137,9 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
             (shortcut.Side(query)) ? sgn(current_signed_squared_distance)
                                    : -sgn(current_signed_squared_distance);
 
-        CHECK((current_signed_squared_distance > 0.0 && shortcut.Side(query)) ||
-              (current_signed_squared_distance < 0.0 && !shortcut.Side(query)));
+        CHECK(
+            (current_signed_squared_distance >= 0.0 && shortcut.Side(query)) ||
+            (current_signed_squared_distance <= 0.0 && !shortcut.Side(query)));
       }
 
       closest_signed_squared_distance = current_signed_squared_distance;
