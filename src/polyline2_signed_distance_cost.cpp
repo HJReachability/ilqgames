@@ -57,6 +57,7 @@ float Polyline2SignedDistanceCost::Evaluate(const VectorXf& input) const {
   float signed_squared_distance;
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_squared_distance);
+  if (!oriented_same_as_polyline_) signed_squared_distance *= -1.0;
 
   return sgn(signed_squared_distance) *
          std::sqrt(std::abs(signed_squared_distance));
@@ -82,6 +83,7 @@ void Polyline2SignedDistanceCost::Quadraticize(const VectorXf& input,
   LineSegment2 segment(Point2(0.0, 0.0), Point2(1.0, 1.0));
   const Point2 closest_point = polyline_.ClosestPoint(
       current_position, &is_vertex, &segment, &signed_squared_distance);
+  if (!oriented_same_as_polyline_) signed_squared_distance *= -1.0;
 
   const float sign = sgn(signed_squared_distance);
   const float distance = std::sqrt(std::abs(signed_squared_distance));
