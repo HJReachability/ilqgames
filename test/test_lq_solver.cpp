@@ -114,18 +114,19 @@ void SolveLyapunovIterations(const MatrixXf& A, const MatrixXf& B1,
 }
 
 // Utility class for single player system.
-class SinglePlayerPointMass1D : public SinglePlayerDynamicalSystem {
+class SinglePlayerUtilityDynamics : public SinglePlayerDynamicalSystem {
  public:
-  ~SinglePlayerPointMass1D() {}
-  SinglePlayerPointMass1D() : SinglePlayerDynamicalSystem(2, 2) {
+  ~SinglePlayerUtilityDynamics() {}
+  SinglePlayerUtilityDynamics() : SinglePlayerDynamicalSystem(2, 2) {
+    CHECK_EQ(xdim_, udim_);
     A_ = MatrixXf::Identity(xdim_, xdim_);
-    B_ = MatrixXf::Zero(xdim_, udim_);
-    A_(0, 1) = 1.0;
-    B_(1, 0) = 1.0;
+    B_ = kTimeStep * 0.41 * MatrixXf::Identity(xdim_, xdim_);
+    A_(0, 1) = kTimeStep;
   }
 
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const {
-    return A_ * x + B_ * u;
+    return (A_ - MatrixXf::Identity(xdim_, xdim_)) * x / kTimeStep +
+           B_ * u / kTimeStep;
   }
 
   void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
@@ -139,7 +140,7 @@ class SinglePlayerPointMass1D : public SinglePlayerDynamicalSystem {
 
  private:
   MatrixXf A_, B_;
-};  // class SinglePlayerPointMass1D
+};  // class SinglePlayerUtilityDynamics
 
 // Utility class for time-invariant linear system.
 class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
@@ -386,7 +387,7 @@ TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
 
 TEST(SinglePlayerOpenLoopFeedback, TestSameSolution) {
   // Double integrator in discrete time.
-  const SinglePlayerPointMass1D single;
+  const SinglePlayerUtilityDynamics single;
   LinearDynamicsApproximation lin;
   lin.A = single.A();
   lin.Bs.push_back(single.B());
@@ -394,10 +395,11 @@ TEST(SinglePlayerOpenLoopFeedback, TestSameSolution) {
   const std::vector<LinearDynamicsApproximation> big_lin(kNumTimeSteps, lin);
 
   // Cost structure to regulate to the origin.
-  QuadraticCostApproximation quad(2);
-  quad.state.hess = MatrixXf::Identity(2, 2);
-  quad.control.emplace(
-      0, SingleCostApproximation(MatrixXf::Identity(1, 1), VectorXf::Zero(1)));
+  QuadraticCostApproximation quad(single.UDim());
+  quad.state.hess = MatrixXf::Identity(single.XDim(), single.XDim());
+  quad.control.emplace(0, SingleCostApproximation(
+                              MatrixXf::Identity(single.UDim(), single.UDim()),
+                              VectorXf::Zero(single.UDim())));
 
   const std::vector<std::vector<QuadraticCostApproximation>> big_quad(
       kNumTimeSteps, {quad});
@@ -405,24 +407,26 @@ TEST(SinglePlayerOpenLoopFeedback, TestSameSolution) {
   // Solve open-loop and feedback separately.
   const std::shared_ptr<ConcatenatedDynamicalSystem> dyn(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerPointMass1D>()}, kTimeStep));
-  LQFeedbackSolver fb(dyn, kNumTimeSteps);
+          {std::make_shared<SinglePlayerUtilityDynamics>()}, kTimeStep));
   LQOpenLoopSolver ol(dyn, kNumTimeSteps);
+  LQFeedbackSolver fb(dyn, kNumTimeSteps);
 
-  const VectorXf x0 = VectorXf::Ones(2);
-  const std::vector<Strategy> fb_strategy = fb.Solve(big_lin, big_quad, x0);
+  const VectorXf x0 = VectorXf::Ones(single.XDim());
   const std::vector<Strategy> ol_strategy = ol.Solve(big_lin, big_quad, x0);
+  const std::vector<Strategy> fb_strategy = fb.Solve(big_lin, big_quad, x0);
 
-  // Check that these are the same open-loop strategy.
+  // Check that these are the same open-loop strategy, but only at the first
+  // time step because the state costs in open-loop are treated as pertaining to
+  // the next state. Over a long time horizon, these differences (which only
+  // really change the overall cost at the last time step) should become
+  // insignificant, at least when considering the first time step.
   CHECK_EQ(fb_strategy.size(), 1);
   CHECK_EQ(ol_strategy.size(), 1);
 
-  for (size_t kk = 0; kk < kNumTimeSteps; kk++) {
-    std::printf("%zu: ol is %f and fb is %f\n", kk,
-                ol_strategy[0].alphas[kk](0), fb_strategy[0].alphas[kk](0));
-    CHECK_LT((fb_strategy[0].alphas[kk] - ol_strategy[0].alphas[kk])
-                 .cwiseAbs()
-                 .maxCoeff(),
-             constants::kSmallNumber);
-  }
+  const VectorXf u_ol = ol_strategy[0](0, VectorXf::Zero(2), VectorXf::Zero(2));
+  const VectorXf u_fb = fb_strategy[0](0, x0, VectorXf::Zero(2));
+
+  constexpr float kMaxRelativeError = 0.01;
+  CHECK_LT((u_ol - u_fb).cwiseAbs().maxCoeff(),
+           kMaxRelativeError * u_fb.cwiseAbs().maxCoeff());
 }
