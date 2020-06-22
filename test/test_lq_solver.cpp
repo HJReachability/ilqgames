@@ -48,8 +48,10 @@
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/dynamics/single_player_dynamical_system.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -110,6 +112,35 @@ void SolveLyapunovIterations(const MatrixXf& A, const MatrixXf& B1,
          P1.transpose() * R21 * P1 + P2.transpose() * R22 * P2 + Q2;
   }
 }
+
+// Utility class for single player system.
+class SinglePlayerUtilityDynamics : public SinglePlayerDynamicalSystem {
+ public:
+  ~SinglePlayerUtilityDynamics() {}
+  SinglePlayerUtilityDynamics() : SinglePlayerDynamicalSystem(2, 2) {
+    CHECK_EQ(xdim_, udim_);
+    A_ = MatrixXf::Identity(xdim_, xdim_);
+    B_ = kTimeStep * 0.41 * MatrixXf::Identity(xdim_, xdim_);
+    A_(0, 1) = kTimeStep;
+  }
+
+  VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const {
+    return (A_ - MatrixXf::Identity(xdim_, xdim_)) * x / kTimeStep +
+           B_ * u / kTimeStep;
+  }
+
+  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
+                 Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
+    A = A_;
+    B = B_;
+  }
+
+  const MatrixXf& A() const { return A_; }
+  const MatrixXf& B() const { return B_; }
+
+ private:
+  MatrixXf A_, B_;
+};  // class SinglePlayerUtilityDynamics
 
 // Utility class for time-invariant linear system.
 class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
@@ -352,4 +383,50 @@ TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
   EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
       player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
       kTimeStep, kMaxPerturbation, true));
+}
+
+TEST(SinglePlayerOpenLoopFeedback, TestSameSolution) {
+  // Double integrator in discrete time.
+  const SinglePlayerUtilityDynamics single;
+  LinearDynamicsApproximation lin;
+  lin.A = single.A();
+  lin.Bs.push_back(single.B());
+
+  const std::vector<LinearDynamicsApproximation> big_lin(kNumTimeSteps, lin);
+
+  // Cost structure to regulate to the origin.
+  QuadraticCostApproximation quad(single.UDim());
+  quad.state.hess = MatrixXf::Identity(single.XDim(), single.XDim());
+  quad.control.emplace(0, SingleCostApproximation(
+                              MatrixXf::Identity(single.UDim(), single.UDim()),
+                              VectorXf::Zero(single.UDim())));
+
+  const std::vector<std::vector<QuadraticCostApproximation>> big_quad(
+      kNumTimeSteps, {quad});
+
+  // Solve open-loop and feedback separately.
+  const std::shared_ptr<ConcatenatedDynamicalSystem> dyn(
+      new ConcatenatedDynamicalSystem(
+          {std::make_shared<SinglePlayerUtilityDynamics>()}, kTimeStep));
+  LQOpenLoopSolver ol(dyn, kNumTimeSteps);
+  LQFeedbackSolver fb(dyn, kNumTimeSteps);
+
+  const VectorXf x0 = VectorXf::Ones(single.XDim());
+  const std::vector<Strategy> ol_strategy = ol.Solve(big_lin, big_quad, x0);
+  const std::vector<Strategy> fb_strategy = fb.Solve(big_lin, big_quad, x0);
+
+  // Check that these are the same open-loop strategy, but only at the first
+  // time step because the state costs in open-loop are treated as pertaining to
+  // the next state. Over a long time horizon, these differences (which only
+  // really change the overall cost at the last time step) should become
+  // insignificant, at least when considering the first time step.
+  CHECK_EQ(fb_strategy.size(), 1);
+  CHECK_EQ(ol_strategy.size(), 1);
+
+  const VectorXf u_ol = ol_strategy[0](0, VectorXf::Zero(2), VectorXf::Zero(2));
+  const VectorXf u_fb = fb_strategy[0](0, x0, VectorXf::Zero(2));
+
+  constexpr float kMaxRelativeError = 0.01;
+  CHECK_LT((u_ol - u_fb).cwiseAbs().maxCoeff(),
+           kMaxRelativeError * u_fb.cwiseAbs().maxCoeff());
 }
