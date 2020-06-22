@@ -56,6 +56,7 @@
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
+#include <ilqgames/cost/signed_distance_cost.h>
 #include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/dynamics/concatenated_flat_system.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
@@ -497,6 +498,17 @@ TEST(Polyline2SignedDistanceCostTest, QuadraticizesCorrectly) {
 TEST(Polyline2SignedDistanceCostTest, QuadraticizesExponentialCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   Polyline2SignedDistanceCost cost(polyline, {0, 1});
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
+TEST(SignedDistanceCostTest, QuadraticizesCorrectly) {
+  SignedDistanceCost cost({0, 1}, {2, 3}, 5.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(SignedDistanceCostTest, QuadraticizesExponentialCorrectly) {
+  SignedDistanceCost cost({0, 1}, {2, 3}, 5.0);
   cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
