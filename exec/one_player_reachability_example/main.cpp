@@ -113,11 +113,17 @@ int main(int argc, char** argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.open_loop = kOpenLoop;
 
+  auto start = std::chrono::system_clock::now();
   auto open_loop_problem =
       std::make_shared<ilqgames::OnePlayerReachabilityExample>(params);
   std::shared_ptr<const ilqgames::SolverLog> log = open_loop_problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> open_loop_logs =
       {log};
+  LOG(INFO) << "Solver completed in "
+            << std::chrono::duration<ilqgames::Time>(
+                   std::chrono::system_clock::now() - start)
+                   .count()
+            << " seconds.";
 
   static constexpr float kMaxPerturbation = 1e-1;
   bool is_local_opt = NumericalCheckLocalNashEquilibrium(
@@ -140,6 +146,7 @@ int main(int argc, char** argv) {
   }
 
   // Solve for feedback equilibrium.
+  start = std::chrono::system_clock::now();
   params.open_loop = !kOpenLoop;
   auto feedback_problem =
       std::make_shared<ilqgames::OnePlayerReachabilityExample>(params);
@@ -148,6 +155,11 @@ int main(int argc, char** argv) {
   log = feedback_problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> feedback_logs =
       {log};
+  LOG(INFO) << "Solver completed in "
+            << std::chrono::duration<ilqgames::Time>(
+                   std::chrono::system_clock::now() - start)
+                   .count()
+            << " seconds.";
 
   // Check if solution satisfies sufficient conditions for being a local Nash.
   is_local_opt = NumericalCheckLocalNashEquilibrium(

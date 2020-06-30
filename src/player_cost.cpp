@@ -245,4 +245,22 @@ void PlayerCost::SetExponentialConstant(float a) {
   for (auto& pair : control_costs_) pair.second->SetExponentialConstant(a);
 }
 
+bool PlayerCost::IsExponentiated(float* a) const {
+  const bool is_exponentiated = state_costs_.front()->IsExponentiated(a);
+
+  auto check_exponential_constants = [&is_exponentiated, &a](const Cost& cost) {
+    float a_prime;
+    CHECK_EQ(is_exponentiated, cost.IsExponentiated(&a_prime));
+    if (a) CHECK_EQ(*a, a_prime);
+  };  // check_exponential_constants
+
+  for (size_t ii = 1; ii < state_costs_.size(); ii++)
+    check_exponential_constants(*state_costs_[ii]);
+
+  for (const auto& pair : control_costs_)
+    check_exponential_constants(*pair.second);
+
+  return is_exponentiated;
+}
+
 }  // namespace ilqgames

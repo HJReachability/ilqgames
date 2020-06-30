@@ -46,6 +46,7 @@
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
+#include <ilqgames/utils/compute_strategy_costs.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
@@ -117,12 +118,29 @@ int main(int argc, char** argv) {
       std::make_shared<ilqgames::CollisionAvoidanceReachabilityExample>(params);
 
   // Solve the game.
+  const auto start = std::chrono::system_clock::now();
   const std::shared_ptr<const ilqgames::SolverLog> log =
       feedback_problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> feedback_logs =
       {log};
+  LOG(INFO) << "Solver completed in "
+            << std::chrono::duration<ilqgames::Time>(
+                   std::chrono::system_clock::now() - start)
+                   .count()
+            << " seconds.";
 
-  // Check if solution satisfies sufficient conditions for being a local Nash.
+  // Compute strategy costs.
+  const std::vector<float> total_costs = ComputeStrategyCosts(
+      feedback_problem->Solver().PlayerCosts(),
+      feedback_problem->CurrentStrategies(),
+      feedback_problem->CurrentOperatingPoint(),
+      feedback_problem->Solver().Dynamics(), feedback_problem->InitialState(),
+      feedback_problem->Solver().TimeStep());
+  LOG(INFO) << "Total strategy costs are: ";
+  for (const float c : total_costs) LOG(INFO) << c;
+
+  // Check if solution satisfies sufficient conditions for being a local
+  // Nash.
   constexpr float kMaxPerturbation = 0.1;
   const bool is_local_nash = NumericalCheckLocalNashEquilibrium(
       feedback_problem->Solver().PlayerCosts(),

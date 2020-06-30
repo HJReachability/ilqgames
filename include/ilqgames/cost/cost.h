@@ -75,7 +75,8 @@ class Cost {
     CHECK_GE(a, 0.0);
     exponential_constant_ = a;
   }
-  bool IsExponentiated() const {
+  bool IsExponentiated(float* a = nullptr) const {
+    if (a) *a = exponential_constant_;
     return std::abs(exponential_constant_) > constants::kSmallNumber;
   }
 

@@ -66,10 +66,10 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Exponential constant.
-static constexpr float kExponentialConstant = 2.0;
+static constexpr float kExponentialConstant = 3.0;
 
 // Nominal distance.
-static constexpr float kNominalDistance = 1.0;  // m
+static constexpr float kNominalDistance = 5.0;  // m
 
 // Cost weights.
 static constexpr float kControlCostWeight = 1.0;

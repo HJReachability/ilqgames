@@ -109,6 +109,7 @@ class PlayerCost {
 
   // Set exponential constant for all costs associated to this player.
   void SetExponentialConstant(float a);
+  bool IsExponentiated(float* a) const;
 
   // Accessors.
   const std::vector<std::shared_ptr<Cost>>& StateCosts() const {
