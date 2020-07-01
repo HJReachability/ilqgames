@@ -69,6 +69,9 @@ static constexpr size_t kNumTimeSteps =
 // Exponential constant.
 static constexpr float kExponentialConstant = 0.1;
 
+// Reach or avoid?
+static constexpr bool kReach = false;
+
 // Cost weights.
 static constexpr float kOmegaCostWeight = 1.0;
 
@@ -125,9 +128,9 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
   p1_cost.AddControlCost(0, p1_omega_cost);
 
   // Goal cost.
-  const Polyline2 square = DrawSquare(Point2(kP1GoalX, kP1GoalY), 2.0);
+  const Polyline2 circle = DrawCircle(Point2(kP1GoalX, kP1GoalY), 1.0, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_goal_cost(
-      new Polyline2SignedDistanceCost(square, {kP1XIdx, kP1YIdx}, false,
+      new Polyline2SignedDistanceCost(circle, {kP1XIdx, kP1YIdx}, kReach,
                                       "Goal"));
 
   p1_cost.AddStateCost(p1_goal_cost);

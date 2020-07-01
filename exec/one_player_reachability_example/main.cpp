@@ -60,7 +60,10 @@
 #include <imgui/imgui_impl_opengl3.h>
 
 // Optional log saving and visualization.
-DEFINE_bool(save, false, "Optionally save solver logs to disk.");
+DEFINE_bool(save_open_loop, false,
+            "Optionally save open-loop solver logs to disk.");
+DEFINE_bool(save_feedback, false,
+            "Optionally save feedback solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
 DEFINE_bool(last_traj, false,
             "Should the solver only dump the last trajectory?");
@@ -137,7 +140,7 @@ int main(int argc, char** argv) {
   else
     LOG(INFO) << "Open-loop solution is not a local optimum.";
 
-  if (FLAGS_save) {
+  if (FLAGS_save_open_loop) {
     if (FLAGS_experiment_name == "") {
       CHECK(log->Save(FLAGS_last_traj));
     } else {
@@ -174,7 +177,7 @@ int main(int argc, char** argv) {
     LOG(INFO) << "Feedback solution is not a local optimum.";
 
   // Dump the logs and/or exit.
-  if (FLAGS_save) {
+  if (FLAGS_save_feedback) {
     if (FLAGS_experiment_name == "") {
       CHECK(log->Save(FLAGS_last_traj));
     } else {

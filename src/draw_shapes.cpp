@@ -61,15 +61,15 @@ Polyline2 DrawSquare(const Point2& center, float side_length) {
 Polyline2 DrawCircle(const Point2& center, float radius, size_t num_segments) {
   CHECK_GT(radius, 0.0);
 
-  const Point2 initial_pt = center + Point2(radius, 0.0);
-  Polyline2 poly({initial_pt});
+  PointList2 poly;
+  poly.push_back(center + Point2(radius, 0.0));
   for (size_t ii = 0; ii < num_segments; ii++) {
     const float angle = 2.0 * M_PI * static_cast<float>(ii + 1) /
                         static_cast<float>(num_segments);
-    poly.AddPoint(center + radius * Point2(std::cos(angle), std::sin(angle)));
+    poly.push_back(center + radius * Point2(std::cos(angle), std::sin(angle)));
   }
 
-  return poly;
+  return Polyline2(poly);
 }
 
 }  // namespace ilqgames

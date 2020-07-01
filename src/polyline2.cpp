@@ -100,7 +100,7 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
   }
 
   return return_point;
-}  // namespace ilqgames
+}
 
 Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
                                LineSegment2* segment,
