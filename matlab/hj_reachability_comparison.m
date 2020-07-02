@@ -1,4 +1,4 @@
-function single_point_avoid()
+function hj_reachability_comparison()
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
 %     uMode = 'min' <-- goal
 %     minWith = 'zero' <-- Tube (not set)
@@ -66,7 +66,7 @@ schemeData.uMode = uMode;
 
 %% Compute value function
 
-HJIextraArgs.visualize = true; %show plot
+HJIextraArgs.visualize = false; %show plot
 HJIextraArgs.fig_num = 1; %set figure number
 HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 
@@ -77,36 +77,87 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 
 %% Compute optimal trajectory from some initial state
 if compTraj
-  pause
-  
   %set the initial state
   xinit = [2, 2, -pi];
-  
+
   %check if this initial state is in the BRS/BRT
   %value = eval_u(g, data, x)
   value = eval_u(g,data(:,:,:,end),xinit);
-  
-  if true %value <= 0 %if initial state is in BRS/BRT
-    % find optimal trajectory
-    
-    dCar.x = xinit; %set initial state of the dubins car
 
-    TrajextraArgs.uMode = uMode; %set if control wants to min or max
-    TrajextraArgs.visualize = true; %show plot
-    TrajextraArgs.fig_num = 2; %figure number
-    
-    %we want to see the first two dimensions (x and y)
-    TrajextraArgs.projDim = [1 1 0]; 
-    
-    %flip data time points so we start from the beginning of time
-    dataTraj = flip(data,4);
-    
-    % [traj, traj_tau] = ...
-    % computeOptTraj(g, data, tau, dynSys, extraArgs)
-    [traj, traj_tau] = ...
-      computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
-  else
-    error(['Initial state is not in the BRS/BRT! It have a value of ' num2str(value,2)])
+  % find optimal trajectory
+  dCar.x = xinit; %set initial state of the dubins car
+
+  TrajextraArgs.uMode = uMode; %set if control wants to min or max
+  TrajextraArgs.visualize = false; %show plot
+  TrajextraArgs.fig_num = 2; %figure number
+
+  %we want to see the first two dimensions (x and y)
+  TrajextraArgs.projDim = [1 1 0];
+
+  %flip data time points so we start from the beginning of time
+  dataTraj = flip(data,4);
+
+  % [traj, traj_tau] = ...
+  % computeOptTraj(g, data, tau, dynSys, extraArgs)
+  [traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
+  traj = traj'; % Transpose traj to have colums be different timesteps
+
+  %% Compute ILQ trajectory for same problem.
+  ilq_traj = run_ilqgames("one_player_reachability_example");
+  if (size(traj, 1) ~= size(ilq_traj, 1))
+    fprintf("Incorrect number of timesteps: %d vs. %d.", size(traj, 1), size(ilq_traj, 1));
   end
+
+  if (size(traj, 2) ~= size(ilq_traj, 2))
+    fprintf("Incorrect number of state dimensions: %d vs. %d.", size(traj, 2), size(ilq_traj, 2));
+  end
+
+  figure(3);
+  hold on;
+  plot(traj(:, 1), traj(:, 2), 'b-o');
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'g-o');
+  hold off;
 end
+end
+
+%% Compute ILQ trajectory for given example.
+function traj = run_ilqgames(exec)
+  experiment_name = "simple_avoid_feedback";
+  experiment_arg = " --experiment_name='" + experiment_name + "'";
+
+  exists = experiment_already_run(char(experiment_name));
+  if ~exists
+    %% Stitch together the command for the executable.
+    instruction = "../bin/" + exec + " --noviz --save_feedback --last_traj" + ...
+                  experiment_arg;
+    system(char(instruction));
+  end
+
+  log_folder = "../logs/";
+  cd(char(log_folder + experiment_name));
+  dirs = dir;
+  last_iterate = "blah";
+  for ii = 1:size(dirs)
+      if dirs(ii).name(1) ~= '.'
+          last_iterate = dirs(ii).name;
+          fprintf("%s", last_iterate);
+          break;
+      end
+  end
+  cd('../../matlab');
+  traj = load(log_folder + experiment_name + "/" + last_iterate + "/xs.txt");
+end
+
+function exists = experiment_already_run(folder_name)
+  %% Get experiment folder names
+  cd('../logs');
+  dirs = dir;
+  exists = false;
+  for ii = 1:length(dirs)
+    if strcmp(folder_name, dirs(ii).name)
+      exists = true;
+      break;
+    end
+  end
+  cd('../matlab');
 end

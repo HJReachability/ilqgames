@@ -62,7 +62,7 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 5.0;  // s
+static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -72,13 +72,16 @@ static constexpr float kExponentialConstant = 0.1;
 // Reach or avoid?
 static constexpr bool kReach = false;
 
+// Target radius.
+static constexpr float kTargetRadius = 0.5;
+
 // Cost weights.
 static constexpr float kOmegaCostWeight = 1.0;
 
 // Initial state.
-static constexpr float kP1InitialX = 0.0;           // m
-static constexpr float kP1InitialY = -10.0;         // m
-static constexpr float kP1InitialHeading = M_PI_4;  // rad
+static constexpr float kP1InitialX = 2.0;          // m
+static constexpr float kP1InitialY = 2.0;          // m
+static constexpr float kP1InitialHeading = -M_PI;  // rad
 
 static constexpr float kSpeed = 1.0;  // m/s
 
@@ -128,7 +131,8 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
   p1_cost.AddControlCost(0, p1_omega_cost);
 
   // Goal cost.
-  const Polyline2 circle = DrawCircle(Point2(kP1GoalX, kP1GoalY), 1.0, 10);
+  const Polyline2 circle =
+      DrawCircle(Point2(kP1GoalX, kP1GoalY), kTargetRadius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_goal_cost(
       new Polyline2SignedDistanceCost(circle, {kP1XIdx, kP1YIdx}, kReach,
                                       "Goal"));

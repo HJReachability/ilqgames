@@ -21,12 +21,12 @@ end
 % Norm of the difference between trajectories.
 function y = trajectory_d(traj1,traj2)
 xy_indeces = [1,2;7,8;13,14];
-biggest = 0; 
+biggest = 0;
 for i=1:length(xy_indeces)
    for j=1:length(traj2)
       tmp = min(vecnorm(traj1(:,xy_indeces(i,:)) - traj2(j,xy_indeces(i,:))));
       if biggest < tmp
-         biggest = tmp; 
+         biggest = tmp;
       end
    end
 end
@@ -127,13 +127,13 @@ function test_region_size_vs_alpha_scaling(exec1,n,m)
     flag1 = " -trust_region_size=";
     flag2 = " -initial_alpha_scaling=";
     experiment_arg = "-experiment_name=";
-    
+
     range_for_tregion = [1.0,2.0,3.0,4.0,5.0];%linspace(0.0,20.0,n);
     range_for_alphasc = linspace(0.1,0.75,m);
     j = 1;
     for tr_size=range_for_tregion
        for alpha_scaling=range_for_alphasc
-           
+
            % Convert parameters loop parameters to strings for names
            string_alpha_sc = string(num2str(alpha_scaling));
            string_tr_size  = string(num2str(tr_size));
@@ -141,7 +141,7 @@ function test_region_size_vs_alpha_scaling(exec1,n,m)
                                                "_alphasc_" + num2str(alpha_scaling);
            exp_folder_name = "'"+tmp + "'";
            experiment_name = experiment_arg + exp_folder_name;
-           
+
            exists = check_if_folder_exists(char(tmp));
            if ~exists
                % Stitch together the command for the executable.
@@ -182,12 +182,12 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
     flag1 = " -trust_region_size=";
     flag2 = " -initial_alpha_scaling=";
     experiment_arg = "-experiment_name=";
-    
+
     tr_min = 1.0; tr_max = 10.0;
     al_min = 0.1; al_max = 0.75;
     range_for_tregion = [tr_min,tr_max];%linspace(0.0,20.0,n);
     range_for_alphasc = [al_min,al_max];
-    
+
     if ~randornot
         trr = linspace(tr_min,tr_max,ceil(sqrt(num_samples)));
         alp = linspace(al_min,al_max,ceil(sqrt(num_samples)));
@@ -196,7 +196,7 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
         alltr_size = all_points_tr(:);
         allalpha_scaling = all_points_al(:);
     end
-    
+
     for i=1:num_samples
        if randornot
         tr_size = random('unif',range_for_tregion(1),range_for_tregion(2));
@@ -205,7 +205,7 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
         tr_size = alltr_size(i);
         alpha_scaling = allalpha_scaling(i);
        end
-       
+
        % Convert parameters loop parameters to strings for names
        string_alpha_sc = string(num2str(alpha_scaling));
        string_tr_size  = string(num2str(tr_size));
@@ -225,13 +225,13 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
            end
            [conv_val,runtime] = convergence_val(char(prefix+"/"+tmp),ideal);
            vals(j,i) = conv_val;
-           alphas(j,i) = alpha_scaling; 
+           alphas(j,i) = alpha_scaling;
            sizes(j,i) = tr_size;
            times(j,i) = runtime;
        end
        %title("as=" + string_alpha_sc + ",tr=" + string_tr_size + "(" +num2str(runtime)+ ")");
     end
-    
+
     vals_min = min(min(vals));
     vals_max = max(max(vals));
     for i=1:num_samples
@@ -242,7 +242,7 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
            end
         end
     end
-    
+
     figure(1)
     detailed_vs_histogram(vals,execs,alphas(1,:),sizes(1,:),tol);
 %     title("Flat algorithm.")
@@ -250,7 +250,7 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
 %     detailed_histogram(vals(2,:),alphas(2,:),sizes(2,:));
 %     title("Non-Flat algorithm.")
 %     figure(1)
-    
+
     true_times = cell(1,length(execs));
     for j=1:length(execs)
         figure(2+j)
@@ -264,7 +264,7 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
            % red = [1 0 0]
            % blue = [0 0 1]
            plot(alphas(j,i),sizes(j,i),'*','color',[vals(j,i) 0 1-vals(j,i)]);
-           hold on 
+           hold on
         end
         if j==1
             title("("+execs{j}+")"+"Flat Algorithm " + "("+mean(true_times{j})+")");
@@ -274,7 +274,7 @@ function sensitivity_to_params(ideal_traj,execs,num_samples,randornot,tol)
         xlabel("initial alpha scaling");
         ylabel("trust region size");
     end
-    
+
     cd('../matlab')
 end
 
@@ -295,16 +295,16 @@ function detailed_vs_histogram(vals,execs,alphas,sizes,tol)
     if(abs(xrange(1)) > abs(xrange(2)))
        new_range = [xrange(1),-xrange(1)];
     else
-       new_range = [-xrange(2),xrange(2)]; 
+       new_range = [-xrange(2),xrange(2)];
     end
     xlim(new_range);
     ylim([0,60]);
-    
+
     yy = 6.5;
     plot(new_range,[yy,yy],'k--');
     yy = 3.75;
     plot(new_range,[yy,yy],'k--');
-    
+
     % Find good example
     [~,argood] = min(vals(2,:));
     tmp =execs{2}+"_trsize_" + num2str(sizes(argood)) + ...
@@ -318,7 +318,7 @@ function detailed_vs_histogram(vals,execs,alphas,sizes,tol)
     box on
     plot_trajectory(traj)
     cd('../../../matlab')
-    % Find bad example 
+    % Find bad example
     [~,argbad] = max(vals(2,:) > 50);
     tmp =execs{2}+"_trsize_" + num2str(sizes(argbad)) + ...
                                                "_alphasc_" + num2str(alphas(argbad)) + "_tol_" + num2str(tol);
@@ -345,5 +345,5 @@ function detailed_vs_histogram(vals,execs,alphas,sizes,tol)
     box on
     plot_trajectory(traj)
     cd('../../../matlab')
-    
+
 end
