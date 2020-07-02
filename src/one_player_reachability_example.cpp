@@ -45,7 +45,6 @@
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
-#include <ilqgames/dynamics/single_player_delayed_dubins_car.h>
 #include <ilqgames/dynamics/single_player_dubins_car.h>
 #include <ilqgames/examples/one_player_reachability_example.h>
 #include <ilqgames/geometry/draw_shapes.h>
@@ -84,10 +83,9 @@ static constexpr float kOmegaCostWeight = 1.0;
 static constexpr float kOmegaMax = 1.0;
 
 // Initial state.
-static constexpr float kP1InitialX = 2.0;        // m
-static constexpr float kP1InitialY = 2.0;        // m
+static constexpr float kP1InitialX = 2.0;          // m
+static constexpr float kP1InitialY = 2.0;          // m
 static constexpr float kP1InitialTheta = -M_PI;  // rad
-static constexpr float kP1InitialOmega = 0.0;    // rad/s
 
 static constexpr float kSpeed = 1.0;  // m/s
 
@@ -96,15 +94,14 @@ static constexpr float kP1GoalX = 0.0;
 static constexpr float kP1GoalY = 0.0;
 
 // State dimensions.
-using P1 = SinglePlayerDelayedDubinsCar;
+using P1 = SinglePlayerDubinsCar;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
 static const Dimension kP1YIdx = P1::kPyIdx;
 static const Dimension kP1ThetaIdx = P1::kThetaIdx;
-static const Dimension kP1OmegaIdx = P1::kOmegaIdx;
 
 // Control dimensions.
-static const Dimension kP1AlphaIdx = 0;
+static const Dimension kP1OmegaIdx = 0;
 }  // anonymous namespace
 
 OnePlayerReachabilityExample::OnePlayerReachabilityExample(
@@ -119,7 +116,6 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1ThetaIdx) = kP1InitialTheta;
-  x0_(kP1OmegaIdx) = kP1InitialOmega;
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
@@ -134,18 +130,18 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
   PlayerCost p1_cost("P1");
 
   // Penalize and constrain control effort.
-  const auto p1_alpha_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP1AlphaIdx, 0.0, "Steering");
-  p1_cost.AddControlCost(0, p1_alpha_cost);
+  const auto p1_omega_cost = std::make_shared<QuadraticCost>(
+      kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
+  p1_cost.AddControlCost(0, p1_omega_cost);
 
   const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
-                                                  "Input Constraint (Max)");
+    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
+                                                "Input Constraint (Max)");
   const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
-                                                  "Input Constraint (Min)");
-  p1_cost.AddStateConstraint(p1_omega_max_constraint);
-  p1_cost.AddStateConstraint(p1_omega_min_constraint);
+    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
+                                                "Input Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
   // Goal cost.
   const Polyline2 circle =
@@ -175,7 +171,7 @@ inline std::vector<float> OnePlayerReachabilityExample::Ys(
 
 inline std::vector<float> OnePlayerReachabilityExample::Thetas(
     const VectorXf& x) const {
-  return {x(kP1OmegaIdx)};
+  return {x(kP1ThetaIdx)};
 }
 
 }  // namespace ilqgames
