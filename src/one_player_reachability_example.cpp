@@ -134,14 +134,14 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   p1_cost.AddControlCost(0, p1_omega_cost);
 
-  // const auto p1_omega_max_constraint =
-  //   std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
-  //                                               "Input Constraint (Max)");
-  // const auto p1_omega_min_constraint =
-  //   std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
-  //                                               "Input Constraint (Min)");
-  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  const auto p1_omega_max_constraint =
+    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
+                                                "Input Constraint (Max)");
+  const auto p1_omega_min_constraint =
+    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
+                                                "Input Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
   // Target cost.
   const Polyline2 circle =
