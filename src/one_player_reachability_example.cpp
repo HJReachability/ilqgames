@@ -41,6 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
@@ -77,6 +78,9 @@ static constexpr float kTargetRadius = 0.5;
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 1.0;
+
+// Input constraint.
+static constexpr float kOmegaMax = 1.0;
 
 // Initial state.
 static constexpr float kP1InitialX = 2.0;          // m
@@ -125,10 +129,19 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
   // Set up costs for all players.
   PlayerCost p1_cost("P1");
 
-  // Penalize control effort.
+  // Penalize and constrain control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   p1_cost.AddControlCost(0, p1_omega_cost);
+
+  const auto p1_omega_max_constraint =
+    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
+                                                "Input Constraint (Max)");
+  const auto p1_omega_min_constraint =
+    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
+                                                "Input Constraint (Min)");
+  p1_cost.AddStateConstraint(p1_omega_max_constraint);
+  p1_cost.AddStateConstraint(p1_omega_min_constraint);
 
   // Goal cost.
   const Polyline2 circle =
