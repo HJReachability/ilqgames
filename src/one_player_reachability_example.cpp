@@ -89,9 +89,9 @@ static constexpr float kP1InitialTheta = -M_PI;  // rad
 
 static constexpr float kSpeed = 1.0;  // m/s
 
-// Goal position.
-static constexpr float kP1GoalX = 0.0;
-static constexpr float kP1GoalY = 0.0;
+// Target position.
+static constexpr float kP1TargetX = 0.0;
+static constexpr float kP1TargetY = 0.0;
 
 // State dimensions.
 using P1 = SinglePlayerDubinsCar;
@@ -134,23 +134,23 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   p1_cost.AddControlCost(0, p1_omega_cost);
 
-  const auto p1_omega_max_constraint =
-    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
-                                                "Input Constraint (Max)");
-  const auto p1_omega_min_constraint =
-    std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
-                                                "Input Constraint (Min)");
-  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  // const auto p1_omega_max_constraint =
+  //   std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
+  //                                               "Input Constraint (Max)");
+  // const auto p1_omega_min_constraint =
+  //   std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
+  //                                               "Input Constraint (Min)");
+  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
-  // Goal cost.
+  // Target cost.
   const Polyline2 circle =
-      DrawCircle(Point2(kP1GoalX, kP1GoalY), kTargetRadius, 10);
-  const std::shared_ptr<Polyline2SignedDistanceCost> p1_goal_cost(
+      DrawCircle(Point2(kP1TargetX, kP1TargetY), kTargetRadius, 10);
+  const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(circle, {kP1XIdx, kP1YIdx}, kReach,
-                                      "Goal"));
+                                      "Target"));
 
-  p1_cost.AddStateCost(p1_goal_cost);
+  p1_cost.AddStateCost(p1_target_cost);
 
   // Make sure costs are exponentiated.
   p1_cost.SetExponentialConstant(kExponentialConstant);
