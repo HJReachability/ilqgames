@@ -67,17 +67,11 @@ static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
-// Exponential constant.
-static constexpr float kExponentialConstant = 0.1;
-
 // Reach or avoid?
 static constexpr bool kReach = false;
 
 // Target radius.
 static constexpr float kTargetRadius = 0.5;
-
-// Cost weights.
-static constexpr float kOmegaCostWeight = 1.0;
 
 // Input constraint.
 static constexpr float kOmegaMax = 1.0;
@@ -131,7 +125,7 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
 
   // Penalize and constrain control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
+      params.control_cost_weight, kP1OmegaIdx, 0.0, "Steering");
   p1_cost.AddControlCost(0, p1_omega_cost);
 
   const auto p1_omega_max_constraint =
@@ -153,7 +147,8 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
   p1_cost.AddStateCost(p1_target_cost);
 
   // Make sure costs are exponentiated.
-  p1_cost.SetExponentialConstant(kExponentialConstant);
+  CHECK_GT(params.exponential_constant, 0.0);
+  p1_cost.SetExponentialConstant(params.exponential_constant);
 
   // Set up solver.
   solver_.reset(new ILQSolver(dynamics, {p1_cost}, kTimeHorizon, params));
