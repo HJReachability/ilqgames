@@ -122,10 +122,10 @@ end
 
 %% Compute ILQ trajectory for given example.
 function traj = run_ilqgames(exec)
-  experiment_name = "simple_avoid_feedback";
+  experiment_name = "simple_avoid";
   experiment_arg = " --experiment_name='" + experiment_name + "'";
 
-  exists = experiment_already_run(char(experiment_name));
+  exists = experiment_already_run(char(experiment_name + "_feedback"));
   if ~exists
     %% Stitch together the command for the executable.
     instruction = "../bin/" + exec + " --noviz --save_feedback --last_traj" + ...
@@ -134,7 +134,7 @@ function traj = run_ilqgames(exec)
   end
 
   log_folder = "../logs/";
-  cd(char(log_folder + experiment_name));
+  cd(char(log_folder + experiment_name + "_feedback"));
   dirs = dir;
   last_iterate = "blah";
   for ii = 1:size(dirs)
@@ -145,7 +145,7 @@ function traj = run_ilqgames(exec)
       end
   end
   cd('../../matlab');
-  traj = load(log_folder + experiment_name + "/" + last_iterate + "/xs.txt");
+  traj = load(log_folder + experiment_name + "_feedback/" + last_iterate + "/xs.txt");
 end
 
 function exists = experiment_already_run(folder_name)
