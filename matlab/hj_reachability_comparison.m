@@ -4,9 +4,6 @@ function hj_reachability_comparison()
 %     minWith = 'zero' <-- Tube (not set)
 %     compTraj = true <-- compute optimal trajectory
 
-%% Should we compute the trajectory?
-compTraj = true;
-
 %% Grid
 grid_min = [-5; -5; -pi]; % Lower corner of computation domain
 grid_max = [5; 5; pi];    % Upper corner of computation domain
@@ -17,7 +14,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 % state space dimensions
 
 %% target set
-R = 0.5;
+R = 1.0;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
 data0 = shapeCylinder(g, 3, [0; 0; 0], R);
 % also try shapeRectangleByCorners, shapeSphere, etc.
@@ -76,60 +73,84 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
   HJIPDE_solve(data0, tau, schemeData, 'minVOverTime', HJIextraArgs);
 
 %% Compute optimal trajectory from some initial state
-if compTraj
-  %set the initial state
-  xinit = [2, 2, -pi];
+%set the initial state
+xinit = [2, 2, -pi];
 
-  %check if this initial state is in the BRS/BRT
-  %value = eval_u(g, data, x)
-  value = eval_u(g,data(:,:,:,end),xinit);
+%%check if this initial state is in the BRS/BRT
+%value = eval_u(g, data, x)
+value = eval_u(g,data(:,:,:,end),xinit);
 
-  % find optimal trajectory
-  dCar.x = xinit; %set initial state of the dubins car
+dCar.x = xinit; %set initial state of the dubins car
 
-  TrajextraArgs.uMode = uMode; %set if control wants to min or max
-  TrajextraArgs.visualize = false; %show plot
-  TrajextraArgs.fig_num = 2; %figure number
+TrajextraArgs.uMode = uMode; %set if control wants to min or max
+TrajextraArgs.visualize = false; %show plot
+TrajextraArgs.fig_num = 2; %figure number
 
-  %we want to see the first two dimensions (x and y)
-  TrajextraArgs.projDim = [1 1 0];
+%%we want to see the first two dimensions (x and y)
+TrajextraArgs.projDim = [1 1 0];
 
-  %flip data time points so we start from the beginning of time
-  dataTraj = flip(data,4);
+%%flip data time points so we start from the beginning of time
+dataTraj = flip(data,4);
 
-  % [traj, traj_tau] = ...
-  % computeOptTraj(g, data, tau, dynSys, extraArgs)
-  [traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
-  traj = traj'; % Transpose traj to have colums be different timesteps
+[traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
+traj = traj'; % Transpose traj to have colums be different timesteps
 
-  %% Compute ILQ trajectory for same problem.
-  ilq_traj = run_ilqgames("one_player_reachability_example");
-  if (size(traj, 1) ~= size(ilq_traj, 1))
-    fprintf("Incorrect number of timesteps: %d vs. %d.", size(traj, 1), size(ilq_traj, 1));
-  end
+%% Plot original trajectory.
+figure(3);
+title('Sensitivity to Scale');
+hold on;
+plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
-  if (size(traj, 2) ~= size(ilq_traj, 2))
-    fprintf("Incorrect number of state dimensions: %d vs. %d.", size(traj, 2), size(ilq_traj, 2));
-  end
+%% Compute ILQ trajectory for same problem with different parAmetersx and overlay plots.
+scale_vals = linspace(0.05, 0.5, 5);
+control_penalty_vals = linspace(0.05, 0.5, 5);
 
-  figure(3);
-  hold on;
-  plot(traj(:, 1), traj(:, 2), 'b-o');
-  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'g-o');
-  hold off;
+nominal_scale = 0.05;
+nominal_control_penalty = 0.05;
+
+for a = scale_vals
+  ilq_traj = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals), 'DisplayName', sprintf('$a = %1.5f$', a));
 end
+
+hold off;
+l1 = legend;
+
+figure(4);
+title('Sensitivity to Control Penalty');
+hold on;
+plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+
+for epsilon = control_penalty_vals;
+  ilq_traj = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(epsilon, control_penalty_vals), 'DisplayName', sprintf('$\\epsilon = %1.5f$', epsilon));
 end
+
+hold off;
+l2 = legend;
+
+set(l1, 'Interpreter', 'latex');
+set(l2, 'Interpreter', 'latex');
+
+end
+
+%% Simple red-blue colormap.
+function color = colormap(val, opts)
+  r = (val - opts(1)) / (opts(end) - opts(1));
+  color = [r, 0.25, 1.0 - r];
+end
+
 
 %% Compute ILQ trajectory for given example.
-function traj = run_ilqgames(exec)
-  experiment_name = "simple_avoid";
+function traj = run_ilqgames(exec, scale, control_penalty)
+  experiment_name = "simple_avoid_" + scale + "_" + control_penalty;
   experiment_arg = " --experiment_name='" + experiment_name + "'";
 
-  exists = experiment_already_run(char(experiment_name + "_feedback"));
-  if ~exists
+  if ~experiment_already_run(char(experiment_name + "_feedback"))
     %% Stitch together the command for the executable.
-    instruction = "../bin/" + exec + " --noviz --save_feedback --last_traj" + ...
-                  experiment_arg;
+    instruction = "../bin/" + exec + " --trust_region_size=1.0 --noviz --save_feedback --last_traj" + ...
+                  experiment_arg + " --exponential_constant=" + scale + ...
+                  " --control_penalty=" + control_penalty;
     system(char(instruction));
   end
 

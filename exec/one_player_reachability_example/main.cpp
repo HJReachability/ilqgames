@@ -127,6 +127,8 @@ int main(int argc, char** argv) {
   auto start = std::chrono::system_clock::now();
   auto open_loop_problem =
       std::make_shared<ilqgames::OnePlayerReachabilityExample>(params);
+
+  LOG(INFO) << "Computing open-loop solution.";
   std::shared_ptr<const ilqgames::SolverLog> log = open_loop_problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> open_loop_logs =
       {log};
@@ -163,6 +165,7 @@ int main(int argc, char** argv) {
       std::make_shared<ilqgames::OnePlayerReachabilityExample>(params);
 
   // Solve the game.
+  LOG(INFO) << "Computing feedback solution.";
   log = feedback_problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> feedback_logs =
       {log};
@@ -214,7 +217,7 @@ int main(int argc, char** argv) {
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) return 1;
 
-    // Decide GL+GLSL versions.
+// Decide GL+GLSL versions.
 #if __APPLE__
   // GL 3.2 + GLSL 150.
   const char* glsl_version = "#version 150";
@@ -227,8 +230,8 @@ int main(int argc, char** argv) {
   const char* glsl_version = "#version 130";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
-  // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
+// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
+// only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 #endif
 
   // Create window with graphics context
@@ -238,7 +241,7 @@ int main(int argc, char** argv) {
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);  // Enable vsync
 
-  // Initialize OpenGL loader
+// Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
   bool err = gl3wInit() != 0;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)

@@ -71,7 +71,7 @@ static constexpr size_t kNumTimeSteps =
 static constexpr bool kReach = false;
 
 // Target radius.
-static constexpr float kTargetRadius = 0.5;
+static constexpr float kTargetRadius = 1.0;
 
 // Input constraint.
 static constexpr float kOmegaMax = 1.0;
