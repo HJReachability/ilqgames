@@ -71,7 +71,7 @@ static constexpr size_t kNumTimeSteps =
 static constexpr bool kReach = false;
 
 // Target radius.
-static constexpr float kTargetRadius = 1.0;
+static constexpr float kTargetRadius = 2.5;
 
 // Input constraint.
 static constexpr float kOmegaMax = 1.0;
@@ -119,6 +119,10 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
 
   operating_point_.reset(
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
+  constexpr size_t kNumTimeStepsInitialTurn = 3;
+  for (size_t kk = 0; kk < kNumTimeStepsInitialTurn; kk++)
+    operating_point_->us[kk][0](0) = -0.5;
+
 
   // Set up costs for all players.
   PlayerCost p1_cost("P1");

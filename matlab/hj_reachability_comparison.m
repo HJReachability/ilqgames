@@ -14,7 +14,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 % state space dimensions
 
 %% target set
-R = 1.0;
+R = 2.5;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
 data0 = shapeCylinder(g, 3, [0; 0; 0], R);
 % also try shapeRectangleByCorners, shapeSphere, etc.
@@ -96,12 +96,12 @@ dataTraj = flip(data,4);
 traj = traj'; % Transpose traj to have colums be different timesteps
 value = eval_u(g, data(:,:,:,end), xinit);
 
-%% Compute ILQ trajectory for same problem with different parAmetersx and overlay plots.
-scale_vals = linspace(0.05, 1.0, 5);
-control_penalty_vals = linspace(0.01, 0.05, 5);
+%% Compute ILQ trajectory for same problem with different parameters and overlay plots.
+scale_vals = linspace(0.05, 10.0, 5);
+control_penalty_vals = linspace(0.001, 0.01, 5);
 
-nominal_scale = 0.5;
-nominal_control_penalty = 0.05;
+nominal_scale = 10.0;
+nominal_control_penalty = 0.01;
 
 figure(3);
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), 'Interpreter', 'latex');
@@ -110,7 +110,8 @@ plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
-  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), 'DisplayName', sprintf('$a = %1.3f, \\tilde V(x_1) / V(x_1)= %1.2f$', a, values(1) / value));
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
+       'DisplayName', sprintf('$a = %1.3f, \\tilde V(x_1) / V(x_1)= %1.2f$', a, values(1) / value));
 end
 
 hold off;
@@ -123,7 +124,9 @@ plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
 for epsilon = control_penalty_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
-  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(epsilon, control_penalty_vals, false), 'DisplayName', sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) / V(x_1) = %1.2f$', epsilon, values(1) / value));
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
+       colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
+       sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) / V(x_1) = %1.2f$', epsilon, values(1) / value));
 end
 
 hold off;
