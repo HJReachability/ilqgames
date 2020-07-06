@@ -18,6 +18,8 @@ function y=vecnorm(A)
    y = sqrt(norm2);
 end
 
+
+
 % Norm of the difference between trajectories.
 function y = trajectory_d(traj1,traj2)
 xy_indeces = [1,2;7,8;13,14];

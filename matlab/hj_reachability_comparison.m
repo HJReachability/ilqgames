@@ -94,36 +94,36 @@ dataTraj = flip(data,4);
 
 [traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
 traj = traj'; % Transpose traj to have colums be different timesteps
+value = eval_u(g, data(:,:,:,end), xinit);
 
-%% Plot original trajectory.
+%% Compute ILQ trajectory for same problem with different parAmetersx and overlay plots.
+scale_vals = linspace(0.05, 1.0, 5);
+control_penalty_vals = linspace(0.01, 0.05, 5);
+
+nominal_scale = 0.5;
+nominal_control_penalty = 0.05;
+
 figure(3);
-title('Sensitivity to Scale');
+title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), 'Interpreter', 'latex');
 hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
-%% Compute ILQ trajectory for same problem with different parAmetersx and overlay plots.
-scale_vals = linspace(0.05, 0.5, 5);
-control_penalty_vals = linspace(0.05, 0.5, 5);
-
-nominal_scale = 0.05;
-nominal_control_penalty = 0.05;
-
 for a = scale_vals
-  ilq_traj = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
-  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals), 'DisplayName', sprintf('$a = %1.5f$', a));
+  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), 'DisplayName', sprintf('$a = %1.3f, \\tilde V(x_1) / V(x_1)= %1.2f$', a, values(1) / value));
 end
 
 hold off;
 l1 = legend;
 
 figure(4);
-title('Sensitivity to Control Penalty');
+title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), 'Interpreter', 'latex');
 hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
-for epsilon = control_penalty_vals;
-  ilq_traj = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
-  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(epsilon, control_penalty_vals), 'DisplayName', sprintf('$\\epsilon = %1.5f$', epsilon));
+for epsilon = control_penalty_vals
+  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(epsilon, control_penalty_vals, false), 'DisplayName', sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) / V(x_1) = %1.2f$', epsilon, values(1) / value));
 end
 
 hold off;
@@ -135,14 +135,17 @@ set(l2, 'Interpreter', 'latex');
 end
 
 %% Simple red-blue colormap.
-function color = colormap(val, opts)
+function color = colormap(val, opts, reverse)
   r = (val - opts(1)) / (opts(end) - opts(1));
   color = [r, 0.25, 1.0 - r];
+
+  if reverse
+    color = [1.0 - r, 0.25, r];
+  end
 end
 
-
 %% Compute ILQ trajectory for given example.
-function traj = run_ilqgames(exec, scale, control_penalty)
+function [traj, values] = run_ilqgames(exec, scale, control_penalty)
   experiment_name = "simple_avoid_" + scale + "_" + control_penalty;
   experiment_arg = " --experiment_name='" + experiment_name + "'";
 
@@ -166,7 +169,12 @@ function traj = run_ilqgames(exec, scale, control_penalty)
       end
   end
   cd('../../matlab');
+
   traj = load(log_folder + experiment_name + "_feedback/" + last_iterate + "/xs.txt");
+  values = load(log_folder + experiment_name + "_feedback/" + last_iterate + "/costs.txt");
+  for ii = 1:length(values)
+    values(ii) = log(values(ii)) / scale;
+  end
 end
 
 function exists = experiment_already_run(folder_name)
