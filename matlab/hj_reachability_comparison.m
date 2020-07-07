@@ -97,11 +97,11 @@ traj = traj'; % Transpose traj to have colums be different timesteps
 value = eval_u(g, data(:,:,:,end), xinit);
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(0.05, 10.0, 5);
-control_penalty_vals = linspace(0.001, 0.01, 5);
+scale_vals = linspace(1.0, 100.0, 5);
+control_penalty_vals = linspace(0.1, 10.0, 5);
 
 nominal_scale = 10.0;
-nominal_control_penalty = 0.01;
+nominal_control_penalty = 1.0;
 
 figure(3);
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.3f$)', nominal_control_penalty), ...
@@ -156,7 +156,7 @@ function [traj, values] = run_ilqgames(exec, scale, control_penalty)
   if ~experiment_already_run(char(experiment_name + "_feedback"))
     %% Stitch together the command for the executable.
     instruction = "../bin/" + exec + " --trust_region_size=1.0 --noviz --save_feedback" + ...
-                  "--last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
+                  " --last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
                   " --control_penalty=" + control_penalty;
     system(char(instruction));
   end
@@ -168,7 +168,6 @@ function [traj, values] = run_ilqgames(exec, scale, control_penalty)
   for ii = 1:size(dirs)
       if dirs(ii).name(1) ~= '.'
           last_iterate = dirs(ii).name;
-          fprintf("%s", last_iterate);
           break;
       end
   end
