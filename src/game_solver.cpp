@@ -278,9 +278,13 @@ bool GameSolver::CurrentOperatingPoint(
     auto& current_us = current_operating_point->us[kk];
 
     // Accumulate costs.
-    for (size_t ii = 0; ii < player_costs_.size(); ii++)
-      (*total_costs)[ii] += player_costs_[ii].Evaluate(t, x, current_us);
-
+    for (size_t ii = 0; ii < player_costs_.size(); ii++) {
+      if (player_costs_[ii].IsExponentiated())
+        (*total_costs)[ii] +=
+            player_costs_[ii].EvaluateExponential(t, x, current_us);
+      else
+        (*total_costs)[ii] += player_costs_[ii].Evaluate(t, x, current_us);
+    }
     // Check convergence and trust region (including explicit inequality
     // constraints).
     auto check_all_constraints = [this](Time t, const VectorXf& x,

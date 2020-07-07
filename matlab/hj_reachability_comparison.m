@@ -104,7 +104,7 @@ nominal_scale = 10.0;
 nominal_control_penalty = 0.01;
 
 figure(3);
-title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
+title(sprintf('Sensitivity to Scale ($\\epsilon = %1.3f$)', nominal_control_penalty), ...
       'Interpreter', 'latex');
 hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
@@ -112,7 +112,7 @@ plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-       'DisplayName', sprintf('$a = %1.3f, \\tilde V(x_1) / V(x_1)= %1.2f$', a, values(1) / value));
+       'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) / V(x_1)= %1.2f$', a, values(1) / value));
 end
 
 hold off;
@@ -127,7 +127,7 @@ for epsilon = control_penalty_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
-       sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) / V(x_1) = %1.2f$', epsilon, values(1) / value));
+       sprintf('$\\epsilon = %1.3f, \\tilde V(x_1) / V(x_1) = %1.2f$', epsilon, values(1) / value));
 end
 
 hold off;
