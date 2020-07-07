@@ -104,7 +104,8 @@ nominal_scale = 10.0;
 nominal_control_penalty = 0.01;
 
 figure(3);
-title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), 'Interpreter', 'latex');
+title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
+      'Interpreter', 'latex');
 hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
@@ -154,8 +155,8 @@ function [traj, values] = run_ilqgames(exec, scale, control_penalty)
 
   if ~experiment_already_run(char(experiment_name + "_feedback"))
     %% Stitch together the command for the executable.
-    instruction = "../bin/" + exec + " --trust_region_size=1.0 --noviz --save_feedback --last_traj" + ...
-                  experiment_arg + " --exponential_constant=" + scale + ...
+    instruction = "../bin/" + exec + " --trust_region_size=1.0 --noviz --save_feedback" + ...
+                  "--last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
                   " --control_penalty=" + control_penalty;
     system(char(instruction));
   end
