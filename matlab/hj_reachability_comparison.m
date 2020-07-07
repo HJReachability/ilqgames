@@ -14,7 +14,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 % state space dimensions
 
 %% target set
-R = 2.5;
+R = 1.0;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
 data0 = shapeCylinder(g, 3, [0; 0; 0], R);
 % also try shapeRectangleByCorners, shapeSphere, etc.
@@ -22,7 +22,7 @@ data0 = shapeCylinder(g, 3, [0; 0; 0], R);
 %% time vector
 t0 = 0;
 tMax = 2;
-dt = 0.05;
+dt = 0.1;
 tau = t0:dt:tMax;
 
 %% problem parameters
@@ -97,22 +97,25 @@ traj = traj'; % Transpose traj to have colums be different timesteps
 value = eval_u(g, data(:,:,:,end), xinit);
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(1.0, 100.0, 5);
-control_penalty_vals = linspace(0.1, 10.0, 5);
+scale_vals = linspace(0.5, 2.0, 5);
+control_penalty_vals = linspace(0.01, 0.1, 5);
 
-nominal_scale = 10.0;
-nominal_control_penalty = 1.0;
+nominal_scale = 1.0;
+nominal_control_penalty = 0.1;
 
 figure(3);
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.3f$)', nominal_control_penalty), ...
       'Interpreter', 'latex');
+xlabel('$p_x$ (m)', 'Interpreter', 'latex');
+ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+
 hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-       'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) / V(x_1)= %1.2f$', a, values(1) / value));
+       'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) - V(x_1)= %1.2f$', a, values(1) + value));
 end
 
 hold off;
@@ -120,6 +123,9 @@ l1 = legend;
 
 figure(4);
 title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), 'Interpreter', 'latex');
+xlabel('$p_x$ (m)', 'Interpreter', 'latex');
+ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+
 hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
@@ -127,7 +133,7 @@ for epsilon = control_penalty_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
-       sprintf('$\\epsilon = %1.3f, \\tilde V(x_1) / V(x_1) = %1.2f$', epsilon, values(1) / value));
+       sprintf('$\\epsilon = %1.3f, \\tilde V(x_1) - V(x_1) = %1.2f$', epsilon, values(1) + value));
 end
 
 hold off;
