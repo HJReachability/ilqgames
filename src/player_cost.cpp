@@ -131,14 +131,20 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
                            const std::vector<VectorXf>& us) const {
   float total_cost = 0.0;
 
+  // First check if exponentiated.
+  const bool is_exponentiated = IsExponentiated();
+
   // State costs.
-  for (const auto& cost : state_costs_) total_cost += cost->Evaluate(t, x);
+  for (const auto& cost : state_costs_)
+    total_cost += (is_exponentiated) ? cost->EvaluateExponential(t, x)
+                                     : cost->Evaluate(t, x);
 
   // Control costs.
   for (const auto& pair : control_costs_) {
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
-    total_cost += cost->Evaluate(t, us[player]);
+    total_cost += (is_exponentiated) ? cost->EvaluateExponential(t, us[player])
+                                     : cost->Evaluate(t, us[player]);
   }
 
   return total_cost;
