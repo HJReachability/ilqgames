@@ -16,7 +16,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 %% target set
 R = 1.0;
 % data0 = shapeCylinder(grid,ignoreDims,center,radius)
-data0 = shapeCylinder(g, 3, [0; 0; 0], R);
+data0 = -shapeCylinder(g, 3, [0; 0; 0], R);
 % also try shapeRectangleByCorners, shapeSphere, etc.
 
 %% time vector
@@ -33,7 +33,7 @@ wMax = 1;
 % do dStep1 here
 
 % control trying to min or max value function?
-uMode = 'max';
+uMode = 'min';
 % do dStep2 here
 
 
@@ -70,7 +70,7 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 %[data, tau, extraOuts] = ...
 % HJIPDE_solve(data0, tau, schemeData, minWith, extraArgs)
 [data, tau2, ~] = ...
-  HJIPDE_solve(data0, tau, schemeData, 'minVOverTime', HJIextraArgs);
+  HJIPDE_solve(data0, tau, schemeData, 'maxVWithL', HJIextraArgs);
 
 %% Compute optimal trajectory from some initial state
 %set the initial state
@@ -97,10 +97,10 @@ traj = traj'; % Transpose traj to have colums be different timesteps
 value = eval_u(g, data(:,:,:,end), xinit);
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(0.5, 2.0, 5);
+scale_vals = linspace(0.1, 0.5, 5);
 control_penalty_vals = linspace(0.01, 0.1, 5);
 
-nominal_scale = 1.0;
+nominal_scale = 0.1;
 nominal_control_penalty = 0.1;
 
 figure(3);
@@ -115,7 +115,7 @@ plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-       'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) - V(x_1)= %1.2f$', a, values(1) + value));
+       'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) - V(x_1)= %1.2f$', a, values(1) - value));
 end
 
 hold off;
@@ -133,7 +133,7 @@ for epsilon = control_penalty_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
-       sprintf('$\\epsilon = %1.3f, \\tilde V(x_1) - V(x_1) = %1.2f$', epsilon, values(1) + value));
+       sprintf('$\\epsilon = %1.3f, \\tilde V(x_1) - V(x_1) = %1.2f$', epsilon, values(1) - value));
 end
 
 hold off;

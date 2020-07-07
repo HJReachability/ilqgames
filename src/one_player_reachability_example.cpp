@@ -119,7 +119,7 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
 
   operating_point_.reset(
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-  constexpr size_t kNumTimeStepsInitialTurn = 5;
+  constexpr size_t kNumTimeStepsInitialTurn = 0;
   for (size_t kk = 0; kk < kNumTimeStepsInitialTurn; kk++)
     operating_point_->us[kk][0](0) = -0.5;
 
