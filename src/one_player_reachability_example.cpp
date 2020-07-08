@@ -71,14 +71,14 @@ static constexpr size_t kNumTimeSteps =
 static constexpr bool kAvoid = true;
 
 // Target radius.
-static constexpr float kTargetRadius = 2.0;
+static constexpr float kTargetRadius = 2.0;  // m
 
 // Input constraint.
-static constexpr float kOmegaMax = 1.0;
+static constexpr float kOmegaMax = 1.0;  // rad/s
 
 // Initial state.
-static constexpr float kP1InitialX = 1.75;      // m
-static constexpr float kP1InitialY = 1.75;      // m
+static constexpr float kP1InitialX = 1.75;     // m
+static constexpr float kP1InitialY = 1.75;     // m
 static constexpr float kP1InitialTheta = 0.0;  // rad
 
 static constexpr float kSpeed = 1.0;  // m/s

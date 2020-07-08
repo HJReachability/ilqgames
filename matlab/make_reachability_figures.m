@@ -1,8 +1,8 @@
 %% Script to compare ILQ with grid-based HJ reachability computation, and in larger
 %% example where comparison is not possible just approximate the reach set.
 
-%one_player_comparison();
-two_player_comparison();
+one_player_comparison();
+%two_player_comparison();
 
 function one_player_comparison()
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
