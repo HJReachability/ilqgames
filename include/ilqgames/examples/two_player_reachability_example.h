@@ -36,29 +36,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// One player reachability example. Single player choosing control to minimize
-// max distance (-ve) signed distance to a ball we're outside.
+// Two player reachability example. Protagonist choosing control to minimize
+// max distance (-ve) signed distance to a wall, and antagonist choosing
+// disturbance to maximize max signed distance.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLES_ONE_PLAYER_REACHABILITY_EXAMPLE_H
-#define ILQGAMES_EXAMPLES_ONE_PLAYER_REACHABILITY_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLES_TWO_PLAYER_REACHABILITY_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_TWO_PLAYER_REACHABILITY_EXAMPLE_H
 
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-class OnePlayerReachabilityExample : public TopDownRenderableProblem {
+class TwoPlayerReachabilityExample : public TopDownRenderableProblem {
  public:
-  ~OnePlayerReachabilityExample() {}
-  OnePlayerReachabilityExample(const SolverParams& params);
+  ~TwoPlayerReachabilityExample() {}
+  TwoPlayerReachabilityExample(const SolverParams& params);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;
   std::vector<float> Ys(const VectorXf& x) const;
   std::vector<float> Thetas(const VectorXf& x) const;
-};  // class OnePlayerReachabilityExample
+};  // class TwoPlayerReachabilityExample
 
 }  // namespace ilqgames
 

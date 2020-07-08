@@ -36,8 +36,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// One player reachability example. Single player choosing control to minimize
-// max distance (-ve) signed distance to a ball we're outside.
+// Two player reachability example. Protagonist choosing control to minimize
+// max distance (-ve) signed distance to a wall, and antagonist choosing
+// disturbance to maximize max signed distance.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -77,8 +78,8 @@ static constexpr float kTargetRadius = 2.0;
 static constexpr float kOmegaMax = 1.0;
 
 // Initial state.
-static constexpr float kP1InitialX = 1.75;      // m
-static constexpr float kP1InitialY = 1.75;      // m
+static constexpr float kP1InitialX = 1.75;     // m
+static constexpr float kP1InitialY = 1.75;     // m
 static constexpr float kP1InitialTheta = 0.0;  // rad
 
 static constexpr float kSpeed = 1.0;  // m/s
