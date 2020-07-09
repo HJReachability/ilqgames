@@ -51,7 +51,6 @@
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
-#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
 #include <math.h>
@@ -76,9 +75,9 @@ static constexpr float kAMax = 1.0;      // m/s/s
 static constexpr float kDMax = 0.5;      // m/s
 
 // Initial state.
-static constexpr float kInitialX = 1.75;     // m
-static constexpr float kInitialY = 1.75;     // m
-static constexpr float kInitialTheta = 0.0;  // rad
+static constexpr float kInitialX = 0.0;      // m
+static constexpr float kInitialY = -2.0;     // m
+static constexpr float kInitialTheta = 0.5;  // rad
 static constexpr float kInitialV = 1.0;      // m/s
 
 // State dimensions.
@@ -88,7 +87,7 @@ using Dyn = TwoPlayerUnicycle4D;
 TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
     const SolverParams& params) {
   // Create dynamics.
-  const auto dynamics = std::make_shared<TwoPlayerUnicycle4D>(kTimeStep);
+  const auto dynamics = std::make_shared<const TwoPlayerUnicycle4D>(kTimeStep);
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
@@ -130,20 +129,40 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   p2_cost.AddControlCost(1, p2_dy_cost);
 
   const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
-                                                  "Input Constraint (Max)");
+      std::make_shared<SingleDimensionConstraint>(
+          Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
   const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
-                                                  "Input Constraint (Min)");
+      std::make_shared<SingleDimensionConstraint>(
+          Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
   p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
   p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
+  const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      Dyn::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
+  const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      Dyn::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_a_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_a_min_constraint);
+
+  const auto p2_dx_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      Dyn::kDxIdx, kDMax, false, "Dx Constraint (Max)");
+  const auto p2_dx_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      Dyn::kDxIdx, -kDMax, true, "Dx Constraint (Min)");
+  p2_cost.AddControlConstraint(1, p2_dx_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_dx_min_constraint);
+
+  const auto p2_dy_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      Dyn::kDyIdx, kDMax, false, "Dy Constraint (Max)");
+  const auto p2_dy_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      Dyn::kDyIdx, -kDMax, true, "Dy Constraint (Min)");
+  p2_cost.AddControlConstraint(1, p2_dy_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
+
   // Target cost.
-  const Polyline2 circle =
-      DrawCircle(Point2(kP1TargetX, kP1TargetY), kTargetRadius, 10);
+  const Polyline2 boundary({Point2(100.0, 0.0), Point2(-100.0, 0.0)});
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
-      new Polyline2SignedDistanceCost(circle, {kP1XIdx, kP1YIdx}, kAvoid,
-                                      "Target"));
+      new Polyline2SignedDistanceCost(boundary, {Dyn::kPxIdx, Dyn::kPyIdx},
+                                      kAvoid, "Target"));
 
   p1_cost.AddStateCost(p1_target_cost);
 
@@ -157,17 +176,17 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
 
 inline std::vector<float> TwoPlayerReachabilityExample::Xs(
     const VectorXf& x) const {
-  return {x(kP1XIdx)};
+  return {x(Dyn::kPxIdx)};
 }
 
 inline std::vector<float> TwoPlayerReachabilityExample::Ys(
     const VectorXf& x) const {
-  return {x(kP1YIdx)};
+  return {x(Dyn::kPyIdx)};
 }
 
 inline std::vector<float> TwoPlayerReachabilityExample::Thetas(
     const VectorXf& x) const {
-  return {x(kP1ThetaIdx)};
+  return {x(Dyn::kThetaIdx)};
 }
 
 }  // namespace ilqgames
