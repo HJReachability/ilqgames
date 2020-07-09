@@ -45,12 +45,13 @@
 #include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
-#include <ilqgames/dynamics/two_player_unicycle.h>
+#include <ilqgames/dynamics/two_player_unicycle_4d.h>
 #include <ilqgames/examples/two_player_reachability_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
 #include <math.h>
