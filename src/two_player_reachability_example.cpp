@@ -47,6 +47,7 @@
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/two_player_unicycle_4d.h>
 #include <ilqgames/examples/two_player_reachability_example.h>
+#include <ilqgames/geometry/draw_shapes.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
@@ -61,13 +62,16 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;      // s
+static constexpr Time kTimeStep = 0.1;     // s
 static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Reach or avoid?
 static constexpr bool kAvoid = true;
+
+// Radius of circle to avoid.
+static constexpr kTargetRadius = 1.0;
 
 // Input constraint.
 static constexpr float kOmegaMax = 1.0;  // rad/s
@@ -159,12 +163,12 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
 
   // Target cost.
-  const Polyline2 boundary({Point2(100.0, 0.0), Point2(-100.0, 0.0)});
+  const Polyline2 circle = DrawCircle(Point2::Zero(), kTargetRadius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
-      new Polyline2SignedDistanceCost(boundary, {Dyn::kPxIdx, Dyn::kPyIdx},
+      new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
                                       kAvoid, "Target"));
   const std::shared_ptr<Polyline2SignedDistanceCost> p2_target_cost(
-      new Polyline2SignedDistanceCost(boundary, {Dyn::kPxIdx, Dyn::kPyIdx},
+      new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
                                       kAvoid, "Target"));
 
   p1_cost.AddStateCost(p1_target_cost);

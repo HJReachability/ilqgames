@@ -1,8 +1,8 @@
 %% Script to compare ILQ with grid-based HJ reachability computation, and in larger
 %% example where comparison is not possible just approximate the reach set.
 
-one_player_comparison();
-%two_player_comparison();
+%one_player_comparison();
+two_player_comparison();
 
 function one_player_comparison()
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
@@ -159,18 +159,17 @@ function two_player_comparison()
 %     compTraj = true <-- compute optimal trajectory
 
 %% Grid
-grid_min = [-4; -4; -pi]; % Lower corner of computation domain
-grid_max = [4; 4; pi];    % Upper corner of computation domain
-N = [41; 41; 41];         % Number of grid points per dimension
+grid_min = [-4; -4; -pi; -1.0]; % Lower corner of computation domain
+grid_max = [1; 1; pi; 2.0];    % Upper corner of computation domain
+N = [41; 41; 41; 21];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
 % Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic
 % state space dimensions
 
 %% target set
-R = 3.0;
-% data0 = shapeCylinder(grid,ignoreDims,center,radius)
-data0 = -shapeCylinder(g, 3, [0; 0; 0], R);
+R = 1.0;
+data0 = shapeCylinder(g, [3, 4], [0; 0; 0; 0], R);
 % also try shapeRectangleByCorners, shapeSphere, etc.
 
 %% time vector
@@ -182,20 +181,18 @@ tau = t0:dt:tMax;
 %% problem parameters
 
 % input bounds
-speed = 1;
+aMax = 1;
 wMax = 1;
-% do dStep1 here
+dMax = 0.5;
 
 % control trying to min or max value function?
 uMode = 'max';
-% do dStep2 here
-
+dMode = 'min';
 
 %% Pack problem parameters
 
 % Define dynamic system
-% obj = DubinsCar(x, wMax, speed, dMax)
-dCar = DubinsCar([0, 0, 0], wMax, speed); %do dStep3 here
+dCar = Plane4D([0, 0, 0, 0], wMax, [-aMax, aMax], dMax); %do dStep3 here
 
 % Put grid and dynamic systems into schemeData
 schemeData.grid = g;
@@ -312,12 +309,12 @@ end
 
 %% Compute ILQ trajectory for given example.
 function [traj, values] = run_ilqgames(exec, scale, control_penalty)
-  experiment_name = "simple_avoid_" + scale + "_" + control_penalty;
+  experiment_name = "two_player_avoid_" + scale + "_" + control_penalty;
   experiment_arg = " --experiment_name='" + experiment_name + "'";
 
   if ~experiment_already_run(char(experiment_name + "_feedback"))
     %% Stitch together the command for the executable.
-    instruction = "../bin/" + exec + " --trust_region_size=0.1 --noviz --save_feedback" + ...
+    instruction = "../bin/" + exec + " --trust_region_size=0.1 --noviz --save" + ...
                   " --last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
                   " --convergence_tolerance=0.01 --control_penalty=" + control_penalty + ...
                   " --initial_alpha_scaling=0.1";
@@ -325,7 +322,7 @@ function [traj, values] = run_ilqgames(exec, scale, control_penalty)
   end
 
   log_folder = "../logs/";
-  cd(char(log_folder + experiment_name + "_feedback"));
+  cd(char(log_folder + experiment_name));
   dirs = dir;
   last_iterate = "blah";
   for ii = 1:size(dirs)
@@ -336,8 +333,8 @@ function [traj, values] = run_ilqgames(exec, scale, control_penalty)
   end
   cd('../../matlab');
 
-  traj = load(log_folder + experiment_name + "_feedback/" + last_iterate + "/xs.txt");
-  values = load(log_folder + experiment_name + "_feedback/" + last_iterate + "/costs.txt");
+  traj = load(log_folder + experiment_name + last_iterate + "/xs.txt");
+  values = load(log_folder + experiment_name + last_iterate + "/costs.txt");
   for ii = 1:length(values)
     values(ii) = log(values(ii)) / scale;
   end
