@@ -266,7 +266,7 @@ end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
 scale_vals = linspace(0.1, 1.0, 5);
-control_penalty_vals = linspace(0.1, 100.0, 10);
+control_penalty_vals = linspace(1.0, 10.0, 5);
 
 nominal_scale = 1.0;
 nominal_control_penalty = 1.0;
