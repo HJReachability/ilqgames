@@ -274,13 +274,10 @@ bool PlayerCost::IsExponentiated(float* a) const {
   for (size_t ii = 1; ii < state_costs_.size(); ii++)
     check_exponential_constants(*state_costs_[ii]);
 
-  // for (const auto& pair : control_costs_)
-  //   check_exponential_constants(*pair.second);
-
   return is_exponentiated;
 }
 
-void PlayerCost::SetStateCostExponentialSign(float s) {
+void PlayerCost::SetExponentialSign(float s) {
   for (auto& cost : state_costs_) cost->SetExponentialSign(s);
 }
 

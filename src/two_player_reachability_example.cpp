@@ -62,7 +62,7 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
+static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -174,7 +174,7 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   CHECK_GT(params.exponential_constant, 0.0);
   p1_cost.SetExponentialConstant(params.exponential_constant);
   p2_cost.SetExponentialConstant(params.exponential_constant);
-  p2_cost.SetStateCostExponentialSign(-1.0);
+  p2_cost.SetExponentialSign(-1.0);
 
   // Set up solver.
   solver_.reset(

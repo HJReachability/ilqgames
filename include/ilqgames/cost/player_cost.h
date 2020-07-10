@@ -107,12 +107,12 @@ class PlayerCost {
   void ScaleConstraintBarrierWeights(float scale = 0.5);
   void ResetConstraintBarrierWeights();
 
-  // Set exponential constant for all costs associated to this player.
+  // Set exponential constant for all state costs associated to this player.
   void SetExponentialConstant(float a);
   bool IsExponentiated(float* a = nullptr) const;
 
   // Set exponential sign for state costs associated to this player.
-  void SetStateCostExponentialSign(float s);
+  void SetExponentialSign(float s);
 
   // Accessors.
   const std::vector<std::shared_ptr<Cost>>& StateCosts() const {

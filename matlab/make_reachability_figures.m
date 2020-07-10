@@ -106,7 +106,7 @@ value = eval_u(g, data(:,:,:,end), xinit);
 scale_vals = linspace(0.1, 1.0, 5);
 control_penalty_vals = linspace(1.0, 2.0, 5);
 
-nominal_scale = 1.0;
+nominal_scale = 0.5;
 nominal_control_penalty = 1.0;
 
 figure(3);
