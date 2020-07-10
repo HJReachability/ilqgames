@@ -111,6 +111,9 @@ class PlayerCost {
   void SetExponentialConstant(float a);
   bool IsExponentiated(float* a = nullptr) const;
 
+  // Set exponential sign for state costs associated to this player.
+  void SetStateCostExponentialSign(float s);
+
   // Accessors.
   const std::vector<std::shared_ptr<Cost>>& StateCosts() const {
     return state_costs_;

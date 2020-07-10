@@ -53,17 +53,18 @@ void Cost::ModifyDerivatives(Time t, const VectorXf& input, float* dx,
                              float* dydz) const {
   if (!IsExponentiated()) return;
 
+  const float scaling = exponential_constant_ * exponential_sign_;
+
   const float exp_cost = EvaluateExponential(t, input);
-  const float modified_dx = exponential_constant_ * *dx * exp_cost;
-  const float modified_ddx = exponential_constant_ * exp_cost *
-                             (*ddx + exponential_constant_ * *dx * *dx);
+  const float modified_dx = scaling * *dx * exp_cost;
+  const float modified_ddx = scaling * exp_cost * (*ddx + scaling * *dx * *dx);
 
   if (dy && ddy && dxdy) {
-    const float modified_dy = exponential_constant_ * *dy * exp_cost;
-    const float modified_ddy = exponential_constant_ * exp_cost *
-                               (*ddy + exponential_constant_ * *dy * *dy);
-    const float modified_dxdy = exponential_constant_ * exp_cost *
-                                (*dxdy + exponential_constant_ * *dx * *dy);
+    const float modified_dy = scaling * *dy * exp_cost;
+    const float modified_ddy =
+        scaling * exp_cost * (*ddy + scaling * *dy * *dy);
+    const float modified_dxdy =
+        scaling * exp_cost * (*dxdy + scaling * *dx * *dy);
 
     *dy = modified_dy;
     *ddy = modified_ddy;
@@ -71,11 +72,11 @@ void Cost::ModifyDerivatives(Time t, const VectorXf& input, float* dx,
   }
 
   if (dz && ddz && dxdz) {
-    const float modified_dz = exponential_constant_ * *dz * exp_cost;
-    const float modified_ddz = exponential_constant_ * exp_cost *
-                               (*ddz + exponential_constant_ * *dz * *dz);
-    const float modified_dxdz = exponential_constant_ * exp_cost *
-                                (*dxdz + exponential_constant_ * *dx * *dz);
+    const float modified_dz = scaling * *dz * exp_cost;
+    const float modified_ddz =
+        scaling * exp_cost * (*ddz + scaling * *dz * *dz);
+    const float modified_dxdz =
+        scaling * exp_cost * (*dxdz + scaling * *dx * *dz);
 
     *dz = modified_dz;
     *ddz = modified_ddz;
@@ -83,8 +84,8 @@ void Cost::ModifyDerivatives(Time t, const VectorXf& input, float* dx,
   }
 
   if (dz && dy) {
-    const float modified_dydz = exponential_constant_ * exp_cost *
-                                (*dydz + exponential_constant_ * *dy * *dz);
+    const float modified_dydz =
+        scaling * exp_cost * (*dydz + scaling * *dy * *dz);
     *dydz = modified_dydz;
   }
 

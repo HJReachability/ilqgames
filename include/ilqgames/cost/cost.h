@@ -59,7 +59,8 @@ class Cost {
   // for evaluating the exponentiated version of this cost, i.e. exp(a * cost)
   virtual float Evaluate(Time t, const VectorXf& input) const = 0;
   virtual float EvaluateExponential(Time t, const VectorXf& input) const {
-    return std::exp(exponential_constant_ * Evaluate(t, input));
+    return exponential_sign_ *
+           std::exp(exponential_constant_ * Evaluate(t, input));
   }
 
   // Quadraticize this cost at the given time and input, and add to the running
@@ -80,6 +81,12 @@ class Cost {
     return std::abs(exponential_constant_) > constants::kSmallNumber;
   }
 
+  // Set exponential sign. See below for further details.
+  void SetExponentialSign(float s) {
+    CHECK_EQ(std::abs(s), 1.0);
+    exponential_sign_ = s;
+  }
+
   // Reset the initial time associated to this cost.
   static void ResetInitialTime(Time t0) { initial_time_ = t0; };
 
@@ -89,7 +96,10 @@ class Cost {
 
  protected:
   explicit Cost(float weight, const std::string& name = "")
-      : weight_(weight), name_(name), exponential_constant_(0.0) {}
+      : weight_(weight),
+        name_(name),
+        exponential_constant_(0.0),
+        exponential_sign_(1.0) {}
 
   // Multiplicative weight associated to this cost.
   float weight_;
@@ -101,7 +111,7 @@ class Cost {
   static Time initial_time_;
 
   // Constant multiplying all costs before they get exponentiated in
-  // quadraticization.
+  // quadraticization,
   // NOTE: This defaults to zero but can be positive to get a max over time
   // approximation.
   // NOTE: This only takes effect during quadraticization, but not during cost
@@ -109,6 +119,10 @@ class Cost {
   // NOTE: When this is nearly zero, we just assume that exponentiated costs are
   // not active and resort to regular (non-exponentiated costs).
   float exponential_constant_;
+
+  // Sign of cost (+1 or -1) after exponentiation (only used if exponentiated).
+  // Used for adversarial players.
+  float exponential_sign_;
 
   // Modify existing derivatives if exponentiated.
   void ModifyDerivatives(Time t, const VectorXf& input, float* dx, float* ddx,

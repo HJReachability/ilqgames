@@ -61,8 +61,8 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 2.0;  // s
+static constexpr Time kTimeStep = 0.1;      // s
+static constexpr Time kTimeHorizon = 10.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -76,7 +76,7 @@ static constexpr float kDMax = 0.5;      // m/s
 
 // Initial state.
 static constexpr float kInitialX = 0.0;      // m
-static constexpr float kInitialY = -2.0;     // m
+static constexpr float kInitialY = -5.0;     // m
 static constexpr float kInitialTheta = 0.5;  // rad
 static constexpr float kInitialV = 1.0;      // m/s
 
@@ -163,15 +163,22 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(boundary, {Dyn::kPxIdx, Dyn::kPyIdx},
                                       kAvoid, "Target"));
+  const std::shared_ptr<Polyline2SignedDistanceCost> p2_target_cost(
+      new Polyline2SignedDistanceCost(boundary, {Dyn::kPxIdx, Dyn::kPyIdx},
+                                      kAvoid, "Target"));
 
   p1_cost.AddStateCost(p1_target_cost);
+  p2_cost.AddStateCost(p2_target_cost);
 
   // Make sure costs are exponentiated.
   CHECK_GT(params.exponential_constant, 0.0);
   p1_cost.SetExponentialConstant(params.exponential_constant);
+  p2_cost.SetExponentialConstant(params.exponential_constant);
+  p2_cost.SetStateCostExponentialSign(-1.0);
 
   // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost}, kTimeHorizon, params));
+  solver_.reset(
+      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> TwoPlayerReachabilityExample::Xs(

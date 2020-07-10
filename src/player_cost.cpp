@@ -283,4 +283,8 @@ bool PlayerCost::IsExponentiated(float* a) const {
   return is_exponentiated;
 }
 
+void PlayerCost::SetStateCostExponentialSign(float s) {
+  for (auto& cost : state_costs_) cost->SetExponentialSign(s);
+}
+
 }  // namespace ilqgames
