@@ -183,10 +183,8 @@ float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
 
-    if (IsExponentiated())
-      total_cost *= cost->EvaluateExponential(t, us[player]);
-    else
-      total_cost += cost->Evaluate(t, us[player]);
+    CHECK(!cost->IsExponentiated());
+    total_cost += cost->Evaluate(t, us[player]);
   }
 
   return total_cost;
@@ -262,7 +260,6 @@ void PlayerCost::ResetConstraintBarrierWeights() {
 
 void PlayerCost::SetExponentialConstant(float a) {
   for (auto& cost : state_costs_) cost->SetExponentialConstant(a);
-  for (auto& pair : control_costs_) pair.second->SetExponentialConstant(a);
 }
 
 bool PlayerCost::IsExponentiated(float* a) const {
@@ -277,8 +274,8 @@ bool PlayerCost::IsExponentiated(float* a) const {
   for (size_t ii = 1; ii < state_costs_.size(); ii++)
     check_exponential_constants(*state_costs_[ii]);
 
-  for (const auto& pair : control_costs_)
-    check_exponential_constants(*pair.second);
+  // for (const auto& pair : control_costs_)
+  //   check_exponential_constants(*pair.second);
 
   return is_exponentiated;
 }
