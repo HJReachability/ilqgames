@@ -71,7 +71,7 @@ static constexpr size_t kNumTimeSteps =
 static constexpr bool kAvoid = true;
 
 // Radius of circle to avoid.
-static constexpr kTargetRadius = 1.0;
+static constexpr float kTargetRadius = 1.0;
 
 // Input constraint.
 static constexpr float kOmegaMax = 1.0;  // rad/s
@@ -79,10 +79,10 @@ static constexpr float kAMax = 1.0;      // m/s/s
 static constexpr float kDMax = 0.5;      // m/s
 
 // Initial state.
-static constexpr float kInitialX = 0.0;      // m
-static constexpr float kInitialY = -5.0;     // m
-static constexpr float kInitialTheta = 0.5;  // rad
-static constexpr float kInitialV = 1.0;      // m/s
+static constexpr float kInitialX = 0.0;                   // m
+static constexpr float kInitialY = -3.5;                  // m
+static constexpr float kInitialTheta = 0.5 * M_PI - 0.1;  // rad
+static constexpr float kInitialV = 1.0;                   // m/s
 
 // State dimensions.
 using Dyn = TwoPlayerUnicycle4D;

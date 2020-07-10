@@ -119,7 +119,8 @@ hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
 for a = scale_vals
-  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
+  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", "_feedback", ...
+                                    a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
        'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) - V(x_1)= %1.2f$', a, ...
                               values(1) + value - 1.0));
@@ -129,7 +130,8 @@ hold off;
 l1 = legend('Location', 'SouthWest');
 
 figure(4);
-title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), 'Interpreter', 'latex');
+title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
+      'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
@@ -137,7 +139,8 @@ hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
 for epsilon = control_penalty_vals
-  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
+  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", "_feedback", ...
+                                    nominal_scale, epsilon);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
        sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) - V(x_1) = %1.2f$', epsilon, ...
@@ -161,7 +164,7 @@ function two_player_comparison()
 %% Grid
 grid_min = [-4; -4; -pi; -1.0]; % Lower corner of computation domain
 grid_max = [1; 1; pi; 2.0];    % Upper corner of computation domain
-N = [41; 41; 41; 21];         % Number of grid points per dimension
+N = [21; 21; 21; 11];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
 % Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic
@@ -192,7 +195,7 @@ dMode = 'min';
 %% Pack problem parameters
 
 % Define dynamic system
-dCar = Plane4D([0, 0, 0, 0], wMax, [-aMax, aMax], dMax); %do dStep3 here
+dCar = Plane4D([0; 0; 0; 0], wMax, [-aMax; aMax], [-dMax; dMax]); %do dStep3 here
 
 % Put grid and dynamic systems into schemeData
 schemeData.grid = g;
@@ -225,11 +228,11 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 
 %% Compute optimal trajectory from some initial state
 %set the initial state
-xinit = [1.75, 1.75, 0];
+xinit = [0, -3.5, pi / 2 - 0.1, 1.0];
 
 %%check if this initial state is in the BRS/BRT
 %value = eval_u(g, data, x)
-value = eval_u(g,data(:,:,:,end),xinit);
+value = eval_u(g,data(:,:,:,:,end),xinit);
 
 dCar.x = xinit; %set initial state of the dubins car
 
@@ -238,14 +241,14 @@ TrajextraArgs.visualize = false; %show plot
 TrajextraArgs.fig_num = 2; %figure number
 
 %%we want to see the first two dimensions (x and y)
-TrajextraArgs.projDim = [1 1 0];
+TrajextraArgs.projDim = [1 1 0 0];
 
 %%flip data time points so we start from the beginning of time
-dataTraj = flip(data,4);
+dataTraj = flip(data,5);
 
 [traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
 traj = traj'; % Transpose traj to have colums be different timesteps
-value = eval_u(g, data(:,:,:,end), xinit);
+value = eval_u(g, data(:,:,:,:,end), xinit);
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
 scale_vals = linspace(0.1, 1.0, 5);
@@ -264,7 +267,8 @@ hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
 for a = scale_vals
-  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", a, nominal_control_penalty);
+  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+                                    a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
        'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) - V(x_1)= %1.2f$', a, ...
                               values(1) + value - 1.0));
@@ -274,7 +278,8 @@ hold off;
 l1 = legend('Location', 'SouthWest');
 
 figure(4);
-title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), 'Interpreter', 'latex');
+title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
+      'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
@@ -282,7 +287,7 @@ hold on;
 plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
 
 for epsilon = control_penalty_vals
-  [ilq_traj, values] = run_ilqgames("one_player_reachability_example", nominal_scale, epsilon);
+  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", nominal_scale, epsilon);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
        sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) - V(x_1) = %1.2f$', epsilon, ...
@@ -308,13 +313,15 @@ function color = colormap(val, opts, reverse)
 end
 
 %% Compute ILQ trajectory for given example.
-function [traj, values] = run_ilqgames(exec, scale, control_penalty)
-  experiment_name = "two_player_avoid_" + scale + "_" + control_penalty;
-  experiment_arg = " --experiment_name='" + experiment_name + "'";
+function [traj, values] = run_ilqgames(exec, extra_suffix, scale, control_penalty)
+  experiment_name = exec + "_" + scale + "_" + control_penalty;
+  experiment_arg = " --experiment_name='" + experiment_name + extra_suffix + "'";
 
-  if ~experiment_already_run(char(experiment_name + "_feedback"))
+  save_flag = "--save" + extra_suffix;
+
+  if ~experiment_already_run(char(experiment_name + extra_suffix))
     %% Stitch together the command for the executable.
-    instruction = "../bin/" + exec + " --trust_region_size=0.1 --noviz --save" + ...
+    instruction = "../bin/" + exec + " --trust_region_size=0.1 --noviz " + save_flag + ...
                   " --last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
                   " --convergence_tolerance=0.01 --control_penalty=" + control_penalty + ...
                   " --initial_alpha_scaling=0.1";
@@ -322,7 +329,7 @@ function [traj, values] = run_ilqgames(exec, scale, control_penalty)
   end
 
   log_folder = "../logs/";
-  cd(char(log_folder + experiment_name));
+  cd(char(log_folder + experiment_name + extra_suffix));
   dirs = dir;
   last_iterate = "blah";
   for ii = 1:size(dirs)
@@ -333,8 +340,10 @@ function [traj, values] = run_ilqgames(exec, scale, control_penalty)
   end
   cd('../../matlab');
 
-  traj = load(log_folder + experiment_name + last_iterate + "/xs.txt");
-  values = load(log_folder + experiment_name + last_iterate + "/costs.txt");
+  traj = load(log_folder + experiment_name + extra_suffix + "/" + ...
+              last_iterate + "/xs.txt");
+  values = load(log_folder + experiment_name + extra_suffix + "/" + ...
+                last_iterate + "/costs.txt");
   for ii = 1:length(values)
     values(ii) = log(values(ii)) / scale;
   end
