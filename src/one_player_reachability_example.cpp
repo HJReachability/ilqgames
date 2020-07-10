@@ -54,9 +54,15 @@
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/types.h>
 
+#include <gflags/gflags.h>
 #include <math.h>
 #include <memory>
 #include <vector>
+
+// Initial state command-line flags.
+DEFINE_double(px0, 1.75, "Initial x-position (m).");
+DEFINE_double(py0, 1.75, "Initial y-position (m).");
+DEFINE_double(theta0, 0.0, "Initial heading (rad).");
 
 namespace ilqgames {
 
@@ -76,11 +82,7 @@ static constexpr float kTargetRadius = 2.0;  // m
 // Input constraint.
 static constexpr float kOmegaMax = 1.0;  // rad/s
 
-// Initial state.
-static constexpr float kP1InitialX = 1.75;     // m
-static constexpr float kP1InitialY = 1.75;     // m
-static constexpr float kP1InitialTheta = 0.0;  // rad
-
+// Speed.
 static constexpr float kSpeed = 1.0;  // m/s
 
 // Target position.
@@ -107,9 +109,9 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
-  x0_(kP1XIdx) = kP1InitialX;
-  x0_(kP1YIdx) = kP1InitialY;
-  x0_(kP1ThetaIdx) = kP1InitialTheta;
+  x0_(kP1XIdx) = FLAGS_px0;
+  x0_(kP1YIdx) = FLAGS_py0;
+  x0_(kP1ThetaIdx) = FLAGS_theta0;
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());

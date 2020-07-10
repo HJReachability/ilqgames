@@ -54,9 +54,16 @@
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/types.h>
 
+#include <gflags/gflags.h>
 #include <math.h>
 #include <memory>
 #include <vector>
+
+// Initial state command-line flags.
+DEFINE_double(px0, 0.0, "Initial x-position (m).");
+DEFINE_double(py0, -3.5, "Initial y-position (m).");
+DEFINE_double(theta0, 0.5 * M_PI - 0.1, "Initial heading (rad).");
+DEFINE_double(v0, 1.0, "Initial speed (m/s).");
 
 namespace ilqgames {
 
@@ -78,12 +85,6 @@ static constexpr float kOmegaMax = 1.0;  // rad/s
 static constexpr float kAMax = 1.0;      // m/s/s
 static constexpr float kDMax = 0.5;      // m/s
 
-// Initial state.
-static constexpr float kInitialX = 0.0;                   // m
-static constexpr float kInitialY = -3.5;                  // m
-static constexpr float kInitialTheta = 0.5 * M_PI - 0.1;  // rad
-static constexpr float kInitialV = 1.0;                   // m/s
-
 // State dimensions.
 using Dyn = TwoPlayerUnicycle4D;
 }  // anonymous namespace
@@ -95,10 +96,10 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
-  x0_(Dyn::kPxIdx) = kInitialX;
-  x0_(Dyn::kPyIdx) = kInitialY;
-  x0_(Dyn::kThetaIdx) = kInitialTheta;
-  x0_(Dyn::kVIdx) = kInitialV;
+  x0_(Dyn::kPxIdx) = FLAGS_px0;
+  x0_(Dyn::kPyIdx) = FLAGS_py0;
+  x0_(Dyn::kThetaIdx) = FLAGS_theta0;
+  x0_(Dyn::kVIdx) = FLAGS_v0;
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());

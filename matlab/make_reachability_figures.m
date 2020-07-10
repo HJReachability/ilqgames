@@ -10,6 +10,11 @@ function one_player_comparison(baseline)
 %     minWith = 'zero' <-- Tube (not set)
 %     compTraj = true <-- compute optimal trajectory
 
+
+%% Compute optimal trajectory from some initial state
+%set the initial state
+xinit = [1.75, 1.75, 0];
+
 if baseline
 %% Grid
 grid_min = [-4; -4; -pi]; % Lower corner of computation domain
@@ -79,10 +84,6 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 [data, tau2, ~] = ...
   HJIPDE_solve(data0, tau, schemeData, 'minVOverTime', HJIextraArgs);
 
-%% Compute optimal trajectory from some initial state
-%set the initial state
-xinit = [1.75, 1.75, 0];
-
 %%check if this initial state is in the BRS/BRT
 %value = eval_u(g, data, x)
 value = eval_u(g,data(:,:,:,end),xinit);
@@ -111,7 +112,7 @@ control_penalty_vals = linspace(1.0, 2.0, 5);
 nominal_scale = 0.5;
 nominal_control_penalty = 1.0;
 
-figure(3);
+figure;
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
@@ -128,9 +129,11 @@ if ~baseline
   value_format_string = "\\tilde V(x_1) = %1.2f$";
 end
 
+x0_flag = "--px0=" + xinit(1) + " --py0=" + xinit(2) + " --theta0=" + xinit(3);
+
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", "_feedback", ...
-                                    a, nominal_control_penalty);
+                                    a, nominal_control_penalty, x0_flag);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
        'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
                               values(1) + value - 1.0));
@@ -139,7 +142,7 @@ end
 hold off;
 l1 = legend('Location', 'SouthWest');
 
-figure(4);
+figure;
 title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
@@ -152,7 +155,7 @@ end
 
 for epsilon = control_penalty_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", "_feedback", ...
-                                    nominal_scale, epsilon);
+                                    nominal_scale, epsilon, x0_flag);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
        sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
@@ -173,16 +176,18 @@ function two_player_comparison(baseline)
 %     minWith = 'zero' <-- Tube (not set)
 %     compTraj = true <-- compute optimal trajectory
 
-if (baseline)
 %% Grid
 grid_min = [-4; -4; -pi; -1.0]; % Lower corner of computation domain
 grid_max = [1; 1; pi; 2.0];    % Upper corner of computation domain
 N = [21; 21; 21; 11];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
-% Use "g = createGrid(grid_min, grid_max, N);" if there are no periodic
-% state space dimensions
 
+%% Compute optimal trajectory from some initial state
+%set the initial state
+xinit = [0, -3.5, pi / 2 - 0.1, 1.0];
+
+if (baseline)
 %% target set
 R = 1.0;
 data0 = shapeCylinder(g, [3, 4], [0; 0; 0; 0], R);
@@ -239,10 +244,6 @@ HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 [data, tau2, ~] = ...
   HJIPDE_solve(data0, tau, schemeData, 'minVOverTime', HJIextraArgs);
 
-%% Compute optimal trajectory from some initial state
-%set the initial state
-xinit = [0, -3.5, pi / 2 - 0.1, 1.0];
-
 %%check if this initial state is in the BRS/BRT
 %value = eval_u(g, data, x)
 value = eval_u(g,data(:,:,:,:,end),xinit);
@@ -271,7 +272,7 @@ control_penalty_vals = linspace(1.0, 10.0, 5);
 nominal_scale = 1.0;
 nominal_control_penalty = 1.0;
 
-figure(3);
+figure;
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
@@ -288,9 +289,11 @@ if ~baseline
   value_format_string = "\\tilde V(x_1) = %1.2f$";
 end
 
+x0_flag = "--px0=" + xinit(1) + " --py0=" + xinit(2) + " --theta0=" + xinit(3) + " --v0=" + xinit(4);
+
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
-                                    a, nominal_control_penalty);
+                                    a, nominal_control_penalty, x0_flag);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
        'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
                               values(1) + value));
@@ -299,7 +302,7 @@ end
 hold off;
 l1 = legend('Location', 'SouthWest');
 
-figure(4);
+figure;
 title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
@@ -311,7 +314,8 @@ if baseline
 end
 
 for epsilon = control_penalty_vals
-  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", nominal_scale, epsilon);
+  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+                                    nominal_scale, epsilon, x0_flag);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
        sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
@@ -324,6 +328,28 @@ l2 = legend('Location', 'SouthWest');
 set(l1, 'Interpreter', 'latex');
 set(l2, 'Interpreter', 'latex');
 
+%% Reachable set plot.
+tilde_V = zeros(N([1, 2])');
+nominal_theta = pi / 2;
+nominal_v = 1.0;
+theta_idx = int64((nominal_theta - grid_min(3)) / g.dx(3));
+v_idx = int64((nominal_v - grid_min(4)) / g.dx(4));
+
+for x_idx = 1:N(1)
+  for y_idx = 1:N(2)
+    %% Unpack state.
+    x0 = [g.xs{1}(x_idx, y_idx, theta_idx, v_idx), g.xs{2}(x_idx, y_idx, theta_idx, v_idx), ...
+         nominal_theta, nominal_v];
+    x0_flag = "--px0=" + x0(1) + " --py0=" + x0(2) + " --theta0=" + x0(3) + " --v0=" + x0(4);
+
+    [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+                                      nominal_scale, nominal_control_penalty, x0_flag);
+    tilde_V(x_idx, y_idx) = values(1);
+  end
+end
+
+figure;
+surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), tilde_V);
 end
 
 %% Simple red-blue colormap.
@@ -337,10 +363,9 @@ function color = colormap(val, opts, reverse)
 end
 
 %% Compute ILQ trajectory for given example.
-function [traj, values] = run_ilqgames(exec, extra_suffix, scale, control_penalty)
-  experiment_name = exec + "_" + scale + "_" + control_penalty;
+function [traj, values] = run_ilqgames(exec, extra_suffix, scale, control_penalty, x0_flag)
+  experiment_name = exec + "_" + scale + "_" + control_penalty + x0_flag;
   experiment_arg = " --experiment_name='" + experiment_name + extra_suffix + "'";
-
   save_flag = "--save" + extra_suffix;
 
   if ~experiment_already_run(char(experiment_name + extra_suffix))
@@ -348,7 +373,7 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, scale, control_penalt
     instruction = "../bin/" + exec + " --trust_region_size=0.1 --noviz " + save_flag + ...
                   " --last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
                   " --convergence_tolerance=0.01 --control_penalty=" + control_penalty + ...
-                  " --initial_alpha_scaling=0.1";
+                  " --initial_alpha_scaling=0.1 " + x0_flag;
     system(char(instruction));
   end
 
