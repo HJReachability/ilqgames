@@ -1,15 +1,16 @@
 %% Script to compare ILQ with grid-based HJ reachability computation, and in larger
 %% example where comparison is not possible just approximate the reach set.
 
-%one_player_comparison();
-two_player_comparison();
+%one_player_comparison(false);
+two_player_comparison(false);
 
-function one_player_comparison()
+function one_player_comparison(baseline)
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
 %     uMode = 'min' <-- goal
 %     minWith = 'zero' <-- Tube (not set)
 %     compTraj = true <-- compute optimal trajectory
 
+if baseline
 %% Grid
 grid_min = [-4; -4; -pi]; % Lower corner of computation domain
 grid_max = [4; 4; pi];    % Upper corner of computation domain
@@ -101,6 +102,7 @@ dataTraj = flip(data,4);
 [traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
 traj = traj'; % Transpose traj to have colums be different timesteps
 value = eval_u(g, data(:,:,:,end), xinit);
+end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
 scale_vals = linspace(0.1, 1.0, 5);
@@ -116,13 +118,21 @@ xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
 hold on;
-plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+if baseline
+  plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+  value_format_string = '\\tilde V(x_1) - V(x_1) = %1.2f';
+end
+
+if ~baseline
+  value = 0.0;
+  value_format_string = "\\tilde V(x_1) = %1.2f$";
+end
 
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", "_feedback", ...
                                     a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-       'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) - V(x_1)= %1.2f$', a, ...
+       'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
                               values(1) + value - 1.0));
 end
 
@@ -136,14 +146,16 @@ xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
 hold on;
-plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+if (baseline)
+  plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+end
 
 for epsilon = control_penalty_vals
   [ilq_traj, values] = run_ilqgames("one_player_reachability_example", "_feedback", ...
                                     nominal_scale, epsilon);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
-       sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) - V(x_1) = %1.2f$', epsilon, ...
+       sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
                values(1) + value - 1.0));
 end
 
@@ -155,12 +167,13 @@ set(l2, 'Interpreter', 'latex');
 
 end
 
-function two_player_comparison()
+function two_player_comparison(baseline)
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
 %     uMode = 'min' <-- goal
 %     minWith = 'zero' <-- Tube (not set)
 %     compTraj = true <-- compute optimal trajectory
 
+if (baseline)
 %% Grid
 grid_min = [-4; -4; -pi; -1.0]; % Lower corner of computation domain
 grid_max = [1; 1; pi; 2.0];    % Upper corner of computation domain
@@ -249,6 +262,7 @@ dataTraj = flip(data,5);
 [traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dCar, TrajextraArgs);
 traj = traj'; % Transpose traj to have colums be different timesteps
 value = eval_u(g, data(:,:,:,:,end), xinit);
+end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
 scale_vals = linspace(0.1, 1.0, 5);
@@ -264,13 +278,21 @@ xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
 hold on;
-plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+if baseline
+  plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+  value_format_string = '\\tilde V(x_1) - V(x_1) = %1.2f';
+end
+
+if ~baseline
+  value = 0.0;
+  value_format_string = "\\tilde V(x_1) = %1.2f$";
+end
 
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
                                     a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-       'DisplayName', sprintf('$a = %1.2f, \\tilde V(x_1) - V(x_1)= %1.2f$', a, ...
+       'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
                               values(1) + value - 1.0));
 end
 
@@ -284,13 +306,15 @@ xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
 hold on;
-plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+if baseline
+  plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+end
 
 for epsilon = control_penalty_vals
   [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", nominal_scale, epsilon);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
-       sprintf('$\\epsilon = %1.2f, \\tilde V(x_1) - V(x_1) = %1.2f$', epsilon, ...
+       sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
                values(1) + value - 1.0));
 end
 
