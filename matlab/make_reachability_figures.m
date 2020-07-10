@@ -266,7 +266,7 @@ end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
 scale_vals = linspace(0.1, 1.0, 5);
-control_penalty_vals = linspace(1.0, 2.0, 5);
+control_penalty_vals = linspace(0.1, 100.0, 10);
 
 nominal_scale = 1.0;
 nominal_control_penalty = 1.0;
@@ -293,7 +293,7 @@ for a = scale_vals
                                     a, nominal_control_penalty);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
        'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
-                              values(1) + value - 1.0));
+                              values(1) + value));
 end
 
 hold off;
@@ -315,7 +315,7 @@ for epsilon = control_penalty_vals
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
        sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
-               values(1) + value - 1.0));
+               values(1) + value));
 end
 
 hold off;
