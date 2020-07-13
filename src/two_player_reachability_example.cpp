@@ -77,9 +77,6 @@ static constexpr size_t kNumTimeSteps =
 // Reach or avoid?
 static constexpr bool kAvoid = true;
 
-// Radius of circle to avoid.
-static constexpr float kTargetRadius = 1.0;
-
 // Input constraint.
 static constexpr float kOmegaMax = 1.0;  // rad/s
 static constexpr float kAMax = 1.0;      // m/s/s
@@ -164,7 +161,9 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
 
   // Target cost.
-  const Polyline2 circle = DrawCircle(Point2::Zero(), kTargetRadius, 10);
+  const float target_radius =
+      std::hypot(FLAGS_px0, FLAGS_py0 - 0.5 * FLAGS_v0 * kTimeHorizon) + 0.1;
+  const Polyline2 circle = DrawCircle(Point2::Zero(), target_radius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
                                       kAvoid, "Target"));

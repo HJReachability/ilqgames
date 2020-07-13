@@ -2,7 +2,7 @@
 %% example where comparison is not possible just approximate the reach set.
 
 %one_player_comparison(false);
-two_player_comparison(false);
+two_player_comparison(true);
 
 function one_player_comparison(baseline)
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
@@ -177,21 +177,19 @@ function two_player_comparison(baseline)
 %     compTraj = true <-- compute optimal trajectory
 
 %% Grid
-grid_min = [-4; -4; -pi; -1.0]; % Lower corner of computation domain
-grid_max = [1; 1; pi; 2.0];    % Upper corner of computation domain
-N = [21; 21; 21; 11];         % Number of grid points per dimension
+grid_min = [-2; -8; -pi; -1.0]; % Lower corner of computation domain
+grid_max = [2; 1; pi; 2.0];    % Upper corner of computation domain
+N = [23; 23; 11; 11];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
 g = createGrid(grid_min, grid_max, N, pdDims);
 
 %% Compute optimal trajectory from some initial state
 %set the initial state
-xinit = [0, -3.5, pi / 2 - 0.1, 1.0];
+xinit = [0, -7, pi / 2 - 0.1, 1.0];
 
-if (baseline)
 %% target set
 R = 1.0;
 data0 = shapeCylinder(g, [3, 4], [0; 0; 0; 0], R);
-% also try shapeRectangleByCorners, shapeSphere, etc.
 
 %% time vector
 t0 = 0;
@@ -199,6 +197,7 @@ tMax = 2;
 dt = 0.1;
 tau = t0:dt:tMax;
 
+if (baseline)
 %% problem parameters
 
 % input bounds
@@ -266,11 +265,11 @@ value = eval_u(g, data(:,:,:,:,end), xinit);
 end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(0.1, 1.0, 5);
-control_penalty_vals = linspace(1.0, 10.0, 5);
+scale_vals = linspace(1.0, 5.0, 5);
+control_penalty_vals = linspace(0.1, 1.0, 5);
 
 nominal_scale = 1.0;
-nominal_control_penalty = 1.0;
+nominal_control_penalty = 0.5;
 
 figure;
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
@@ -290,13 +289,13 @@ if ~baseline
 end
 
 x0_flag = "--px0=" + xinit(1) + " --py0=" + xinit(2) + " --theta0=" + xinit(3) + " --v0=" + xinit(4);
-
+value_to_add = R - sqrt(xinit(1).^2 + xinit(2).^2) + 0.5 * xinit(4) * tMax - 0.1;
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
                                     a, nominal_control_penalty, x0_flag);
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
        'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
-                              values(1) + value));
+                              values(1) + value + value_to_add));
 end
 
 hold off;
@@ -319,7 +318,7 @@ for epsilon = control_penalty_vals
   plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
        colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
        sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
-               values(1) + value));
+               values(1) + value + value_to_add));
 end
 
 hold off;
@@ -329,27 +328,31 @@ set(l1, 'Interpreter', 'latex');
 set(l2, 'Interpreter', 'latex');
 
 %% Reachable set plot.
-tilde_V = zeros(N([1, 2])');
-nominal_theta = pi / 2;
-nominal_v = 1.0;
-theta_idx = int64((nominal_theta - grid_min(3)) / g.dx(3));
-v_idx = int64((nominal_v - grid_min(4)) / g.dx(4));
+make_surf_plot = true;
+if make_surf_plot
+  tilde_V = zeros(N([1, 2])');
+  nominal_theta = pi / 2;
+  nominal_v = 1.0;
+  theta_idx = int64((nominal_theta - grid_min(3)) / g.dx(3));
+  v_idx = int64((nominal_v - grid_min(4)) / g.dx(4));
 
-for x_idx = 1:N(1)
-  for y_idx = 1:N(2)
-    %% Unpack state.
-    x0 = [g.xs{1}(x_idx, y_idx, theta_idx, v_idx), g.xs{2}(x_idx, y_idx, theta_idx, v_idx), ...
-         nominal_theta, nominal_v];
-    x0_flag = "--px0=" + x0(1) + " --py0=" + x0(2) + " --theta0=" + x0(3) + " --v0=" + x0(4);
+  for x_idx = 1:N(1)
+    for y_idx = 1:N(2)
+      %% Unpack state.
+      x0 = [g.xs{1}(x_idx, y_idx, theta_idx, v_idx), g.xs{2}(x_idx, y_idx, theta_idx, v_idx), ...
+            nominal_theta, nominal_v];
+      x0_flag = "--px0=" + x0(1) + " --py0=" + x0(2) + " --theta0=" + x0(3) + " --v0=" + x0(4);
 
-    [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
-                                      nominal_scale, nominal_control_penalty, x0_flag);
-    tilde_V(x_idx, y_idx) = values(1);
+      [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+                                        nominal_scale, nominal_control_penalty, x0_flag);
+      tilde_V(x_idx, y_idx) = values(1) + value_to_add;
+    end
   end
+
+  figure;
+  surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), tilde_V);
 end
 
-figure;
-surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), tilde_V);
 end
 
 %% Simple red-blue colormap.
