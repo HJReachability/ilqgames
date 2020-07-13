@@ -177,7 +177,7 @@ function two_player_comparison(baseline)
 %     compTraj = true <-- compute optimal trajectory
 
 %% Grid
-grid_min = [-2; -8; -pi; -1.0]; % Lower corner of computation domain
+grid_min = [0; -8; -pi; 0.0]; % Lower corner of computation domain
 grid_max = [2; 1; pi; 2.0];    % Upper corner of computation domain
 N = [23; 23; 11; 11];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
@@ -185,7 +185,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 
 %% Compute optimal trajectory from some initial state
 %set the initial state
-xinit = [0, -7, pi / 2 - 0.1, 1.0];
+xinit = [0, -7, pi / 2 - 1e-4, 0.5];
 
 %% target set
 R = 1.0;
@@ -193,8 +193,8 @@ data0 = shapeCylinder(g, [3, 4], [0; 0; 0; 0], R);
 
 %% time vector
 t0 = 0;
-tMax = 2;
-dt = 0.1;
+tMax = 5;
+dt = 0.25;
 tau = t0:dt:tMax;
 
 if (baseline)
@@ -265,11 +265,11 @@ value = eval_u(g, data(:,:,:,:,end), xinit);
 end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(1.0, 5.0, 5);
-control_penalty_vals = linspace(0.1, 1.0, 5);
+scale_vals = linspace(0.5, 1.0, 5);
+control_penalty_vals = linspace(1.0, 5.0, 5);
 
 nominal_scale = 1.0;
-nominal_control_penalty = 0.5;
+nominal_control_penalty = 1.0;
 
 figure;
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
@@ -289,7 +289,9 @@ if ~baseline
 end
 
 x0_flag = "--px0=" + xinit(1) + " --py0=" + xinit(2) + " --theta0=" + xinit(3) + " --v0=" + xinit(4);
-value_to_add = R - sqrt(xinit(1).^2 + xinit(2).^2) + 0.5 * xinit(4) * tMax - 0.1;
+distance_traveled = xinit(4) * tMax * 0.5;
+value_to_add = R - sqrt((xinit(1) + distance_traveled * cos(xinit(3))).^2 + ...
+                        (xinit(2) + distance_traveled * sin(xinit(3))).^2);
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
                                     a, nominal_control_penalty, x0_flag);
@@ -376,7 +378,7 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, scale, control_penalt
     instruction = "../bin/" + exec + " --trust_region_size=0.1 --noviz " + save_flag + ...
                   " --last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
                   " --convergence_tolerance=0.01 --control_penalty=" + control_penalty + ...
-                  " --initial_alpha_scaling=0.1 " + x0_flag;
+                  " --initial_alpha_scaling=0.05 " + x0_flag;
     system(char(instruction));
   end
 

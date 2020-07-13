@@ -69,8 +69,8 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 2.0;  // s
+static constexpr Time kTimeStep = 0.25;     // s
+static constexpr Time kTimeHorizon = 5.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -161,8 +161,10 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
 
   // Target cost.
+  const float kDistanceTraveled = 0.5 * FLAGS_v0 * kTimeHorizon;
   const float target_radius =
-      std::hypot(FLAGS_px0, FLAGS_py0 - 0.5 * FLAGS_v0 * kTimeHorizon) + 0.1;
+      std::hypot(FLAGS_px0 + kDistanceTraveled * std::cos(FLAGS_theta0),
+                 FLAGS_py0 + kDistanceTraveled * std::sin(FLAGS_theta0));
   const Polyline2 circle = DrawCircle(Point2::Zero(), target_radius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
