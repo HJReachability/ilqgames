@@ -177,7 +177,7 @@ function two_player_comparison(baseline)
 %     compTraj = true <-- compute optimal trajectory
 
 %% Grid
-grid_min = [0; -8; -pi; 0.0]; % Lower corner of computation domain
+grid_min = [-1; -8; -pi; 0.0]; % Lower corner of computation domain
 grid_max = [2; 1; pi; 2.0];    % Upper corner of computation domain
 N = [23; 23; 11; 11];         % Number of grid points per dimension
 pdDims = 3;               % 3rd dimension is periodic
@@ -185,7 +185,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 
 %% Compute optimal trajectory from some initial state
 %set the initial state
-xinit = [0, -7, pi / 2 - 1e-4, 0.5];
+xinit = [0, -7, pi / 2 - 0.1, 0.5];
 
 %% target set
 R = 1.0;
@@ -280,7 +280,7 @@ ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 hold on;
 if baseline
   plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
-  value_format_string = '\\tilde V(x_1) - V(x_1) = %1.2f';
+  value_format_string = '\\tilde V(x_1) - V(x_1) = %1.2f$';
 end
 
 if ~baseline
@@ -352,7 +352,21 @@ if make_surf_plot
   end
 
   figure;
-  surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), tilde_V);
+  title('Comparison of Value Functions');
+  xlabel('$p_x$ (m)', 'Interpreter', 'latex');
+  ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+  zlabel('Value');
+  hold on;
+  if (baseline)
+    s1 = surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), -data0(:,:,theta_idx,v_idx,end), ...
+         'FaceColor', 'green', 'FaceAlpha', 0.5, 'EdgeColor', 'none');
+  end
+
+  s2 = surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), tilde_V);
+  hold off;
+
+  l3 = legend([s1, s2], {'$V(x_1)$', '$\\tilde V(x_1)$'});
+  set(l3, 'Interpreter', 'latex');
 end
 
 end
@@ -377,7 +391,7 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, scale, control_penalt
     %% Stitch together the command for the executable.
     instruction = "../bin/" + exec + " --trust_region_size=0.1 --noviz " + save_flag + ...
                   " --last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
-                  " --convergence_tolerance=0.01 --control_penalty=" + control_penalty + ...
+                  " --convergence_tolerance=0.001 --control_penalty=" + control_penalty + ...
                   " --initial_alpha_scaling=0.05 " + x0_flag;
     system(char(instruction));
   end
