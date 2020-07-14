@@ -2,7 +2,7 @@
 %% example where comparison is not possible just approximate the reach set.
 
 %one_player_comparison(false);
-two_player_comparison(false);
+two_player_comparison(true);
 
 function one_player_comparison(baseline)
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
@@ -185,7 +185,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 
 %% Compute optimal trajectory from some initial state
 %set the initial state
-xinit = [0, -7, pi / 2 - 0.1, 0.5];
+xinit = [0, 0, pi / 2 - 0.1, 0.5];
 
 %% target set
 R = 1.0;

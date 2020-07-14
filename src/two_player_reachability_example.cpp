@@ -161,10 +161,10 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
 
   // Target cost.
-  const float kDistanceTraveled = 0.5 * FLAGS_v0 * kTimeHorizon;
+  const float distance_traveled = 0.5 * FLAGS_v0 * kTimeHorizon;
   const float target_radius =
-      std::hypot(FLAGS_px0 + kDistanceTraveled * std::cos(FLAGS_theta0),
-                 FLAGS_py0 + kDistanceTraveled * std::sin(FLAGS_theta0));
+      std::hypot(FLAGS_px0 + distance_traveled * std::cos(FLAGS_theta0),
+                 FLAGS_py0 + distance_traveled * std::sin(FLAGS_theta0));
   const Polyline2 circle = DrawCircle(Point2::Zero(), target_radius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
