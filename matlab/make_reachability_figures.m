@@ -2,7 +2,7 @@
 %% example where comparison is not possible just approximate the reach set.
 
 %one_player_comparison(false);
-two_player_comparison(true);
+two_player_comparison(false);
 
 function one_player_comparison(baseline)
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
@@ -193,8 +193,8 @@ data0 = shapeCylinder(g, [3, 4], [0; 0; 0; 0], R);
 
 %% time vector
 t0 = 0;
-tMax = 5;
-dt = 0.25;
+tMax = 2;
+dt = 0.1;
 tau = t0:dt:tMax;
 
 if (baseline)
@@ -266,10 +266,10 @@ end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
 scale_vals = linspace(0.5, 1.0, 5);
-control_penalty_vals = linspace(1.0, 5.0, 5);
+control_penalty_vals = linspace(0.1, 1.0, 5);
 
-nominal_scale = 1.0;
-nominal_control_penalty = 1.0;
+nominal_scale = 0.75;
+nominal_control_penalty = 0.5;
 
 figure;
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
@@ -344,6 +344,9 @@ if make_surf_plot
       x0 = [g.xs{1}(x_idx, y_idx, theta_idx, v_idx), g.xs{2}(x_idx, y_idx, theta_idx, v_idx), ...
             nominal_theta, nominal_v];
       x0_flag = "--px0=" + x0(1) + " --py0=" + x0(2) + " --theta0=" + x0(3) + " --v0=" + x0(4);
+      distance_traveled = x0(4) * tMax * 0.5;
+      value_to_add = R - sqrt((x0(1) + distance_traveled * cos(x0(3))).^2 + ...
+                              (x0(2) + distance_traveled * sin(x0(3))).^2);
 
       [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
                                         nominal_scale, nominal_control_penalty, x0_flag);
@@ -352,20 +355,27 @@ if make_surf_plot
   end
 
   figure;
-  title('Comparison of Value Functions');
+  title(sprintf('Comparison of Value Functions $(a = %1.2f, \\epsilon = %1.2f)$', ...
+                nominal_scale, nominal_control_penalty), 'Interpreter', 'latex');
   xlabel('$p_x$ (m)', 'Interpreter', 'latex');
   ylabel('$p_y$ (m)', 'Interpreter', 'latex');
   zlabel('Value');
   hold on;
   if (baseline)
-    s1 = surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), -data0(:,:,theta_idx,v_idx,end), ...
-         'FaceColor', 'green', 'FaceAlpha', 0.5, 'EdgeColor', 'none');
+    s1 = surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), ...
+              -data0(:,:,theta_idx,v_idx,end), 'FaceColor', 'green', 'FaceAlpha', ...
+              0.5, 'EdgeColor', 'none');
   end
 
   s2 = surf(g.xs{1}(:, :, theta_idx, v_idx), g.xs{2}(:, :, theta_idx, v_idx), tilde_V);
   hold off;
 
-  l3 = legend([s1, s2], {'$V(x_1)$', '$\\tilde V(x_1)$'});
+  if baseline
+    l3 = legend([s1, s2], {'$V(x_1)$', '$\tilde V(x_1)$'});
+  else
+    l3 = legend([s2], {'$\tilde V(x_1)$'});
+  end
+
   set(l3, 'Interpreter', 'latex');
 end
 
