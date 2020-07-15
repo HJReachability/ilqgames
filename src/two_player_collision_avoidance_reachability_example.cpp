@@ -56,30 +56,26 @@
 #include <memory>
 #include <vector>
 
+// Initial state command-line flags.
+DEFINE_double(px0, 0.0, "Initial x-position (m).");
+DEFINE_double(py0, -5.0, "Initial y-position (m).");
+
 namespace ilqgames {
 
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 5.0;  // s
+static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
-// Exponential constant.
-static constexpr float kExponentialConstant = 3.0;
-
-// Cost weights.
-static constexpr float kControlCostWeight = 1.0;
-
 // Initial state.
-static constexpr float kP1InitialX = 0.0;                // m
-static constexpr float kP1InitialY = -5.0;               // m
-static constexpr float kP1InitialHeading = 0.95 * M_PI;  // rad
-static constexpr float kP1InitialSpeed = 10.0;           // m/s
-static constexpr float kP2InitialX = 0.0;                // m
-static constexpr float kP2InitialY = 5.0;                // m
-static constexpr float kP2InitialHeading = M_PI;         // rad
-static constexpr float kP2InitialSpeed = 10.0;           // m/s
+static constexpr float kP1InitialHeading = 0.1;  // rad
+static constexpr float kP1InitialSpeed = 5.0;    // m/s
+static constexpr float kP2InitialX = 0.0;        // m
+static constexpr float kP2InitialY = 0.0;        // m
+static constexpr float kP2InitialHeading = 0.0;  // rad
+static constexpr float kP2InitialSpeed = 5.0;    // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar5D;
@@ -108,8 +104,8 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
-  x0_(kP1XIdx) = kP1InitialX;
-  x0_(kP1YIdx) = kP1InitialY;
+  x0_(kP1XIdx) = FLAGS_px0;
+  x0_(kP1YIdx) = FLAGS_py0;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
   x0_(kP1VIdx) = kP1InitialSpeed;
   x0_(kP2XIdx) = kP2InitialX;
@@ -130,14 +126,14 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
   PlayerCost p1_cost("P1"), p2_cost("P2");
 
   // Penalize control effort.
-  const auto control_cost =
-      std::make_shared<QuadraticCost>(kControlCostWeight, -1, 0.0, "Steering");
+  const auto control_cost = std::make_shared<QuadraticCost>(
+      params.control_cost_weight, -1, 0.0, "Steering");
   p1_cost.AddControlCost(0, control_cost);
   p2_cost.AddControlCost(1, control_cost);
 
   // Collision-avoidance cost.
   auto p1_position = [](Time t) {
-    return Point2(kP1InitialX, kP1InitialY) +
+    return Point2(FLAGS_px0, FLAGS_py0) +
            t * kP1InitialSpeed *
                Point2(std::cos(kP1InitialHeading), std::sin(kP1InitialHeading));
   };  // p1_position
@@ -159,8 +155,8 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
   p2_cost.AddStateCost(collision_avoidance_cost);
 
   // Make sure costs are exponentiated.
-  p1_cost.SetExponentialConstant(kExponentialConstant);
-  p2_cost.SetExponentialConstant(kExponentialConstant);
+  p1_cost.SetExponentialConstant(params.exponential_constant);
+  p2_cost.SetExponentialConstant(params.exponential_constant);
 
   // Set up solver.
   solver_.reset(
