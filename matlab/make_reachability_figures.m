@@ -1,9 +1,7 @@
 %% Script to compare ILQ with grid-based HJ reachability computation, and in larger
 %% example where comparison is not possible just approximate the reach set.
 
-%one_player_comparison(true);
-%two_player_comparison(true);
-two_player_collision_avoidance();
+two_player_comparison(false);
 
 function one_player_comparison(baseline)
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
@@ -186,7 +184,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 
 %% Compute optimal trajectory from some initial state
 %set the initial state
-xinit = [0, 0, pi / 2 - 0.1, 0.5];
+xinit = [0, -1.5, pi / 4, 0.5];
 
 %% target set
 R = 1.0;
@@ -202,7 +200,7 @@ if (baseline)
 %% problem parameters
 
 % input bounds
-aMax = 1;
+aMax = 0.1;
 wMax = 1;
 dMax = 0.5;
 
@@ -266,11 +264,11 @@ value = eval_u(g, data(:,:,:,:,end), xinit);
 end
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(0.5, 1.0, 5);
-control_penalty_vals = linspace(0.1, 1.0, 5);
+scale_vals = linspace(1.0, 10.0, 5);
+control_penalty_vals = linspace(1.0, 10.0, 5);
 
-nominal_scale = 0.75;
-nominal_control_penalty = 0.5;
+nominal_scale = 5.0;
+nominal_control_penalty = 5.0;
 
 figure;
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
@@ -290,9 +288,11 @@ if ~baseline
 end
 
 x0_flag = "--px0=" + xinit(1) + " --py0=" + xinit(2) + " --theta0=" + xinit(3) + " --v0=" + xinit(4);
-distance_traveled = xinit(4) * tMax * 0.5;
-value_to_add = R - sqrt((xinit(1) + distance_traveled * cos(xinit(3))).^2 + ...
-                        (xinit(2) + distance_traveled * sin(xinit(3))).^2);
+%%distance_traveled = xinit(4) * tMax * 0.5;
+%%value_to_add = R - sqrt((xinit(1) + distance_traveled * cos(xinit(3))).^2 + ...
+%%                        (xinit(2) + distance_traveled * sin(xinit(3))).^2);
+value_to_add = R + xinit(2);
+
 for a = scale_vals
   [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
                                     a, nominal_control_penalty, x0_flag);
@@ -331,7 +331,7 @@ set(l1, 'Interpreter', 'latex');
 set(l2, 'Interpreter', 'latex');
 
 %% Reachable set plot.
-make_surf_plot = true;
+make_surf_plot = false;
 if make_surf_plot
   tilde_V = zeros(N([1, 2])');
   nominal_theta = pi / 2;
@@ -380,75 +380,6 @@ if make_surf_plot
   set(l3, 'Interpreter', 'latex');
 end
 
-end
-
-function two_player_collision_avoidance()
-  %% Grid
-  grid_min = [-5; -6]; % Lower corner of computation domain
-  grid_max = [5; -1];    % Upper corner of computation domain
-  N = [41; 41];         % Number of grid points per dimension
-  g = createGrid(grid_min, grid_max, N);
-
-  %% Speed and time.
-  speed = 5;
-  tMax = 2;
-  theta0 = 0.1;
-
-  %% Compute optimal trajectory from some initial state
-  %set the initial state
-  xinit = [0.0, -5.0];
-
-  %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-  scale_vals = linspace(0.1, 0.5, 5);
-  control_penalty_vals = linspace(0.1, 5.0, 5);
-
-  nominal_scale = 0.5;
-  nominal_control_penalty = 1.0;
-
-  figure;
-  title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
-        'Interpreter', 'latex');
-  xlabel('$p_x$ (m)', 'Interpreter', 'latex');
-  ylabel('$p_y$ (m)', 'Interpreter', 'latex');
-
-  hold on;
-  value_format_string = "\\tilde V(x_1) = %1.2f$";
-  x0_flag = "--px0=" + xinit(1) + " --py0=" + xinit(2);
-  distance_traveled = speed * tMax * 0.5;
-  value_to_add = 5.0 - sqrt((xinit(1) + distance_traveled * cos(theta0) - distance_traveled).^2 + ...
-                            (xinit(2) + distance_traveled * sin(theta0)));
-  for a = scale_vals
-    [ilq_traj, values] = run_ilqgames("two_player_collision_avoidance_reachability_example", "", ...
-                                      a, nominal_control_penalty, x0_flag);
-    plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-         'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
-                                values(1) + value_to_add));
-  end
-
-  hold off;
-  l1 = legend('Location', 'SouthWest');
-
-  figure;
-  title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
-        'Interpreter', 'latex');
-  xlabel('$p_x$ (m)', 'Interpreter', 'latex');
-  ylabel('$p_y$ (m)', 'Interpreter', 'latex');
-
-  hold on;
-  for epsilon = control_penalty_vals
-    [ilq_traj, values] = run_ilqgames("two_player_collision_avoidance_reachability_example", "", ...
-                                      nominal_scale, epsilon, x0_flag);
-    plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
-         colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
-         sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
-                 values(1) + value_to_add));
-  end
-
-  hold off;
-  l2 = legend('Location', 'SouthWest');
-
-  set(l1, 'Interpreter', 'latex');
-  set(l2, 'Interpreter', 'latex');
 end
 
 %% Simple red-blue colormap.

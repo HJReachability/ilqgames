@@ -61,8 +61,8 @@
 
 // Initial state command-line flags.
 DEFINE_double(px0, 0.0, "Initial x-position (m).");
-DEFINE_double(py0, -3.5, "Initial y-position (m).");
-DEFINE_double(theta0, 0.5 * M_PI - 0.1, "Initial heading (rad).");
+DEFINE_double(py0, -1.5, "Initial y-position (m).");
+DEFINE_double(theta0, M_PI / 4.0, "Initial heading (rad).");
 DEFINE_double(v0, 1.0, "Initial speed (m/s).");
 
 namespace ilqgames {
@@ -78,12 +78,16 @@ static constexpr size_t kNumTimeSteps =
 static constexpr bool kAvoid = true;
 
 // Input constraint.
-static constexpr float kOmegaMax = 1.0;  // rad/s
+static constexpr float kOmegaMax = 0.1;  // rad/s
 static constexpr float kAMax = 1.0;      // m/s/s
 static constexpr float kDMax = 0.5;      // m/s
 
 // State dimensions.
 using Dyn = TwoPlayerUnicycle4D;
+
+// Regularization.
+static constexpr float kStateRegularization = 10.0;
+static constexpr float kControlRegularization = 10.0;
 }  // anonymous namespace
 
 TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
@@ -111,7 +115,8 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
     operating_point_->us[kk][0](0) = -0.5;
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
+  PlayerCost p1_cost("P1", kStateRegularization, kControlRegularization),
+      p2_cost("P2", kStateRegularization, kControlRegularization);
 
   // Penalize and constrain control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
@@ -161,10 +166,11 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
 
   // Target cost.
-  const float distance_traveled = 0.5 * FLAGS_v0 * kTimeHorizon;
-  const float target_radius =
-      std::hypot(FLAGS_px0 + distance_traveled * std::cos(FLAGS_theta0),
-                 FLAGS_py0 + distance_traveled * std::sin(FLAGS_theta0));
+  //  const float distance_traveled = 0.5 * FLAGS_v0 * kTimeHorizon;
+  // const float target_radius =
+  //     std::hypot(FLAGS_px0 + distance_traveled * std::cos(FLAGS_theta0),
+  //                FLAGS_py0 + distance_traveled * std::sin(FLAGS_theta0));
+  const float target_radius = -FLAGS_py0;
   const Polyline2 circle = DrawCircle(Point2::Zero(), target_radius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
