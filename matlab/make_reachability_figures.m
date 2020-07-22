@@ -1,7 +1,9 @@
 %% Script to compare ILQ with grid-based HJ reachability computation, and in larger
 %% example where comparison is not possible just approximate the reach set.
 
-two_player_comparison(false);
+%one_player_comparison(false);
+%two_player_comparison(false);
+collision_avoidance_example();
 
 function one_player_comparison(baseline)
 % Run Backward Reachable Tube (BRT) with a goal, then optimal trajectory
@@ -379,7 +381,65 @@ if make_surf_plot
 
   set(l3, 'Interpreter', 'latex');
 end
+end
 
+
+function collision_avoidance_example()
+%% Compute ILQ trajectory for same problem with different parameters and overlay plots.
+scale_vals = linspace(1.0, 10.0, 5);
+control_penalty_vals = linspace(1.0, 10.0, 5);
+
+nominal_scale = 5.0;
+nominal_control_penalty = 5.0;
+
+figure;
+title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
+      'Interpreter', 'latex');
+xlabel('$p_x$ (m)', 'Interpreter', 'latex');
+ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+
+hold on;
+value = 0.0;
+value_format_string = "\\tilde V(x_1) = %1.2f$";
+
+value_to_add = 5.0;
+
+for a = scale_vals
+  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+                                    a, nominal_control_penalty, x0_flag);
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
+       'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
+                              values(1) + value + value_to_add));
+end
+
+hold off;
+l1 = legend('Location', 'SouthWest');
+
+figure;
+title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
+      'Interpreter', 'latex');
+xlabel('$p_x$ (m)', 'Interpreter', 'latex');
+ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+
+hold on;
+if baseline
+  plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
+end
+
+for epsilon = control_penalty_vals
+  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+                                    nominal_scale, epsilon, x0_flag);
+  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
+       colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
+       sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
+               values(1) + value + value_to_add));
+end
+
+hold off;
+l2 = legend('Location', 'SouthWest');
+
+set(l1, 'Interpreter', 'latex');
+set(l2, 'Interpreter', 'latex');
 end
 
 %% Simple red-blue colormap.
