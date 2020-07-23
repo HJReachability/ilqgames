@@ -57,11 +57,10 @@
 #include <vector>
 
 // Initial state command-line flags.
-DEFINE_double(px0, 0.0, "Initial x-position (m).");
-DEFINE_double(py0, -5.0, "Initial y-position (m).");
+DEFINE_double(d0, 5.0, "Initial distance from the origin (m).");
+DEFINE_double(v0, 5.0, "Initial speed (m/s).");
 
 namespace ilqgames {
-
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;     // s
@@ -69,17 +68,10 @@ static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
-// Initial state.
-static constexpr float kP1InitialHeading = 0.1;  // rad
-static constexpr float kP1InitialSpeed = 5.0;    // m/s
-static constexpr float kP2InitialX = 0.0;        // m
-static constexpr float kP2InitialY = 0.0;        // m
-static constexpr float kP2InitialHeading = 0.0;  // rad
-static constexpr float kP2InitialSpeed = 5.0;    // m/s
-
 // State dimensions.
 using P1 = SinglePlayerCar5D;
 using P2 = SinglePlayerCar5D;
+using P3 = SinglePlayerCar5D;
 static constexpr float kInterAxleDistance = 4.0;
 
 static const Dimension kP1XIdx = P1::kPxIdx;
@@ -91,27 +83,40 @@ static const Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
 static const Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
 static const Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
 static const Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
+
+static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
+static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
+static const Dimension kP3HeadingIdx =
+    P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
+static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
 }  // anonymous namespace
 
 ThreePlayerCollisionAvoidanceReachabilityExample::
-    ThreePlayerCollisionAvoidanceReachabilityExample(const SolverParams& params) {
+    ThreePlayerCollisionAvoidanceReachabilityExample(
+        const SolverParams& params) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
           {std::make_shared<P1>(kInterAxleDistance),
-           std::make_shared<P2>(kInterAxleDistance)},
+           std::make_shared<P2>(kInterAxleDistance),
+           std::make_shared<P3>(kInterAxleDistance)},
           kTimeStep));
 
   // Set up initial state.
+  constexpr float kAnglePerturbation = 0.1;  // rad
   x0_ = VectorXf::Zero(dynamics->XDim());
-  x0_(kP1XIdx) = FLAGS_px0;
-  x0_(kP1YIdx) = FLAGS_py0;
-  x0_(kP1HeadingIdx) = kP1InitialHeading;
-  x0_(kP1VIdx) = kP1InitialSpeed;
-  x0_(kP2XIdx) = kP2InitialX;
-  x0_(kP2YIdx) = kP2InitialY;
-  x0_(kP2HeadingIdx) = kP2InitialHeading;
-  x0_(kP2VIdx) = kP2InitialSpeed;
+  x0_(kP1XIdx) = FLAGS_d0;
+  x0_(kP1YIdx) = 0.0;
+  x0_(kP1HeadingIdx) = -M_PI + kAnglePerturbation;
+  x0_(kP1VIdx) = FLAGS_v0;
+  x0_(kP2XIdx) = -0.5 * FLAGS_d0;
+  x0_(kP2YIdx) = 0.5 * std::sqrt(3.0) * FLAGS_d0;
+  x0_(kP2HeadingIdx) = -M_PI / 3.0 + kAnglePerturbation;
+  x0_(kP2VIdx) = FLAGS_v0;
+  x0_(kP3XIdx) = -0.5 * FLAGS_d0;
+  x0_(kP3YIdx) = -0.5 * std::sqrt(3.0) * FLAGS_d0;
+  x0_(kP3HeadingIdx) = M_PI / 3.0 + kAnglePerturbation;
+  x0_(kP3VIdx) = FLAGS_v0;
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
@@ -123,44 +128,43 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
+  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
 
   // Penalize control effort.
   const auto control_cost = std::make_shared<QuadraticCost>(
       params.control_cost_weight, -1, 0.0, "Steering");
   p1_cost.AddControlCost(0, control_cost);
   p2_cost.AddControlCost(1, control_cost);
+  p3_cost.AddControlCost(2, control_cost);
 
-  // Collision-avoidance cost.
-  auto p1_position = [](Time t) {
-    return Point2(FLAGS_px0, FLAGS_py0) +
-           t * kP1InitialSpeed *
-               Point2(std::cos(kP1InitialHeading), std::sin(kP1InitialHeading));
-  };  // p1_position
-  auto p2_position = [](Time t) {
-    return Point2(kP2InitialX, kP2InitialY) +
-           t * kP2InitialSpeed *
-               Point2(std::cos(kP2InitialHeading), std::sin(kP2InitialHeading));
-  };  // p2_position
-
-  // NOTE: Assumes line segments traced by each player at initialization do not
-  // intersect.
-  const float nominal_distance =
-      (p1_position(0.5 * kTimeHorizon) - p2_position(0.5 * kTimeHorizon))
-          .norm();
-  const std::shared_ptr<SignedDistanceCost> collision_avoidance_cost(
+  // Penalize proximity.
+  const float nominal_distance = 2.0;
+  const std::shared_ptr<SignedDistanceCost> p1_p2_collision_avoidance_cost(
       new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-                             nominal_distance, "CollisionAvoidance"));
-  p1_cost.AddStateCost(collision_avoidance_cost);
-  p2_cost.AddStateCost(collision_avoidance_cost);
+                             nominal_distance, "P1P2CollisionAvoidance"));
+  p1_cost.AddStateCost(p1_p2_collision_avoidance_cost);
+  p2_cost.AddStateCost(p1_p2_collision_avoidance_cost);
+
+  const std::shared_ptr<SignedDistanceCost> p1_p3_collision_avoidance_cost(
+      new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
+                             nominal_distance, "P1P3CollisionAvoidance"));
+  p1_cost.AddStateCost(p1_p3_collision_avoidance_cost);
+  p3_cost.AddStateCost(p1_p3_collision_avoidance_cost);
+
+  const std::shared_ptr<SignedDistanceCost> p2_p3_collision_avoidance_cost(
+      new SignedDistanceCost({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
+                             nominal_distance, "P2P3CollisionAvoidance"));
+  p2_cost.AddStateCost(p2_p3_collision_avoidance_cost);
+  p3_cost.AddStateCost(p2_p3_collision_avoidance_cost);
 
   // Make sure costs are exponentiated.
   p1_cost.SetExponentialConstant(params.exponential_constant);
   p2_cost.SetExponentialConstant(params.exponential_constant);
+  p3_cost.SetExponentialConstant(params.exponential_constant);
 
   // Set up solver.
-  solver_.reset(
-      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
+  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
+                              kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerCollisionAvoidanceReachabilityExample::Xs(
