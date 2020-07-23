@@ -59,7 +59,8 @@ float OrientationCost::Evaluate(const VectorXf& input) const {
 }
 
 void OrientationCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                   VectorXf* grad) const {
+                                   VectorXf* grad,
+                                   float exponential_constant) const {
   CHECK_LT(dim_, input.size());
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
@@ -75,7 +76,7 @@ void OrientationCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float dx = weight_ * angle_diff;
   float ddx = weight_;
 
-  ModifyDerivatives(input, &dx, &ddx);
+  ModifyDerivatives(exponential_constant, input, &dx, &ddx);
 
   (*grad)(dim_) += dx;
   (*hess)(dim_, dim_) += ddx;

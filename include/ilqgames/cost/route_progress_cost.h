@@ -60,8 +60,7 @@ class RouteProgressCost : public Cost {
   RouteProgressCost(float weight, float nominal_speed,
                     const Polyline2& polyline,
                     const std::pair<Dimension, Dimension>& position_idxs,
-                    const std::string& name = "",
-                    float initial_route_pos = 0.0)
+                    const std::string& name = "", float initial_route_pos = 0.0)
       : Cost(weight, name),
         nominal_speed_(nominal_speed),
         polyline_(polyline),
@@ -75,7 +74,7 @@ class RouteProgressCost : public Cost {
   // Quadraticize this cost at the given input, and add to the running
   // sum of gradients and Hessians.
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+                    VectorXf* grad, float exponential_constant = 0.0) const;
 
  private:
   // Nominal speed.

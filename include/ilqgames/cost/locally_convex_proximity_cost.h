@@ -70,8 +70,8 @@ class LocallyConvexProximityCost : public TimeInvariantCost {
 
   // Quadraticize this cost at the given input, and add to the running
   // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+  void Quadraticize(const VectorXf& input, MatrixXf* hess, VectorXf* grad,
+                    float exponential_constant = 0.0) const;
 
  private:
   // Threshold for minimum squared relative distance.

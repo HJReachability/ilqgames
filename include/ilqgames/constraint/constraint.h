@@ -89,6 +89,10 @@ class Constraint : public Cost {
 
   // Quadraticize the barrier at the given time and input, and add to the
   // running sum of gradients and Hessians (if non-null).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad, float exponential_constant) const {
+    Quadraticize(t, input, hess, grad);
+  };
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad) const = 0;
 

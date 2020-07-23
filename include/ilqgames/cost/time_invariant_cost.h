@@ -66,10 +66,11 @@ class TimeInvariantCost : public Cost {
   // Quadraticize this cost at the given input, and add to the running set of
   // sum of gradients and Hessians.
   virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+                            VectorXf* grad,
+                            float exponential_constant = 0.0) const = 0;
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
-    Quadraticize(input, hess, grad);
+                    VectorXf* grad, float exponential_constant = 0.0) const {
+    Quadraticize(input, hess, grad, exponential_constant);
   }
 
  protected:
@@ -77,13 +78,13 @@ class TimeInvariantCost : public Cost {
       : Cost(weight, name) {}
 
   // Modify existing derivatives if exponentiated.
-  void ModifyDerivatives(const VectorXf& input, float* dx, float* ddx,
-                         float* dy = nullptr, float* ddy = nullptr,
-                         float* dxdy = nullptr, float* dz = nullptr,
-                         float* ddz = nullptr, float* dxdz = nullptr,
-                         float* dydz = nullptr) const {
-    Cost::ModifyDerivatives(0.0, input, dx, ddx, dy, ddy, dxdy, dz, ddz, dxdz,
-                            dydz);
+  void ModifyDerivatives(float exponential_constant, const VectorXf& input,
+                         float* dx, float* ddx, float* dy = nullptr,
+                         float* ddy = nullptr, float* dxdy = nullptr,
+                         float* dz = nullptr, float* ddz = nullptr,
+                         float* dxdz = nullptr, float* dydz = nullptr) const {
+    Cost::ModifyDerivatives(exponential_constant, 0.0, input, dx, ddx, dy, ddy,
+                            dxdy, dz, ddz, dxdz, dydz);
   }
 };  //\class TimeInvariantCost
 

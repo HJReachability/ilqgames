@@ -69,7 +69,7 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
         yidx_(position_idxs.second) {
     // Set equivalent cost pointer.
     const float new_threshold =
-      (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
+        (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
     equivalent_cost_.reset(new SemiquadraticPolyline2Cost(
         kInitialEquivalentCostWeight, polyline, position_idxs, new_threshold,
         !oriented_right, name + "/Cost"));
@@ -81,8 +81,7 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
 
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+  void Quadraticize(const VectorXf& input, MatrixXf* hess, VectorXf* grad) const;
 
  private:
   // Polyline to compute distances from.

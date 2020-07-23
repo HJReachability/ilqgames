@@ -64,9 +64,11 @@ class Cost {
   }
 
   // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
+  // sum of gradients and Hessians. Optionally, can provide a nonzero
+  // exponential constant which will be used in quadratization.
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+                            VectorXf* grad,
+                            float exponential_constant = 0.0) const = 0;
 
   // Access the name of this cost.
   const std::string& Name() const { return name_; }
@@ -101,6 +103,15 @@ class Cost {
         exponential_constant_(0.0),
         exponential_sign_(1.0) {}
 
+  // Modify existing derivatives if exponentiated, and optionally use nonzero
+  // provided exponential constant.
+  void ModifyDerivatives(float exponential_constant, Time t,
+                         const VectorXf& input, float* dx, float* ddx,
+                         float* dy = nullptr, float* ddy = nullptr,
+                         float* dxdy = nullptr, float* dz = nullptr,
+                         float* ddz = nullptr, float* dxdz = nullptr,
+                         float* dydz = nullptr) const;
+
   // Multiplicative weight associated to this cost.
   float weight_;
 
@@ -123,13 +134,6 @@ class Cost {
   // Sign of cost (+1 or -1) after exponentiation (only used if exponentiated).
   // Used for adversarial players.
   float exponential_sign_;
-
-  // Modify existing derivatives if exponentiated.
-  void ModifyDerivatives(Time t, const VectorXf& input, float* dx, float* ddx,
-                         float* dy = nullptr, float* ddy = nullptr,
-                         float* dxdy = nullptr, float* dz = nullptr,
-                         float* ddz = nullptr, float* dxdz = nullptr,
-                         float* dydz = nullptr) const;
 };  //\class Cost
 
 }  // namespace ilqgames

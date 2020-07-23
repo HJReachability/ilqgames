@@ -68,7 +68,7 @@ class QuadraticDifferenceCost : public TimeInvariantCost {
   // Quadraticize this cost at the given input, and add to the running=
   // sum of gradients and Hessians (if non-null).
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad = nullptr) const;
+                    VectorXf* grad, float exponential_constant = 0.0) const;
 
  private:
   // Sets of dimensions whose pairwise differences will constitute the cost.

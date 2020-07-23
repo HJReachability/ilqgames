@@ -63,7 +63,8 @@ float QuadraticCost::Evaluate(const VectorXf& input) const {
 }
 
 void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad) const {
+                                 VectorXf* grad,
+                                 float exponential_constant) const {
   CHECK_LT(dimension_, input.size());
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
@@ -74,14 +75,16 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), grad->size());
 
   // Handle single dimension case first.
-  const float aw = exponential_constant_ * weight_;
+  const float aw = (exponential_constant == 0.0)
+                       ? exponential_constant_ * weight_
+                       : exponential_constant * weight_;
 
   if (dimension_ >= 0) {
     const float delta = input(dimension_) - nominal_;
     float dx = weight_ * delta;
     float ddx = weight_;
 
-    if (IsExponentiated()) {
+    if (IsExponentiated() || exponential_constant != 0.0) {
       const float aw_delta = aw * delta;
       const float exp_cost = std::exp(0.5 * aw_delta * delta);
 
@@ -97,7 +100,7 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   else {
     const VectorXf delta = input - VectorXf::Constant(input.size(), nominal_);
 
-    if (IsExponentiated()) {
+    if (IsExponentiated() || exponential_constant != 0.0) {
       const float exp_cost = std::exp(0.5 * aw * delta.squaredNorm());
       const float aw_sq = aw * aw;
       VectorXf delta_sq(delta.size());

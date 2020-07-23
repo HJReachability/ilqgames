@@ -61,9 +61,9 @@ float WeightedConvexProximityCost::Evaluate(const VectorXf& input) const {
   return 0.5 * weight_ * vv * std::min(delta_x * delta_x, delta_y * delta_y);
 }
 
-void WeightedConvexProximityCost::Quadraticize(const VectorXf& input,
-                                               MatrixXf* hess,
-                                               VectorXf* grad) const {
+void WeightedConvexProximityCost::Quadraticize(
+    const VectorXf& input, MatrixXf* hess, VectorXf* grad,
+    float exponential_constant) const {
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
 
@@ -97,8 +97,8 @@ void WeightedConvexProximityCost::Quadraticize(const VectorXf& input,
     float dx1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dx);
     float dx1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dx);
 
-    ModifyDerivatives(input, &dx1, &ddx1, &dv1, &ddv1, &dx1dv1, &dv2, &ddv2,
-                      &dx1dv2, &dv1dv2);
+    ModifyDerivatives(exponential_constant, input, &dx1, &ddx1, &dv1, &ddv1,
+                      &dx1dv1, &dv2, &ddv2, &dx1dv2, &dv1dv2);
 
     // Hessian.
     (*hess)(xidx1_, xidx1_) += ddx1;
@@ -133,8 +133,8 @@ void WeightedConvexProximityCost::Quadraticize(const VectorXf& input,
     float dy1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dy);
     float dy1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dy);
 
-    ModifyDerivatives(input, &dy1, &ddy1, &dv1, &ddv1, &dy1dv1, &dv2, &ddv2,
-                      &dy1dv2, &dv1dv2);
+    ModifyDerivatives(exponential_constant, input, &dy1, &ddy1, &dv1, &ddv1,
+                      &dy1dv1, &dv2, &ddv2, &dy1dv2, &dv1dv2);
 
     // Hessian.
     (*hess)(yidx1_, yidx1_) += ddy1;

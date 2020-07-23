@@ -44,6 +44,7 @@
 #include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
+#include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
@@ -509,6 +510,25 @@ TEST(SignedDistanceCostTest, QuadraticizesCorrectly) {
 
 TEST(SignedDistanceCostTest, QuadraticizesExponentialCorrectly) {
   SignedDistanceCost cost({0, 1}, {2, 3}, 5.0);
+  cost.SetExponentialConstant(kExponentialConstant);
+  CheckQuadraticization(cost);
+}
+
+TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
+  const std::shared_ptr<const SignedDistanceCost> cost1(
+      new SignedDistanceCost({0, 1}, {2, 3}, 5.0));
+  const std::shared_ptr<const QuadraticCost> cost2(
+      new QuadraticCost(kCostWeight, -1, 1.0));
+  ExtremeValueCost cost({cost1, cost2}, true);
+  CheckQuadraticization(cost);
+}
+
+TEST(ExtremeValueCostTest, QuadraticizesExponentialCorrectly) {
+  const std::shared_ptr<const SignedDistanceCost> cost1(
+      new SignedDistanceCost({0, 1}, {2, 3}, 5.0));
+  const std::shared_ptr<const QuadraticCost> cost2(
+      new QuadraticCost(kCostWeight, -1, 1.0));
+  ExtremeValueCost cost({cost1, cost2}, true);
   cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }

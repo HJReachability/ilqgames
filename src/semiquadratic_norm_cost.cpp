@@ -61,7 +61,8 @@ float SemiquadraticNormCost::Evaluate(const VectorXf& input) const {
 }
 
 void SemiquadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                         VectorXf* grad) const {
+                                         VectorXf* grad,
+                                         float exponential_constant) const {
   CHECK_LT(dim1_, input.size());
   CHECK_LT(dim2_, input.size());
   CHECK_NOTNULL(hess);
@@ -89,7 +90,7 @@ void SemiquadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float ddy = weight_ - (threshold_ * x * x * weight_) / norm_3;
   float dxdy = threshold_ * x * y * weight_ / norm_3;
 
-  ModifyDerivatives(input, &dx, &ddx, &dy, &ddy, &dxdy);
+  ModifyDerivatives(exponential_constant, input, &dx, &ddx, &dy, &ddy, &dxdy);
 
   (*grad)(dim1_) += dx;
   (*grad)(dim2_) += dy;

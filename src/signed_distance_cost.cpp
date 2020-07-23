@@ -61,7 +61,8 @@ float SignedDistanceCost::Evaluate(const VectorXf& input) const {
 }
 
 void SignedDistanceCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                      VectorXf* grad) const {
+                                      VectorXf* grad,
+                                      float exponential_constant) const {
   CHECK_LT(xdim1_, input.size());
   CHECK_LT(ydim1_, input.size());
   CHECK_LT(xdim2_, input.size());
@@ -85,7 +86,8 @@ void SignedDistanceCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float ddy1 = -delta_x * delta_x / norm_3;
   float dx1dy1 = delta_x * delta_y / norm_3;
 
-  ModifyDerivatives(input, &dx1, &ddx1, &dy1, &ddy1, &dx1dy1);
+  ModifyDerivatives(exponential_constant, input, &dx1, &ddx1, &dy1, &ddy1,
+                    &dx1dy1);
 
   (*grad)(xdim1_) += dx1;
   (*grad)(ydim1_) += dy1;

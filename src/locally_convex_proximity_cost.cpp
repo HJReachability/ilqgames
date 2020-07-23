@@ -59,9 +59,9 @@ float LocallyConvexProximityCost::Evaluate(const VectorXf& input) const {
   return 0.5 * weight_ * std::min(delta_x * delta_x, delta_y * delta_y);
 }
 
-void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
-                                              MatrixXf* hess,
-                                              VectorXf* grad) const {
+void LocallyConvexProximityCost::Quadraticize(
+    const VectorXf& input, MatrixXf* hess, VectorXf* grad,
+    float exponential_constant) const {
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
 
@@ -85,7 +85,7 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
   if (is_x_active) {
     float dx1 = -weight_ * delta_x;
     float ddx1 = weight_;
-    ModifyDerivatives(input, &dx1, &ddx1);
+    ModifyDerivatives(exponential_constant, input, &dx1, &ddx1);
 
     (*grad)(xidx1_) += dx1;
     (*grad)(xidx2_) -= dx1;
@@ -97,7 +97,7 @@ void LocallyConvexProximityCost::Quadraticize(const VectorXf& input,
   } else {
     float dy1 = -weight_ * delta_y;
     float ddy1 = weight_;
-    ModifyDerivatives(input, &dy1, &ddy1);
+    ModifyDerivatives(exponential_constant, input, &dy1, &ddy1);
 
     (*grad)(yidx1_) += dy1;
     (*grad)(yidx2_) -= dy1;
