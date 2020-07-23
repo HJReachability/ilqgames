@@ -386,57 +386,75 @@ end
 
 function collision_avoidance_example()
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(1.0, 10.0, 5);
-control_penalty_vals = linspace(1.0, 10.0, 5);
+scale_vals = linspace(0.1, 1.0, 5);
+control_penalty_vals = linspace(1.0, 2.0, 5);
 
-nominal_scale = 5.0;
-nominal_control_penalty = 5.0;
+nominal_scale = 1.0;
+nominal_control_penalty = 1.0;
 
 figure;
+set(gca, 'FontSize', 24');
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
 hold on;
-value = 0.0;
 value_format_string = "\\tilde V(x_1) = %1.2f$";
 
-value_to_add = 5.0;
+value_to_add = 2.0;
+x0_flag = "--d0=5.0 --v0=5.0";
 
+ii = 1;
 for a = scale_vals
-  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+  [ilq_traj, values] = run_ilqgames("three_player_collision_avoidance_reachability_example", "", ...
                                     a, nominal_control_penalty, x0_flag);
-  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-       'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
-                              values(1) + value + value_to_add));
+  if max(abs(values(1) - values(2)), abs(values(1) - values(3))) > 0.01
+    fprintf("Error! Values do not match" + values);
+  end
+
+  pa(ii) = plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
+                'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
+                                       values(1) + value_to_add));
+  plot(ilq_traj(:, 6), ilq_traj(:, 7), 'x:', 'color', colormap(a, scale_vals, true));
+  plot(ilq_traj(:, 11), ilq_traj(:, 12), 'x--', 'color', colormap(a, scale_vals, true));
+
+  ii = ii + 1;
 end
 
 hold off;
-l1 = legend('Location', 'SouthWest');
+l1 = legend(pa, 'Location', 'NorthEast');
 
 figure;
+set(gca, 'FontSize', 24');
 title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
 hold on;
-if baseline
-  plot(traj(:, 1), traj(:, 2), 'g-o', 'DisplayName', 'Best-effort solution');
-end
-
+ii = 1;
 for epsilon = control_penalty_vals
-  [ilq_traj, values] = run_ilqgames("two_player_reachability_example", "", ...
+  [ilq_traj, values] = run_ilqgames("three_player_collision_avoidance_reachability_example", "", ...
                                     nominal_scale, epsilon, x0_flag);
-  plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', ...
-       colormap(epsilon, control_penalty_vals, false), 'DisplayName', ...
-       sprintf(char("$\\epsilon = %1.2f, " + value_format_string), epsilon, ...
-               values(1) + value + value_to_add));
+  if max(abs(values(1) - values(2)), abs(values(1) - values(3))) > 0.01
+    fprintf("Error! Values do not match" + values);
+  end
+
+  pe(ii) = plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', ...
+                'color', colormap(epsilon, control_penalty_vals, false), ...
+                'DisplayName', sprintf(char("$\\epsilon = %1.2f, " + value_format_string), ...
+                                       epsilon, values(1) + value_to_add));
+  plot(ilq_traj(:, 6), ilq_traj(:, 7), 'x:', 'color', ...
+       colormap(epsilon, control_penalty_vals, false));
+  plot(ilq_traj(:, 11), ilq_traj(:, 12), 'x--', 'color', ...
+       colormap(epsilon, control_penalty_vals, false));
+
+  ii = ii + 1;
 end
 
 hold off;
-l2 = legend('Location', 'SouthWest');
+l2 = legend(pe, 'Location', 'NorthEast');
 
 set(l1, 'Interpreter', 'latex');
 set(l2, 'Interpreter', 'latex');
