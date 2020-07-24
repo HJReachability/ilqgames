@@ -40,6 +40,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/single_dimension_constraint.h>
+#include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/signed_distance_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
@@ -67,6 +69,10 @@ static constexpr Time kTimeStep = 0.1;     // s
 static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
+
+// Input contraints.
+static constexpr float kOmegaMax = 1.0;
+static constexpr float kAMax = 0.1;
 
 // State dimensions.
 using P1 = SinglePlayerCar5D;
@@ -130,32 +136,80 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
   // Set up costs for all players.
   PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
 
-  // Penalize control effort.
-  const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, -1, 0.0, "Steering");
-  p1_cost.AddControlCost(0, control_cost);
-  p2_cost.AddControlCost(1, control_cost);
-  p3_cost.AddControlCost(2, control_cost);
+  // Constrain control input.
+  const auto p1_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  const auto p1_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P1::kAIdx, kAMax, false, "Omega Constraint (Min)");
+  const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P1::kAIdx, -kAMax, true, "Omega Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  p1_cost.AddControlConstraint(0, p1_a_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_a_min_constraint);
+
+  const auto p2_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  const auto p2_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P2::kAIdx, kAMax, false, "Omega Constraint (Min)");
+  const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P2::kAIdx, -kAMax, true, "Omega Constraint (Min)");
+  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
+  p2_cost.AddControlConstraint(1, p2_a_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_a_min_constraint);
+
+  const auto p3_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P3::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  const auto p3_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P3::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  const auto p3_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P3::kAIdx, kAMax, false, "Omega Constraint (Min)");
+  const auto p3_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P3::kAIdx, -kAMax, true, "Omega Constraint (Min)");
+  p3_cost.AddControlConstraint(2, p3_omega_max_constraint);
+  p3_cost.AddControlConstraint(2, p3_omega_min_constraint);
+  p3_cost.AddControlConstraint(2, p3_a_max_constraint);
+  p3_cost.AddControlConstraint(2, p3_a_min_constraint);
 
   // Penalize proximity.
   const float nominal_distance = 2.0;
   const std::shared_ptr<SignedDistanceCost> p1_p2_collision_avoidance_cost(
       new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-                             nominal_distance, "P1P2CollisionAvoidance"));
-  p1_cost.AddStateCost(p1_p2_collision_avoidance_cost);
-  p2_cost.AddStateCost(p1_p2_collision_avoidance_cost);
-
+                             nominal_distance));
   const std::shared_ptr<SignedDistanceCost> p1_p3_collision_avoidance_cost(
       new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
-                             nominal_distance, "P1P3CollisionAvoidance"));
-  p1_cost.AddStateCost(p1_p3_collision_avoidance_cost);
-  p3_cost.AddStateCost(p1_p3_collision_avoidance_cost);
-
+                             nominal_distance));
   const std::shared_ptr<SignedDistanceCost> p2_p3_collision_avoidance_cost(
       new SignedDistanceCost({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
-                             nominal_distance, "P2P3CollisionAvoidance"));
-  p2_cost.AddStateCost(p2_p3_collision_avoidance_cost);
-  p3_cost.AddStateCost(p2_p3_collision_avoidance_cost);
+                             nominal_distance));
+
+  constexpr bool kTakeMin = true;
+  const std::shared_ptr<ExtremeValueCost> p1_proximity_cost(
+      new ExtremeValueCost(
+          {p1_p2_collision_avoidance_cost, p1_p3_collision_avoidance_cost},
+          kTakeMin, "Proximity"));
+  const std::shared_ptr<ExtremeValueCost> p2_proximity_cost(
+      new ExtremeValueCost(
+          {p1_p2_collision_avoidance_cost, p2_p3_collision_avoidance_cost},
+          kTakeMin, "Proximity"));
+  const std::shared_ptr<ExtremeValueCost> p3_proximity_cost(
+      new ExtremeValueCost(
+          {p2_p3_collision_avoidance_cost, p1_p3_collision_avoidance_cost},
+          kTakeMin, "Proximity"));
+  p1_cost.AddStateCost(p1_proximity_cost);
+  p2_cost.AddStateCost(p2_proximity_cost);
+  p3_cost.AddStateCost(p3_proximity_cost);
 
   // Make sure costs are exponentiated.
   p1_cost.SetExponentialConstant(params.exponential_constant);
