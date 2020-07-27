@@ -54,13 +54,15 @@ class SignedDistanceCost : public TimeInvariantCost {
  public:
   SignedDistanceCost(const std::pair<Dimension, Dimension>& dims1,
                      const std::pair<Dimension, Dimension>& dims2,
-                     float nominal = 0.0, const std::string& name = "")
+                     float nominal = 0.0, bool less_is_positive = true,
+                     const std::string& name = "")
       : TimeInvariantCost(1.0, name),
         xdim1_(dims1.first),
         ydim1_(dims1.second),
         xdim2_(dims2.first),
         ydim2_(dims2.second),
-        nominal_(nominal) {
+        nominal_(nominal),
+        less_is_positive_(less_is_positive) {
     CHECK_GE(xdim1_, 0);
     CHECK_GE(ydim1_, 0);
     CHECK_GE(xdim2_, 0);
@@ -82,6 +84,9 @@ class SignedDistanceCost : public TimeInvariantCost {
 
   // Nominal value in this (or all) dimensions.
   const float nominal_;
+
+  // Orientation. Whether less than nominal is positive or negative.
+  const bool less_is_positive_;
 };  //\class SignedDistanceCost
 
 }  // namespace ilqgames

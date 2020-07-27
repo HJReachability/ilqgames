@@ -62,6 +62,9 @@
 DEFINE_double(d0, 5.0, "Initial distance from the origin (m).");
 DEFINE_double(v0, 5.0, "Initial speed (m/s).");
 
+// Buffer for the signed distance cost.
+DEFINE_double(buffer, 3.0, "Nominal signed distance cost (m).");
+
 namespace ilqgames {
 namespace {
 // Time.
@@ -136,6 +139,13 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
   // Set up costs for all players.
   PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
 
+  // Cost on control input.
+  const auto control_cost = std::make_shared<QuadraticCost>(
+      params.control_cost_weight, -1, 0.0, "Steering");
+  p1_cost.AddControlCost(0, control_cost);
+  p2_cost.AddControlCost(1, control_cost);
+  p3_cost.AddControlCost(2, control_cost);
+
   // Constrain control input.
   const auto p1_omega_max_constraint =
       std::make_shared<SingleDimensionConstraint>(
@@ -183,18 +193,17 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
   p3_cost.AddControlConstraint(2, p3_a_min_constraint);
 
   // Penalize proximity.
-  const float nominal_distance = 2.0;
   const std::shared_ptr<SignedDistanceCost> p1_p2_collision_avoidance_cost(
       new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-                             nominal_distance));
+                             FLAGS_buffer));
   const std::shared_ptr<SignedDistanceCost> p1_p3_collision_avoidance_cost(
       new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
-                             nominal_distance));
+                             FLAGS_buffer));
   const std::shared_ptr<SignedDistanceCost> p2_p3_collision_avoidance_cost(
       new SignedDistanceCost({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
-                             nominal_distance));
+                             FLAGS_buffer));
 
-  constexpr bool kTakeMin = true;
+  constexpr bool kTakeMin = false;
   const std::shared_ptr<ExtremeValueCost> p1_proximity_cost(
       new ExtremeValueCost(
           {p1_p2_collision_avoidance_cost, p1_p3_collision_avoidance_cost},

@@ -57,7 +57,9 @@ float SignedDistanceCost::Evaluate(const VectorXf& input) const {
   // Otherwise, cost is squared 2-norm of entire input.
   const float dx = input(xdim1_) - input(xdim2_);
   const float dy = input(ydim1_) - input(ydim2_);
-  return nominal_ - std::hypot(dx, dy);
+  const float cost = nominal_ - std::hypot(dx, dy);
+
+  return (less_is_positive_) ? cost : -cost;
 }
 
 void SignedDistanceCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
@@ -76,15 +78,16 @@ void SignedDistanceCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), grad->size());
 
   // Compute gradient and Hessian.
+  const float s = (less_is_positive_) ? 1.0 : -1.0;
   const float delta_x = input(xdim1_) - input(xdim2_);
   const float delta_y = input(ydim1_) - input(ydim2_);
   const float norm = std::hypot(delta_x, delta_y);
   const float norm_3 = norm * norm * norm;
-  float dx1 = -delta_x / norm;
-  float dy1 = -delta_y / norm;
-  float ddx1 = -delta_y * delta_y / norm_3;
-  float ddy1 = -delta_x * delta_x / norm_3;
-  float dx1dy1 = delta_x * delta_y / norm_3;
+  float dx1 = -s * delta_x / norm;
+  float dy1 = -s * delta_y / norm;
+  float ddx1 = -s * delta_y * delta_y / norm_3;
+  float ddy1 = -s * delta_x * delta_x / norm_3;
+  float dx1dy1 = s * delta_x * delta_y / norm_3;
 
   ModifyDerivatives(exponential_constant, input, &dx1, &ddx1, &dy1, &ddy1,
                     &dx1dy1);

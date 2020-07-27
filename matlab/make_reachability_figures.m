@@ -385,12 +385,14 @@ end
 
 
 function collision_avoidance_example()
-%% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-scale_vals = linspace(1.0, 2.0, 5);
-control_penalty_vals = linspace(1.0, 5.0, 5);
+close all;
 
-nominal_scale = 1.0;
-nominal_control_penalty = 1.0;
+%% Compute ILQ trajectory for same problem with different parameters and overlay plots.
+scale_vals = linspace(0.1, 0.5, 5);
+control_penalty_vals = linspace(0.75, 1.5, 5);
+
+nominal_scale = 0.5;
+nominal_control_penalty = 0.75;
 
 figure;
 %%set(gca, 'FontSize', 24');
@@ -400,10 +402,10 @@ xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 
 hold on;
-value_format_string = "\\tilde V(x_1) = %1.2f$";
+%%value_format_string = "\\tilde V(x_1) = %1.2f$";
 
-value_to_add = 2.0;
-x0_flag = "--d0=4.0 --v0=4.0";
+buffer = 2.0;
+x0_flag = "--d0=5.0 --v0=5.0 --buffer=" + buffer;
 
 ii = 1;
 for a = scale_vals
@@ -414,8 +416,7 @@ for a = scale_vals
   end
 
   pa(ii) = plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', 'color', colormap(a, scale_vals, true), ...
-                'DisplayName', sprintf(char("$a = %1.2f, " + value_format_string), a, ...
-                                       values(1) + value_to_add));
+                'DisplayName', sprintf('$a = %1.2f$', a));
   plot(ilq_traj(:, 6), ilq_traj(:, 7), 'x:', 'color', colormap(a, scale_vals, true));
   plot(ilq_traj(:, 11), ilq_traj(:, 12), 'x--', 'color', colormap(a, scale_vals, true));
 
@@ -443,8 +444,7 @@ for epsilon = control_penalty_vals
 
   pe(ii) = plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', ...
                 'color', colormap(epsilon, control_penalty_vals, false), ...
-                'DisplayName', sprintf(char("$\\epsilon = %1.2f, " + value_format_string), ...
-                                       epsilon, values(1) + value_to_add));
+                'DisplayName', sprintf('$\\epsilon = %1.2f$', epsilon));
   plot(ilq_traj(:, 6), ilq_traj(:, 7), 'x:', 'color', ...
        colormap(epsilon, control_penalty_vals, false));
   plot(ilq_traj(:, 11), ilq_traj(:, 12), 'x--', 'color', ...
@@ -480,7 +480,7 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, scale, control_penalt
     %% Stitch together the command for the executable.
     instruction = "../bin/" + exec + " --noviz " + save_flag + ...
                   " --last_traj" + experiment_arg + " --exponential_constant=" + scale + ...
-                  " --convergence_tolerance=0.1 --trust_region_size=0.1" + ...
+                  " --convergence_tolerance=0.01 --trust_region_size=0.1" + ...
                   " --control_penalty=" + control_penalty + ...
                   " --initial_alpha_scaling=0.01 " + x0_flag;
     system(char(instruction));
