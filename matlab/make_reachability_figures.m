@@ -395,7 +395,7 @@ nominal_scale = 0.5;
 nominal_control_penalty = 0.75;
 
 figure;
-%%set(gca, 'FontSize', 24');
+set(gca, 'FontSize', 24');
 title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_penalty), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
@@ -427,7 +427,7 @@ hold off;
 l1 = legend(pa, 'Location', 'NorthEast');
 
 figure;
-%%set(gca, 'FontSize', 24');
+set(gca, 'FontSize', 24');
 title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ...
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
