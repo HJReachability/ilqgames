@@ -400,6 +400,8 @@ title(sprintf('Sensitivity to Scale ($\\epsilon = %1.2f$)', nominal_control_pena
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+xlim([-5.5, 5.5]);
+ylim([-5.5, 5.5]);
 
 hold on;
 %%value_format_string = "\\tilde V(x_1) = %1.2f$";
@@ -432,6 +434,8 @@ title(sprintf('Sensitivity to Control Penalty ($a = %1.2f$)', nominal_scale), ..
       'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+xlim([-5.5, 5.5]);
+ylim([-5.5, 5.5]);
 
 hold on;
 ii = 1;
