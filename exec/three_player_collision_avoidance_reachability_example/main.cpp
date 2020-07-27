@@ -69,7 +69,7 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 // Exponential scaling and control penalty weightings.
 DEFINE_double(exponential_constant, 0.1,
               "Scale factor in exponential weightings.");
-DEFINE_double(control_penalty, 1.0, "Control penalty weight.");
+DEFINE_double(control_penalty, 0.1, "Control penalty weight.");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");

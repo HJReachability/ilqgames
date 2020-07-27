@@ -137,14 +137,10 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
-
-  // Cost on control input.
-  const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, -1, 0.0, "Steering");
-  p1_cost.AddControlCost(0, control_cost);
-  p2_cost.AddControlCost(1, control_cost);
-  p3_cost.AddControlCost(2, control_cost);
+  PlayerCost p1_cost("P1", params.control_cost_weight,
+                     params.control_cost_weight),
+      p2_cost("P2", params.control_cost_weight, params.control_cost_weight),
+      p3_cost("P3", params.control_cost_weight, params.control_cost_weight);
 
   // Constrain control input.
   const auto p1_omega_max_constraint =
@@ -154,9 +150,9 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
       std::make_shared<SingleDimensionConstraint>(
           P1::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
   const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, kAMax, false, "Omega Constraint (Min)");
+      P1::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
   const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, -kAMax, true, "Omega Constraint (Min)");
+      P1::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
   p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
   p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
   p1_cost.AddControlConstraint(0, p1_a_max_constraint);
@@ -169,9 +165,9 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
       std::make_shared<SingleDimensionConstraint>(
           P2::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
   const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, kAMax, false, "Omega Constraint (Min)");
+      P2::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
   const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, -kAMax, true, "Omega Constraint (Min)");
+      P2::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
   p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
   p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
   p2_cost.AddControlConstraint(1, p2_a_max_constraint);
@@ -184,9 +180,9 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
       std::make_shared<SingleDimensionConstraint>(
           P3::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
   const auto p3_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P3::kAIdx, kAMax, false, "Omega Constraint (Min)");
+      P3::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
   const auto p3_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P3::kAIdx, -kAMax, true, "Omega Constraint (Min)");
+      P3::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
   p3_cost.AddControlConstraint(2, p3_omega_max_constraint);
   p3_cost.AddControlConstraint(2, p3_omega_min_constraint);
   p3_cost.AddControlConstraint(2, p3_a_max_constraint);
@@ -221,9 +217,12 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
   p3_cost.AddStateCost(p3_proximity_cost);
 
   // Make sure costs are exponentiated.
-  p1_cost.SetExponentialConstant(params.exponential_constant);
-  p2_cost.SetExponentialConstant(params.exponential_constant);
-  p3_cost.SetExponentialConstant(params.exponential_constant);
+  // p1_cost.SetExponentialConstant(params.exponential_constant);
+  // p2_cost.SetExponentialConstant(params.exponential_constant);
+  // p3_cost.SetExponentialConstant(params.exponential_constant);
+  p1_cost.SetMaxOverTime();
+  p2_cost.SetMaxOverTime();
+  p3_cost.SetMaxOverTime();
 
   // Set up solver.
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},

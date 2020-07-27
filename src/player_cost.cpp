@@ -281,4 +281,12 @@ void PlayerCost::SetExponentialSign(float s) {
   for (auto& cost : state_costs_) cost->SetExponentialSign(s);
 }
 
+QuadraticCostApproximation PlayerCost::NullQuadraticization(
+    PlayerIndex ii, Dimension xdim, Dimension udim) const {
+  QuadraticCostApproximation q(xdim, state_regularization_);
+  q.control.emplace(ii, SingleCostApproximation(udim, control_regularization_));
+
+  return q;
+}
+
 }  // namespace ilqgames
