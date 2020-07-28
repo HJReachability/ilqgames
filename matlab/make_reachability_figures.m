@@ -4,12 +4,13 @@ function collision_avoidance_example()
 close all;
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-regularization_vals = linspace(0.75, 1.5, 5);
+regularization_vals = linspace(1, 1.25, 5);
+
+x0_flag = " --d0=5 --v0=5";
 
 figure;
 set(gca, 'FontSize', 24');
-title(sprintf('Sensitivity to Regularization', nominal_scale), ...
-      'Interpreter', 'latex');
+title('Sensitivity to Regularization', 'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
 ylabel('$p_y$ (m)', 'Interpreter', 'latex');
 xlim([-5.5, 5.5]);
@@ -38,7 +39,6 @@ end
 hold off;
 l2 = legend(pe, 'Location', 'NorthEast');
 
-set(l1, 'Interpreter', 'latex');
 set(l2, 'Interpreter', 'latex');
 end
 
@@ -54,7 +54,7 @@ end
 
 %% Compute ILQ trajectory for given example.
 function [traj, values] = run_ilqgames(exec, extra_suffix, regularization, x0_flag)
-  experiment_name = exec + "_" + control_penalty + x0_flag;
+  experiment_name = exec + "_" + regularization + x0_flag;
   experiment_arg = " --experiment_name='" + experiment_name + extra_suffix + "'";
   save_flag = "--save" + extra_suffix;
 
@@ -62,9 +62,9 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, regularization, x0_fl
     %% Stitch together the command for the executable.
     instruction = "../bin/" + exec + " --noviz " + save_flag + ...
                   " --last_traj" + experiment_arg + ...
-                  " --convergence_tolerance=0.01 --trust_region_size=0.1" + ...
+                  " --convergence_tolerance=0.02 --initial_alpha_scaling=0.9" + ...
                   " --control_penalty=" + regularization + ...
-                  " --initial_alpha_scaling=0.01 " + x0_flag;
+                  x0_flag;
     system(char(instruction));
   end
 
@@ -84,9 +84,9 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, regularization, x0_fl
               last_iterate + "/xs.txt");
   values = load(log_folder + experiment_name + extra_suffix + "/" + ...
                 last_iterate + "/costs.txt");
-  for ii = 1:length(values)
-    values(ii) = log(values(ii)) / scale;
-  end
+%%  for ii = 1:length(values)
+%%    values(ii) = log(values(ii)) / scale;
+%%  end
 end
 
 function exists = experiment_already_run(folder_name)
