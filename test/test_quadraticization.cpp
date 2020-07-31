@@ -82,9 +82,6 @@ static constexpr float kHessForwardStep = 1e-3;
 static constexpr float kNumericalPrecision = 0.15;
 static constexpr float kNumericalPrecisionFraction = 0.1;
 
-// Exponential constant in costs.
-static constexpr float kExponentialConstant = 0.1;
-
 // Function to compute numerical gradient of a cost.
 VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
   VectorXf grad(input.size());
