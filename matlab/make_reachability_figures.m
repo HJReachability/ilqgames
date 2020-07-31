@@ -4,7 +4,7 @@ function collision_avoidance_example()
 close all;
 
 %% Compute ILQ trajectory for same problem with different parameters and overlay plots.
-regularization_vals = linspace(1, 1.25, 5);
+regularization_vals = linspace(0.01, 1, 5);
 
 x0_flag = " --d0=5 --v0=5";
 
@@ -63,7 +63,7 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, regularization, x0_fl
     instruction = "../bin/" + exec + " --noviz " + save_flag + ...
                   " --last_traj" + experiment_arg + ...
                   " --convergence_tolerance=0.02 --initial_alpha_scaling=0.9" + ...
-                  " --control_penalty=" + regularization + ...
+                  " --regularization=" + regularization + ...
                   x0_flag;
     system(char(instruction));
   end
