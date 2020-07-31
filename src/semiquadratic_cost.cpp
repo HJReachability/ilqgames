@@ -61,8 +61,7 @@ float SemiquadraticCost::Evaluate(const VectorXf& input) const {
 // Quadraticize this cost at the given input, and add to the running
 // sum of gradients and Hessians (if non-null).
 void SemiquadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                     VectorXf* grad,
-                                     float exponential_constant) const {
+                                     VectorXf* grad) const {
   CHECK_LT(dimension_, input.size());
 
   // Handle no cost case first.
@@ -78,10 +77,8 @@ void SemiquadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), grad->size());
 
   // Compute gradient and Hessian.
-  float dx = weight_ * diff;
-  float ddx = weight_;
-
-  ModifyDerivatives(exponential_constant, input, &dx, &ddx);
+  const float dx = weight_ * diff;
+  const float ddx = weight_;
 
   (*grad)(dimension_) += dx;
   (*hess)(dimension_, dimension_) += ddx;

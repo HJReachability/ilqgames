@@ -65,10 +65,8 @@ DEFINE_bool(last_traj, false,
             "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
-// Exponential scaling and control penalty weightings.
-DEFINE_double(exponential_constant, 0.1,
-              "Scale factor in exponential weightings.");
-DEFINE_double(control_penalty, 1.0, "Control penalty weight.");
+// Regularization.
+DEFINE_double(regularization, 1.0, "Regularization.");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
@@ -116,8 +114,8 @@ int main(int argc, char** argv) {
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.exponential_constant = FLAGS_exponential_constant;
-  params.control_cost_weight = FLAGS_control_penalty;
+  params.state_regularization = FLAGS_regularization;
+  params.control_regularization = FLAGS_regularization;
 
   const auto start = std::chrono::system_clock::now();
   const auto problem =

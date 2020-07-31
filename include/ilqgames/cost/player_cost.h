@@ -90,6 +90,10 @@ class PlayerCost {
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
+  // Return empty cost quadraticization except for constraints.
+  QuadraticCostApproximation QuadraticizeConstraints(
+      Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
+
   // Turn all constraints either "on" or "off" (in which case they are replaced
   // with their"equivalent" costs).
   void TurnConstraintsOn() { are_constraints_on_ = true; }
@@ -108,13 +112,6 @@ class PlayerCost {
   void ScaleConstraintBarrierWeights(float scale = 0.5);
   void ResetConstraintBarrierWeights();
 
-  // Set exponential constant for all state costs associated to this player.
-  void SetExponentialConstant(float a);
-  bool IsExponentiated(float* a = nullptr) const;
-
-  // Set exponential sign for state costs associated to this player.
-  void SetExponentialSign(float s);
-
   // Set whether this is a time-additive, max-over-time, or min-over-time cost.
   // At each specific time, all costs are added.
   enum CostStructure { SUM, MAX, MIN };
@@ -124,11 +121,6 @@ class PlayerCost {
   bool IsTimeAdditive() const { return cost_structure_ == SUM; }
   bool IsMaxOverTime() const { return cost_structure_ == MAX; }
   bool IsMinOverTime() const { return cost_structure_ == MIN; }
-
-  // Return empty cost quadraticization except for regularization.
-  QuadraticCostApproximation NullQuadraticization(PlayerIndex ii,
-                                                  Dimension xdim,
-                                                  Dimension udim) const;
 
   // Accessors.
   const std::vector<std::shared_ptr<Cost>>& StateCosts() const {

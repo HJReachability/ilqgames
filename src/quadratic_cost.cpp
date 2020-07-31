@@ -63,8 +63,7 @@ float QuadraticCost::Evaluate(const VectorXf& input) const {
 }
 
 void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad,
-                                 float exponential_constant) const {
+                                 VectorXf* grad) const {
   CHECK_LT(dimension_, input.size());
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
@@ -75,22 +74,10 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), grad->size());
 
   // Handle single dimension case first.
-  const float aw = (exponential_constant == 0.0)
-                       ? exponential_constant_ * weight_
-                       : exponential_constant * weight_;
-
   if (dimension_ >= 0) {
     const float delta = input(dimension_) - nominal_;
-    float dx = weight_ * delta;
-    float ddx = weight_;
-
-    if (IsExponentiated() || exponential_constant != 0.0) {
-      const float aw_delta = aw * delta;
-      const float exp_cost = std::exp(0.5 * aw_delta * delta);
-
-      dx = aw_delta * exp_cost;
-      ddx = aw * (aw * dx * dx + 1.0) * exp_cost;
-    }
+    const float dx = weight_ * delta;
+    const float ddx = weight_;
 
     (*grad)(dimension_) += dx;
     (*hess)(dimension_, dimension_) += ddx;
@@ -100,31 +87,9 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   else {
     const VectorXf delta = input - VectorXf::Constant(input.size(), nominal_);
 
-    if (IsExponentiated() || exponential_constant != 0.0) {
-      const float exp_cost = std::exp(0.5 * aw * delta.squaredNorm());
-      const float aw_sq = aw * aw;
-      VectorXf delta_sq(delta.size());
-
-      *grad += aw * delta * exp_cost;
-
-      for (size_t ii = 0; ii < hess->rows(); ii++) {
-        delta_sq(ii) = delta(ii) * delta(ii);
-
-        for (size_t jj = 0; jj < hess->cols(); jj++) {
-          if (ii == jj) continue;
-          (*hess)(ii, jj) += aw_sq * delta(ii) * delta(jj) * exp_cost;
-        }
-      }
-
-      hess->diagonal() =
-          hess->diagonal() +
-          exp_cost * aw *
-              (aw * delta_sq + VectorXf::Constant(delta.size(), 1.0));
-    } else {
-      *grad += weight_ * delta;
-      hess->diagonal() =
-          hess->diagonal() + VectorXf::Constant(input.size(), weight_);
-    }
+    *grad += weight_ * delta;
+    hess->diagonal() =
+      hess->diagonal() + VectorXf::Constant(input.size(), weight_);
   }
 }
 

@@ -76,12 +76,9 @@ struct SolverParams {
   // Whether solver should shoot for an open loop or feedback Nash.
   bool open_loop = false;
 
-  // Exponential scale factor (used in reachability problems).
-  float exponential_constant = 0.0;
-
-  // Optionally specify a control cost weight. Defaults negative, which should
-  // be interpreted by examples as though it was not specified externally.
-  float control_cost_weight = -1.0;
+  // State and control regularization.
+  float state_regularization = 0.0;
+  float control_regularization = 0.0;
 };  // struct SolverParams
 
 }  // namespace ilqgames

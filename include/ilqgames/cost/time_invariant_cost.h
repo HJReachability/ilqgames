@@ -59,33 +59,19 @@ class TimeInvariantCost : public Cost {
   float Evaluate(Time t, const VectorXf& input) const {
     return Evaluate(input);
   }
-  float EvaluateExponential(const VectorXf& input) const {
-    return Cost::EvaluateExponential(0.0, input);
-  }
 
   // Quadraticize this cost at the given input, and add to the running set of
   // sum of gradients and Hessians.
   virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad,
-                            float exponential_constant = 0.0) const = 0;
+                            VectorXf* grad) const = 0;
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad, float exponential_constant = 0.0) const {
-    Quadraticize(input, hess, grad, exponential_constant);
+                    VectorXf* grad) const {
+    Quadraticize(input, hess, grad);
   }
 
  protected:
   explicit TimeInvariantCost(float weight, const std::string& name = "")
       : Cost(weight, name) {}
-
-  // Modify existing derivatives if exponentiated.
-  void ModifyDerivatives(float exponential_constant, const VectorXf& input,
-                         float* dx, float* ddx, float* dy = nullptr,
-                         float* ddy = nullptr, float* dxdy = nullptr,
-                         float* dz = nullptr, float* ddz = nullptr,
-                         float* dxdz = nullptr, float* dydz = nullptr) const {
-    Cost::ModifyDerivatives(exponential_constant, 0.0, input, dx, ddx, dy, ddy,
-                            dxdy, dz, ddz, dxdz, dydz);
-  }
 };  //\class TimeInvariantCost
 
 }  // namespace ilqgames

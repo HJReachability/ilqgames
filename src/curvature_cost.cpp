@@ -54,8 +54,7 @@ float CurvatureCost::Evaluate(const VectorXf& input) const {
 }
 
 void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad,
-                                 float exponential_constant) const {
+                                 VectorXf* grad) const {
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
 
@@ -76,9 +75,6 @@ void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   float ddomega = weight_over_vsq;
   float ddv = 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
   float domega_dv = -2.0 * weight_omega_over_vsq / v;
-
-  ModifyDerivatives(exponential_constant, input, &domega, &ddomega, &dv, &ddv,
-                    &domega_dv);
 
   (*grad)(omega_idx_) += domega;
   (*grad)(v_idx_) += dv;

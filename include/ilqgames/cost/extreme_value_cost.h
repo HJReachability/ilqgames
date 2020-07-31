@@ -63,7 +63,7 @@ class ExtremeValueCost : public Cost {
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad, float exponential_constant = 0.0) const;
+                    VectorXf* grad) const;
 
   // Return a pointer to the extreme cost, and optionally evaluate it too.
   const Cost* ExtremeCost(Time t, const VectorXf& input,

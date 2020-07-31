@@ -84,10 +84,6 @@ static constexpr float kDMax = 0.5;      // m/s
 
 // State dimensions.
 using Dyn = TwoPlayerUnicycle4D;
-
-// Regularization.
-static constexpr float kStateRegularization = 10.0;
-static constexpr float kControlRegularization = 10.0;
 }  // anonymous namespace
 
 TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
@@ -115,26 +111,11 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
     operating_point_->us[kk][0](0) = -0.5;
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1", kStateRegularization, kControlRegularization),
-      p2_cost("P2", kStateRegularization, kControlRegularization);
+  PlayerCost p1_cost("P1", params.state_regularization,
+                     params.control_regularization),
+      p2_cost("P2", params.state_regularization, params.control_regularization);
 
-  // Penalize and constrain control effort.
-  const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, Dyn::kOmegaIdx, 0.0, "Steering");
-  p1_cost.AddControlCost(0, p1_omega_cost);
-
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, Dyn::kAIdx, 0.0, "Acceleration");
-  p1_cost.AddControlCost(0, p1_a_cost);
-
-  const auto p2_dx_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, Dyn::kDxIdx, 0.0, "Dx");
-  p2_cost.AddControlCost(1, p2_dx_cost);
-
-  const auto p2_dy_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, Dyn::kDyIdx, 0.0, "Dy");
-  p2_cost.AddControlCost(1, p2_dy_cost);
-
+  // Constrain control effort.
   const auto p1_omega_max_constraint =
       std::make_shared<SingleDimensionConstraint>(
           Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
@@ -170,23 +151,21 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   // const float target_radius =
   //     std::hypot(FLAGS_px0 + distance_traveled * std::cos(FLAGS_theta0),
   //                FLAGS_py0 + distance_traveled * std::sin(FLAGS_theta0));
-  const float target_radius = -FLAGS_py0;
-  const Polyline2 circle = DrawCircle(Point2::Zero(), target_radius, 10);
+  const float kTargetRadius = 1.0;
+  const Polyline2 circle = DrawCircle(Point2::Zero(), kTargetRadius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
                                       kAvoid, "Target"));
   const std::shared_ptr<Polyline2SignedDistanceCost> p2_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kPxIdx, Dyn::kPyIdx},
-                                      kAvoid, "Target"));
+                                      !kAvoid, "Target"));
 
   p1_cost.AddStateCost(p1_target_cost);
   p2_cost.AddStateCost(p2_target_cost);
 
-  // Make sure costs are exponentiated.
-  CHECK_GT(params.exponential_constant, 0.0);
-  p1_cost.SetExponentialConstant(params.exponential_constant);
-  p2_cost.SetExponentialConstant(params.exponential_constant);
-  p2_cost.SetExponentialSign(-1.0);
+  // Make sure costs are max-over-time.
+  p1_cost.SetMaxOverTime();
+  p2_cost.SetMaxOverTime();
 
   // Set up solver.
   solver_.reset(

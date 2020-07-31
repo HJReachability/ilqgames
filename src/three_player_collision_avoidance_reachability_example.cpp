@@ -137,10 +137,11 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1", params.control_cost_weight,
-                     params.control_cost_weight),
-      p2_cost("P2", params.control_cost_weight, params.control_cost_weight),
-      p3_cost("P3", params.control_cost_weight, params.control_cost_weight);
+  PlayerCost p1_cost("P1", params.state_regularization,
+                     params.control_regularization),
+      p2_cost("P2", params.state_regularization, params.control_regularization),
+      p3_cost("P3", params.control_regularization,
+              params.control_regularization);
 
   // Constrain control input.
   const auto p1_omega_max_constraint =
@@ -216,10 +217,7 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
   p2_cost.AddStateCost(p2_proximity_cost);
   p3_cost.AddStateCost(p3_proximity_cost);
 
-  // Make sure costs are exponentiated.
-  // p1_cost.SetExponentialConstant(params.exponential_constant);
-  // p2_cost.SetExponentialConstant(params.exponential_constant);
-  // p3_cost.SetExponentialConstant(params.exponential_constant);
+  // Make sure costs are max-over-time.
   p1_cost.SetMaxOverTime();
   p2_cost.SetMaxOverTime();
   p3_cost.SetMaxOverTime();

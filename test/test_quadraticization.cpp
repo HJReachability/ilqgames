@@ -93,14 +93,10 @@ VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
   VectorXf query(input);
   for (size_t ii = 0; ii < input.size(); ii++) {
     query(ii) += kGradForwardStep;
-    const float hi = (cost.IsExponentiated())
-                         ? cost.EvaluateExponential(t, query)
-                         : cost.Evaluate(t, query);
+    const float hi = cost.Evaluate(t, query);
 
     query(ii) = input(ii) - kGradForwardStep;
-    const float lo = (cost.IsExponentiated())
-                         ? cost.EvaluateExponential(t, query)
-                         : cost.Evaluate(t, query);
+    const float lo = cost.Evaluate(t, query);
 
     grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
     query(ii) = input(ii);
@@ -317,20 +313,8 @@ TEST(QuadraticCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(QuadraticCostTest, QuadraticizesExponentialCorrectly) {
-  QuadraticCost cost(kCostWeight, -1, 1.0);
-  cost.SetExponentialConstant(kExponentialConstant);
-  CheckQuadraticization(cost);
-}
-
 TEST(QuadraticNormCostTest, QuadraticizesCorrectly) {
   QuadraticNormCost cost(kCostWeight, {1, 2}, 1.0);
-  CheckQuadraticization(cost);
-}
-
-TEST(QuadraticNormCostTest, QuadraticizesExponentialCorrectly) {
-  QuadraticNormCost cost(kCostWeight, {1, 2}, 1.0);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -339,33 +323,14 @@ TEST(SemiquadraticCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(SemiquadraticCostTest, QuadraticizesExponentialCorrectly) {
-  SemiquadraticCost cost(kCostWeight, 0, 0.0, true);
-  cost.SetExponentialConstant(kExponentialConstant);
-  CheckQuadraticization(cost);
-}
-
 TEST(SemiquadraticNormCostTest, QuadraticizesCorrectly) {
   SemiquadraticNormCost cost(kCostWeight, {1, 2}, 1.0, true);
-  CheckQuadraticization(cost);
-}
-
-TEST(SemiquadraticNormCostTest, QuadraticizesExponentialCorrectly) {
-  SemiquadraticNormCost cost(kCostWeight, {1, 2}, 1.0, true);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
 TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   QuadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1});
-  CheckQuadraticization(cost);
-}
-
-TEST(QuadraticPolyline2CostTest, QuadraticizesExponentialCorrectly) {
-  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
-  QuadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1});
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -376,26 +341,10 @@ TEST(RouteProgressCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(RouteProgressCostTest, QuadraticizesExponentialCorrectly) {
-  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
-  constexpr float kNominalSpeed = 0.1;
-  RouteProgressCost cost(kCostWeight, kNominalSpeed, polyline, {0, 1});
-  cost.SetExponentialConstant(kExponentialConstant);
-  CheckQuadraticization(cost);
-}
-
 TEST(SemiquadraticPolyline2CostTest, QuadraticizesCorrectly) {
   Polyline2 polyline(
       {Point2(-200.0, -200.0), Point2(0.5, 1.0), Point2(200.0, 200.0)});
   SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.5, true);
-  CheckQuadraticization(cost);
-}
-
-TEST(SemiquadraticPolyline2CostTest, QuadraticizesExponentialCorrectly) {
-  Polyline2 polyline(
-      {Point2(-200.0, -200.0), Point2(0.5, 1.0), Point2(200.0, 200.0)});
-  SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.5, true);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -404,20 +353,8 @@ TEST(CurvatureCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(CurvatureCostTest, QuadraticizesExponentialCorrectly) {
-  CurvatureCost cost(kCostWeight, 0, 1);
-  cost.SetExponentialConstant(kExponentialConstant);
-  CheckQuadraticization(cost);
-}
-
 TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
   NominalPathLengthCost cost(kCostWeight, 0, 1.0);
-  CheckQuadraticization(cost);
-}
-
-TEST(NominalPathLengthCostTest, QuadraticizesExponentialCorrectly) {
-  NominalPathLengthCost cost(kCostWeight, 0, 1.0);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -426,20 +363,8 @@ TEST(ProximityCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(ProximityCostTest, QuadraticizesExponentialCorrectly) {
-  ProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
-  cost.SetExponentialConstant(kExponentialConstant);
-  CheckQuadraticization(cost);
-}
-
 TEST(LocallyConvexProximityCostTest, QuadraticizesCorrectly) {
   LocallyConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
-  CheckQuadraticization(cost);
-}
-
-TEST(LocallyConvexProximityCostTest, QuadraticizesExponentialCorrectly) {
-  LocallyConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -448,38 +373,14 @@ TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(WeightedConvexProximityCostTest, QuadraticizesExponentialCorrectly) {
-  WeightedConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 4, 5, 0.0);
-  cost.SetExponentialConstant(kExponentialConstant);
-  CheckQuadraticization(cost);
-}
-
 TEST(OrientationCostTest, QuadraticizesCorrectly) {
   OrientationCost cost(kCostWeight, 1, M_PI_2);
-  CheckQuadraticization(cost);
-}
-
-TEST(OrientationCostTest, QuadraticizesExponentialCorrectly) {
-  OrientationCost cost(kCostWeight, 1, M_PI_2);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
 TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
   ProximityConstraint outside_constraint({0, 1}, {2, 3}, 0.0, false);
   CheckQuadraticization(outside_constraint);
-}
-
-TEST(Polyline2SignedDistanceConstraintTest, QuadraticizesCorrectly) {
-  const Polyline2 polyline(
-      {Point2(2.0, -2.0), Point2(-0.5, 1.0), Point2(2.0, 2.0)});
-  Polyline2SignedDistanceConstraint left_constraint(polyline, {0, 1}, 10.0,
-                                                    false);
-  CheckQuadraticization(left_constraint);
-
-  Polyline2SignedDistanceConstraint right_constraint(polyline, {0, 1}, -10.0,
-                                                     true);
-  CheckQuadraticization(right_constraint);
 }
 
 TEST(SingleDimensionConstraintTest, SingleDimensionCorrectly) {
@@ -496,21 +397,8 @@ TEST(Polyline2SignedDistanceCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(Polyline2SignedDistanceCostTest, QuadraticizesExponentialCorrectly) {
-  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
-  Polyline2SignedDistanceCost cost(polyline, {0, 1});
-  cost.SetExponentialConstant(kExponentialConstant);
-  CheckQuadraticization(cost);
-}
-
 TEST(SignedDistanceCostTest, QuadraticizesCorrectly) {
   SignedDistanceCost cost({0, 1}, {2, 3}, 5.0);
-  CheckQuadraticization(cost);
-}
-
-TEST(SignedDistanceCostTest, QuadraticizesExponentialCorrectly) {
-  SignedDistanceCost cost({0, 1}, {2, 3}, 5.0);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }
 
@@ -520,15 +408,5 @@ TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
   const std::shared_ptr<const QuadraticCost> cost2(
       new QuadraticCost(kCostWeight, -1, 1.0));
   ExtremeValueCost cost({cost1, cost2}, true);
-  CheckQuadraticization(cost);
-}
-
-TEST(ExtremeValueCostTest, QuadraticizesExponentialCorrectly) {
-  const std::shared_ptr<const SignedDistanceCost> cost1(
-      new SignedDistanceCost({0, 1}, {2, 3}, 5.0));
-  const std::shared_ptr<const QuadraticCost> cost2(
-      new QuadraticCost(kCostWeight, -1, 1.0));
-  ExtremeValueCost cost({cost1, cost2}, true);
-  cost.SetExponentialConstant(kExponentialConstant);
   CheckQuadraticization(cost);
 }

@@ -69,8 +69,7 @@ float QuadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
 }
 
 void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                          VectorXf* grad,
-                                          float exponential_constant) const {
+                                          VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 
@@ -116,8 +115,6 @@ void QuadraticPolyline2Cost::Quadraticize(const VectorXf& input, MatrixXf* hess,
     dx = w_cross * unit_segment.y();
     dy = -w_cross * unit_segment.x();
   }
-
-  ModifyDerivatives(exponential_constant, input, &dx, &ddx, &dy, &ddy, &dxdy);
 
   (*grad)(xidx_) += dx;
   (*grad)(yidx_) += dy;

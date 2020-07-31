@@ -63,9 +63,9 @@ float Polyline2SignedDistanceCost::Evaluate(const VectorXf& input) const {
          std::sqrt(std::abs(signed_squared_distance));
 }
 
-void Polyline2SignedDistanceCost::Quadraticize(
-    const VectorXf& input, MatrixXf* hess, VectorXf* grad,
-    float exponential_constant) const {
+void Polyline2SignedDistanceCost::Quadraticize(const VectorXf& input,
+                                               MatrixXf* hess,
+                                               VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 
@@ -109,8 +109,6 @@ void Polyline2SignedDistanceCost::Quadraticize(
     ddy = 0.0;
     dxdy = 0.0;
   }
-
-  ModifyDerivatives(exponential_constant, input, &dx, &ddx, &dy, &ddy, &dxdy);
 
   (*grad)(xidx_) += dx;
   (*grad)(yidx_) += dy;

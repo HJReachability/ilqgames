@@ -55,39 +55,16 @@ class Cost {
  public:
   virtual ~Cost() {}
 
-  // Evaluate this cost at the current time and input. Also provide a utility
-  // for evaluating the exponentiated version of this cost, i.e. exp(a * cost)
+  // Evaluate this cost at the current time and input.
   virtual float Evaluate(Time t, const VectorXf& input) const = 0;
-  virtual float EvaluateExponential(Time t, const VectorXf& input) const {
-    return exponential_sign_ *
-           std::exp(exponential_constant_ * Evaluate(t, input));
-  }
 
   // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians. Optionally, can provide a nonzero
-  // exponential constant which will be used in quadratization.
+  // sum of gradients and Hessians.
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad,
-                            float exponential_constant = 0.0) const = 0;
+                            VectorXf* grad) const = 0;
 
   // Access the name of this cost.
   const std::string& Name() const { return name_; }
-
-  // Set exponential constant. See below for further details.
-  void SetExponentialConstant(float a) {
-    CHECK_GE(a, 0.0);
-    exponential_constant_ = a;
-  }
-  bool IsExponentiated(float* a = nullptr) const {
-    if (a) *a = exponential_constant_;
-    return std::abs(exponential_constant_) > constants::kSmallNumber;
-  }
-
-  // Set exponential sign. See below for further details.
-  void SetExponentialSign(float s) {
-    CHECK_EQ(std::abs(s), 1.0);
-    exponential_sign_ = s;
-  }
 
   // Reset the initial time associated to this cost.
   static void ResetInitialTime(Time t0) { initial_time_ = t0; };
@@ -98,19 +75,7 @@ class Cost {
 
  protected:
   explicit Cost(float weight, const std::string& name = "")
-      : weight_(weight),
-        name_(name),
-        exponential_constant_(0.0),
-        exponential_sign_(1.0) {}
-
-  // Modify existing derivatives if exponentiated, and optionally use nonzero
-  // provided exponential constant.
-  void ModifyDerivatives(float exponential_constant, Time t,
-                         const VectorXf& input, float* dx, float* ddx,
-                         float* dy = nullptr, float* ddy = nullptr,
-                         float* dxdy = nullptr, float* dz = nullptr,
-                         float* ddz = nullptr, float* dxdz = nullptr,
-                         float* dydz = nullptr) const;
+      : weight_(weight), name_(name) {}
 
   // Multiplicative weight associated to this cost.
   float weight_;
@@ -120,20 +85,6 @@ class Cost {
 
   // Initial time associated to this cost.
   static Time initial_time_;
-
-  // Constant multiplying all costs before they get exponentiated in
-  // quadraticization,
-  // NOTE: This defaults to zero but can be positive to get a max over time
-  // approximation.
-  // NOTE: This only takes effect during quadraticization, but not during cost
-  // evaluation, since the intent is to approximate a min or max over time.
-  // NOTE: When this is nearly zero, we just assume that exponentiated costs are
-  // not active and resort to regular (non-exponentiated costs).
-  float exponential_constant_;
-
-  // Sign of cost (+1 or -1) after exponentiation (only used if exponentiated).
-  // Used for adversarial players.
-  float exponential_sign_;
 };  //\class Cost
 
 }  // namespace ilqgames

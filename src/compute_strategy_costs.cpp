@@ -67,16 +67,6 @@ std::vector<float> ComputeStrategyCosts(
   VectorXf x(x0);
   Time t = 0.0;
 
-  // Keep track of whether costs are exponentiated.
-  float a;
-  const bool is_exponentiated = player_costs.front().IsExponentiated(&a);
-
-  for (size_t ii = 1; ii < player_costs.size(); ii++) {
-    float a_prime;
-    CHECK_EQ(is_exponentiated, player_costs[ii].IsExponentiated(&a_prime));
-    CHECK_EQ(a, a_prime);
-  }
-
   // Walk forward along the trajectory and accumulate total cost.
   std::vector<VectorXf> us(dynamics.NumPlayers());
   std::vector<float> total_costs(dynamics.NumPlayers(), 0.0);
@@ -102,21 +92,12 @@ std::vector<float> ComputeStrategyCosts(
           (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)
                       : player_costs[ii].Evaluate(t, x, us);
 
-      total_costs[ii] += (is_exponentiated) ? std::exp(a * cost) : cost;
+      total_costs[ii] += cost;
     }
 
     // Update state and time
     x = next_x;
     t = next_t;
-  }
-
-  if (is_exponentiated) {
-    CHECK_GT(a, 0.0);  // Can only really handle positive exponential constants.
-    std::transform(total_costs.begin(), total_costs.end(), total_costs.begin(),
-                   [&a](float c) {
-                     CHECK_GT(c, 0.0);
-                     return std::log(c) / a;
-                   });
   }
 
   return total_costs;

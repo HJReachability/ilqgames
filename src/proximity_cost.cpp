@@ -61,8 +61,7 @@ float ProximityCost::Evaluate(const VectorXf& input) const {
 }
 
 void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                 VectorXf* grad,
-                                 float exponential_constant) const {
+                                 VectorXf* grad) const {
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
 
@@ -85,14 +84,13 @@ void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float dx_delta = dx / delta;
   const float dy_delta = dy / delta;
 
-  float ddx1 = -weight_delta * gap * dx;
-  float ddy1 = -weight_delta * gap * dy;
-  float hess_x1x1 = weight_delta * (dx_delta * (gap * dx_delta + dx) - gap);
-  float hess_y1y1 = weight_delta * (dy_delta * (gap * dy_delta + dy) - gap);
-  float hess_x1y1 = weight_delta * (dx_delta * (gap * dy_delta + dy));
-
-  ModifyDerivatives(exponential_constant, input, &ddx1, &hess_x1x1, &ddy1,
-                    &hess_y1y1, &hess_x1y1);
+  const float ddx1 = -weight_delta * gap * dx;
+  const float ddy1 = -weight_delta * gap * dy;
+  const float hess_x1x1 =
+      weight_delta * (dx_delta * (gap * dx_delta + dx) - gap);
+  const float hess_y1y1 =
+      weight_delta * (dy_delta * (gap * dy_delta + dy) - gap);
+  const float hess_x1y1 = weight_delta * (dx_delta * (gap * dy_delta + dy));
 
   (*grad)(xidx1_) += ddx1;
   (*grad)(xidx2_) -= ddx1;

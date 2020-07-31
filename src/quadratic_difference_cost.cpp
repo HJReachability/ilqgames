@@ -59,8 +59,8 @@ float QuadraticDifferenceCost::Evaluate(const VectorXf& input) const {
 }
 
 void QuadraticDifferenceCost::Quadraticize(const VectorXf& input,
-                                           MatrixXf* hess, VectorXf* grad,
-                                           float exponential_constant) const {
+                                           MatrixXf* hess,
+                                           VectorXf* grad) const {
   CHECK_NOTNULL(hess);
 
   // Check dimensions.
@@ -70,13 +70,11 @@ void QuadraticDifferenceCost::Quadraticize(const VectorXf& input,
   if (grad) CHECK_EQ(input.size(), grad->size());
 
   for (size_t ii = 0; ii < dims1_.size(); ii++) {
-    float dx = weight_ * (input(dims1_[ii]) - input(dims2_[ii]));
-    float dy = -dx;
-    float ddx = weight_;
-    float ddy = weight_;
-    float dxdy = -weight_;
-
-    ModifyDerivatives(exponential_constant, input, &dx, &ddx, &dy, &ddy, &dxdy);
+    const float dx = weight_ * (input(dims1_[ii]) - input(dims2_[ii]));
+    const float dy = -dx;
+    const float ddx = weight_;
+    const float ddy = weight_;
+    const float dxdy = -weight_;
 
     (*hess)(dims1_[ii], dims1_[ii]) += ddx;
     (*hess)(dims2_[ii], dims2_[ii]) += ddy;

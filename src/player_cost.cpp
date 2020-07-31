@@ -129,28 +129,17 @@ void PlayerCost::AddControlConstraint(
 
 float PlayerCost::Evaluate(Time t, const VectorXf& x,
                            const std::vector<VectorXf>& us) const {
-  float total_cost = (IsExponentiated()) ? 1.0 : 0.0;
-
-  // First check if exponentiated.
-  const bool is_exponentiated = IsExponentiated();
+  float total_cost = 0.0;
 
   // State costs.
-  for (const auto& cost : state_costs_) {
-    if (IsExponentiated())
-      total_cost *= cost->EvaluateExponential(t, x);
-    else
-      total_cost += cost->Evaluate(t, x);
-  }
+  for (const auto& cost : state_costs_) total_cost += cost->Evaluate(t, x);
 
   // Control costs.
   for (const auto& pair : control_costs_) {
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
 
-    if (IsExponentiated())
-      total_cost *= cost->EvaluateExponential(t, us[player]);
-    else
-      total_cost += cost->Evaluate(t, us[player]);
+    total_cost += cost->Evaluate(t, us[player]);
   }
 
   return total_cost;
@@ -158,9 +147,21 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
 
 float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
   float cost = 0.0;
+  if (IsMinOverTime())
+    cost = constants::kInfinity;
+  else if (IsMaxOverTime())
+    cost = -constants::kInfinity;
+
   for (size_t kk = 0; kk < op.xs.size(); kk++) {
     const Time t = op.t0 + time_step * static_cast<float>(kk);
-    cost += Evaluate(t, op.xs[kk], op.us[kk]);
+    const float instantaneous_cost = Evaluate(t, op.xs[kk], op.us[kk]);
+
+    if (IsTimeAdditive())
+      cost += instantaneous_cost;
+    else if (IsMinOverTime())
+      cost = std::min(cost, instantaneous_cost);
+    else
+      cost = std::max(cost, instantaneous_cost);
   }
 
   return cost;
@@ -168,22 +169,17 @@ float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
 
 float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
                                  const std::vector<VectorXf>& us) const {
-  float total_cost = (IsExponentiated()) ? 1.0 : 0.0;
+  float total_cost = 0.0;
 
   // State costs.
-  for (const auto& cost : state_costs_) {
-    if (IsExponentiated())
-      total_cost *= cost->EvaluateExponential(next_t, next_x);
-    else
-      total_cost += cost->Evaluate(next_t, next_x);
-  }
+  for (const auto& cost : state_costs_)
+    total_cost += cost->Evaluate(next_t, next_x);
 
   // Control costs.
   for (const auto& pair : control_costs_) {
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
 
-    CHECK(!cost->IsExponentiated());
     total_cost += cost->Evaluate(t, us[player]);
   }
 
@@ -258,33 +254,26 @@ void PlayerCost::ResetConstraintBarrierWeights() {
   for (auto& pair : control_constraints_) pair.second->ResetBarrierWeight();
 }
 
-void PlayerCost::SetExponentialConstant(float a) {
-  for (auto& cost : state_costs_) cost->SetExponentialConstant(a);
-}
+QuadraticCostApproximation PlayerCost::QuadraticizeConstraints(
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
+  QuadraticCostApproximation q(x.size(), state_regularization_);
 
-bool PlayerCost::IsExponentiated(float* a) const {
-  const bool is_exponentiated = state_costs_.front()->IsExponentiated(a);
+  // Accumulate state and control constraint barriers.
+  // NOTE: these are *not* considered when evaluating costs, since the barriers
+  // are only intended to enforce inequality constraints.
+  for (const auto& constraint : state_constraints_) {
+    if (are_constraints_on_)
+      constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
 
-  auto check_exponential_constants = [&is_exponentiated, &a](const Cost& cost) {
-    float a_prime;
-    CHECK_EQ(is_exponentiated, cost.IsExponentiated(&a_prime));
-    if (a) CHECK_EQ(*a, a_prime);
-  };  // check_exponential_constants
+    // Add some equivalent cost in to help us stay feasible.
+    constraint->EquivalentCost().Quadraticize(t, x, &q.state.hess,
+                                              &q.state.grad);
+  }
 
-  for (size_t ii = 1; ii < state_costs_.size(); ii++)
-    check_exponential_constants(*state_costs_[ii]);
-
-  return is_exponentiated;
-}
-
-void PlayerCost::SetExponentialSign(float s) {
-  for (auto& cost : state_costs_) cost->SetExponentialSign(s);
-}
-
-QuadraticCostApproximation PlayerCost::NullQuadraticization(
-    PlayerIndex ii, Dimension xdim, Dimension udim) const {
-  QuadraticCostApproximation q(xdim, state_regularization_);
-  q.control.emplace(ii, SingleCostApproximation(udim, control_regularization_));
+  // Account for control constraints.
+  AccumulateControlConstraints(control_constraints_, t, us,
+                               control_regularization_, &q,
+                               are_constraints_on_);
 
   return q;
 }

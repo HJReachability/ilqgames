@@ -57,8 +57,7 @@ float NominalPathLengthCost::Evaluate(Time t, const VectorXf& input) const {
 }
 
 void NominalPathLengthCost::Quadraticize(Time t, const VectorXf& input,
-                                         MatrixXf* hess, VectorXf* grad,
-                                         float exponential_constant) const {
+                                         MatrixXf* hess, VectorXf* grad) const {
   CHECK_LT(dimension_, input.size());
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
@@ -71,19 +70,8 @@ void NominalPathLengthCost::Quadraticize(Time t, const VectorXf& input,
   // Populate Hessian and gradient.
   const float delta = input(dimension_) - t * nominal_speed_;
 
-  float dx = weight_ * delta;
-  float ddx = weight_;
-
-  if (IsExponentiated() || exponential_constant != 0.0) {
-    const float aw = (exponential_constant == 0.0)
-                         ? exponential_constant_ * weight_
-                         : exponential_constant * weight_;
-    const float aw_delta_sq = aw * delta * delta;
-    const float exp_cost = std::exp(0.5 * aw_delta_sq);
-
-    dx = aw * delta * exp_cost;
-    ddx = aw * (aw_delta_sq + 1.0) * exp_cost;
-  }
+  const float dx = weight_ * delta;
+  const float ddx = weight_;
 
   (*grad)(dimension_) += dx;
   (*hess)(dimension_, dimension_) += ddx;

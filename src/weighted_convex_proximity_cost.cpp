@@ -61,9 +61,9 @@ float WeightedConvexProximityCost::Evaluate(const VectorXf& input) const {
   return 0.5 * weight_ * vv * std::min(delta_x * delta_x, delta_y * delta_y);
 }
 
-void WeightedConvexProximityCost::Quadraticize(
-    const VectorXf& input, MatrixXf* hess, VectorXf* grad,
-    float exponential_constant) const {
+void WeightedConvexProximityCost::Quadraticize(const VectorXf& input,
+                                               MatrixXf* hess,
+                                               VectorXf* grad) const {
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
 
@@ -88,17 +88,14 @@ void WeightedConvexProximityCost::Quadraticize(
 
   float dv1dv2 = 0.0;
   if (is_x_active) {
-    float dx1 = -weight_ * delta_x * vv;
-    float dv1 = -weight_ * input(vidx1_) * delta_x * delta_x;
-    float dv2 = -weight_ * input(vidx2_) * delta_x * delta_x;
-    float ddx1 = weight_;
-    float ddv1 = weight_ * delta_x * delta_x;
-    float ddv2 = ddv1;
-    float dx1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dx);
-    float dx1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dx);
-
-    ModifyDerivatives(exponential_constant, input, &dx1, &ddx1, &dv1, &ddv1,
-                      &dx1dv1, &dv2, &ddv2, &dx1dv2, &dv1dv2);
+    const float dx1 = -weight_ * delta_x * vv;
+    const float dv1 = -weight_ * input(vidx1_) * delta_x * delta_x;
+    const float dv2 = -weight_ * input(vidx2_) * delta_x * delta_x;
+    const float ddx1 = weight_;
+    const float ddv1 = weight_ * delta_x * delta_x;
+    const float ddv2 = ddv1;
+    const float dx1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dx);
+    const float dx1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dx);
 
     // Hessian.
     (*hess)(xidx1_, xidx1_) += ddx1;
@@ -124,17 +121,14 @@ void WeightedConvexProximityCost::Quadraticize(
     (*grad)(vidx1_) += dv1;
     (*grad)(vidx2_) += dv2;
   } else {
-    float dy1 = -weight_ * delta_y * vv;
-    float dv1 = -weight_ * input(vidx1_) * delta_y * delta_y;
-    float dv2 = -weight_ * input(vidx2_) * delta_y * delta_y;
-    float ddy1 = weight_;
-    float ddv1 = weight_ * delta_y * delta_y;
-    float ddv2 = ddv1;
-    float dy1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dy);
-    float dy1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dy);
-
-    ModifyDerivatives(exponential_constant, input, &dy1, &ddy1, &dv1, &ddv1,
-                      &dy1dv1, &dv2, &ddv2, &dy1dv2, &dv1dv2);
+    const float dy1 = -weight_ * delta_y * vv;
+    const float dv1 = -weight_ * input(vidx1_) * delta_y * delta_y;
+    const float dv2 = -weight_ * input(vidx2_) * delta_y * delta_y;
+    const float ddy1 = weight_;
+    const float ddv1 = weight_ * delta_y * delta_y;
+    const float ddv2 = ddv1;
+    const float dy1dv1 = -2.0 * weight_ * input(vidx1_) * sgn(dy);
+    const float dy1dv2 = -2.0 * weight_ * input(vidx2_) * sgn(dy);
 
     // Hessian.
     (*hess)(yidx1_, yidx1_) += ddy1;

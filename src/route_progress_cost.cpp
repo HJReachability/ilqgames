@@ -64,8 +64,7 @@ float RouteProgressCost::Evaluate(Time t, const VectorXf& input) const {
 }
 
 void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
-                                     MatrixXf* hess, VectorXf* grad,
-                                     float exponential_constant) const {
+                                     MatrixXf* hess, VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 
@@ -87,14 +86,11 @@ void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
   // Compute gradient and Hessian.
   const float diff_x = current_position.x() - route_point.x();
   const float diff_y = current_position.y() - route_point.y();
-  float dx = weight_ * diff_x;
-  float dy = weight_ * diff_y;
-  float ddx = weight_;
-  float ddy = weight_;
-  float dxdy = 0.0;
-
-  ModifyDerivatives(exponential_constant, t, input, &dx, &ddx, &dy, &ddy,
-                    &dxdy);
+  const float dx = weight_ * diff_x;
+  const float dy = weight_ * diff_y;
+  const float ddx = weight_;
+  const float ddy = weight_;
+  const float dxdy = 0.0;
 
   (*grad)(xidx_) += dx;
   (*grad)(yidx_) += dy;

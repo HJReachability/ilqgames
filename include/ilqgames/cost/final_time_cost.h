@@ -70,9 +70,9 @@ class FinalTimeCost : public Cost {
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad, float exponential_constant = 0.0) const {
+                    VectorXf* grad) const {
     if (t < initial_time_ + threshold_time_) return;
-    cost_->Quadraticize(t, input, hess, grad, exponential_constant);
+    cost_->Quadraticize(t, input, hess, grad);
   }
 
  private:

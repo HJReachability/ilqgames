@@ -58,8 +58,7 @@ float QuadraticNormCost::Evaluate(const VectorXf& input) const {
 }
 
 void QuadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                     VectorXf* grad,
-                                     float exponential_constant) const {
+                                     VectorXf* grad) const {
   CHECK_LT(dim1_, input.size());
   CHECK_LT(dim2_, input.size());
   CHECK_NOTNULL(hess);
@@ -79,13 +78,11 @@ void QuadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float norm = std::sqrt(norm_sq);
   const float norm_3 = norm * norm_sq;
 
-  float dx = -weight_ * x * (-1.0 + nominal_ / norm);
-  float dy = -weight_ * y * (-1.0 + nominal_ / norm);
-  float ddx = weight_ - (nominal_ * y_sq * weight_) / norm_3;
-  float ddy = weight_ - (nominal_ * x_sq * weight_) / norm_3;
-  float dxdy = nominal_ * x * y * weight_ / norm_3;
-
-  ModifyDerivatives(exponential_constant, input, &dx, &ddx, &dy, &ddy, &dxdy);
+  const float dx = -weight_ * x * (-1.0 + nominal_ / norm);
+  const float dy = -weight_ * y * (-1.0 + nominal_ / norm);
+  const float ddx = weight_ - (nominal_ * y_sq * weight_) / norm_3;
+  const float ddy = weight_ - (nominal_ * x_sq * weight_) / norm_3;
+  const float dxdy = nominal_ * x * y * weight_ / norm_3;
 
   (*grad)(dim1_) += dx;
   (*grad)(dim2_) += dy;

@@ -126,13 +126,10 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
     operating_point_->us[kk][0](0) = -0.5;
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1");
+  PlayerCost p1_cost("P1", params.state_regularization,
+                     params.control_regularization);
 
-  // Penalize and constrain control effort.
-  const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, kP1OmegaIdx, 0.0, "Steering");
-  p1_cost.AddControlCost(0, p1_omega_cost);
-
+  // Constrain control effort.
   const auto p1_omega_max_constraint =
       std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
                                                   "Input Constraint (Max)");
@@ -151,9 +148,8 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
 
   p1_cost.AddStateCost(p1_target_cost);
 
-  // Make sure costs are exponentiated.
-  CHECK_GT(params.exponential_constant, 0.0);
-  p1_cost.SetExponentialConstant(params.exponential_constant);
+  // Make sure costs are maxima-over-time.
+  p1_cost.SetMaxOverTime();
 
   // Set up solver.
   solver_.reset(new ILQSolver(dynamics, {p1_cost}, kTimeHorizon, params));

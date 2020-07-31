@@ -72,9 +72,9 @@ float SemiquadraticPolyline2Cost::Evaluate(const VectorXf& input) const {
   return 0.5 * weight_ * diff * diff;
 }
 
-void SemiquadraticPolyline2Cost::Quadraticize(
-    const VectorXf& input, MatrixXf* hess, VectorXf* grad,
-    float exponential_constant) const {
+void SemiquadraticPolyline2Cost::Quadraticize(const VectorXf& input,
+                                              MatrixXf* hess,
+                                              VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 
@@ -131,8 +131,6 @@ void SemiquadraticPolyline2Cost::Quadraticize(
     dx = w_cross * unit_segment.y();
     dy = -w_cross * unit_segment.x();
   }
-
-  ModifyDerivatives(exponential_constant, input, &dx, &ddx, &dy, &ddy, &dxdy);
 
   (*grad)(xidx_) += dx;
   (*grad)(yidx_) += dy;

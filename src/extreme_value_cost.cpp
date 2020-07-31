@@ -56,14 +56,11 @@ float ExtremeValueCost::Evaluate(Time t, const VectorXf& input) const {
 }
 
 void ExtremeValueCost::Quadraticize(Time t, const VectorXf& input,
-                                    MatrixXf* hess, VectorXf* grad,
-                                    float exponential_constant) const {
+                                    MatrixXf* hess, VectorXf* grad) const {
   const Cost* extreme_cost = ExtremeCost(t, input);
 
   // Call that cost's 'Quadraticize' function.
-  // NOTE: use this instance's own exponential constant when evaluating the
-  // sub-cost gradient and Hessian.
-  extreme_cost->Quadraticize(t, input, hess, grad, exponential_constant_);
+  extreme_cost->Quadraticize(t, input, hess, grad);
 }
 
 const Cost* ExtremeValueCost::ExtremeCost(Time t, const VectorXf& input,

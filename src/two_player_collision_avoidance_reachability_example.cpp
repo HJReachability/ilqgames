@@ -123,13 +123,9 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
-
-  // Penalize control effort.
-  const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_cost_weight, -1, 0.0, "Steering");
-  p1_cost.AddControlCost(0, control_cost);
-  p2_cost.AddControlCost(1, control_cost);
+  PlayerCost p1_cost("P1", params.state_regularization,
+                     params.control_regularization),
+      p2_cost("P2", params.state_regularization, params.control_regularization);
 
   // Collision-avoidance cost.
   auto p1_position = [](Time t) {
@@ -154,9 +150,9 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
   p1_cost.AddStateCost(collision_avoidance_cost);
   p2_cost.AddStateCost(collision_avoidance_cost);
 
-  // Make sure costs are exponentiated.
-  p1_cost.SetExponentialConstant(params.exponential_constant);
-  p2_cost.SetExponentialConstant(params.exponential_constant);
+  // Make sure costs are max-over-time.
+  p1_cost.SetMaxOverTime();
+  p2_cost.SetMaxOverTime();
 
   // Set up solver.
   solver_.reset(
