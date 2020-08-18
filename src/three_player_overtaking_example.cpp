@@ -18,17 +18,17 @@
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
- * TH64;42;21MIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * TH64;42;21MIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+ * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+ * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Please contact the author(s) of this library if you have any questions.
  * Authors: David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
@@ -94,13 +94,19 @@ static constexpr float kP1NominalVCostWeight = 10.0;
 static constexpr float kP2NominalVCostWeight = 1.0;
 static constexpr float kP3NominalVCostWeight = 1.0;
 
+// Newly added, 05-23-2020 19:18 p.m.
+static constexpr float kMinV = 0.0;    // m/s
+static constexpr float kP1MaxV = 35.8; // m/s
+static constexpr float kP2MaxV = 35.8; // m/s
+static constexpr float kP3MaxV = 35.8; // m/s
+
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 5.0;
-static constexpr float kP1ProximityCostWeight = 100.0;
-static constexpr float kP2ProximityCostWeight = 100.0;
-static constexpr float kP3ProximityCostWeight = 100.0;
+static constexpr float kP1ProximityCostWeight = 10.0;
+static constexpr float kP2ProximityCostWeight = 10.0;
+static constexpr float kP3ProximityCostWeight = 10.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
@@ -252,8 +258,6 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p2_cost.AddStateCost(p2_lane_r_cost);
   p2_cost.AddStateCost(p2_lane_l_cost);
 
-
-
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
@@ -345,9 +349,8 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
-
-  // To edit, below: (08-18-2020):
-
+  // To edit, below (08-18-2020). Player 1 should always be ego. If that is not
+  // the case, then remember to change the initial states, etc.:
 
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
