@@ -110,7 +110,7 @@ static constexpr float kP2MaxV = 10.0; // m/s
 static constexpr float kLaneCostWeight = 10.0;
 static constexpr float kLaneBoundaryCostWeight = 5.0;
 
-static constexpr float kMinProximity = 3.0;
+static constexpr float kMinProximity = 5.0;
 static constexpr float kP1ProximityCostWeight = 300.0;
 static constexpr float kP2ProximityCostWeight = 1000.0;
 // static constexpr float kP3ProximityCostWeight = 100.0;
@@ -133,10 +133,10 @@ static constexpr float kP2NominalV = 5.0; // m/s
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 1.5;   // m
+static constexpr float kP1InitialX = 2.5;   // m
 static constexpr float kP1InitialY = -35.0; // m
 
-static constexpr float kP2InitialX = -1.5;  // m
+static constexpr float kP2InitialX = -2.5;  // m
 static constexpr float kP2InitialY = 35.0; // m
 // static constexpr float kP2InitialYAntiparallel = 55.0; // m
 

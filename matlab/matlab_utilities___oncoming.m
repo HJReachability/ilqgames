@@ -167,7 +167,7 @@ function test_region_size_vs_alpha_scaling(exec)
         % Convert parameters loop parameters to strings for names
         string_adversarial_time  = string(num2str(adversarial_time));
         tmp = exec+"_adversarial_time_" + num2str(adversarial_time);
-        exp_folder_name = "'"+tmp + "'";
+        exp_folder_name = "'"+tmp + "'";    
         experiment_name = experiment_arg + exp_folder_name;
            
         exists = check_if_folder_exists(char(tmp));

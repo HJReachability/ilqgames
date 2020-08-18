@@ -275,6 +275,7 @@ function test_region_size_vs_alpha_scaling(exec)
 %                           + " -viz=false -save=true -last_traj=true " + experiment_name;
             system(char(instruction));
         end
+        
 
 %         instruction = folder + exec + flag_adversarial_time + string_adversarial_time ...
 %                           + " -trust_region_size=10 -viz=false -save=true -last_traj=true " + ...

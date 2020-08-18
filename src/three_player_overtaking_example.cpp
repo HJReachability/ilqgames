@@ -18,7 +18,7 @@
  *       contributors may be used to endorse or promote products derived
  *       from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
+ * TH64;42;21MIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
@@ -41,6 +41,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
+#include <ilqgames/constraint/proximity_constraint.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -222,17 +225,17 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP1XIdx, kP1YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  p1_cost.AddStateCost(p1_lane_r_cost);
-  p1_cost.AddStateCost(p1_lane_l_cost);
+  p1_cost.AddStateConstraint(p1_lane_r_constraint);
+  p1_cost.AddStateConstraint(p1_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
@@ -249,50 +252,53 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p2_cost.AddStateCost(p2_lane_r_cost);
   p2_cost.AddStateCost(p2_lane_l_cost);
 
+
+
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP3XIdx, kP3YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP3XIdx, kP3YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  p3_cost.AddStateCost(p3_lane_r_cost);
-  p3_cost.AddStateCost(p3_lane_l_cost);
+  p3_cost.AddStateConstraint(p3_lane_r_constraint);
+  p3_cost.AddStateConstraint(p3_lane_l_constraint);
 
   // Max/min/nominal speed costs.
-  // const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  // const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
+
+  const auto p1_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  // p1_cost.AddStateCost(p1_min_v_cost);
-  // p1_cost.AddStateCost(p1_max_v_cost);
+  p1_cost.AddStateConstraint(p1_min_v_constraint);
+  p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
-  // const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
-  // const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
+  const auto p2_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p2_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kP2MaxV, !kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP2NominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  // p2_cost.AddStateCost(p2_min_v_cost);
-  // p2_cost.AddStateCost(p2_max_v_cost);
+  p2_cost.AddStateConstraint(p2_min_v_constraint);
+  p2_cost.AddStateConstraint(p2_max_v_constraint);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
-  // const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight, "MinV");
-  // const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
-  //     kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight, "MaxV");
+  const auto p3_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p3_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kP3MaxV, !kOrientedRight, "MaxV");
   const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
       kP3NominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  // p3_cost.AddStateCost(p3_min_v_cost);
-  // p3_cost.AddStateCost(p3_max_v_cost);
+  p3_cost.AddStateConstraint(p3_min_v_constraint);
+  p3_cost.AddStateConstraint(p3_max_v_constraint);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // Curvature costs for P1 and P2.
@@ -338,6 +344,10 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0, "Jerk");
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
+
+
+  // To edit, below: (08-18-2020):
+
 
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
