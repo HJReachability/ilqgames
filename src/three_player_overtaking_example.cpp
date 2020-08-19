@@ -220,7 +220,7 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost;
+  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
 
   // Orientation cost ...
 

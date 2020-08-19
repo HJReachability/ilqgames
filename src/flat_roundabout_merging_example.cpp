@@ -243,7 +243,7 @@ FlatRoundaboutMergingExample::FlatRoundaboutMergingExample(
   x0_ = dynamics_->ToLinearSystemState(x0);
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost, p4_cost;
+  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3"), p4_cost("P4");
 
   // Stay in lanes.
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(

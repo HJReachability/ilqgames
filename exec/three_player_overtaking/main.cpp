@@ -108,6 +108,7 @@ int main(int argc, char **argv) {
   // Set up the game.
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
+  params.enforce_constraints_in_linesearch = true;
   params.linesearch = FLAGS_linesearch;
   params.max_solver_iters = 3;
   params.trust_region_size = FLAGS_trust_region_size;
@@ -150,10 +151,11 @@ int main(int argc, char **argv) {
     return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
-  auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
-  ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
-  ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem->Solver().PlayerCosts());
+  std::shared_ptr<ilqgames::ControlSliders> sliders(
+      new ilqgames::ControlSliders({logs}));
+  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
+  ilqgames::CostInspector cost_inspector(sliders,
+                                         {problem->Solver().PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -173,8 +175,8 @@ int main(int argc, char **argv) {
   const char *glsl_version = "#version 130";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
-  // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
+// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
+// only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 #endif
 
   // Create window with graphics context
@@ -185,7 +187,7 @@ int main(int argc, char **argv) {
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1); // Enable vsync
 
-  // Initialize OpenGL loader
+// Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
   bool err = gl3wInit() != 0;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)

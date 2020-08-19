@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,16 +36,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Main GUI for three player intersection example.
+// Main GUI for DubinsOriginExample. Tests both open-loop and feedback solvers
+// on this same problem.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/examples/receding_horizon_simulator.h>
-#include <ilqgames/examples/three_player_intersection_example.h>
+#include <ilqgames/examples/dubins_origin_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
@@ -58,15 +59,18 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+// Optional log saving and visualization.
+DEFINE_bool(save, false, "Optionally save solver logs to disk.");
+DEFINE_bool(viz, true, "Visualize results in a GUI.");
+DEFINE_bool(last_traj, false,
+            "Should the solver only dump the last trajectory?");
+DEFINE_string(experiment_name, "", "Name for the experiment.");
+
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 1.0, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.5, "L_inf tolerance for convergence.");
-
-// Adversarial Time.
-DEFINE_double(adversarial_time, 0.0,
-              "Amount of time other agents are assumed to be adversarial");
+DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
+DEFINE_double(trust_region_size, 0.5, "L_infradius for trust region.");
+DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -92,41 +96,98 @@ static void glfw_error_callback(int error, const char* description) {
 
 int main(int argc, char** argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
+      ILQGAMES_LOG_DIR + std::string("/dubins_origin_example.log");
   google::SetLogDestination(0, log_file.c_str());
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_logtostderr = true;
 
-  // Set up the game.
+  // Solve for open-loop information pattern.
+  static constexpr bool kOpenLoop = true;
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
+  params.enforce_constraints_in_linesearch = true;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  // params.adversarial_time = 0.0;
-  params.adversarial_time = FLAGS_adversarial_time;
+  params.open_loop = kOpenLoop;
 
+  auto open_loop_problem =
+      std::make_shared<ilqgames::DubinsOriginExample>(params);
+  std::shared_ptr<const ilqgames::SolverLog> log = open_loop_problem->Solve();
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> open_loop_logs =
+      {log};
 
-  auto problem =
-      std::make_shared<ilqgames::ThreePlayerIntersectionExample>(params);
+  static constexpr float kMaxPerturbation = 1e-1;
+  bool is_local_nash = NumericalCheckLocalNashEquilibrium(
+      open_loop_problem->Solver().PlayerCosts(),
+      open_loop_problem->CurrentStrategies(),
+      open_loop_problem->CurrentOperatingPoint(),
+      open_loop_problem->Solver().Dynamics(), open_loop_problem->InitialState(),
+      open_loop_problem->Solver().TimeStep(), kMaxPerturbation, kOpenLoop);
+  if (is_local_nash)
+    LOG(INFO) << "Open-loop solution is a local Nash.";
+  else
+    LOG(INFO) << "Open-loop solution is not a local Nash.";
 
-  // Solve the game in a receding horizon.
-  constexpr ilqgames::Time kFinalTime = 10.0;       // s
-  constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
-  const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
-      logs = {
-          RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get())};
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(log->Save(FLAGS_last_traj));
+    } else {
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name + "_open_loop"));
+    }
+  }
+
+  // Solve for feedback equilibrium.
+  params.open_loop = !kOpenLoop;
+  auto feedback_problem =
+      std::make_shared<ilqgames::DubinsOriginExample>(params);
+
+  // Solve the game.
+  log = feedback_problem->Solve();
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> feedback_logs =
+      {log};
+
+  // Check if solution satisfies sufficient conditions for being a local Nash.
+  is_local_nash = NumericalCheckLocalNashEquilibrium(
+      feedback_problem->Solver().PlayerCosts(),
+      feedback_problem->CurrentStrategies(),
+      feedback_problem->CurrentOperatingPoint(),
+      feedback_problem->Solver().Dynamics(), feedback_problem->InitialState(),
+      feedback_problem->Solver().TimeStep(), kMaxPerturbation, !kOpenLoop);
+  if (is_local_nash)
+    LOG(INFO) << "Feedback solution is a local Nash.";
+  else
+    LOG(INFO) << "Feedback solution is not a local Nash.";
+
+  // Dump the logs and/or exit.
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(log->Save(FLAGS_last_traj));
+    } else {
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name + "_feedback"));
+    }
+  }
 
   // Create a top-down renderer, control sliders, and cost inspector.
+  if (!FLAGS_viz) return 0;
   std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({logs}));
-  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+      new ilqgames::ControlSliders({open_loop_logs, feedback_logs}));
+  ilqgames::TopDownRenderer top_down_renderer(
+      sliders, {open_loop_problem, feedback_problem});
+  ilqgames::CostInspector cost_inspector(
+      sliders, {open_loop_problem->Solver().PlayerCosts(),
+                feedback_problem->Solver().PlayerCosts()});
+  // std::shared_ptr<ilqgames::ControlSliders> sliders(
+  //     new ilqgames::ControlSliders({feedback_logs, feedback_logs}));
+  // ilqgames::TopDownRenderer top_down_renderer(
+  //     sliders, {feedback_problem, feedback_problem});
+  // ilqgames::CostInspector cost_inspector(
+  //     sliders, {feedback_problem->Solver().PlayerCosts(),
+  //               feedback_problem->Solver().PlayerCosts()});
 
-  // Setup window
+  // Setup window.
   glfwSetErrorCallback(glfw_error_callback);
   if (!glfwInit()) return 1;
 
@@ -149,7 +210,7 @@ int main(int argc, char** argv) {
 
   // Create window with graphics context
   GLFWwindow* window = glfwCreateWindow(
-      1280, 720, "ILQGames: 3-Player Intersection Example", NULL, NULL);
+      1280, 720, "ILQGames: 2-Player Collision Example", NULL, NULL);
   if (window == NULL) return 1;
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);  // Enable vsync

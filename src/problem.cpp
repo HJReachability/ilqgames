@@ -68,8 +68,8 @@ std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
   if (!solver_->Solve(x0_, *operating_point_, *strategies_,
                       &final_operating_point, &final_strategies, log.get(),
                       max_runtime)) {
-    LOG(WARNING) << "Solver failed. Not updating operating point and "
-                    "strategies to failed solution.";
+    VLOG(0) << "Solver failed. Not updating operating point and "
+               "strategies to failed solution.";
     return log;
   }
 

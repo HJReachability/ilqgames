@@ -372,9 +372,6 @@ TEST(OrientationCostTest, QuadraticizesCorrectly) {
 }
 
 TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
-  ProximityConstraint inside_constraint({0, 1}, {2, 3}, 20.0, true);
-  CheckQuadraticization(inside_constraint);
-
   ProximityConstraint outside_constraint({0, 1}, {2, 3}, 0.0, false);
   CheckQuadraticization(outside_constraint);
 }

@@ -51,8 +51,8 @@
 
 namespace ilqgames {
 
-bool Polyline2SignedDistanceConstraint::IsSatisfied(const VectorXf& input,
-                                                    float* level) const {
+bool Polyline2SignedDistanceConstraint::IsSatisfiedLevel(const VectorXf& input,
+                                                         float* level) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 
@@ -63,7 +63,7 @@ bool Polyline2SignedDistanceConstraint::IsSatisfied(const VectorXf& input,
 
   // Maybe set level.
   const float sign = (oriented_right_) ? 1.0 : -1.0;
-  if (level) *level = sign * (signed_threshold_sq_ - signed_distance_sq);
+  *level = sign * (signed_threshold_sq_ - signed_distance_sq);
 
   return (oriented_right_) ? signed_distance_sq > signed_threshold_sq_
                            : signed_distance_sq < signed_threshold_sq_;

@@ -62,7 +62,7 @@ std::vector<float> ComputeStrategyCosts(
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    float time_step, bool open_loop = false) {
+    float time_step, bool open_loop) {
   // Start at the initial state.
   VectorXf x(x0);
   Time t = 0.0;
@@ -83,9 +83,10 @@ std::vector<float> ComputeStrategyCosts(
                                 operating_point.us[kk][ii]);
     }
 
-    // Update costs.
     const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
     const Time next_t = t + time_step;
+
+    // Update costs.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
       total_costs[ii] +=
           (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)

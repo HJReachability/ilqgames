@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,44 +36,32 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all multi-player dynamical systems. Supports (discrete-time)
-// linearization and integration.
+// Two Dubins cars. One tries to follow other one, which is trying to get to the
+// origin. Both also have penalties on control input, and we are interested in
+// the difference between open-loop and feedback Nash strategies for this
+// situation. Example conceived by Forrest Laine ( forrest.laine@berkeley.edu ).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_EXAMPLES_DUBINS_ORIGIN_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_DUBINS_ORIGIN_EXAMPLE_H
 
-#include <glog/logging.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-VectorXf MultiPlayerDynamicalSystem::Integrate(
-    Time t0, Time time_interval, const VectorXf& x0,
-    const std::vector<VectorXf>& us) const {
-  VectorXf x(x0);
+class DubinsOriginExample : public TopDownRenderableProblem {
+ public:
+  ~DubinsOriginExample() {}
+  DubinsOriginExample(const SolverParams& params);
 
-  if (integrate_using_euler_) {
-    x += time_interval * Evaluate(t0, x0, us);
-  } else {
-    // Number of integration steps and corresponding time step.
-    constexpr size_t kNumIntegrationSteps = 2;
-    const double dt = time_interval / static_cast<Time>(kNumIntegrationSteps);
-
-    // RK4 integration. See https://en.wikipedia.org/wiki/Runge-Kutta_methods
-    // for further details.
-    for (Time t = t0; t < t0 + time_interval - 0.5 * dt; t += dt) {
-      const VectorXf k1 = dt * Evaluate(t, x, us);
-      const VectorXf k2 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k1, us);
-      const VectorXf k3 = dt * Evaluate(t + 0.5 * dt, x + 0.5 * k2, us);
-      const VectorXf k4 = dt * Evaluate(t + dt, x + k3, us);
-
-      x += (k1 + 2.0 * (k2 + k3) + k4) / 6.0;
-    }
-  }
-
-  return x;
-}
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class RoundaboutMergingExample
 
 }  // namespace ilqgames
+
+#endif

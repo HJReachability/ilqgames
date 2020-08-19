@@ -274,7 +274,7 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
   x0_(kP4VIdx) = kP4InitialSpeed;
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost, p4_cost;
+  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3"), p4_cost("P4");
 
   // Stay in lanes.
 

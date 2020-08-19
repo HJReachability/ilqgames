@@ -52,8 +52,8 @@
 
 namespace ilqgames {
 
-bool ProximityConstraint::IsSatisfied(const VectorXf& input,
-                                      float* level) const {
+bool ProximityConstraint::IsSatisfiedLevel(const VectorXf& input,
+                                           float* level) const {
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
   const float delta_sq = dx * dx + dy * dy;
@@ -62,7 +62,7 @@ bool ProximityConstraint::IsSatisfied(const VectorXf& input,
   const float sign = (inside_) ? -1.0 : 1.0;
 
   // Maybe populate level.
-  if (level) *level = sign * (threshold_sq_ - delta_sq);
+  *level = sign * (threshold_sq_ - delta_sq);
 
   return (inside_) ? delta_sq < threshold_sq_ : delta_sq > threshold_sq_;
 }

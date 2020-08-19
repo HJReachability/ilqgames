@@ -40,8 +40,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLE_THREE_PLAYER_OVERTAKING_EXAMPLE_H
-#define ILQGAMES_EXAMPLE_THREE_PLAYER_OVERTAKING_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLES_THREE_PLAYER_OVERTAKING_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_THREE_PLAYER_OVERTAKING_EXAMPLE_H
 
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
