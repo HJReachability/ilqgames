@@ -269,68 +269,79 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost, p4_cost;
 
-  // To edit below: (08-18-2020)
-
   // Stay in lanes.
+
+  // Player 1:
+
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1_polyline,
                                  {kP1XIdx, kP1YIdx}, "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1_polyline,
-                                     {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1_polyline,
-                                     {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane1_polyline, {kP1XIdx, kP1YIdx},
+                                            kLaneHalfWidth, kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane1_polyline, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, !kOrientedRight,
+                                            "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  p1_cost.AddStateCost(p1_lane_r_cost);
-  p1_cost.AddStateCost(p1_lane_l_cost);
+  p1_cost.AddStateConstraint(p1_lane_r_constraint);
+  p1_cost.AddStateConstraint(p1_lane_l_constraint);
+
+  // Player 2:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2_polyline,
                                  {kP2XIdx, kP2YIdx}, "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2_polyline,
-                                     {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2_polyline,
-                                     {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane2_polyline, {kP2XIdx, kP2YIdx},
+                                            kLaneHalfWidth, kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane2_polyline, {kP2XIdx, kP2YIdx},
+                                            -kLaneHalfWidth, !kOrientedRight,
+                                            "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  p2_cost.AddStateCost(p2_lane_r_cost);
-  p2_cost.AddStateCost(p2_lane_l_cost);
+  p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  p2_cost.AddStateConstraint(p2_lane_l_constraint);
+
+  // Player 3:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3_polyline,
                                  {kP3XIdx, kP3YIdx}, "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3_polyline,
-                                     {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3_polyline,
-                                     {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane3_polyline, {kP3XIdx, kP3YIdx},
+                                            kLaneHalfWidth, kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane3_polyline, {kP3XIdx, kP3YIdx},
+                                            -kLaneHalfWidth, !kOrientedRight,
+                                            "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  p3_cost.AddStateCost(p3_lane_r_cost);
-  p3_cost.AddStateCost(p3_lane_l_cost);
+  p3_cost.AddStateConstraint(p3_lane_r_constraint);
+  p3_cost.AddStateConstraint(p3_lane_l_constraint);
+
+  // Player 4:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p4_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane4_polyline,
                                  {kP4XIdx, kP4YIdx}, "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p4_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane4_polyline,
-                                     {kP4XIdx, kP4YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p4_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane4_polyline,
-                                     {kP4XIdx, kP4YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p4_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane4_polyline, {kP4XIdx, kP4YIdx},
+                                            kLaneHalfWidth, kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p4_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane4_polyline, {kP4XIdx, kP4YIdx},
+                                            -kLaneHalfWidth, !kOrientedRight,
+                                            "LaneLeftBoundary"));
   p4_cost.AddStateCost(p4_lane_cost);
-  p4_cost.AddStateCost(p4_lane_r_cost);
-  p4_cost.AddStateCost(p4_lane_l_cost);
+  p4_cost.AddStateConstraint(p4_lane_r_constraint);
+  p4_cost.AddStateConstraint(p4_lane_l_constraint);
+
+  // To edit below: (08-18-2020)
+
+  // Unedited Below:
 
   // Max/min/nominal speed costs.
   const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(

@@ -169,14 +169,14 @@ static constexpr float kP6NominalV = 5.0; // m/s
 
 static constexpr float kP1InitialX = 0.0;   // m
 static constexpr float kP1InitialY = -20.0; // m
-static constexpr float kP2InitialX = 9.0;  // m
+static constexpr float kP2InitialX = 9.0;   // m
 static constexpr float kP2InitialY = -10.0; // m
-static constexpr float kP3InitialX = 0.0;  // m
-static constexpr float kP3InitialY = 15.0; // m
-static constexpr float kP4InitialX = 6.0; // m
-static constexpr float kP4InitialY = 0.0; // m
-static constexpr float kP5InitialX = -5.0; // m
-static constexpr float kP5InitialY = 15.0; // m
+static constexpr float kP3InitialX = 0.0;   // m
+static constexpr float kP3InitialY = 15.0;  // m
+static constexpr float kP4InitialX = 6.0;   // m
+static constexpr float kP4InitialY = 0.0;   // m
+static constexpr float kP5InitialX = -5.0;  // m
+static constexpr float kP5InitialY = 15.0;  // m
 static constexpr float kP6InitialX = -5.0;  // m
 static constexpr float kP6InitialY = -25.0; // m
 
@@ -407,6 +407,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   //   operating_point_->xs[kk](kP6VIdx) = 10.0;
   // }
 
+  // Player 1:
+
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
@@ -421,6 +423,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p1_cost.AddStateCost(p1_lane_cost);
   p1_cost.AddStateConstraint(p1_lane_r_constraint);
   p1_cost.AddStateConstraint(p1_lane_l_constraint);
+
+  // Player 2:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
@@ -437,6 +441,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p2_cost.AddStateConstraint(p2_lane_r_constraint);
   p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
+  // Player 3:
+
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
@@ -451,6 +457,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p3_cost.AddStateCost(p3_lane_cost);
   p3_cost.AddStateConstraint(p3_lane_r_constraint);
   p3_cost.AddStateConstraint(p3_lane_l_constraint);
+
+  // Player 4:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p4_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP4XIdx, kP4YIdx},
@@ -467,6 +475,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p4_cost.AddStateConstraint(p4_lane_r_constraint);
   p4_cost.AddStateConstraint(p4_lane_l_constraint);
 
+  // Player 5:
+
   const std::shared_ptr<QuadraticPolyline2Cost> p5_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP5XIdx, kP5YIdx},
                                  "LaneCenter"));
@@ -481,6 +491,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p5_cost.AddStateCost(p5_lane_cost);
   p5_cost.AddStateConstraint(p5_lane_r_constraint);
   p5_cost.AddStateConstraint(p5_lane_l_constraint);
+
+  // Player 6:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p6_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP6XIdx, kP6YIdx},
