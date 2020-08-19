@@ -91,10 +91,16 @@ static constexpr float kControlRegularization = 5.0;
 
 static constexpr float kOmegaCostWeight = 500.0;
 static constexpr float kACostWeight = 50.0;
+static constexpr float kP1NominalVCostWeight = 0.1;
+static constexpr float kP2NominalVCostWeight = 0.1;
+static constexpr float kP3NominalVCostWeight = 0.1;
+static constexpr float kP4NominalVCostWeight = 0.1;
+static constexpr float kP5NominalVCostWeight = 0.1;
+static constexpr float kP6NominalVCostWeight = 0.1;
+
 static constexpr float kJerkCostWeight = 5.0;
 
 static constexpr float kMaxVCostWeight = 1000.0;
-static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kGoalCostWeight = 0.1;
 static constexpr float kLaneCostWeight = 25.0;
@@ -108,6 +114,7 @@ static constexpr float kP4ProximityCostWeight = 100.0;
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
+static constexpr bool kConstraintOrientedInside = false;
 
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5; // m
@@ -344,44 +351,45 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
   // Unedited Below:
 
   // Max/min/nominal speed costs.
-  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
+
+  const auto p1_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  p1_cost.AddStateCost(p1_min_v_cost);
-  p1_cost.AddStateCost(p1_max_v_cost);
+      kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
+  p1_cost.AddStateConstraint(p1_min_v_constraint);
+  p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
-  const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
+  const auto p2_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p2_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kP2MaxV, !kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  p2_cost.AddStateCost(p2_min_v_cost);
-  p2_cost.AddStateCost(p2_max_v_cost);
+      kP2NominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
+  p2_cost.AddStateConstraint(p2_min_v_constraint);
+  p2_cost.AddStateConstraint(p2_max_v_constraint);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
-  const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight, "MaxV");
+  const auto p3_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p3_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kP3MaxV, !kOrientedRight, "MaxV");
   const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  p3_cost.AddStateCost(p3_min_v_cost);
-  p3_cost.AddStateCost(p3_max_v_cost);
+      kP3NominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
+  p3_cost.AddStateConstraint(p3_min_v_constraint);
+  p3_cost.AddStateConstraint(p3_max_v_constraint);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
-  const auto p4_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP4VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p4_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP4VIdx, kP4MaxV, kOrientedRight, "MaxV");
+  const auto p4_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP4VIdx, kMinV, kOrientedRight, "MinV");
+  const auto p4_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP4VIdx, kP4MaxV, !kOrientedRight, "MaxV");
   const auto p4_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP4VIdx, kP4NominalV, "NominalV");
-  p4_cost.AddStateCost(p4_min_v_cost);
-  p4_cost.AddStateCost(p4_max_v_cost);
+      kP4NominalVCostWeight, kP4VIdx, kP4NominalV, "NominalV");
+  p4_cost.AddStateConstraint(p4_min_v_constraint);
+  p4_cost.AddStateConstraint(p4_max_v_constraint);
   p4_cost.AddStateCost(p4_nominal_v_cost);
 
   // Penalize acceleration.
@@ -427,21 +435,29 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
   p4_cost.AddControlCost(3, p4_omega_cost);
   p4_cost.AddControlCost(3, p4_j_cost);
 
-  // Pairwise proximity costs.
-  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  const std::shared_ptr<ProxCost> p1p4_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
-  p1_cost.AddStateCost(p1p2_proximity_cost);
-  //  p1_cost.AddStateCost(p1p3_proximity_cost);
-  p1_cost.AddStateCost(p1p4_proximity_cost);
+  // To do---modify below (08-18-2020):
 
-  // p2p1_proximity cost:  Modified to include adversarial phase
+  // Pairwise proximity costs.
+
+  // Pairwise proximity costs: Player 1.
+
+  const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP2"));
+  const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP3"));
+  const std::shared_ptr<ProximityConstraint> p1p4_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP4XIdx, kP4YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP4"));
+  p1_cost.AddStateConstraint(p1p2_proximity_constraint);
+  p1_cost.AddStateConstraint(p1p3_proximity_constraint);
+  p1_cost.AddStateConstraint(p1p4_proximity_constraint);
+
+  // Pairwise proximity costs: Player 2.
 
   const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
       new InitialTimeCost(
@@ -455,15 +471,9 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-
                         params.adversarial_time, "FinalProximityCostP1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
-
-  // const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  // p2_cost.AddStateCost(p2p1_proximity_cost);
 
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
@@ -473,9 +483,9 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
                    {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
 
   p2_cost.AddStateCost(p2p3_proximity_cost);
-  //  p2_cost.AddStateCost(p2p4_proximity_cost);
+  p2_cost.AddStateCost(p2p4_proximity_cost);
 
-  // p3p1_proximity_cost:  Modified to include adversarial phase
+  // Pairwise proximity costs: Player 3.
 
   const std::shared_ptr<InitialTimeCost> p3p1_initial_proximity_cost(
       new InitialTimeCost(
@@ -538,7 +548,7 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
       new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
 
-  //  p4_cost.AddStateCost(p4p2_proximity_cost);
+  p4_cost.AddStateCost(p4p2_proximity_cost);
   p4_cost.AddStateCost(p4p3_proximity_cost);
 
   // Set up solver.

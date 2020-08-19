@@ -88,7 +88,6 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
-
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
