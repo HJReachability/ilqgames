@@ -82,7 +82,13 @@ static constexpr Time kTimeHorizon = 10.0; // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
+// Car inter-axle distance.
+static constexpr float kInterAxleLength = 4.0; // m
+
 // Cost weights.
+static constexpr float kStateRegularization = 1.0;
+static constexpr float kControlRegularization = 5.0;
+
 static constexpr float kOmegaCostWeight = 500.0;
 static constexpr float kACostWeight = 50.0;
 static constexpr float kJerkCostWeight = 5.0;
@@ -90,6 +96,7 @@ static constexpr float kJerkCostWeight = 5.0;
 static constexpr float kMaxVCostWeight = 1000.0;
 static constexpr float kNominalVCostWeight = 10.0;
 
+static constexpr float kGoalCostWeight = 0.1;
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
@@ -104,6 +111,16 @@ static constexpr bool kOrientedRight = true;
 
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5; // m
+
+// Goal points.
+static constexpr float kP1GoalX = -6.0;  // m
+static constexpr float kP1GoalY = 600.0; // m
+
+static constexpr float kP2GoalX = 500.0; // m
+static constexpr float kP2GoalY = 12.0;  // m
+
+static constexpr float kP3GoalX = 100.0; // m
+static constexpr float kP3GoalY = 16.0;  // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0; // m/s
@@ -251,6 +268,8 @@ RoundaboutMergingExample::RoundaboutMergingExample(const SolverParams &params) {
 
   // Set up costs for all players.
   PlayerCost p1_cost, p2_cost, p3_cost, p4_cost;
+
+  // To edit below: (08-18-2020)
 
   // Stay in lanes.
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(

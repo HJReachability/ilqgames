@@ -34,7 +34,7 @@
  * Authors: David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
  */
 
-///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////2;24M////////////////////
 //
 // Three player overtaking example. Ordering is given by the following:
 // (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
@@ -351,8 +351,6 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
-  // To edit, below (08-18-2020). Player 1 should always be ego. If that is not
-  // the case, then remember to change the initial states, etc.:
 
   // Pairwise proximity costs: Player 1.
 
