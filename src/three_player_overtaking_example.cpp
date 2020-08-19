@@ -38,7 +38,7 @@
 //
 // Three player overtaking example. Ordering is given by the following:
 // (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
-//
+//[<64;65;25M][<64;58;30M]
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
@@ -107,12 +107,14 @@ static constexpr float kMinProximity = 5.0;
 static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
+
 using ProxCost = ProximityCost;
 
 // Heading weight
 static constexpr float kNominalHeadingCostWeight = 150.0;
 
 static constexpr bool kOrientedRight = true;
+static constexpr bool kConstraintOrientedInside = false;
 
 // Lane width.
 static constexpr float kLaneHalfWidth = 2.5; // m
@@ -352,23 +354,26 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   // To edit, below (08-18-2020). Player 1 should always be ego. If that is not
   // the case, then remember to change the initial states, etc.:
 
-  // Pairwise proximity costs.
-  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p1_cost.AddStateCost(p1p2_proximity_cost);
-  p1_cost.AddStateCost(p1p3_proximity_cost);
+  // Pairwise proximity costs: Player 1.
 
-  // p2p1_proximity cost:  Modified to include adversarial phase
+  const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP2"));
+  const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
+                              kMinProximity, kConstraintOrientedInside,
+                              "ProximityConstraintP3"));
+  p1_cost.AddStateConstraint(p1p2_proximity_constraint);
+  p1_cost.AddStateConstraint(p1p3_proximity_constraint);
+
+  // Pairwise proximity costs: Player 2.
 
   const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          params.adversarial_time, "InitialProximityCostP2P1"));
   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
@@ -376,19 +381,16 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        params.adversarial_time, "FinalProximityCostP2P1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
-
-  // const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  // p2_cost.AddStateCost(p2p1_proximity_cost);
 
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p2_cost.AddStateCost(p2p3_proximity_cost);
+
+  // Pairwise proximity costs: Player 3.
 
   // p3p1_proximity_cost:  Modified to include adversarial phase
 
@@ -407,11 +409,6 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
                         params.adversarial_time, "FinalProximityCostP1"));
   p3_cost.AddStateCost(p3p1_final_proximity_cost);
   final_time_costs_.push_back(p3p1_final_proximity_cost);
-
-  // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
-  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  // p3_cost.AddStateCost(p3p1_proximity_cost);
 
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
