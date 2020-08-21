@@ -77,7 +77,6 @@ DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 DEFINE_double(adversarial_time, 0.0,
               "Amount of time other agents are assumed to be adversarial");
 
-
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
 // libraries are often used for this purpose! Here we are supporting a few
@@ -96,8 +95,7 @@ DEFINE_double(adversarial_time, 0.0,
 // Include glfw3.h after our OpenGL definitions.
 #include <GLFW/glfw3.h>
 
-    static void
-    glfw_error_callback(int error, const char *description) {
+static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
@@ -152,10 +150,11 @@ int main(int argc, char **argv) {
     return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
-  auto sliders = std::make_shared<ilqgames::ControlSliders>(logs);
-  ilqgames::TopDownRenderer top_down_renderer(sliders, logs, problem);
-  ilqgames::CostInspector cost_inspector(sliders, logs,
-                                         problem->Solver().PlayerCosts());
+  std::shared_ptr<ilqgames::ControlSliders> sliders(
+      new ilqgames::ControlSliders({logs}));
+  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
+  ilqgames::CostInspector cost_inspector(sliders,
+                                         {problem->Solver().PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

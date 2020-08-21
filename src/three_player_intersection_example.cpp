@@ -36,8 +36,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Three player i64;102;25Mntersection example. Ordering is given by the following:
-// (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
+// Three player i64;102;25Mntersection example. Ordering is given by the
+// following: (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -90,15 +90,18 @@ static constexpr float kStateRegularization = 1.0;
 static constexpr float kControlRegularization = 5.0;
 
 static constexpr float kOmegaCostWeight = 0.1;
-static constexpr float kJerkCostWeight = 0.1;
+static constexpr float kJerkCostWeight = 0.05;
 static constexpr float kMaxOmega = 1.0;
 
 static constexpr float kACostWeight = 0.1;
-static constexpr float kNominalVCostWeight = 100.0;
+static constexpr float kNominalVCostWeight = 200.0;
 
 static constexpr float kLaneCostWeight = 25.0;
 
 static constexpr float kMinProximity = 6.0;
+static constexpr float kP2ProximityCostWeight = 10.0;
+static constexpr float kP3ProximityCostWeight = 10.0;
+
 using ProxCost = ProximityCost;
 
 static constexpr bool kOrientedRight = true;
@@ -113,8 +116,8 @@ static constexpr float kP2MaxV = 12.0; // m/s
 static constexpr float kP3MaxV = 2.0;  // m/s
 static constexpr float kMinV = 1.0;    // m/s
 
-static constexpr float kP1NominalV = 8.0; // m/s
-static constexpr float kP2NominalV = 5.0; // m/s
+static constexpr float kP1NominalV = 10.0; // m/s
+static constexpr float kP2NominalV = 10.0; // m/s
 static constexpr float kP3NominalV = 1.5; // m/s
 
 // Initial state.
@@ -122,7 +125,7 @@ static constexpr float kP1InitialX = -2.0;  // m
 static constexpr float kP2InitialX = -10.0; // m
 static constexpr float kP3InitialX = -11.0; // m
 
-static constexpr float kP1InitialY = -30.0; // m
+static constexpr float kP1InitialY = -20.0; // m
 static constexpr float kP2InitialY = 45.0;  // m
 static constexpr float kP3InitialY = 16.0;  // m
 
@@ -130,8 +133,8 @@ static constexpr float kP1InitialHeading = M_PI_2;  // rad
 static constexpr float kP2InitialHeading = -M_PI_2; // rad
 static constexpr float kP3InitialHeading = 0.0;     // rad
 
-static constexpr float kP1InitialSpeed = 4.0;  // m/s
-static constexpr float kP2InitialSpeed = 3.0;  // m/s
+static constexpr float kP1InitialSpeed = 2.0;  // m/s
+static constexpr float kP2InitialSpeed = 2.0;  // m/s
 static constexpr float kP3InitialSpeed = 1.25; // m/s
 
 // State dimensions.

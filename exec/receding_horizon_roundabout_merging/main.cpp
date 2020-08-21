@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/examples/roundabout_merging_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
@@ -115,21 +116,16 @@ int main(int argc, char **argv) {
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   // params.adversarial_time = 0.0;
-
-
   params.adversarial_time = FLAGS_adversarial_time;
 
   auto problem = std::make_shared<ilqgames::RoundaboutMergingExample>(params);
 
-  // Solve the game.
-  const auto start = std::chrono::system_clock::now();
-  std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
-  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
-  LOG(INFO) << "Solver completed in "
-            << std::chrono::duration<ilqgames::Time>(
-                   std::chrono::system_clock::now() - start)
-                   .count()
-            << " seconds.";
+  // Solve the game in a receding horizon.
+  constexpr ilqgames::Time kFinalTime = 10.0;      // s
+  constexpr ilqgames::Time kPlannerRuntime = 0.25; // s
+  const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
+    logs = {
+          RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get())};
 
   // Check if solution satisfies sufficient conditions for being a local Nash.
   const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
@@ -140,20 +136,20 @@ int main(int argc, char **argv) {
   else
     LOG(INFO) << "Solution may not be a local Nash.";
 
-  // Dump the logs and/or exit.
-  if (FLAGS_save) {
-    if (FLAGS_experiment_name == "") {
-      CHECK(log->Save(FLAGS_last_traj));
-    } else {
-      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
-    }
-  }
-  if (!FLAGS_viz)
-    return 0;
+  // // Dump the logs and/or exit.
+  // if (FLAGS_save) {
+  //   if (FLAGS_experiment_name == "") {
+  //     CHECK(log->Save(FLAGS_last_traj));
+  //   } else {
+  //     CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+  //   }
+  // }
+  // if (!FLAGS_viz)
+  //   return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({logs}));
+      new ilqgames::ControlSliders(logs));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
   ilqgames::CostInspector cost_inspector(sliders,
                                          {problem->Solver().PlayerCosts()});

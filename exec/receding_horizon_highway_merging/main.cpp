@@ -36,16 +36,19 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Main GUI for roundabout merging example.
+// Main GUI for highway merging example.
+// Formerly: Main GUI for three player intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/examples/roundabout_merging_example.h>
+// #include <ilqgames/examples/three_player_overtaking_example.h>
+
+#include <ilqgames/examples/highway_merging_example.h>
+#include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
 
@@ -70,7 +73,7 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
 DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.45, "L_inf tolerance for convergence.");
+DEFINE_double(convergence_tolerance, 0.25, "L_inf tolerance for convergence.");
 
 // Adversarial Time.
 DEFINE_double(adversarial_time, 0.0,
@@ -100,7 +103,7 @@ static void glfw_error_callback(int error, const char *description) {
 
 int main(int argc, char **argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/roundabout_merging.log");
+      ILQGAMES_LOG_DIR + std::string("/highway_merging.log");
   google::SetLogDestination(0, log_file.c_str());
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -108,28 +111,22 @@ int main(int argc, char **argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
+  params.max_solver_iters = 1000;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_constraints_in_linesearch = true;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   // params.adversarial_time = 0.0;
-
-
   params.adversarial_time = FLAGS_adversarial_time;
 
-  auto problem = std::make_shared<ilqgames::RoundaboutMergingExample>(params);
+  auto problem = std::make_shared<ilqgames::HighwayMergingExample>(params);
 
-  // Solve the game.
-  const auto start = std::chrono::system_clock::now();
-  std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
-  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
-  LOG(INFO) << "Solver completed in "
-            << std::chrono::duration<ilqgames::Time>(
-                   std::chrono::system_clock::now() - start)
-                   .count()
-            << " seconds.";
+  // Solve the game in a receding horizon.
+  constexpr ilqgames::Time kFinalTime = 10.0;      // s
+  constexpr ilqgames::Time kPlannerRuntime = 0.25; // s
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
+      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get());
 
   // Check if solution satisfies sufficient conditions for being a local Nash.
   const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
@@ -140,20 +137,20 @@ int main(int argc, char **argv) {
   else
     LOG(INFO) << "Solution may not be a local Nash.";
 
-  // Dump the logs and/or exit.
-  if (FLAGS_save) {
-    if (FLAGS_experiment_name == "") {
-      CHECK(log->Save(FLAGS_last_traj));
-    } else {
-      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
-    }
-  }
-  if (!FLAGS_viz)
-    return 0;
+  // // Dump the logs and/or exit.
+  // if (FLAGS_save) {
+  //   if (FLAGS_experiment_name == "") {
+  //     CHECK(log->Save(FLAGS_last_traj));
+  //   } else {
+  //     CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+  //   }
+  // }
+  // if (!FLAGS_viz)
+  //   return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({logs}));
+      new ilqgames::ControlSliders(logs));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
   ilqgames::CostInspector cost_inspector(sliders,
                                          {problem->Solver().PlayerCosts()});
@@ -182,7 +179,7 @@ int main(int argc, char **argv) {
 
   // Create window with graphics context
   GLFWwindow *window = glfwCreateWindow(
-      1280, 720, "ILQGames: Roundabout Merging Example", NULL, NULL);
+      1280, 720, "ILQGames: Highway Merging Example", NULL, NULL);
   if (window == NULL)
     return 1;
   glfwMakeContextCurrent(window);
