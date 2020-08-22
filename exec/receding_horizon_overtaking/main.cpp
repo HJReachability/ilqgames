@@ -136,21 +136,20 @@ int main(int argc, char **argv) {
   else
     LOG(INFO) << "Solution may not be a local Nash.";
 
-
-      //     // Dump the logs and/or exit.
-      //     if (FLAGS_save) {
-      //   if (FLAGS_experiment_name == "") {
-      //     CHECK(log->Save(FLAGS_last_traj));
-      //   } else {
-      //     CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
-      //   }
-      // }
-      // if (!FLAGS_viz)
-      //   return 0;
+  //     // Dump the logs and/or exit.
+  //     if (FLAGS_save) {
+  //   if (FLAGS_experiment_name == "") {
+  //     CHECK(log->Save(FLAGS_last_traj));
+  //   } else {
+  //     CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+  //   }
+  // }
+  // if (!FLAGS_viz)
+  //   return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
-  std::shared_ptr<ilqgames::ControlSliders>
-          sliders(new ilqgames::ControlSliders(logs));
+  std::shared_ptr<ilqgames::ControlSliders> sliders(
+      new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
   ilqgames::CostInspector cost_inspector(sliders,
                                          {problem->Solver().PlayerCosts()});

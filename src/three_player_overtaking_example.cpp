@@ -86,11 +86,11 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 500000.0;
-static constexpr float kJerkCostWeight = 500.0;
+static constexpr float kOmegaCostWeight = 5.0;
+static constexpr float kJerkCostWeight = 0.1;
 
-static constexpr float kACostWeight = 50.0;
-static constexpr float kP1NominalVCostWeight = 10.0;
+static constexpr float kACostWeight = 0.1;
+static constexpr float kP1NominalVCostWeight = 100.0;
 static constexpr float kP2NominalVCostWeight = 1.0;
 static constexpr float kP3NominalVCostWeight = 1.0;
 
@@ -100,13 +100,13 @@ static constexpr float kP1MaxV = 35.8; // m/s
 static constexpr float kP2MaxV = 35.8; // m/s
 static constexpr float kP3MaxV = 35.8; // m/s
 
-static constexpr float kLaneCostWeight = 25.0;
-static constexpr float kLaneBoundaryCostWeight = 100.0;
+static constexpr float kLaneCostWeight = 1000.0;
+// static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kMinProximity = 5.0;
-static constexpr float kP1ProximityCostWeight = 10.0;
-static constexpr float kP2ProximityCostWeight = 10.0;
-static constexpr float kP3ProximityCostWeight = 10.0;
+static constexpr float kMinProximity = 3.0;
+static constexpr float kP1ProximityCostWeight = 5.0;
+static constexpr float kP2ProximityCostWeight = 5.0;
+static constexpr float kP3ProximityCostWeight = 5.0;
 
 using ProxCost = ProximityCost;
 
@@ -121,8 +121,8 @@ static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
 static constexpr float kP1NominalV = 15.0; // m/s
-static constexpr float kP2NominalV = 10.0; // m/s
-static constexpr float kP3NominalV = 10.0; // m/s
+static constexpr float kP2NominalV = 5.0; // m/s
+static constexpr float kP3NominalV = 2.0; // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = 2.5;   // m
@@ -139,8 +139,8 @@ static constexpr float kP2InitialHeading = M_PI_2; // rad
 static constexpr float kP3InitialHeading = M_PI_2; // rad
 
 static constexpr float kP1InitialSpeed = 10.0; // m/s
-static constexpr float kP2InitialSpeed = 2.0;  // m/s
-static constexpr float kP3InitialSpeed = 2.0;  // m/s
+static constexpr float kP2InitialSpeed = 5.0;  // m/s
+static constexpr float kP3InitialSpeed = 10.0;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -235,11 +235,11 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP1XIdx, kP1YIdx},
-                                            -kLaneHalfWidth, kOrientedRight,
+                                            kLaneHalfWidth, !kOrientedRight,
                                             "LaneRightBoundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_l_constraint(
-      new Polyline2SignedDistanceConstraint(lane2, {kP1XIdx, kP1YIdx},
-                                            kLaneHalfWidth, !kOrientedRight,
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
   p1_cost.AddStateConstraint(p1_lane_r_constraint);
@@ -248,28 +248,28 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP2XIdx, kP2YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP2XIdx, kP2YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  p2_cost.AddStateCost(p2_lane_r_cost);
-  p2_cost.AddStateCost(p2_lane_l_cost);
+  p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP3XIdx, kP3YIdx},
-                                            -kLaneHalfWidth, kOrientedRight,
+                                            kLaneHalfWidth, !kOrientedRight,
                                             "LaneRightBoundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_l_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP3XIdx, kP3YIdx},
-                                            kLaneHalfWidth, !kOrientedRight,
+                                            -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
   p3_cost.AddStateConstraint(p3_lane_r_constraint);
@@ -350,7 +350,6 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0, "Jerk");
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
-
 
   // Pairwise proximity costs: Player 1.
 

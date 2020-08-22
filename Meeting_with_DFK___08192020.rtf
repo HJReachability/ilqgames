@@ -6,7 +6,10 @@
 \margl1440\margr1440\vieww13500\viewh10120\viewkind0
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
 
-\f0\fs40 \cf0 1. Try commenting out constraints until the GUI works.\
+\f0\b\fs40 \cf0 \ul \ulc0 08-19-2020:
+\b0 \ulnone \
+\
+1. Try commenting out constraints until the GUI works.\
 \
 2. \
 \
@@ -36,6 +39,8 @@ git merge master\
 \
 5. Ctrl+ X I \'97 Copy a different file into current file. (\'93Inserts\'94 a file).\
 \
+6. Ctrl+C Ctrl+X \'97 Uncomment a block of text.\
+\
 \pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
 
 \b \cf0 To do\'97Friday (or before Friday):
@@ -43,19 +48,36 @@ git merge master\
 \
 1. What the best way to show the receding horizon stuff is.\
 \
-2. Try increasing adversarial time horizon for the different examples.\
+2. Try out adversarial time horizon for the different examples.\
 \
-3. Generate receding horizon versions of this in the exec folder.\
+3. Generate receding horizon versions of this in the exec folder. (Done)\
 \
 4. Afterwards, if we want to set multiple adversarial times, we can try that in a simple example like oncoming, where differences in the resulting trajectories induced by this change may be more evident (than if we did this in a more complicated example).\
 \
 For receding horizon stuff:\
 \
-(1) *Undo braces on logs under:\
+(1) *Keep braces on logs under:\
 // Create a top-down renderer, control sliders, and cost inspector.\
 \
 (2) *#include <ilqgames/examples receding_horizon_simulator.h>\
 \
 (3) *Comment out block of code under \'93Dump the logs and/or exit.\'94\
+\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\b \cf0 \ul \ulc0 08-21-2020:
+\b0 \ulnone \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+\'97
+\f1\fs34 \cf2 \cb3 \CocoaLigature0 v=2 
+\f0\fs40 \cf0 \cb1 \CocoaLigature1 (verbosity level 2, can be used to tell which constraint / cost is causing the GUI to look messed up.)\
+\
+three_player_overtaking:\
+\
+Lane numbers should be modified.\
+\
+Mess\
 \
 }
