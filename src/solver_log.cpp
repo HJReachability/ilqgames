@@ -217,4 +217,21 @@ bool SaveLogs(const std::vector<SolverLog>& logs, bool only_last_trajectory,
   return true;
 }
 
+bool SaveLogs(const std::vector<std::shared_ptr<const SolverLog>>& logs,
+              bool only_last_trajectory, const std::string& experiment_name) {
+  const std::string dir_name =
+      std::string(ILQGAMES_LOG_DIR) + "/" + experiment_name;
+  if (!MakeDirectory(dir_name)) return false;
+
+  for (size_t ii = 0; ii < logs.size(); ii++) {
+    const auto& log = logs[ii];
+
+    if (!log->Save(only_last_trajectory,
+                   experiment_name + "/" + std::to_string(ii)))
+      return false;
+  }
+
+  return true;
+}
+
 }  // namespace ilqgames
