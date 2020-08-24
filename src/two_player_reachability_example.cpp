@@ -111,9 +111,12 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
     operating_point_->us[kk][0](0) = -0.5;
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1", params.state_regularization,
-                     params.control_regularization),
-      p2_cost("P2", params.state_regularization, params.control_regularization);
+  PlayerCost p1_cost("P1"), p2_cost("P2");
+
+  const auto control_cost = std::make_shared<QuadraticCost>(
+      params.control_regularization, -1, 0.0, "ControlCost");
+  p1_cost.AddControlCost(0, control_cost);
+  p2_cost.AddControlCost(1, control_cost);
 
   // Constrain control effort.
   const auto p1_omega_max_constraint =
