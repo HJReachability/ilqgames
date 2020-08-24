@@ -133,13 +133,13 @@ int main(int argc, char** argv) {
           RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get())};
 
   // Dump the logs and/or exit.
-  // if (FLAGS_save) {
-  //   if (FLAGS_experiment_name == "") {
-  //     CHECK(log->Save(FLAGS_last_traj));
-  //   } else {
-  //     CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
-  //   }
-  // }
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(log->Save(FLAGS_last_traj));
+    } else {
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+    }
+  }
 
   // Create a top-down renderer, control sliders, and cost inspector.
   if (!FLAGS_viz) return 0;
