@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/utils/make_directory.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -58,16 +59,6 @@
 #include <regex>
 
 namespace ilqgames {
-
-// Convert current time into a default experiment name for unique log saving.
-std::string SolverLog::DefaultExperimentName() {
-  const auto date =
-      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-  std::string name = std::string(std::ctime(&date));
-  std::transform(name.begin(), name.end(), name.begin(),
-                 [](char ch) { return (ch == ' ' || ch == ':') ? '_' : ch; });
-  return std::regex_replace(name, std::regex("( |\n)+$"), "");
-}
 
 VectorXf SolverLog::InterpolateState(size_t iterate, Time t) const {
   const OperatingPoint& op = operating_points_[iterate];
@@ -119,22 +110,12 @@ float SolverLog::InterpolateControl(size_t iterate, Time t, PlayerIndex player,
   return (1.0 - frac) * op.us[lo][player](dim) + frac * op.us[hi][player](dim);
 }
 
-bool SolverLog::Save(const bool only_last_trajectory,
+bool SolverLog::Save(bool only_last_trajectory,
                      const std::string& experiment_name) const {
-  auto make_directory = [](const std::string& directory_name) {
-    if (mkdir(directory_name.c_str(), 0777) == -1) {
-      LOG(ERROR) << "Could not create directory " << directory_name
-                 << ". Error msg: " << std::strerror(errno);
-      return false;
-    }
-    return true;
-  };  // make_directory
-
   // Making top-level directory
-
   const std::string dir_name =
       std::string(ILQGAMES_LOG_DIR) + "/" + experiment_name;
-  if (!make_directory(dir_name)) return false;
+  if (!MakeDirectory(dir_name)) return false;
   LOG(INFO) << "Saving to directory: " << dir_name;
 
   size_t start = 0;
@@ -143,7 +124,7 @@ bool SolverLog::Save(const bool only_last_trajectory,
   for (size_t ii = start; ii < operating_points_.size(); ii++) {
     const auto& op = operating_points_[ii];
     const std::string sub_dir_name = dir_name + "/" + std::to_string(ii);
-    if (!make_directory(sub_dir_name)) return false;
+    if (!MakeDirectory(sub_dir_name)) return false;
 
     // Dump xs.
     std::ofstream file;
@@ -208,6 +189,32 @@ inline MatrixXf SolverLog::P(size_t iterate, size_t time_index,
 inline VectorXf SolverLog::alpha(size_t iterate, size_t time_index,
                                  PlayerIndex player) const {
   return strategies_[iterate][player].alphas[time_index];
+}
+
+std::string DefaultExperimentName() {
+  const auto date =
+      std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  std::string name = std::string(std::ctime(&date));
+  std::transform(name.begin(), name.end(), name.begin(),
+                 [](char ch) { return (ch == ' ' || ch == ':') ? '_' : ch; });
+  return std::regex_replace(name, std::regex("( |\n)+$"), "");
+}
+
+bool SaveLogs(const std::vector<SolverLog>& logs, bool only_last_trajectory,
+              const std::string& experiment_name) {
+  const std::string dir_name =
+      std::string(ILQGAMES_LOG_DIR) + "/" + experiment_name;
+  if (!MakeDirectory(dir_name)) return false;
+
+  for (size_t ii = 0; ii < logs.size(); ii++) {
+    const auto& log = logs[ii];
+
+    if (!log.Save(only_last_trajectory,
+                  experiment_name + "/" + std::to_string(ii)))
+      return false;
+  }
+
+  return true;
 }
 
 }  // namespace ilqgames
