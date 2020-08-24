@@ -126,8 +126,13 @@ bool SolverLog::Save(bool only_last_trajectory,
     const std::string sub_dir_name = dir_name + "/" + std::to_string(ii);
     if (!MakeDirectory(sub_dir_name)) return false;
 
-    // Dump xs.
+    // Dump initial time.
     std::ofstream file;
+    file.open(sub_dir_name + "/t0.txt");
+    file << op.t0 << std::endl;
+    file.close();
+
+    // Dump xs.
     file.open(sub_dir_name + "/xs.txt");
     for (const auto& x : op.xs) {
       file << x.transpose() << std::endl;
