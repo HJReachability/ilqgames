@@ -161,9 +161,10 @@ void TopDownRenderer::Render() {
       const ImVec2 p =
           PositionToWindowCoordinates(current_pxs[ii], current_pys[ii]);
 
-      if (ii >= current_thetas.size())
-        draw_list->AddCircleFilled(p, agent_radius, agent_color);
-      else {
+      if (ii >= current_thetas.size()) {
+        VLOG(2) << "More players than coordinates to visualize.";
+        break;
+      } else {
         const float heading = HeadingToWindowCoordinates(current_thetas[ii]);
         const float cheading = std::cos(heading);
         const float sheading = std::sin(heading);

@@ -84,21 +84,30 @@ void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float dx_delta = dx / delta;
   const float dy_delta = dy / delta;
 
+  const float ddx1 = -weight_delta * gap * dx;
+  const float ddy1 = -weight_delta * gap * dy;
   const float hess_x1x1 =
       weight_delta * (dx_delta * (gap * dx_delta + dx) - gap);
+  const float hess_y1y1 =
+      weight_delta * (dy_delta * (gap * dy_delta + dy) - gap);
+  const float hess_x1y1 = weight_delta * (dx_delta * (gap * dy_delta + dy));
+
+  (*grad)(xidx1_) += ddx1;
+  (*grad)(xidx2_) -= ddx1;
+
+  (*grad)(yidx1_) += ddy1;
+  (*grad)(yidx2_) -= ddy1;
+
   (*hess)(xidx1_, xidx1_) += hess_x1x1;
   (*hess)(xidx1_, xidx2_) -= hess_x1x1;
   (*hess)(xidx2_, xidx1_) -= hess_x1x1;
   (*hess)(xidx2_, xidx2_) += hess_x1x1;
 
-  const float hess_y1y1 =
-      weight_delta * (dy_delta * (gap * dy_delta + dy) - gap);
   (*hess)(yidx1_, yidx1_) += hess_y1y1;
   (*hess)(yidx1_, yidx2_) -= hess_y1y1;
   (*hess)(yidx2_, yidx1_) -= hess_y1y1;
   (*hess)(yidx2_, yidx2_) += hess_y1y1;
 
-  const float hess_x1y1 = weight_delta * (dx_delta * (gap * dy_delta + dy));
   (*hess)(xidx1_, yidx1_) += hess_x1y1;
   (*hess)(yidx1_, xidx1_) += hess_x1y1;
 
@@ -110,14 +119,6 @@ void ProximityCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
 
   (*hess)(xidx2_, yidx2_) += hess_x1y1;
   (*hess)(yidx2_, xidx2_) += hess_x1y1;
-
-  const float ddx1 = -weight_delta * gap * dx;
-  (*grad)(xidx1_) += ddx1;
-  (*grad)(xidx2_) -= ddx1;
-
-  const float ddy1 = -weight_delta * gap * dy;
-  (*grad)(yidx1_) += ddy1;
-  (*grad)(yidx2_) -= ddy1;
 }
 
 }  // namespace ilqgames

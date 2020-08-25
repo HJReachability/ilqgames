@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.11"/>
-<title>ilqgames: ilqgames::OrientationFlatCost Class Reference</title>
+<title>ilqgames: ilqgames::Polyline2SignedDistanceCost Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -82,39 +82,39 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><b>ilqgames</b></li><li class="navelem"><a class="el" href="classilqgames_1_1_orientation_flat_cost.html">OrientationFlatCost</a></li>  </ul>
+<li class="navelem"><b>ilqgames</b></li><li class="navelem"><a class="el" href="classilqgames_1_1_polyline2_signed_distance_cost.html">Polyline2SignedDistanceCost</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="classilqgames_1_1_orientation_flat_cost-members.html">List of all members</a>  </div>
+<a href="classilqgames_1_1_polyline2_signed_distance_cost-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">ilqgames::OrientationFlatCost Class Reference</div>  </div>
+<div class="title">ilqgames::Polyline2SignedDistanceCost Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <div class="dynheader">
-Inheritance diagram for ilqgames::OrientationFlatCost:</div>
+Inheritance diagram for ilqgames::Polyline2SignedDistanceCost:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="classilqgames_1_1_orientation_flat_cost.png" usemap="#ilqgames::OrientationFlatCost_map" alt=""/>
-  <map id="ilqgames::OrientationFlatCost_map" name="ilqgames::OrientationFlatCost_map">
-<area href="classilqgames_1_1_time_invariant_cost.html" alt="ilqgames::TimeInvariantCost" shape="rect" coords="0,56,174,80"/>
-<area href="classilqgames_1_1_cost.html" alt="ilqgames::Cost" shape="rect" coords="0,0,174,24"/>
+  <img src="classilqgames_1_1_polyline2_signed_distance_cost.png" usemap="#ilqgames::Polyline2SignedDistanceCost_map" alt=""/>
+  <map id="ilqgames::Polyline2SignedDistanceCost_map" name="ilqgames::Polyline2SignedDistanceCost_map">
+<area href="classilqgames_1_1_time_invariant_cost.html" alt="ilqgames::TimeInvariantCost" shape="rect" coords="0,56,231,80"/>
+<area href="classilqgames_1_1_cost.html" alt="ilqgames::Cost" shape="rect" coords="0,0,231,24"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a9f888bd3236e120cc973a3cbe8c0cb13"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f888bd3236e120cc973a3cbe8c0cb13"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>OrientationFlatCost</b> (float weight, const std::pair&lt; Dimension, Dimension &gt; &amp;dims, float nominal=0.0, const std::string &amp;name=&quot;&quot;)</td></tr>
-<tr class="separator:a9f888bd3236e120cc973a3cbe8c0cb13"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c6ba86849f65fe7d3e1f8ac38cce9eb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c6ba86849f65fe7d3e1f8ac38cce9eb"></a>
+<tr class="memitem:a444d14956d2335b60e928e0394e86221"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a444d14956d2335b60e928e0394e86221"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>Polyline2SignedDistanceCost</b> (const <a class="el" href="classilqgames_1_1_polyline2.html">Polyline2</a> &amp;polyline, const std::pair&lt; Dimension, Dimension &gt; &amp;position_idxs, bool oriented_same_as_polyline=true, const std::string &amp;name=&quot;&quot;)</td></tr>
+<tr class="separator:a444d14956d2335b60e928e0394e86221"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acf991d382328987f0757fa299d58f869"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf991d382328987f0757fa299d58f869"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (const VectorXf &amp;input) const </td></tr>
-<tr class="separator:a9c6ba86849f65fe7d3e1f8ac38cce9eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4702648ebb52668d905e3d9d85b29397"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4702648ebb52668d905e3d9d85b29397"></a>
+<tr class="separator:acf991d382328987f0757fa299d58f869"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26d830bf62ef4b4e0827f8cbf779b21c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a26d830bf62ef4b4e0827f8cbf779b21c"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (const VectorXf &amp;input, MatrixXf *hess, VectorXf *grad) const </td></tr>
-<tr class="separator:a4702648ebb52668d905e3d9d85b29397"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a26d830bf62ef4b4e0827f8cbf779b21c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classilqgames_1_1_time_invariant_cost"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classilqgames_1_1_time_invariant_cost')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classilqgames_1_1_time_invariant_cost.html">ilqgames::TimeInvariantCost</a></td></tr>
 <tr class="memitem:a1e59c75a8765e4d89243c20838cc2bed inherit pub_methods_classilqgames_1_1_time_invariant_cost"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e59c75a8765e4d89243c20838cc2bed"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (Time t, const VectorXf &amp;input) const </td></tr>
@@ -161,10 +161,10 @@ static Time&#160;</td><td class="memItemRight" valign="bottom"><b>initial_time_<
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="orientation__flat__cost_8h_source.html#l00056">56</a> of file <a class="el" href="orientation__flat__cost_8h_source.html">orientation_flat_cost.h</a>.</p>
+<p>Definition at line <a class="el" href="polyline2__signed__distance__cost_8h_source.html#l00055">55</a> of file <a class="el" href="polyline2__signed__distance__cost_8h_source.html">polyline2_signed_distance_cost.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/cost/<a class="el" href="orientation__flat__cost_8h_source.html">orientation_flat_cost.h</a></li>
-<li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="orientation__flat__cost_8cpp_source.html">orientation_flat_cost.cpp</a></li>
+<li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/cost/<a class="el" href="polyline2__signed__distance__cost_8h_source.html">polyline2_signed_distance_cost.h</a></li>
+<li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="polyline2__signed__distance__cost_8cpp_source.html">polyline2_signed_distance_cost.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

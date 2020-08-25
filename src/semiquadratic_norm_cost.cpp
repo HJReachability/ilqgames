@@ -79,17 +79,23 @@ void SemiquadraticNormCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
     return;
 
   // Populate hessian and, optionally, gradient.
-  const float norm_3 = norm * norm * norm;
-  (*hess)(dim1_, dim1_) +=
-      weight_ - (threshold_ * input(dim2_) * input(dim2_) * weight_) / norm_3;
-  (*hess)(dim2_, dim2_) +=
-      weight_ - (threshold_ * input(dim1_) * input(dim1_) * weight_) / norm_3;
-  (*hess)(dim1_, dim2_) +=
-      threshold_ * input(dim1_) * input(dim2_) * weight_ / norm_3;
-  (*hess)(dim2_, dim1_) += (*hess)(dim1_, dim2_);
+  const float norm_2 = norm * norm;
+  const float norm_3 = norm * norm_2;
+  const float x = input(dim1_);
+  const float y = input(dim2_);
+  const float dx = -weight_ * x * (-1.0 + threshold_ / norm);
+  const float dy = -weight_ * y * (-1.0 + threshold_ / norm);
+  const float ddx = weight_ - (threshold_ * y * y * weight_) / norm_3;
+  const float ddy = weight_ - (threshold_ * x * x * weight_) / norm_3;
+  const float dxdy = threshold_ * x * y * weight_ / norm_3;
 
-  (*grad)(dim1_) += -weight_ * input(dim1_) * (-1.0 + threshold_ / norm);
-  (*grad)(dim2_) += -weight_ * input(dim2_) * (-1.0 + threshold_ / norm);
+  (*grad)(dim1_) += dx;
+  (*grad)(dim2_) += dy;
+
+  (*hess)(dim1_, dim1_) += ddx;
+  (*hess)(dim2_, dim2_) += ddy;
+  (*hess)(dim1_, dim2_) += dxdy;
+  (*hess)(dim2_, dim1_) += dxdy;
 }
 
 }  // namespace ilqgames

@@ -136,10 +136,12 @@ bool GameSolver::Solve(const VectorXf& x0,
   // which occurs after solving the LQ game.
   bool was_operating_point_feasible;
   std::vector<float> total_costs;
+  std::vector<size_t> times_of_extreme_costs;
   last_operating_point.swap(current_operating_point);
   CurrentOperatingPoint(last_operating_point, current_strategies,
                         &current_operating_point, &has_converged, &total_costs,
-                        false, &was_operating_point_feasible);
+                        &times_of_extreme_costs, false,
+                        &was_operating_point_feasible);
 
   // Log current iterate.
   if (log) {
@@ -186,11 +188,14 @@ bool GameSolver::Solve(const VectorXf& x0,
       const auto& us = current_operating_point.us[kk];
 
       // Quadraticize costs.
-      std::transform(player_costs_.begin(), player_costs_.end(),
-                     quadraticization_[kk].begin(),
-                     [&t, &x, &us](const PlayerCost& cost) {
-                       return cost.Quadraticize(t, x, us);
-                     });
+      for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+        const PlayerCost& cost = player_costs_[ii];
+
+        if (cost.IsTimeAdditive() || times_of_extreme_costs[ii] == kk)
+          quadraticization_[kk][ii] = cost.Quadraticize(t, x, us);
+        else
+          quadraticization_[kk][ii] = cost.QuadraticizeConstraints(t, x, us);
+      }
     }
 
     // Solve LQ game.
@@ -200,7 +205,7 @@ bool GameSolver::Solve(const VectorXf& x0,
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
                             &was_operating_point_feasible, &has_converged,
-                            &total_costs)) {
+                            &total_costs, &times_of_extreme_costs)) {
       // Maybe emit warning if exiting early.
       if (num_iterations == 1) {
         VLOG(1)
@@ -254,18 +259,26 @@ bool GameSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
     OperatingPoint* current_operating_point, bool* has_converged,
-    std::vector<float>* total_costs, bool check_trust_region,
+    std::vector<float>* total_costs,
+    std::vector<size_t>* times_of_extreme_costs, bool check_trust_region,
     bool* satisfies_constraints) const {
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
   CHECK_NOTNULL(total_costs);
+  CHECK_NOTNULL(times_of_extreme_costs);
 
+  // Initialize time, convergence, and constraint satisfaction checks.
   current_operating_point->t0 = last_operating_point.t0;
   *has_converged = true;
   if (satisfies_constraints) *satisfies_constraints = true;
+
+  // Initialize total costs and times of extreme costs.
   if (total_costs->size() != player_costs_.size())
     total_costs->resize(player_costs_.size());
   std::fill(total_costs->begin(), total_costs->end(), 0.0);
+  if (times_of_extreme_costs->size() != player_costs_.size())
+    times_of_extreme_costs->resize(player_costs_.size());
+  std::fill(times_of_extreme_costs->begin(), times_of_extreme_costs->end(), 0);
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
@@ -278,8 +291,22 @@ bool GameSolver::CurrentOperatingPoint(
     auto& current_us = current_operating_point->us[kk];
 
     // Accumulate costs.
-    for (size_t ii = 0; ii < player_costs_.size(); ii++)
-      (*total_costs)[ii] += player_costs_[ii].Evaluate(t, x, current_us);
+    for (size_t ii = 0; ii < player_costs_.size(); ii++) {
+      const float current_cost = player_costs_[ii].Evaluate(t, x, current_us);
+
+      if (player_costs_[ii].IsTimeAdditive())
+        (*total_costs)[ii] += player_costs_[ii].Evaluate(t, x, current_us);
+      else if (player_costs_[ii].IsMaxOverTime() &&
+               current_cost > (*total_costs)[ii]) {
+        (*total_costs)[ii] = current_cost;
+        (*times_of_extreme_costs)[ii] = kk;
+      } else if (player_costs_[ii].IsMinOverTime()) {
+        if (current_cost < (*total_costs)[ii]) {
+          (*total_costs)[ii] = current_cost;
+          (*times_of_extreme_costs)[ii] = kk;
+        }
+      }
+    }
 
     // Check convergence and trust region (including explicit inequality
     // constraints).
@@ -339,11 +366,11 @@ float GameSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
   return distance;
 }
 
-bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
-                                    OperatingPoint* current_operating_point,
-                                    bool* is_new_operating_point_feasible,
-                                    bool* has_converged,
-                                    std::vector<float>* total_costs) const {
+bool GameSolver::ModifyLQStrategies(
+    std::vector<Strategy>* strategies, OperatingPoint* current_operating_point,
+    bool* is_new_operating_point_feasible, bool* has_converged,
+    std::vector<float>* total_costs,
+    std::vector<size_t>* times_of_extreme_costs) const {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
@@ -357,7 +384,8 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   const OperatingPoint last_operating_point(*current_operating_point);
   bool satisfies_trust_region = CurrentOperatingPoint(
       last_operating_point, *strategies, current_operating_point, has_converged,
-      total_costs, true, is_new_operating_point_feasible);
+      total_costs, times_of_extreme_costs, true,
+      is_new_operating_point_feasible);
 
   if (!params_.linesearch) return true;
 
@@ -368,7 +396,8 @@ bool GameSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
     satisfies_trust_region = CurrentOperatingPoint(
         last_operating_point, *strategies, current_operating_point,
-        has_converged, total_costs, true, is_new_operating_point_feasible);
+        has_converged, total_costs, times_of_extreme_costs, true,
+        is_new_operating_point_feasible);
   }
 
   // Output a warning. Solver should revert to last valid operating point.

@@ -88,9 +88,11 @@ std::vector<float> ComputeStrategyCosts(
 
     // Update costs.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      total_costs[ii] +=
+      const float cost =
           (open_loop) ? player_costs[ii].EvaluateOffset(t, next_t, next_x, us)
                       : player_costs[ii].Evaluate(t, x, us);
+
+      total_costs[ii] += cost;
     }
 
     // Update state and time

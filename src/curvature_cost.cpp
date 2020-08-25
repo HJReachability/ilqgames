@@ -69,15 +69,20 @@ void CurvatureCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float one_over_vsq = 1.0 / (v * v);
   const float weight_over_vsq = weight_ * one_over_vsq;
   const float weight_omega_over_vsq = omega * weight_over_vsq;
-  (*hess)(omega_idx_, omega_idx_) += weight_over_vsq;
 
-  const float cross_term = -2.0 * weight_omega_over_vsq / v;
-  (*hess)(omega_idx_, v_idx_) += cross_term;
-  (*hess)(v_idx_, omega_idx_) += cross_term;
-  (*hess)(v_idx_, v_idx_) += 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
+  float domega = weight_omega_over_vsq;
+  float dv = -weight_omega_over_vsq * omega / v;
+  float ddomega = weight_over_vsq;
+  float ddv = 3.0 * weight_omega_over_vsq * omega * one_over_vsq;
+  float domega_dv = -2.0 * weight_omega_over_vsq / v;
 
-  (*grad)(omega_idx_) += weight_omega_over_vsq;
-  (*grad)(v_idx_) -= weight_omega_over_vsq * omega / v;
+  (*grad)(omega_idx_) += domega;
+  (*grad)(v_idx_) += dv;
+
+  (*hess)(omega_idx_, omega_idx_) += ddomega;
+  (*hess)(omega_idx_, v_idx_) += domega_dv;
+  (*hess)(v_idx_, omega_idx_) += domega_dv;
+  (*hess)(v_idx_, v_idx_) += ddv;
 }
 
 }  // namespace ilqgames

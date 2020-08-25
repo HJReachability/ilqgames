@@ -138,6 +138,7 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
   for (const auto& pair : control_costs_) {
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
+
     total_cost += cost->Evaluate(t, us[player]);
   }
 
@@ -146,9 +147,21 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
 
 float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
   float cost = 0.0;
+  if (IsMinOverTime())
+    cost = constants::kInfinity;
+  else if (IsMaxOverTime())
+    cost = -constants::kInfinity;
+
   for (size_t kk = 0; kk < op.xs.size(); kk++) {
     const Time t = op.t0 + time_step * static_cast<float>(kk);
-    cost += Evaluate(t, op.xs[kk], op.us[kk]);
+    const float instantaneous_cost = Evaluate(t, op.xs[kk], op.us[kk]);
+
+    if (IsTimeAdditive())
+      cost += instantaneous_cost;
+    else if (IsMinOverTime())
+      cost = std::min(cost, instantaneous_cost);
+    else
+      cost = std::max(cost, instantaneous_cost);
   }
 
   return cost;
@@ -166,6 +179,7 @@ float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
   for (const auto& pair : control_costs_) {
     const PlayerIndex& player = pair.first;
     const auto& cost = pair.second;
+
     total_cost += cost->Evaluate(t, us[player]);
   }
 
@@ -238,6 +252,30 @@ void PlayerCost::ScaleConstraintBarrierWeights(float scale) {
 void PlayerCost::ResetConstraintBarrierWeights() {
   for (auto& constraint : state_constraints_) constraint->ResetBarrierWeight();
   for (auto& pair : control_constraints_) pair.second->ResetBarrierWeight();
+}
+
+QuadraticCostApproximation PlayerCost::QuadraticizeConstraints(
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
+  QuadraticCostApproximation q(x.size(), state_regularization_);
+
+  // Accumulate state and control constraint barriers.
+  // NOTE: these are *not* considered when evaluating costs, since the barriers
+  // are only intended to enforce inequality constraints.
+  for (const auto& constraint : state_constraints_) {
+    if (are_constraints_on_)
+      constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
+
+    // Add some equivalent cost in to help us stay feasible.
+    constraint->EquivalentCost().Quadraticize(t, x, &q.state.hess,
+                                              &q.state.grad);
+  }
+
+  // Account for control constraints.
+  AccumulateControlConstraints(control_constraints_, t, us,
+                               control_regularization_, &q,
+                               are_constraints_on_);
+
+  return q;
 }
 
 }  // namespace ilqgames

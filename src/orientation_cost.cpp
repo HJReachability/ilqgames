@@ -70,9 +70,13 @@ void OrientationCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), grad->size());
 
   // Populate Hessian and gradient.
-  (*hess)(dim_, dim_) += weight_;
-  (*grad)(dim_) +=
-      weight_ * (std::fmod(input(dim_) - nominal_ + M_PI, M_PI * 2.0) - M_PI);
+  const float angle_diff =
+      std::fmod(input(dim_) - nominal_ + M_PI, M_PI * 2.0) - M_PI;
+  const float dx = weight_ * angle_diff;
+  const float ddx = weight_;
+
+  (*grad)(dim_) += dx;
+  (*hess)(dim_, dim_) += ddx;
 }
 
 }  // namespace ilqgames

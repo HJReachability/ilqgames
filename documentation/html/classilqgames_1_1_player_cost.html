@@ -87,6 +87,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classilqgames_1_1_player_cost-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -94,6 +95,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:ace95c2515185110fe4db8f1274ef66f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace95c2515185110fe4db8f1274ef66f9"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>CostStructure</b> { <b>SUM</b>, 
+<b>MAX</b>, 
+<b>MIN</b>
+ }</td></tr>
+<tr class="separator:ace95c2515185110fe4db8f1274ef66f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a271f96af8eeac9138b0832239ca62437"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a271f96af8eeac9138b0832239ca62437"></a>
@@ -123,6 +132,9 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>EvaluateOffset</b> (
 <tr class="memitem:ad3962847f8eda8bcfecf2096e6abccb6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3962847f8eda8bcfecf2096e6abccb6"></a>
 <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
 <tr class="separator:ad3962847f8eda8bcfecf2096e6abccb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ebb1982b3f3f852ee446ac379b3318a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ebb1982b3f3f852ee446ac379b3318a"></a>
+<a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a>&#160;</td><td class="memItemRight" valign="bottom"><b>QuadraticizeConstraints</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
+<tr class="separator:a4ebb1982b3f3f852ee446ac379b3318a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6afcddbb08549f6e9e1167fdbe335306"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6afcddbb08549f6e9e1167fdbe335306"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>TurnConstraintsOn</b> ()</td></tr>
 <tr class="separator:a6afcddbb08549f6e9e1167fdbe335306"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -147,6 +159,24 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ScaleConstraintBarrie
 <tr class="memitem:add7445e01947fcaaf9d5f1e392471970"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="add7445e01947fcaaf9d5f1e392471970"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ResetConstraintBarrierWeights</b> ()</td></tr>
 <tr class="separator:add7445e01947fcaaf9d5f1e392471970"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aabdacf36b0f3bc01b96ea1b62da9737a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aabdacf36b0f3bc01b96ea1b62da9737a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>SetTimeAdditive</b> ()</td></tr>
+<tr class="separator:aabdacf36b0f3bc01b96ea1b62da9737a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab348e49baf8f7e580914a17ce79f175e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab348e49baf8f7e580914a17ce79f175e"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>SetMaxOverTime</b> ()</td></tr>
+<tr class="separator:ab348e49baf8f7e580914a17ce79f175e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a00b0e84c89dfef9375d3ee17c9b8e4ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a00b0e84c89dfef9375d3ee17c9b8e4ef"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>SetMinOverTime</b> ()</td></tr>
+<tr class="separator:a00b0e84c89dfef9375d3ee17c9b8e4ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a7a783fc2d25d16b20d8ecb232de147"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a7a783fc2d25d16b20d8ecb232de147"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsTimeAdditive</b> () const </td></tr>
+<tr class="separator:a0a7a783fc2d25d16b20d8ecb232de147"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a07ef47dadd7821b19357062d74ab79"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a07ef47dadd7821b19357062d74ab79"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsMaxOverTime</b> () const </td></tr>
+<tr class="separator:a1a07ef47dadd7821b19357062d74ab79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff2f1b2d48982fa767c8cd9ad770710f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff2f1b2d48982fa767c8cd9ad770710f"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsMinOverTime</b> () const </td></tr>
+<tr class="separator:aff2f1b2d48982fa767c8cd9ad770710f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfb1861f05ba2efa163e7a28670f0585"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adfb1861f05ba2efa163e7a28670f0585"></a>
 const std::vector&lt; std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>StateCosts</b> () const </td></tr>
 <tr class="separator:adfb1861f05ba2efa163e7a28670f0585"><td class="memSeparator" colspan="2">&#160;</td></tr>

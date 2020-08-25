@@ -100,7 +100,7 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
   }
 
   return return_point;
-}  // namespace ilqgames
+}
 
 Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
                                LineSegment2* segment,
@@ -111,25 +111,49 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
   Point2 closest_point;
 
   float current_signed_squared_distance;
-  int segment_ind = 0;
+  int segment_idx = 0;
   int segment_counter = 0;
+  bool is_segment_endpoint;
   for (const auto& s : segments_) {
-    bool is_segment_endpoint;
     const Point2 current_point = s.ClosestPoint(
         query, &is_segment_endpoint, &current_signed_squared_distance);
 
     if (std::abs(current_signed_squared_distance) <
         std::abs(closest_signed_squared_distance)) {
+      // If this is an endpoint, compute which side of the polyline this is on
+      // by finding which side of the line segment from the previous point to
+      // the next point this is on.
+      if (is_segment_endpoint &&
+          (segment_counter > 0 || current_point == s.SecondPoint()) &&
+          (segment_counter < segments_.size() - 1 ||
+           current_point == s.FirstPoint())) {
+        const LineSegment2 shortcut =
+            (current_point == s.FirstPoint())
+                ? LineSegment2(segments_[segment_counter - 1].FirstPoint(),
+                               s.SecondPoint())
+                : LineSegment2(s.FirstPoint(),
+                               segments_[segment_counter + 1].SecondPoint());
+        current_signed_squared_distance *=
+            (shortcut.Side(query)) ? sgn(current_signed_squared_distance)
+                                   : -sgn(current_signed_squared_distance);
+
+        CHECK(
+            (current_signed_squared_distance >= 0.0 && shortcut.Side(query)) ||
+            (current_signed_squared_distance <= 0.0 && !shortcut.Side(query)));
+      }
+
       closest_signed_squared_distance = current_signed_squared_distance;
       closest_point = current_point;
 
       if (is_vertex) *is_vertex = is_segment_endpoint;
-      if (segment) *segment = s;
-      segment_ind = segment_counter;
+      segment_idx = segment_counter;
     }
 
     segment_counter++;
   }
+
+  // Maybe set segment.
+  if (segment) *segment = segments_[segment_idx];
 
   // Maybe set signed_squared_distance.
   if (signed_squared_distance)

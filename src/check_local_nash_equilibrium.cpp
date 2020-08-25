@@ -72,7 +72,10 @@ bool NumericalCheckLocalNashEquilibrium(
 
   // Compute nominal equilibrium cost and be sure to use only 1-step Euler
   // integration.
-  MultiPlayerIntegrableSystem::IntegrateUsingEuler();
+  const bool was_integrating_using_euler =
+      MultiPlayerIntegrableSystem::IntegrationUsesEuler();
+  if (!was_integrating_using_euler)
+    MultiPlayerIntegrableSystem::IntegrateUsingEuler();
   const std::vector<float> nominal_costs =
       ComputeStrategyCosts(player_costs, strategies, operating_point, dynamics,
                            x0, time_step, open_loop);
@@ -113,7 +116,8 @@ bool NumericalCheckLocalNashEquilibrium(
           //           << std::endl;
 
           // Other users will likely want RK4 integration.
-          MultiPlayerIntegrableSystem::IntegrateUsingRK4();
+          if (!was_integrating_using_euler)
+            MultiPlayerIntegrableSystem::IntegrateUsingRK4();
           return false;
         }
 

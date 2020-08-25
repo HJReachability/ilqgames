@@ -126,8 +126,13 @@ bool SolverLog::Save(bool only_last_trajectory,
     const std::string sub_dir_name = dir_name + "/" + std::to_string(ii);
     if (!MakeDirectory(sub_dir_name)) return false;
 
-    // Dump xs.
+    // Dump initial time.
     std::ofstream file;
+    file.open(sub_dir_name + "/t0.txt");
+    file << op.t0 << std::endl;
+    file.close();
+
+    // Dump xs.
     file.open(sub_dir_name + "/xs.txt");
     for (const auto& x : op.xs) {
       file << x.transpose() << std::endl;
@@ -211,6 +216,23 @@ bool SaveLogs(const std::vector<SolverLog>& logs, bool only_last_trajectory,
 
     if (!log.Save(only_last_trajectory,
                   experiment_name + "/" + std::to_string(ii)))
+      return false;
+  }
+
+  return true;
+}
+
+bool SaveLogs(const std::vector<std::shared_ptr<const SolverLog>>& logs,
+              bool only_last_trajectory, const std::string& experiment_name) {
+  const std::string dir_name =
+      std::string(ILQGAMES_LOG_DIR) + "/" + experiment_name;
+  if (!MakeDirectory(dir_name)) return false;
+
+  for (size_t ii = 0; ii < logs.size(); ii++) {
+    const auto& log = logs[ii];
+
+    if (!log->Save(only_last_trajectory,
+                   experiment_name + "/" + std::to_string(ii)))
       return false;
   }
 

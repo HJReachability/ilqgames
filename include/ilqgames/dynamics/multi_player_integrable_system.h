@@ -91,6 +91,7 @@ class MultiPlayerIntegrableSystem {
   // description.
   static void IntegrateUsingEuler() { integrate_using_euler_ = true; }
   static void IntegrateUsingRK4() { integrate_using_euler_ = false; }
+  static bool IntegrationUsesEuler() { return integrate_using_euler_; }
 
   // Getters.
   Time TimeStep() const { return time_step_; }

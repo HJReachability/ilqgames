@@ -69,6 +69,10 @@ class LineSegment2 {
     return std::atan2(UnitDirection().y(), UnitDirection().x());
   }
 
+  // Compute which side of this line segment the query point is on.
+  // Returns true for the "right" side and false for the "left.""
+  bool Side(const Point2& query) const;
+
   // Find closest point on this line segment to a given point (and optionally
   // the signed squared distance, where right is positive, and whether or not
   // the closest point is an endpoint).

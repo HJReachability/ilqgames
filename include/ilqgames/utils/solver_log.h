@@ -189,6 +189,9 @@ class SolverLog : private Uncopyable {
 bool SaveLogs(const std::vector<SolverLog>& logs,
               bool only_last_trajectory = true,
               const std::string& experiment_name = DefaultExperimentName());
+bool SaveLogs(const std::vector<std::shared_ptr<const SolverLog>>& logs,
+              bool only_last_trajectory = true,
+              const std::string& experiment_name = DefaultExperimentName());
 
 }  // namespace ilqgames
 
