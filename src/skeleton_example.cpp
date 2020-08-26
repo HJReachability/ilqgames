@@ -191,35 +191,35 @@ SkeletonExample::SkeletonExample(const SolverParams& params) {
 
   // Constrain each control input to lie in an interval.
   // Step 3. Try uncommenting these blocks.
-  const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P1::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P1::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
-  p1_cost.AddControlConstraint(0, p1_a_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_a_min_constraint);
+  // const auto p1_omega_max_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P1::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  // const auto p1_omega_min_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P1::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  // const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+  //     P1::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
+  // const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+  //     P1::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
+  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  // p1_cost.AddControlConstraint(0, p1_a_max_constraint);
+  // p1_cost.AddControlConstraint(0, p1_a_min_constraint);
 
-  const auto p2_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P2::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p2_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P2::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
-  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
-  p2_cost.AddControlConstraint(1, p2_a_max_constraint);
-  p2_cost.AddControlConstraint(1, p2_a_min_constraint);
+  // const auto p2_omega_max_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P2::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  // const auto p2_omega_min_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P2::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  // const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+  //     P2::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
+  // const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+  //     P2::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
+  // p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  // p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
+  // p2_cost.AddControlConstraint(1, p2_a_max_constraint);
+  // p2_cost.AddControlConstraint(1, p2_a_min_constraint);
 
   // Encourage each player to go a given nominal speed.
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
@@ -230,7 +230,8 @@ SkeletonExample::SkeletonExample(const SolverParams& params) {
       kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
-  // Encourage each player to remain near the lane center.
+  // Encourage each player to remain near the lane center. Could also add
+  // constraints to stay in the lane.
   const Polyline2 lane1(
       {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
   const Polyline2 lane2({Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 5.0),
@@ -248,8 +249,6 @@ SkeletonExample::SkeletonExample(const SolverParams& params) {
   p2_cost.AddStateCost(p2_lane_cost);
 
   // Penalize proximity (could also use a constraint).
-  // Step 4. Try commenting this cost out and replacing with the commented block
-  // below to add an equivalent constraint.
   constexpr float kMinProximity = 6.0;  // m
   const std::shared_ptr<ProximityCost> p1p2_proximity_cost(
       new ProximityCost(kProximityCostWeight, {kP1XIdx, kP1YIdx},
