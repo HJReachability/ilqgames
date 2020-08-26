@@ -87,13 +87,13 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Input contraints.
-static constexpr float kOmegaMax = 1.0;
-static constexpr float kAMax = 0.1;
+static constexpr float kOmegaMax = 1.5;  // rad/s
+static constexpr float kAMax = 4.0;      // m/s
 
 // Cost weights.
 // Step 1. Try changing these.
-static constexpr float kOmegaCostWeight = 1.0;
-static constexpr float kACostWeight = 0.1;
+static constexpr float kOmegaCostWeight = 10.0;
+static constexpr float kACostWeight = 5.0;
 static constexpr float kNominalVCostWeight = 10.0;
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kProximityCostWeight = 100.0;
