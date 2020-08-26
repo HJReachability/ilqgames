@@ -17,6 +17,7 @@ var searchData=
   ['singleplayerflatunicycle4d',['SinglePlayerFlatUnicycle4D',['../classilqgames_1_1_single_player_flat_unicycle4_d.html',1,'ilqgames']]],
   ['singleplayerunicycle4d',['SinglePlayerUnicycle4D',['../classilqgames_1_1_single_player_unicycle4_d.html',1,'ilqgames']]],
   ['singleplayerunicycle5d',['SinglePlayerUnicycle5D',['../classilqgames_1_1_single_player_unicycle5_d.html',1,'ilqgames']]],
+  ['skeletonexample',['SkeletonExample',['../classilqgames_1_1_skeleton_example.html',1,'ilqgames']]],
   ['solutionsplicer',['SolutionSplicer',['../classilqgames_1_1_solution_splicer.html',1,'ilqgames']]],
   ['solverlog',['SolverLog',['../classilqgames_1_1_solver_log.html',1,'ilqgames']]],
   ['solverparams',['SolverParams',['../structilqgames_1_1_solver_params.html',1,'ilqgames']]],
