@@ -51,13 +51,12 @@
 // 1. Set the cost weights.
 // 2. Set the nominal speed for each car.
 // 3. Add input constraints.
-// 4. Add collision-avoidance constraint.
+// 4. (Advanced) Try other constraints.
 // 5. (Advanced) Add in a third player.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
-#include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
@@ -100,7 +99,7 @@ static constexpr float kProximityCostWeight = 100.0;
 // Nominal speed.
 // Step 2. Try changing these.
 static constexpr float kP1NominalV = 8.0;  // m/s
-static constexpr float kP2NominalV = 5.0;  // m/s
+static constexpr float kP2NominalV = 8.0;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = 0.0;    // m
@@ -257,15 +256,6 @@ SkeletonExample::SkeletonExample(const SolverParams& params) {
                         {kP2XIdx, kP2YIdx}, kMinProximity, "Proximity"));
   p1_cost.AddStateCost(p1p2_proximity_cost);
   p2_cost.AddStateCost(p1p2_proximity_cost);
-
-  // constexpr bool kConstraintOrientedInside =
-  //     false;  // Orientation of constraint.
-  // const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
-  //     new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-  //                             kMinProximity, kConstraintOrientedInside,
-  //                             "ProximityConstraint"));
-  // p1_cost.AddStateConstraint(p1p2_proximity_constraint);
-  // p2_cost.AddStateConstraint(p1p2_proximity_constraint);
 
   // Set up solver.
   solver_.reset(
