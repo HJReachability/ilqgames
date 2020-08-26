@@ -51,9 +51,8 @@
 // 1. Set the cost weights.
 // 2. Set the nominal speed for each car.
 // 3. Add input constraints.
-// 4. Add lane constraints.
-// 5. Add collision-avoidance constraint.
-// 6. (Advanced) Add in a third player.
+// 4. Add collision-avoidance constraint.
+// 5. (Advanced) Add in a third player.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -249,38 +248,8 @@ SkeletonExample::SkeletonExample(const SolverParams& params) {
                                  "LaneCenter"));
   p2_cost.AddStateCost(p2_lane_cost);
 
-  // Constrain players to remain within the given distance of the lane center.
-  // Step 4. Try uncommenting this block.
-  constexpr float kLaneHalfWidth = 3.0;  // m
-  constexpr bool kOrientedRight = true;  // Orientation of feasible set.
-  const std::shared_ptr<Polyline2SignedDistanceConstraint>
-  p1_lane_r_constraint(
-      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
-                                            kLaneHalfWidth, !kOrientedRight,
-                                            "LaneRightBoundary"));
-  const std::shared_ptr<Polyline2SignedDistanceConstraint>
-  p1_lane_l_constraint(
-      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
-                                            -kLaneHalfWidth, kOrientedRight,
-                                            "LaneLeftBoundary"));
-  p1_cost.AddStateConstraint(p1_lane_l_constraint);
-  p1_cost.AddStateConstraint(p1_lane_r_constraint);
-
-  // const std::shared_ptr<Polyline2SignedDistanceConstraint>
-  // p2_lane_r_constraint(
-  //     new Polyline2SignedDistanceConstraint(lane1, {kP2XIdx, kP2YIdx},
-  //                                           kLaneHalfWidth, !kOrientedRight,
-  //                                           "LaneRightBoundary"));
-  // const std::shared_ptr<Polyline2SignedDistanceConstraint>
-  // p2_lane_l_constraint(
-  //     new Polyline2SignedDistanceConstraint(lane1, {kP2XIdx, kP2YIdx},
-  //                                           -kLaneHalfWidth, kOrientedRight,
-  //                                           "LaneLeftBoundary"));
-  // p2_cost.AddStateConstraint(p2_lane_l_constraint);
-  // p2_cost.AddStateConstraint(p2_lane_r_constraint);
-
   // Penalize proximity (could also use a constraint).
-  // Step 5. Try commenting this cost out and replacing with the commented block
+  // Step 4. Try commenting this cost out and replacing with the commented block
   // below to add an equivalent constraint.
   constexpr float kMinProximity = 6.0;  // m
   const std::shared_ptr<ProximityCost> p1p2_proximity_cost(
