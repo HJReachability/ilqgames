@@ -92,8 +92,8 @@ static constexpr float kAMax = 4.0;      // m/s
 
 // Cost weights.
 // Step 1. Try changing these.
-static constexpr float kOmegaCostWeight = 10.0;
-static constexpr float kACostWeight = 5.0;
+static constexpr float kOmegaCostWeight = 25.0;
+static constexpr float kACostWeight = 15.0;
 static constexpr float kNominalVCostWeight = 10.0;
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kProximityCostWeight = 100.0;
@@ -193,35 +193,35 @@ SkeletonExample::SkeletonExample(const SolverParams& params) {
 
   // Constrain each control input to lie in an interval.
   // Step 3. Try uncommenting these blocks.
-  // const auto p1_omega_max_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P1::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  // const auto p1_omega_min_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P1::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  // const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-  //     P1::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  // const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-  //     P1::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
-  // p1_cost.AddControlConstraint(0, p1_a_max_constraint);
-  // p1_cost.AddControlConstraint(0, p1_a_min_constraint);
+  const auto p1_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  const auto p1_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P1::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
+  const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P1::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  p1_cost.AddControlConstraint(0, p1_a_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_a_min_constraint);
 
-  // const auto p2_omega_max_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P2::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  // const auto p2_omega_min_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P2::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  // const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-  //     P2::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  // const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-  //     P2::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  // p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
-  // p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
-  // p2_cost.AddControlConstraint(1, p2_a_max_constraint);
-  // p2_cost.AddControlConstraint(1, p2_a_min_constraint);
+  const auto p2_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  const auto p2_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P2::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
+  const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P2::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
+  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
+  p2_cost.AddControlConstraint(1, p2_a_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_a_min_constraint);
 
   // Encourage each player to go a given nominal speed.
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
@@ -251,20 +251,20 @@ SkeletonExample::SkeletonExample(const SolverParams& params) {
 
   // Constrain players to remain within the given distance of the lane center.
   // Step 4. Try uncommenting this block.
-  // constexpr float kLaneHalfWidth = 3.0;  // m
-  // constexpr bool kOrientedRight = true;  // Orientation of feasible set.
-  // const std::shared_ptr<Polyline2SignedDistanceConstraint>
-  // p1_lane_r_constraint(
-  //     new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
-  //                                           kLaneHalfWidth, !kOrientedRight,
-  //                                           "LaneRightBoundary"));
-  // const std::shared_ptr<Polyline2SignedDistanceConstraint>
-  // p1_lane_l_constraint(
-  //     new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
-  //                                           -kLaneHalfWidth, kOrientedRight,
-  //                                           "LaneLeftBoundary"));
-  // p1_cost.AddStateConstraint(p1_lane_l_constraint);
-  // p1_cost.AddStateConstraint(p1_lane_r_constraint);
+  constexpr float kLaneHalfWidth = 3.0;  // m
+  constexpr bool kOrientedRight = true;  // Orientation of feasible set.
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+  p1_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+  p1_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            "LaneLeftBoundary"));
+  p1_cost.AddStateConstraint(p1_lane_l_constraint);
+  p1_cost.AddStateConstraint(p1_lane_r_constraint);
 
   // const std::shared_ptr<Polyline2SignedDistanceConstraint>
   // p2_lane_r_constraint(
