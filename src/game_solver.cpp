@@ -320,8 +320,7 @@ bool GameSolver::CurrentOperatingPoint(
 
     const float delta_x_distance = StateDistance(
         x, last_operating_point.xs[kk], params_.trust_region_dimensions);
-    const bool checked_constraints =
-        check_all_constraints(t, x, current_us) || !satisfies_constraints;
+    const bool checked_constraints = check_all_constraints(t, x, current_us);
 
     *has_converged &= delta_x_distance <= params_.convergence_tolerance;
     if (satisfies_constraints) *satisfies_constraints &= checked_constraints;
@@ -335,6 +334,7 @@ bool GameSolver::CurrentOperatingPoint(
         if (params_.enforce_constraints_in_linesearch && checked_constraints)
           VLOG(2) << "Failed trust region on time step " << kk
                   << " but satisfied constraints up till then.";
+
         return false;
       }
     }

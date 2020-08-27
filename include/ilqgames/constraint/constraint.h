@@ -105,9 +105,9 @@ class Constraint : public Cost {
   // "Equivalent" well-defined cost to encourage constraint satisfaction, e.g.,
   // when an initial iterate is infeasible.
   std::unique_ptr<Cost> equivalent_cost_;
-  static constexpr float kInitialBarrierWeight = 1.0;
-  static constexpr float kInitialEquivalentCostWeight = 0.0;
-  static constexpr float kCostBuffer = 0.1;
+  static constexpr float kInitialBarrierWeight = 1e2;
+  static constexpr float kInitialEquivalentCostWeight = 1e6;
+  static constexpr float kCostBuffer = 1.0;
 };  //\class Constraint
 
 }  // namespace ilqgames
