@@ -6,8 +6,8 @@ function receding_horizon_example()
 
   exec = "receding_horizon_three_player_collision_avoidance_reachability_example";
   experiment_name = "receding_horizon_example";
-  x0_flag = " --d0=5 --v0=5";
-  regularization = 0.1;
+  x0_flag = " --d0=10 --v0=5";
+  regularization = 0.01;
 
   if ~experiment_already_run(char(experiment_name))
     %% Stitch together the command for the executable.
@@ -22,7 +22,7 @@ function receding_horizon_example()
   set(gca, 'FontSize', 16');
 
   dt = 0.1;
-  iters = 1:1:5;
+  iters = 1:2:10;
   for ii = 1:numel(iters)
     iter = iters(ii);
     subplot(1, numel(iters), ii);
@@ -31,8 +31,8 @@ function receding_horizon_example()
     title(sprintf('$t_0 = %4.2f$', t0), 'Interpreter', 'latex');
     xlabel('$p_x$ (m)', 'Interpreter', 'latex');
     ylabel('$p_y$ (m)', 'Interpreter', 'latex');
-    xlim([-5.5, 5.5]);
-    ylim([-5.5, 5.5]);
+    xlim([-8, 8]);
+    ylim([-8, 8]);
 
     hold on;
     plot(xs(:, 1), xs(:, 2), 'r');
