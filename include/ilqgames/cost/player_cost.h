@@ -90,8 +90,9 @@ class PlayerCost {
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
-  // Return empty cost quadraticization except for constraints.
-  QuadraticCostApproximation QuadraticizeConstraints(
+  // Return empty cost quadraticization except for constraints and control
+  // costs.
+  QuadraticCostApproximation QuadraticizeConstraintsAndControlCosts(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
   // Turn all constraints either "on" or "off" (in which case they are replaced

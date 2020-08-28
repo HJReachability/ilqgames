@@ -114,7 +114,8 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
         if (ii == jj) {
           // Does player ii's cost depend upon player jj's control?
           const auto control_iter = quad[ii].control.find(ii);
-          CHECK(control_iter != quad[ii].control.end());
+          CHECK(control_iter != quad[ii].control.end())
+              << "Player " << ii << " is missing a control Hessian.";
 
           S_block = BiZi * lin.Bs[ii] + control_iter->second.hess;
         } else {

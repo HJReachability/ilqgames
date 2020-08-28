@@ -104,6 +104,7 @@ void AccumulateControlConstraints(const CostMap<Constraint>& constraints,
     if (are_constraints_on) constraint.Quadraticize(t, u, hess, grad);
     constraint.EquivalentCost().Quadraticize(t, u, hess, grad);
   };
+
   AccumulateControlCostsBase(constraints, t, us, regularization, q, f);
 }
 }  // namespace
@@ -254,7 +255,7 @@ void PlayerCost::ResetConstraintBarrierWeights() {
   for (auto& pair : control_constraints_) pair.second->ResetBarrierWeight();
 }
 
-QuadraticCostApproximation PlayerCost::QuadraticizeConstraints(
+QuadraticCostApproximation PlayerCost::QuadraticizeConstraintsAndControlCosts(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   QuadraticCostApproximation q(x.size(), state_regularization_);
 
@@ -274,6 +275,9 @@ QuadraticCostApproximation PlayerCost::QuadraticizeConstraints(
   AccumulateControlConstraints(control_constraints_, t, us,
                                control_regularization_, &q,
                                are_constraints_on_);
+
+  // Accumulate control costs.
+  AccumulateControlCosts(control_costs_, t, us, control_regularization_, &q);
 
   return q;
 }

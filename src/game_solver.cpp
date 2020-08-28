@@ -194,7 +194,8 @@ bool GameSolver::Solve(const VectorXf& x0,
         if (cost.IsTimeAdditive() || times_of_extreme_costs[ii] == kk)
           quadraticization_[kk][ii] = cost.Quadraticize(t, x, us);
         else
-          quadraticization_[kk][ii] = cost.QuadraticizeConstraints(t, x, us);
+          quadraticization_[kk][ii] =
+              cost.QuadraticizeConstraintsAndControlCosts(t, x, us);
       }
     }
 

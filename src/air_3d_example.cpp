@@ -59,8 +59,8 @@
 #include <vector>
 
 // Initial state command-line flags.
-DEFINE_double(rx0, 0.0, "Initial x-position (m).");
-DEFINE_double(ry0, -1.5, "Initial y-position (m).");
+DEFINE_double(rx0, 4.0, "Initial x-position (m).");
+DEFINE_double(ry0, 3.0, "Initial y-position (m).");
 DEFINE_double(rtheta0, M_PI / 4.0, "Initial heading (rad).");
 DEFINE_double(ve, 1.0, "Evader speed (m/s).");
 DEFINE_double(vp, 1.0, "Pursuer speed (m/s).");
@@ -69,8 +69,8 @@ namespace ilqgames {
 
 namespace {
 // Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 2.0;  // s
+static constexpr Time kTimeStep = 0.1;      // s
+static constexpr Time kTimeHorizon = 10.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -116,8 +116,8 @@ Air3DExample::Air3DExample(const SolverParams& params) {
   const auto p1_omega_min_constraint =
       std::make_shared<SingleDimensionConstraint>(
           Dyn::kOmega1Idx, -kOmegaMax, true, "Omega Constraint (Min)");
-  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+   p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+   p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
   const auto p2_omega_max_constraint =
       std::make_shared<SingleDimensionConstraint>(
@@ -125,25 +125,26 @@ Air3DExample::Air3DExample(const SolverParams& params) {
   const auto p2_omega_min_constraint =
       std::make_shared<SingleDimensionConstraint>(
           Dyn::kOmega2Idx, -kOmegaMax, true, "Omega Constraint (Min)");
-  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
-  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
+   p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+   p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
 
   // Target cost.
   const float kTargetRadius = 5.0;
   const Polyline2 circle = DrawCircle(Point2::Zero(), kTargetRadius, 10);
 
-  constexpr bool kAvoid = true;
+  constexpr bool kReach = true;
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kRxIdx, Dyn::kRyIdx},
-                                      kAvoid, "Target"));
+                                      !kReach, "Target"));
   const std::shared_ptr<Polyline2SignedDistanceCost> p2_target_cost(
       new Polyline2SignedDistanceCost(circle, {Dyn::kRxIdx, Dyn::kRyIdx},
-                                      !kAvoid, "Target"));
+                                      kReach, "Target"));
 
   p1_cost.AddStateCost(p1_target_cost);
   p2_cost.AddStateCost(p2_target_cost);
 
-  // Make sure evader's cost is a max-over-time and pursuer's is a min-over-time.
+  // Make sure evader's cost is a max-over-time and pursuer's is a
+  // min-over-time.
   p1_cost.SetMaxOverTime();
   p2_cost.SetMinOverTime();
 

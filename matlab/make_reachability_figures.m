@@ -14,7 +14,7 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 xinit = [3, 4, -2*pi/3];
 
 %% target set
-R = 1.0;
+R = 8.0;
 data0 = -shapeCylinder(g, 3, [0; 0; 0], R);
 
 %% time vector
@@ -54,18 +54,17 @@ if (baseline)
 
   [data, tau2, ~] = HJIPDE_solve(data0, tau, schemeData, 'maxVOverTime', HJIextraArgs);
 
-  dCar.x = xinit; %set initial state of the dubins car
-
+  dAir.x = xinit;
   TrajextraArgs.uMode = eMode; %set if control wants to min or max
   %%  TrajextraArgs.dMode = pMode; %set if disturbance wants to min or max
-  TrajextraArgs.visualize = false; %show plot
+  TrajextraArgs.visualize = true; %show plot
   TrajextraArgs.fig_num = 2; %figure number
 
   %%we want to see the first two dimensions (x and y)
   TrajextraArgs.projDim = [1 1 0];
 
   %%flip data time points so we start from the beginning of time
-  dataTraj = flip(data,4);
+  dataTraj = flip(data, 4);
 
   [traj, traj_tau] = computeOptTraj(g, dataTraj, tau2, dAir, TrajextraArgs);
   traj = traj'; % Transpose traj to have colums be different timesteps
