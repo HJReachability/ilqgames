@@ -51,8 +51,10 @@
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/relative_distance_cost.h>
 #include <ilqgames/cost/route_progress_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
@@ -307,6 +309,16 @@ void CheckQuadraticization(const Cost& cost) {
 
 TEST(QuadraticCostTest, QuadraticizesCorrectly) {
   QuadraticCost cost(kCostWeight, -1, 1.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(QuadraticDifferenceCostTest, QuadraticizesCorrectly) {
+  QuadraticDifferenceCost cost(kCostWeight, {0, 1}, {1, 2});
+  CheckQuadraticization(cost);
+}
+
+TEST(RelativeDistanceCostTest, QuadraticizesCorrectly) {
+  RelativeDistanceCost cost(kCostWeight, {0, 1}, {1, 2});
   CheckQuadraticization(cost);
 }
 

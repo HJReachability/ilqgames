@@ -41,8 +41,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLES_COLLISION_AVOIDANCE_REACHABILITY_EXAMPLE_H
-#define ILQGAMES_EXAMPLES_COLLISION_AVOIDANCE_REACHABILITY_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
 
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
