@@ -12,9 +12,10 @@ g = createGrid(grid_min, grid_max, N, pdDims);
 
 %% Compute optimal trajectory from some initial state
 xinit = [3, 4, -2*pi/3];
+%xinit = [1, 0.5, -2*pi/3];
 
 %% target set
-R = 8.0;
+R = 1.0;
 data0 = -shapeCylinder(g, 3, [0; 0; 0], R);
 
 %% time vector
@@ -48,7 +49,7 @@ if (baseline)
   schemeData.dMode = pMode;
 
   %% Compute value function
-  HJIextraArgs.visualize = false; %show plot
+  HJIextraArgs.visualize = true; %show plot
   HJIextraArgs.fig_num = 1; %set figure number
   HJIextraArgs.deleteLastPlot = true; %delete previous plot as you update
 
@@ -56,7 +57,7 @@ if (baseline)
 
   dAir.x = xinit;
   TrajextraArgs.uMode = eMode; %set if control wants to min or max
-  %%  TrajextraArgs.dMode = pMode; %set if disturbance wants to min or max
+  TrajextraArgs.dMode = pMode; %set if disturbance wants to min or max
   TrajextraArgs.visualize = true; %show plot
   TrajextraArgs.fig_num = 2; %figure number
 
