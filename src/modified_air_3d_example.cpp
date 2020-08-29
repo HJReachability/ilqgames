@@ -46,9 +46,11 @@
 
 #include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/relative_distance_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_dubins_car.h>
+#include <ilqgames/dynamics/single_player_point_mass_2d.h>
 #include <ilqgames/examples/modified_air_3d_example.h>
 #include <ilqgames/geometry/draw_shapes.h>
 #include <ilqgames/geometry/polyline2.h>
@@ -82,29 +84,38 @@ static constexpr size_t kNumTimeSteps =
 static constexpr float kOmegaMax = 1.0;  // rad/s
 
 // State dimensions.
-using Dyn = SinglePlayerDubinsCar;
+// using Dyn = SinglePlayerDubinsCar;
+using Dyn = SinglePlayerPointMass2D;
 
-static const float kP1PxIdx = Dyn::kPxIdx;
-static const float kP1PyIdx = Dyn::kPyIdx;
-static const float kP1ThetaIdx = Dyn::kThetaIdx;
+static const Dimension kP1PxIdx = Dyn::kPxIdx;
+static const Dimension kP1PyIdx = Dyn::kPyIdx;
+// static const Dimension kP1ThetaIdx = Dyn::kThetaIdx;
+static const Dimension kP1VxIdx = Dyn::kVxIdx;
+static const Dimension kP1VyIdx = Dyn::kVyIdx;
 
-static const float kP2PxIdx = Dyn::kNumXDims + Dyn::kPxIdx;
-static const float kP2PyIdx = Dyn::kNumXDims + Dyn::kPyIdx;
-static const float kP2ThetaIdx = Dyn::kNumXDims + Dyn::kThetaIdx;
+static const Dimension kP2PxIdx = Dyn::kNumXDims + Dyn::kPxIdx;
+static const Dimension kP2PyIdx = Dyn::kNumXDims + Dyn::kPyIdx;
+// static const Dimension kP2ThetaIdx = Dyn::kNumXDims + Dyn::kThetaIdx;
+static const Dimension kP2VxIdx = Dyn::kNumXDims + Dyn::kVxIdx;
+static const Dimension kP2VyIdx = Dyn::kNumXDims + Dyn::kVyIdx;
 }  // anonymous namespace
 
 ModifiedAir3DExample::ModifiedAir3DExample(const SolverParams& params) {
   // Create dynamics.
   const auto dynamics = std::shared_ptr<const ConcatenatedDynamicalSystem>(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<Dyn>(FLAGS_ve), std::make_shared<Dyn>(FLAGS_vp)},
-          kTimeStep));
+          //   {std::make_shared<Dyn>(FLAGS_ve),
+          //   std::make_shared<Dyn>(FLAGS_vp)},
+          {std::make_shared<Dyn>(), std::make_shared<Dyn>()}, kTimeStep));
 
   // Set up initial state.
   x0_ = VectorXf::Zero(dynamics->XDim());
+  x0_(kP1VxIdx) = FLAGS_ve;
   x0_(kP2PxIdx) = FLAGS_rx0;
   x0_(kP2PyIdx) = FLAGS_ry0;
-  x0_(kP2ThetaIdx) = FLAGS_rtheta0;
+  //  x0_(kP2ThetaIdx) = FLAGS_rtheta0;
+  x0_(kP2VxIdx) = FLAGS_vp * std::cos(FLAGS_rtheta0);
+  x0_(kP2VyIdx) = FLAGS_vp * std::sin(FLAGS_rtheta0);
 
   // Set up initial strategies and operating point.
   strategies_.reset(new std::vector<Strategy>());
@@ -116,7 +127,7 @@ ModifiedAir3DExample::ModifiedAir3DExample(const SolverParams& params) {
       new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
 
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
+  PlayerCost p1_cost("P1", 1.0, 0.0), p2_cost("P2", 1.0, 0.0);
 
   const auto control_cost = std::make_shared<QuadraticCost>(
       params.control_regularization, -1, 0.0, "ControlCost");
@@ -124,32 +135,39 @@ ModifiedAir3DExample::ModifiedAir3DExample(const SolverParams& params) {
   p2_cost.AddControlCost(1, control_cost);
 
   // Constrain control effort.
-  const auto omega_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto omega_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  p1_cost.AddControlConstraint(0, omega_max_constraint);
-  p1_cost.AddControlConstraint(0, omega_min_constraint);
-  p2_cost.AddControlConstraint(1, omega_max_constraint);
-  p2_cost.AddControlConstraint(1, omega_min_constraint);
+  // const auto omega_max_constraint =
+  // std::make_shared<SingleDimensionConstraint>(
+  //     Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  // const auto omega_min_constraint =
+  // std::make_shared<SingleDimensionConstraint>(
+  //     Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  // p1_cost.AddControlConstraint(0, omega_max_constraint);
+  // p1_cost.AddControlConstraint(0, omega_min_constraint);
+  // p2_cost.AddControlConstraint(1, omega_max_constraint);
+  // p2_cost.AddControlConstraint(1, omega_min_constraint);
 
   // Target cost.
-  constexpr float kEvaderWeight = 1.0;
-  constexpr float kPursuerWeight = -1.0;
-  const std::shared_ptr<RelativeDistanceCost> p1_target_cost(
-      new RelativeDistanceCost(kEvaderWeight, {kP1PxIdx, kP1PyIdx},
-                               {kP2PxIdx, kP2PyIdx}, "Target"));
-  const std::shared_ptr<RelativeDistanceCost> p2_target_cost(
-      new RelativeDistanceCost(kPursuerWeight, {kP1PxIdx, kP1PyIdx},
-                               {kP2PxIdx, kP2PyIdx}, "Target"));
-
+  constexpr float kEvaderWeight = -1e6;
+  constexpr float kPursuerWeight = 1e6;
+  // const std::shared_ptr<RelativeDistanceCost> p1_target_cost(
+  //     new RelativeDistanceCost(kEvaderWeight, {kP1PxIdx, kP1PyIdx},
+  //                              {kP2PxIdx, kP2PyIdx}, "Target"));
+  // const std::shared_ptr<RelativeDistanceCost> p2_target_cost(
+  //     new RelativeDistanceCost(kPursuerWeight, {kP1PxIdx, kP1PyIdx},
+  //                              {kP2PxIdx, kP2PyIdx}, "Target"));
+  const std::shared_ptr<QuadraticDifferenceCost> p1_target_cost(
+      new QuadraticDifferenceCost(kEvaderWeight, {kP1PxIdx, kP1PyIdx},
+                                  {kP2PxIdx, kP2PyIdx}, "Target"));
+  const std::shared_ptr<QuadraticDifferenceCost> p2_target_cost(
+      new QuadraticDifferenceCost(kPursuerWeight, {kP1PxIdx, kP1PyIdx},
+                                  {kP2PxIdx, kP2PyIdx}, "Target"));
   p1_cost.AddStateCost(p1_target_cost);
   p2_cost.AddStateCost(p2_target_cost);
 
   // Make sure evader's cost is a max-over-time and pursuer's is a
   // min-over-time.
-  p1_cost.SetMaxOverTime();
-  p2_cost.SetMinOverTime();
+  // p1_cost.SetMaxOverTime();
+  // p2_cost.SetMinOverTime();
 
   // Set up solver.
   solver_.reset(
@@ -166,7 +184,9 @@ inline std::vector<float> ModifiedAir3DExample::Ys(const VectorXf& x) const {
 
 inline std::vector<float> ModifiedAir3DExample::Thetas(
     const VectorXf& x) const {
-  return {x(kP1ThetaIdx), x(kP2ThetaIdx)};
+  //  return {x(kP1ThetaIdx), x(kP2ThetaIdx)};
+  return {std::atan2(x(kP1VyIdx), x(kP1VxIdx)),
+          std::atan2(x(kP2VyIdx), x(kP2VxIdx))};
 }
 
 }  // namespace ilqgames

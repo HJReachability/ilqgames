@@ -36,11 +36,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Main GUI for Air3DExample.
+// Main GUI for ModifiedAir3DExample.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/examples/air_3d_example.h>
+#include <ilqgames/examples/modified_air_3d_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
@@ -98,7 +98,7 @@ static void glfw_error_callback(int error, const char* description) {
 
 int main(int argc, char** argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/air_3d_example.log");
+      ILQGAMES_LOG_DIR + std::string("/modified_air_3d_example.log");
   google::SetLogDestination(0, log_file.c_str());
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
   params.state_regularization = FLAGS_regularization;
   params.control_regularization = FLAGS_regularization;
 
-  const auto problem = std::make_shared<ilqgames::Air3DExample>(params);
+  const auto problem = std::make_shared<ilqgames::ModifiedAir3DExample>(params);
 
   LOG(INFO) << "Computing feedback solution.";
   const auto start = std::chrono::system_clock::now();
