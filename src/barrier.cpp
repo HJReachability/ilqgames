@@ -36,57 +36,28 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the value of a single dimension of the input. This constraint
-// can be oriented either `left` or `right`, i.e., enforcing that the input is <
-// or > the specified threshold, respectively.
+// Base class for all constraints. We assume that all constraints are
+// *inequalities*, which support a check for satisfaction. All constraints must
+// also implement the cost interface corresponding to a barrier function.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
-
-#include <ilqgames/constraint/time_invariant_constraint.h>
-#include <ilqgames/cost/semiquadratic_cost.h>
+#include <ilqgames/constraint/barrier/barrier.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-class SingleDimensionConstraint : public TimeInvariantConstraint {
- public:
-  SingleDimensionConstraint(Dimension dimension, float threshold,
-                            bool oriented_right, const std::string& name = "")
-      : TimeInvariantConstraint(name),
-        dimension_(dimension),
-        threshold_(threshold),
-        oriented_right_(oriented_right) {
-    // Set equivalent cost pointer.
-    const float new_threshold =
-        (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
-    CHECK_GE(dimension, 0);
-    equivalent_cost_.reset(
-        new SemiquadraticCost(kInitialEquivalentCostWeight, dimension,
-                              new_threshold, !oriented_right, name + "/Cost"));
-  }
+float Barrier::Evaluate(Time t, const VectorXf& input) const {
+  float level = 0.0;
+  CHECK(IsSatisfiedLevel(t, input, &level));
+  CHECK_LT(level, 0.0);
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
-
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
-
- private:
-  // Dimension, threshold, and orientation.
-  const Dimension dimension_;
-  const float threshold_;
-  const bool oriented_right_;
-};  //\class SingleDimensionConstraint
+  // For a concise introduction to log barrier methods, please refer to
+  // Calafiore and El Ghaoui, pp. 453.
+  return -weight_ * std::log(-level);
+}
 
 }  // namespace ilqgames
-
-#endif

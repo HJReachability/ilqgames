@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,8 +46,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_EXPLICIT_CONSTRAINT_H
 
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>

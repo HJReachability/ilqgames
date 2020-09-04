@@ -36,49 +36,52 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the value of a single dimension of the input. This constraint
-// can be oriented either `left` or `right`, i.e., enforcing that the input is <
-// or > the specified threshold, respectively.
+// Base class for all time-invariant constraints.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/single_dimension_constraint.h>
+#ifndef ILQGAMES_CONSTRAINT_BARRIER_TIME_INVARIANT_BARRIER_H
+#define ILQGAMES_CONSTRAINT_BARRIER_TIME_INVARIANT_BARRIER_H
+
+#include <ilqgames/constraint/barrier/barrier.h>
+#include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-bool SingleDimensionConstraint::IsSatisfiedLevel(const VectorXf& input,
-                                                 float* level) const {
-  // Sign corresponding to the orientation of this constraint.
-  const float sign = (oriented_right_) ? 1.0 : -1.0;
+class TimeInvariantBarrier : public Barrier {
+ public:
+  virtual ~TimeInvariantBarrier() {}
 
-  // Maybe populate level.
-  const float delta = threshold_ - input(dimension_);
-  *level = sign * delta;
+  // Check if this constraint is satisfied, and optionally return the value of a
+  // function whose zero sub-level set corresponds to the feasible set.
+  bool IsSatisfiedLevel(Time t, const VectorXf& input, float* level) const {
+    CHECK_NOTNULL(level);
+    return IsSatisfiedLevel(input, level);
+  };
+  virtual bool IsSatisfiedLevel(const VectorXf& input, float* level) const = 0;
 
-  return (oriented_right_) ? delta < 0.0 : delta > 0.0;
-}
+  // Evaluate the barrier at the current input (use base class implementation
+  // and provide arbitrary time).
+  float Evaluate(const VectorXf& input) const {
+    return Barrier::Evaluate(0.0, input);
+  };
 
-void SingleDimensionConstraint::Quadraticize(const VectorXf& input,
-                                             MatrixXf* hess,
-                                             VectorXf* grad) const {
-  CHECK_NOTNULL(hess);
-  CHECK_NOTNULL(grad);
+  // Quadraticize this cost at the given time and input, and add to the running
+  // sum of gradients and Hessians.
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    Quadraticize(input, hess, grad);
+  };
+  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const = 0;
 
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
-
-  // Compute Hessian and gradient.
-  const float delta_inv = 1.0 / (threshold_ - input(dimension_));
-  const float weighted_delta_inv = weight_ * delta_inv;
-  (*grad)(dimension_) += weighted_delta_inv;
-  (*hess)(dimension_, dimension_) += weighted_delta_inv * delta_inv;
-}
+ protected:
+  explicit TimeInvariantBarrier(const std::string& name = "") : Barrier(name) {}
+};  //\class TimeInvariantBarrier
 
 }  // namespace ilqgames
+
+#endif

@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_constraints_in_linesearch =
+  params.enforce_barriers_in_linesearch =
       false;  // Do not enforce constraints in the linesearching process;
               // instead only enforce at the end.
   params.trust_region_size = FLAGS_trust_region_size;

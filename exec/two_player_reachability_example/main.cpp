@@ -107,10 +107,9 @@ int main(int argc, char** argv) {
   // Solve for open-loop information pattern.
   static constexpr bool kOpenLoop = true;
   ilqgames::SolverParams params;
-  params.enforce_constraints_in_linesearch = true;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_constraints_in_linesearch = true;
+  params.enforce_barriers_in_linesearch = true;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;

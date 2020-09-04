@@ -43,75 +43,63 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/proximity_constraint.h>
+#ifndef ILQGAMES_CONSTRAINT_BARRIER_PROXIMITY_BARRIER_H
+#define ILQGAMES_CONSTRAINT_BARRIER_PROXIMITY_BARRIER_H
+
+#include <ilqgames/constraint/barrier/time_invariant_barrier.h>
+#include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
+#include <math.h>
 #include <string>
 #include <utility>
 
 namespace ilqgames {
 
-bool ProximityConstraint::IsSatisfiedLevel(const VectorXf& input,
-                                           float* level) const {
-  const float dx = input(xidx1_) - input(xidx2_);
-  const float dy = input(yidx1_) - input(yidx2_);
-  const float delta_sq = dx * dx + dy * dy;
+class ProximityBarrier : public TimeInvariantBarrier {
+ public:
+  ProximityBarrier(const std::pair<Dimension, Dimension>& position_idxs1,
+                   const std::pair<Dimension, Dimension>& position_idxs2,
+                   float threshold, bool inside = false,
+                   const std::string& name = "")
+      : TimeInvariantBarrier(name),
+        threshold_sq_(threshold * threshold),
+        inside_(inside),
+        xidx1_(position_idxs1.first),
+        yidx1_(position_idxs1.second),
+        xidx2_(position_idxs2.first),
+        yidx2_(position_idxs2.second) {
+    // Set equivalent cost pointer.
+    CHECK(!inside) << "Right now we only have a cost that supports outside "
+                      "oriented constraints.";
+    const float new_threshold = threshold + kCostBuffer;
+    equivalent_cost_.reset(new ProximityCost(kInitialEquivalentCostWeight,
+                                             position_idxs1, position_idxs2,
+                                             new_threshold, name + "/Cost"));
+  }
 
-  // Sign corresponding to orientation of this constraint.
-  const float sign = (inside_) ? -1.0 : 1.0;
+  // Check if this constraint is satisfied, and optionally return the value of a
+  // function whose zero sub-level set corresponds to the feasible set.
+  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
 
-  // Maybe populate level.
-  *level = sign * (threshold_sq_ - delta_sq);
+  // Quadraticize this cost at the given time and input, and add to the running
+  // sum of gradients and Hessians.
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const;
 
-  return (inside_) ? delta_sq < threshold_sq_ : delta_sq > threshold_sq_;
-}
+ private:
+  // Threshold for squared relative distance.
+  const float threshold_sq_;
 
-void ProximityConstraint::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                       VectorXf* grad) const {
-  CHECK_NOTNULL(hess);
-  CHECK_NOTNULL(grad);
+  // Orientation, either `inside` (states should be close) or `outside` (states
+  // should be far apart).
+  const bool inside_;
 
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
-
-  // Compute Hessian and gradient.
-  const float dx = input(xidx1_) - input(xidx2_);
-  const float dy = input(yidx1_) - input(yidx2_);
-  const float dx2 = dx * dx;
-  const float dy2 = dy * dy;
-  const float delta_sq = dx2 + dy2;
-
-  const float grad_coeff = 2.0 / (threshold_sq_ - delta_sq);
-  const float weighted_grad_coeff = weight_ * grad_coeff;
-  (*grad)(xidx1_) += weighted_grad_coeff * dx;
-  (*grad)(xidx2_) -= weighted_grad_coeff * dx;
-  (*grad)(yidx1_) += weighted_grad_coeff * dy;
-  (*grad)(yidx2_) -= weighted_grad_coeff * dy;
-
-  const float hess_x1x1 = weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
-  (*hess)(xidx1_, xidx1_) += hess_x1x1;
-  (*hess)(xidx1_, xidx2_) -= hess_x1x1;
-  (*hess)(xidx2_, xidx1_) -= hess_x1x1;
-  (*hess)(xidx2_, xidx2_) += hess_x1x1;
-
-  const float hess_y1y1 = weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
-  (*hess)(yidx1_, yidx1_) += hess_y1y1;
-  (*hess)(yidx1_, yidx2_) -= hess_y1y1;
-  (*hess)(yidx2_, yidx1_) -= hess_y1y1;
-  (*hess)(yidx2_, yidx2_) += hess_y1y1;
-
-  const float hess_x1y1 = weighted_grad_coeff * grad_coeff * dx * dy;
-  (*hess)(xidx1_, yidx1_) += hess_x1y1;
-  (*hess)(yidx1_, xidx1_) += hess_x1y1;
-  (*hess)(xidx1_, yidx2_) -= hess_x1y1;
-  (*hess)(yidx1_, xidx2_) -= hess_x1y1;
-  (*hess)(xidx2_, yidx1_) -= hess_x1y1;
-  (*hess)(yidx2_, xidx1_) -= hess_x1y1;
-  (*hess)(xidx2_, yidx2_) += hess_x1y1;
-  (*hess)(yidx2_, xidx2_) += hess_x1y1;
-}
+  // Position indices for two vehicles.
+  const Dimension xidx1_, yidx1_;
+  const Dimension xidx2_, yidx2_;
+};  //\class ProximityBarrier
 
 }  // namespace ilqgames
+
+#endif

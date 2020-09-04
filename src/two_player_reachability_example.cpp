@@ -42,7 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/single_dimension_constraint.h>
+#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/two_player_unicycle_4d.h>
@@ -77,7 +77,7 @@ static constexpr size_t kNumTimeSteps =
 // Reach or avoid?
 static constexpr bool kAvoid = true;
 
-// Input constraint.
+// Input barrier.
 static constexpr float kOmegaMax = 0.1;  // rad/s
 static constexpr float kAMax = 1.0;      // m/s/s
 static constexpr float kDMax = 0.5;      // m/s
@@ -119,35 +119,33 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   p2_cost.AddControlCost(1, control_cost);
 
   // Constrain control effort.
-  const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  const auto p1_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kOmegaIdx, kOmegaMax, false, "Omega Barrier (Max)");
+  const auto p1_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Barrier (Min)");
+  p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
+  p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
 
-  const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  p1_cost.AddControlConstraint(0, p1_a_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_a_min_constraint);
+  const auto p1_a_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kAIdx, kAMax, false, "Acceleration Barrier (Max)");
+  const auto p1_a_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kAIdx, -kAMax, true, "Acceleration Barrier (Min)");
+  p1_cost.AddControlBarrier(0, p1_a_max_barrier);
+  p1_cost.AddControlBarrier(0, p1_a_min_barrier);
 
-  const auto p2_dx_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kDxIdx, kDMax, false, "Dx Constraint (Max)");
-  const auto p2_dx_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kDxIdx, -kDMax, true, "Dx Constraint (Min)");
-  p2_cost.AddControlConstraint(1, p2_dx_max_constraint);
-  p2_cost.AddControlConstraint(1, p2_dx_min_constraint);
+  const auto p2_dx_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kDxIdx, kDMax, false, "Dx Barrier (Max)");
+  const auto p2_dx_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kDxIdx, -kDMax, true, "Dx Barrier (Min)");
+  p2_cost.AddControlBarrier(1, p2_dx_max_barrier);
+  p2_cost.AddControlBarrier(1, p2_dx_min_barrier);
 
-  const auto p2_dy_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kDyIdx, kDMax, false, "Dy Constraint (Max)");
-  const auto p2_dy_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      Dyn::kDyIdx, -kDMax, true, "Dy Constraint (Min)");
-  p2_cost.AddControlConstraint(1, p2_dy_max_constraint);
-  p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
+  const auto p2_dy_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kDyIdx, kDMax, false, "Dy Barrier (Max)");
+  const auto p2_dy_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      Dyn::kDyIdx, -kDMax, true, "Dy Barrier (Min)");
+  p2_cost.AddControlBarrier(1, p2_dy_max_barrier);
+  p2_cost.AddControlBarrier(1, p2_dy_min_barrier);
 
   // Target cost.
   //  const float distance_traveled = 0.5 * FLAGS_v0 * kTimeHorizon;

@@ -36,18 +36,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the signed distance to a polyline. Can be oriented either
-// `right` or `left`, i.e., can constrain the signed distance to be either > or
-// < the given threshold, respectively.
+// Constraint on the value of a single dimension of the input. This constraint
+// can be oriented either `left` or `right`, i.e., enforcing that the input is <
+// or > the specified threshold, respectively.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_BARRIER_SINGLE_DIMENSION_BARRIER_H
+#define ILQGAMES_CONSTRAINT_BARRIER_SINGLE_DIMENSION_BARRIER_H
 
-#include <ilqgames/constraint/time_invariant_constraint.h>
-#include <ilqgames/cost/semiquadratic_polyline2_cost.h>
-#include <ilqgames/geometry/polyline2.h>
+#include <ilqgames/constraint/barrier/time_invariant_barrier.h>
+#include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <string>
@@ -55,24 +54,21 @@
 
 namespace ilqgames {
 
-class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
+class SingleDimensionBarrier : public TimeInvariantBarrier {
  public:
-  Polyline2SignedDistanceConstraint(
-      const Polyline2& polyline,
-      const std::pair<Dimension, Dimension>& position_idxs, float threshold,
-      bool oriented_right, const std::string& name = "")
-      : TimeInvariantConstraint(name),
-        polyline_(polyline),
-        signed_threshold_sq_(sgn(threshold) * threshold * threshold),
-        oriented_right_(oriented_right),
-        xidx_(position_idxs.first),
-        yidx_(position_idxs.second) {
+  SingleDimensionBarrier(Dimension dimension, float threshold,
+                         bool oriented_right, const std::string& name = "")
+      : TimeInvariantBarrier(name),
+        dimension_(dimension),
+        threshold_(threshold),
+        oriented_right_(oriented_right) {
     // Set equivalent cost pointer.
     const float new_threshold =
         (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
-    equivalent_cost_.reset(new SemiquadraticPolyline2Cost(
-        kInitialEquivalentCostWeight, polyline, position_idxs, new_threshold,
-        !oriented_right, name + "/Cost"));
+    CHECK_GE(dimension, 0);
+    equivalent_cost_.reset(
+        new SemiquadraticCost(kInitialEquivalentCostWeight, dimension,
+                              new_threshold, !oriented_right, name + "/Cost"));
   }
 
   // Check if this constraint is satisfied, and optionally return the value of a
@@ -81,21 +77,15 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
 
   // Quadraticize this cost at the given time and input, and add to the running
   // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess, VectorXf* grad) const;
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const;
 
  private:
-  // Polyline to compute distances from.
-  const Polyline2 polyline_;
-
-  // Threshold for signed squared distance.
-  const float signed_threshold_sq_;
-
-  // Orientation.
+  // Dimension, threshold, and orientation.
+  const Dimension dimension_;
+  const float threshold_;
   const bool oriented_right_;
-
-  // Position indices.
-  const Dimension xidx_, yidx_;
-};  //\class Polyline2SignedDistanceConstraint
+};  //\class SingleDimensionBarrier
 
 }  // namespace ilqgames
 

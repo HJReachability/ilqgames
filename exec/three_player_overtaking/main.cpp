@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
   // Set up the game.
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
-  params.enforce_constraints_in_linesearch = true;
+  params.enforce_barriers_in_linesearch = true;
   params.linesearch = FLAGS_linesearch;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
