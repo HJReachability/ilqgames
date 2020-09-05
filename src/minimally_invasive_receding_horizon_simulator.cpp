@@ -98,7 +98,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
   original_logs->push_back(original_problem->Solve());
   Time elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-  VLOG(0) << "Solved initial original problem in " << elapsed_time
+  VLOG(1) << "Solved initial original problem in " << elapsed_time
           << " seconds, with " << original_logs->back()->NumIterates()
           << " iterations.";
 
@@ -106,7 +106,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
   safety_logs->push_back(safety_problem->Solve());
   elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-  VLOG(0) << "Solved initial safety problem in " << elapsed_time
+  VLOG(1) << "Solved initial safety problem in " << elapsed_time
           << " seconds, with " << safety_logs->back()->NumIterates()
           << " iterations.";
 
@@ -123,7 +123,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
   while (true) {
     // Break the loop if it's been long enough.
     // Integrate a little more.
-    constexpr Time kExtraTime = 0.45;
+    constexpr Time kExtraTime = 0.25;
     t += kExtraTime;  // + planner_runtime;
 
     if (t >= final_time ||
@@ -163,7 +163,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
     CHECK_LE(original_elapsed_time, planner_runtime);
-    VLOG(0) << "t = " << t << ": Solved warm-started original problem in "
+    VLOG(1) << "t = " << t << ": Solved warm-started original problem in "
             << original_elapsed_time << " seconds.";
 
     solver_call_time = clock::now();
@@ -172,7 +172,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
     CHECK_LE(safety_elapsed_time, planner_runtime);
-    VLOG(0) << "t = " << t << ": Solved warm-started safety problem in "
+    VLOG(1) << "t = " << t << ": Solved warm-started safety problem in "
             << safety_elapsed_time << " seconds.";
 
     // Break the loop if it's been long enough.
@@ -185,20 +185,24 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
                            splicer.CurrentOperatingPoint(),
                            splicer.CurrentStrategies());
 
-    // Make sure that the safety problem converged, and if the original one
-    // didn't then at least the safety problem is not currently active.
-    // CHECK(safety_logs->back()->WasConverged());
-    // CHECK(current_active_problem_flag == ActiveProblem::SAFETY ||
-    //       original_logs->back()->WasConverged());
+    // Check if problems converged.
+    if (!original_logs->back()->WasConverged())
+      VLOG(2) << "Original planner was not converged.";
+    if (!safety_logs->back()->WasConverged())
+      VLOG(2) << "Safety planner was not converged.";
 
     // Check the safety criterion, i.e., if the safety problem's value function
     // for P1 is above kSafetyThreshold (which usually has the units of meters).
+    // That said, make sure the next planner has converged if at all possible.
     constexpr float kSafetyThreshold = -1.0;
     const float p1_safety_cost = safety_logs->back()->TotalCosts().front();
 
-    if (p1_safety_cost > kSafetyThreshold) {
+    if (p1_safety_cost > kSafetyThreshold ||
+        (safety_logs->back()->WasConverged() &&
+         !original_logs->back()->WasConverged())) {
       active_problem.push_back(ActiveProblem::SAFETY);
       splicer.Splice(*safety_logs->back());
+      VLOG(2) << "Using safety controller.";
     } else {
       active_problem.push_back(ActiveProblem::ORIGINAL);
       if (original_logs->back()->WasConverged())

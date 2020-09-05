@@ -78,7 +78,7 @@ namespace ilqgames {
 namespace {
 // Time.
 static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
+static constexpr Time kTimeHorizon = 2.0;  // s
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
@@ -95,7 +95,7 @@ static constexpr float kACostWeight = 0.1;
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kProximityCostWeight = 1.0;
+static constexpr float kProximityCostWeight = 100.0;
 static constexpr float kMinProximity = 6.0;  // m
 using ProxCost = ProximityCost;
 
@@ -214,13 +214,14 @@ ThreePlayerIntersectionReachabilityExample::
   const Polyline2 lane3(
       {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
 
-  const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_r_cost(
-      new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
-                                      !kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_l_cost(
-      new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx},
-                                      -kLaneHalfWidth, kOrientedRight,
-                                      "LaneLeftBoundary"));
+  // const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_r_cost(
+  //     new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx},
+  //                                     -kLaneHalfWidth, kOrientedRight,
+  //                                     "LaneRightBoundary"));
+  // const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_l_cost(
+  //     new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx},
+  //                                     -kLaneHalfWidth, !kOrientedRight,
+  //                                     "LaneLeftBoundary"));
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
@@ -277,7 +278,7 @@ ThreePlayerIntersectionReachabilityExample::
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       params.control_regularization, kP1OmegaIdx, 0.0, "Steering");
   const auto p1_jerk_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, kP1AIdx, 0.0, "A");
+      params.control_regularization, kP1AIdx, 0.0, "Acceleration");
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
@@ -322,11 +323,10 @@ ThreePlayerIntersectionReachabilityExample::
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
   // Ego should care about the max of his signed distance costs.
-  constexpr bool kTakeMin = false;
+  constexpr bool kTakeMin = true;
   const std::shared_ptr<ExtremeValueCost> p1_relative_distance_cost(
-      new ExtremeValueCost({p1_lane_l_cost, p1_lane_r_cost, p1p2_proximity_cost,
-                            p1p3_proximity_cost},
-                           kTakeMin, "RelativeDistance"));
+      new ExtremeValueCost({p1p2_proximity_cost, p1p3_proximity_cost},
+                           !kTakeMin, "RelativeDistance"));
   p1_cost.AddStateCost(p1_relative_distance_cost);
 
   // Ego objective should be max over time.
