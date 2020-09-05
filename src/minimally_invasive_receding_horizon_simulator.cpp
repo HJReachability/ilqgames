@@ -58,6 +58,7 @@
 #include <glog/logging.h>
 #include <chrono>
 #include <memory>
+#include <typeinfo>
 #include <vector>
 
 namespace ilqgames {
@@ -82,9 +83,10 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
            constants::kSmallNumber);
 
   // Unpack dynamics, and ensure that the two problems actually share the same
-  // dynamics object (i.e., they reside at the same address).
+  // dynamics object type.
   const auto& dynamics = original_problem->Solver().Dynamics();
-  CHECK_EQ(&dynamics, &safety_problem->Solver().Dynamics());
+  const auto& safety_dynamics = safety_problem->Solver().Dynamics();
+  CHECK(typeid(dynamics) == typeid(safety_dynamics));
 
   // Clear out the log arrays for us to save in.
   original_logs->clear();
@@ -121,7 +123,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
   while (true) {
     // Break the loop if it's been long enough.
     // Integrate a little more.
-    constexpr Time kExtraTime = 0.25;
+    constexpr Time kExtraTime = 0.45;
     t += kExtraTime;  // + planner_runtime;
 
     if (t >= final_time ||
@@ -133,13 +135,25 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
                            splicer.CurrentOperatingPoint(),
                            splicer.CurrentStrategies());
 
-    // Overwrite both problems with spliced solution.
+    // Find the active problem.
+    const bool current_active_problem_flag = active_problem.back();
+    Problem* current_active_problem =
+        (current_active_problem_flag == ActiveProblem::ORIGINAL)
+            ? original_problem
+            : safety_problem;
+
+    // Make sure both problems have the current solution from the splicer.
     original_problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
                                         splicer.CurrentStrategies());
     safety_problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
                                       splicer.CurrentStrategies());
 
-    // Set up next receding horizon problem and solve.
+    // Make sure both problems have the active problem's initial state.
+    original_problem->ResetInitialState(current_active_problem->InitialState());
+    safety_problem->ResetInitialState(current_active_problem->InitialState());
+
+    // Set up next receding horizon problem and solve, and make sure both
+    // problems' initial state matches that of the active problem.
     original_problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
     safety_problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
 
@@ -173,10 +187,9 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
 
     // Make sure that the safety problem converged, and if the original one
     // didn't then at least the safety problem is not currently active.
-    const bool current_active_problem = active_problem.back();
-    CHECK(safety_logs->back()->WasConverged());
-    CHECK(current_active_problem == ActiveProblem::SAFETY ||
-          original_logs->back()->WasConverged());
+    // CHECK(safety_logs->back()->WasConverged());
+    // CHECK(current_active_problem_flag == ActiveProblem::SAFETY ||
+    //       original_logs->back()->WasConverged());
 
     // Check the safety criterion, i.e., if the safety problem's value function
     // for P1 is above kSafetyThreshold (which usually has the units of meters).
