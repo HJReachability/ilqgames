@@ -1,6 +1,8 @@
 %% collision_avoidance_example();
 %% receding_horizon_example();
-air_3d_example(true);
+%% air_3d_example(true);
+minimally_invasive_example();
+
 
 function air_3d_example(baseline)
 %% Grid
@@ -276,7 +278,58 @@ function [traj, values] = run_ilqgames(exec, extra_suffix, regularization, x0_fl
 %%  end
 end
 
-function [t0, xs] = unpack_log(experiment_name, iter)
+function minimally_invasive_example()
+  close all;
+
+  exec = "minimally_invasive_intersection_example";
+  experiment_name = "minimally_invasive_example";
+  regularization = 0.01;
+
+  if ~experiment_already_run(char(experiment_name))
+    %% Stitch together the command for the executable.
+    instruction = "../bin/" + exec + " --noviz " + "--save" + ...
+                  " --last_traj --experiment_name=" + experiment_name + ...
+                  " --regularization=" + regularization
+    system(char(instruction));
+  end
+
+  figure;
+  set(gca, 'FontSize', 16');
+
+  dt = 0.1;
+  iters = 1:2:10;
+  for ii = 1:numel(iters)
+    iter = iters(ii);
+    subplot(1, numel(iters), ii);
+
+    [t0, original_xs, ~] = unpack_log(experiment_name + "_original", iter);
+    [~, safety_xs, safety_V1] = unpack_log(experiment_name + "_safety", iter);
+
+    %% HACK: safety controller is active if V1 is above threshold.
+    safety_threshold = -1;
+    if (safety_V1 > safety_threshold)
+      safety_active = "true";
+    else
+      safety_active = "false";
+    end
+
+    title(sprintf('$t_0 = %4.2f$, Safety Active = %s', t0, safety_active), ...
+          'Interpreter', 'latex');
+    xlabel('$p_x$ (m)', 'Interpreter', 'latex');
+    ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+    xlim([-10, 10]);
+    ylim([-50, 50]);
+
+    hold on;
+    plot(xs(:, 1), xs(:, 2), 'r');
+    plot(xs(:, 6), xs(:, 7), 'g');
+    plot(xs(:, 11), xs(:, 12), 'b');
+    hold off;
+  end
+
+  end
+
+function [t0, xs, V1] = unpack_log(experiment_name, iter)
   assert(experiment_already_run(experiment_name));
 
   log_folder = "../logs/";
@@ -289,6 +342,11 @@ function [t0, xs] = unpack_log(experiment_name, iter)
             last_iterate + "/t0.txt");
   xs = load(log_folder + experiment_name + "/" + iter + "/" + ...
             last_iterate + "/xs.txt");
+
+  %% Get value for player 1.
+  Vs = load(log_folder + experiment_name + "/" + iter + "/" + ...
+            last_iterate + "/costs.txt");
+  V1 = Vs(1);
 end
 
 function exists = experiment_already_run(folder_name)

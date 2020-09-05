@@ -136,7 +136,14 @@ int main(int argc, char** argv) {
   // safety_logs = RecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
   //                                        safety_problem.get());
 
+  // Dump the logs and/or exit.
+  if (FLAGS_save) {
+    CHECK(SaveLogs(original_logs.front(), true, FLAGS_experiment_name + "_original"));
+    CHECK(SaveLogs(safety_logs.front(), true, FLAGS_experiment_name + "_safety"));
+  }
+
   // Create a top-down renderer, control sliders, and cost inspector.
+  if (!FLAGS_viz) return 0;
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({original_logs, safety_logs}));
   ilqgames::TopDownRenderer top_down_renderer(
