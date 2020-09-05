@@ -276,7 +276,15 @@ bool GameSolver::CurrentOperatingPoint(
   // Initialize total costs and times of extreme costs.
   if (total_costs->size() != player_costs_.size())
     total_costs->resize(player_costs_.size());
-  std::fill(total_costs->begin(), total_costs->end(), 0.0);
+  for (PlayerIndex ii = 0; ii < player_costs_.size(); ii++) {
+    if (player_costs_[ii].IsTimeAdditive())
+      (*total_costs)[ii] = 0.0;
+    else if (player_costs_[ii].IsMaxOverTime())
+      (*total_costs)[ii] = -constants::kInfinity;
+    else
+      (*total_costs)[ii] = constants::kInfinity;
+  }
+
   if (times_of_extreme_costs->size() != player_costs_.size())
     times_of_extreme_costs->resize(player_costs_.size());
   std::fill(times_of_extreme_costs->begin(), times_of_extreme_costs->end(), 0);

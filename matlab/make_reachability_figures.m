@@ -285,11 +285,11 @@ function minimally_invasive_example()
   experiment_name = "minimally_invasive_example";
   regularization = 0.01;
 
-  if ~experiment_already_run(char(experiment_name))
+  if ~experiment_already_run(char(experiment_name + "_safety"))
     %% Stitch together the command for the executable.
     instruction = "../bin/" + exec + " --noviz " + "--save" + ...
                   " --last_traj --experiment_name=" + experiment_name + ...
-                  " --regularization=" + regularization
+                  " --regularization=" + regularization;
     system(char(instruction));
   end
 
@@ -297,7 +297,7 @@ function minimally_invasive_example()
   set(gca, 'FontSize', 16');
 
   dt = 0.1;
-  iters = 1:2:10;
+  iters = 10:2:16;
   for ii = 1:numel(iters)
     iter = iters(ii);
     subplot(1, numel(iters), ii);
@@ -308,22 +308,25 @@ function minimally_invasive_example()
     %% HACK: safety controller is active if V1 is above threshold.
     safety_threshold = -1;
     if (safety_V1 > safety_threshold)
-      safety_active = "true";
+      safety_active = "Safety";
     else
-      safety_active = "false";
+      safety_active = "Original";
     end
 
-    title(sprintf('$t_0 = %4.2f$, Safety Active = %s', t0, safety_active), ...
+    title(sprintf('$t_0 = %4.2f$, %s', t0, safety_active), ...
           'Interpreter', 'latex');
     xlabel('$p_x$ (m)', 'Interpreter', 'latex');
     ylabel('$p_y$ (m)', 'Interpreter', 'latex');
-    xlim([-10, 10]);
-    ylim([-50, 50]);
+    xlim([-12, 10]);
+    ylim([-10, 30]);
 
     hold on;
-    plot(xs(:, 1), xs(:, 2), 'r');
-    plot(xs(:, 6), xs(:, 7), 'g');
-    plot(xs(:, 11), xs(:, 12), 'b');
+    plot(original_xs(:, 1), original_xs(:, 2), 'r');
+    plot(original_xs(:, 6), original_xs(:, 7), 'g');
+    plot(original_xs(:, 11), original_xs(:, 12), 'b');
+    plot(safety_xs(:, 1), safety_xs(:, 2), 'r--');
+    plot(safety_xs(:, 6), safety_xs(:, 7), 'g--');
+    plot(safety_xs(:, 11), safety_xs(:, 12), 'b--');
     hold off;
   end
 

@@ -83,7 +83,7 @@ DEFINE_double(convergence_tolerance, 0.01, "L_inf tolerance for convergence.");
 #include <GL/gl3w.h>  // Initialize with gl3wInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
 #include <GL/glew.h>  // Initialize with glewInit()
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+#elif defined(IMGUI_IMPL_OPENGL_L\OADER_GLAD)
 #include <glad/glad.h>  // Initialize with gladLoadGL()
 #else
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
