@@ -95,7 +95,7 @@ static constexpr float kACostWeight = 0.1;
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
 
-static constexpr float kProximityCostWeight = 100.0;
+static constexpr float kProximityCostWeight = 0.0;
 static constexpr float kMinProximity = 6.0;  // m
 using ProxCost = ProximityCost;
 
