@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,26 +36,30 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Three player intersection example. Ordering is given by the following:
+// Three player intersection reachability example. Ordering is given by:
 // (P1, P2, P3) = (Car 1, Car 2, Pedestrian).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/cost/curvature_cost.h>
+#include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
+#include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/relative_distance_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
+#include <ilqgames/cost/signed_distance_cost.h>
 #include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
-#include <ilqgames/examples/three_player_intersection_example.h>
+#include <ilqgames/examples/three_player_intersection_reachability_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
@@ -161,8 +165,8 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
 }  // anonymous namespace
 
-ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
-    const SolverParams& params) {
+ThreePlayerIntersectionReachabilityExample::
+    ThreePlayerIntersectionReachabilityExample(const SolverParams& params) {
   // Create dynamics.
   const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
       new ConcatenatedDynamicalSystem(
@@ -210,20 +214,14 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   const Polyline2 lane3(
       {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
 
-  const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
-                                 "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
-  p1_cost.AddStateCost(p1_lane_cost);
-  p1_cost.AddStateCost(p1_lane_r_cost);
-  p1_cost.AddStateCost(p1_lane_l_cost);
+  // const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_r_cost(
+  //     new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx},
+  //                                     -kLaneHalfWidth, kOrientedRight,
+  //                                     "LaneRightBoundary"));
+  // const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_l_cost(
+  //     new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx},
+  //                                     -kLaneHalfWidth, !kOrientedRight,
+  //                                     "LaneLeftBoundary"));
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
@@ -256,16 +254,6 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p3_cost.AddStateCost(p3_lane_l_cost);
 
   // Max/min/nominal speed costs.
-  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
-  const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  p1_cost.AddStateCost(p1_min_v_cost);
-  p1_cost.AddStateCost(p1_max_v_cost);
-  p1_cost.AddStateCost(p1_nominal_v_cost);
-
   const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
       kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
   const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
@@ -288,9 +276,9 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_jerk_cost =
-      std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx, 0.0, "A");
+      params.control_regularization, kP1OmegaIdx, 0.0, "Steering");
+  const auto p1_jerk_cost = std::make_shared<QuadraticCost>(
+      params.control_regularization, kP1AIdx, 0.0, "Acceleration");
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
@@ -309,14 +297,12 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p3_cost.AddControlCost(2, p3_a_cost);
 
   // Collision-avoidance costs.
-  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
-      new ProxCost(kProximityCostWeight, {kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-                   kMinProximity, "ProxCostP2"));
-  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
-      new ProxCost(kProximityCostWeight, {kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
-                   kMinProximity, "ProxCostP3"));
-  p1_cost.AddStateCost(p1p2_proximity_cost);
-  p1_cost.AddStateCost(p1p3_proximity_cost);
+  const std::shared_ptr<SignedDistanceCost> p1p2_proximity_cost(
+      new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+                             kMinProximity, true, "ProxCostP2"));
+  const std::shared_ptr<SignedDistanceCost> p1p3_proximity_cost(
+      new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
+                             kMinProximity, true, "ProxCostP3"));
 
   const std::shared_ptr<ProxCost> p2p1_proximity_cost(
       new ProxCost(kProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
@@ -336,22 +322,32 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   p3_cost.AddStateCost(p3p1_proximity_cost);
   p3_cost.AddStateCost(p3p2_proximity_cost);
 
+  // Ego should care about the max of his signed distance costs.
+  constexpr bool kTakeMin = true;
+  const std::shared_ptr<ExtremeValueCost> p1_relative_distance_cost(
+      new ExtremeValueCost({p1p2_proximity_cost, p1p3_proximity_cost},
+                           !kTakeMin, "RelativeDistance"));
+  p1_cost.AddStateCost(p1_relative_distance_cost);
+
+  // Ego objective should be max over time.
+  p1_cost.SetMaxOverTime();
+
   // Set up solver.
   solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
                               kTimeHorizon, params));
 }
 
-inline std::vector<float> ThreePlayerIntersectionExample::Xs(
+inline std::vector<float> ThreePlayerIntersectionReachabilityExample::Xs(
     const VectorXf& x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx)};
 }
 
-inline std::vector<float> ThreePlayerIntersectionExample::Ys(
+inline std::vector<float> ThreePlayerIntersectionReachabilityExample::Ys(
     const VectorXf& x) const {
   return {x(kP1YIdx), x(kP2YIdx), x(kP3YIdx)};
 }
 
-inline std::vector<float> ThreePlayerIntersectionExample::Thetas(
+inline std::vector<float> ThreePlayerIntersectionReachabilityExample::Thetas(
     const VectorXf& x) const {
   return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx)};
 }

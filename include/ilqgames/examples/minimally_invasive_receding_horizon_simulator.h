@@ -36,29 +36,39 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Two player Air3D example from:
-// https://www.cs.ubc.ca/~mitchell/Papers/publishedIEEEtac05.pdf.
+// Utility for solving a problem using a receding horizon, simulating dynamics
+// forward at each stage to account for the passage of time and also switching
+// to a minimally-invasive control *for only the ego vehicle* if its safety
+// problem detects iminent danger.
+//
+// This class is intended as a facsimile of a real-time, online receding horizon
+// problem in which short horizon problems are solved asynchronously throughout
+// operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
-#define ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
+#define ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
 
-#include <ilqgames/solver/solver_params.h>
-#include <ilqgames/solver/top_down_renderable_problem.h>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/solver_log.h>
+
+#include <memory>
+#include <vector>
 
 namespace ilqgames {
 
-class Air3DExample : public TopDownRenderableProblem {
- public:
-  ~Air3DExample() {}
-  Air3DExample(const SolverParams& params);
+// Enumerated type for specifying which problem is active at each invocation.
+enum ActiveProblem { ORIGINAL, SAFETY };
 
-  // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf& x) const;
-  std::vector<float> Ys(const VectorXf& x) const;
-  std::vector<float> Thetas(const VectorXf& x) const;
-};  // class Air3DExample
+// Solve this game following a receding horizon with a minimally-invasive
+// control scheme, accounting for the time used to solve each subproblem and
+// integrating dynamics forward accordingly.
+std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
+    Time final_time, Time planner_runtime, Problem* original_problem,
+    Problem* safety_problem,
+    std::vector<std::shared_ptr<const SolverLog>>* original_logs,
+    std::vector<std::shared_ptr<const SolverLog>>* safety_logs);
 
 }  // namespace ilqgames
 

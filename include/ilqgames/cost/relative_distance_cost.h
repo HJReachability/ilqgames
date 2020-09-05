@@ -36,29 +36,44 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Two player Air3D example from:
-// https://www.cs.ubc.ca/~mitchell/Papers/publishedIEEEtac05.pdf.
+// Distance between two state positions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
-#define ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
+#ifndef ILQGAMES_COST_RELATIVE_DISTANCE_COST_H
+#define ILQGAMES_COST_RELATIVE_DISTANCE_COST_H
 
-#include <ilqgames/solver/solver_params.h>
-#include <ilqgames/solver/top_down_renderable_problem.h>
+#include <ilqgames/cost/time_invariant_cost.h>
+#include <ilqgames/utils/types.h>
+
+#include <glog/logging.h>
+#include <string>
+#include <utility>
 
 namespace ilqgames {
 
-class Air3DExample : public TopDownRenderableProblem {
+class RelativeDistanceCost : public TimeInvariantCost {
  public:
-  ~Air3DExample() {}
-  Air3DExample(const SolverParams& params);
+  // Construct from a multiplicative weight and the dimensions in which to apply
+  // the quadratic difference cost.
+  RelativeDistanceCost(float weight,
+                       const std::pair<Dimension, Dimension>& dims1,
+                       const std::pair<Dimension, Dimension>& dims2,
+                       const std::string& name = "")
+      : TimeInvariantCost(weight, name), dims1_(dims1), dims2_(dims2) {}
 
-  // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf& x) const;
-  std::vector<float> Ys(const VectorXf& x) const;
-  std::vector<float> Thetas(const VectorXf& x) const;
-};  // class Air3DExample
+  // Evaluate this cost at the current input.
+  float Evaluate(const VectorXf& input) const;
+
+  // Quadraticize this cost at the given input, and add to the running=
+  // sum of gradients and Hessians (if non-null).
+  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const;
+
+ private:
+  // Sets of dimensions whose pairwise differences will constitute the cost.
+  const std::pair<Dimension, Dimension> dims1_, dims2_;
+};  //\class RelativeDistanceCost
 
 }  // namespace ilqgames
 

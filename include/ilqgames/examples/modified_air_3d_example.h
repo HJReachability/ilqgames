@@ -39,26 +39,29 @@
 // Two player Air3D example from:
 // https://www.cs.ubc.ca/~mitchell/Papers/publishedIEEEtac05.pdf.
 //
+// Modified such that it does *not* use relative dynamics and instead considers
+// the motion of each player separately.
+//
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
-#define ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
+#ifndef ILQGAMES_EXAMPLES_MODIFIED_AIR_3D_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_MODIFIED_AIR_3D_EXAMPLE_H
 
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-class Air3DExample : public TopDownRenderableProblem {
+class ModifiedAir3DExample : public TopDownRenderableProblem {
  public:
-  ~Air3DExample() {}
-  Air3DExample(const SolverParams& params);
+  ~ModifiedAir3DExample() {}
+  ModifiedAir3DExample(const SolverParams& params);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;
   std::vector<float> Ys(const VectorXf& x) const;
   std::vector<float> Thetas(const VectorXf& x) const;
-};  // class Air3DExample
+};  // class ModifiedAir3DExample
 
 }  // namespace ilqgames
 

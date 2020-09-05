@@ -98,14 +98,13 @@ static void glfw_error_callback(int error, const char* description) {
 
 int main(int argc, char** argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/one_player_reachability_example.log");
+      ILQGAMES_LOG_DIR + std::string("/air_3d_example.log");
   google::SetLogDestination(0, log_file.c_str());
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_logtostderr = true;
 
   // Solve for open-loop information pattern.
-  static constexpr bool kOpenLoop = true;
   ilqgames::SolverParams params;
   params.enforce_constraints_in_linesearch = true;
   params.max_backtracking_steps = 100;
@@ -117,10 +116,10 @@ int main(int argc, char** argv) {
   params.state_regularization = FLAGS_regularization;
   params.control_regularization = FLAGS_regularization;
 
-  const auto start = std::chrono::system_clock::now();
   const auto problem = std::make_shared<ilqgames::Air3DExample>(params);
 
   LOG(INFO) << "Computing feedback solution.";
+  const auto start = std::chrono::system_clock::now();
   const std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
   LOG(INFO) << "Solver completed in "
@@ -134,7 +133,7 @@ int main(int argc, char** argv) {
       problem->Solver().PlayerCosts(), problem->CurrentStrategies(),
       problem->CurrentOperatingPoint(), problem->Solver().Dynamics(),
       problem->InitialState(), problem->Solver().TimeStep(), kMaxPerturbation,
-      kOpenLoop);
+      false);
   if (is_local_nash)
     LOG(INFO) << "Solution is a local Nash.";
   else

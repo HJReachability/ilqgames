@@ -59,11 +59,13 @@ class Polyline2SignedDistanceCost : public TimeInvariantCost {
   Polyline2SignedDistanceCost(
       const Polyline2& polyline,
       const std::pair<Dimension, Dimension>& position_idxs,
-      bool oriented_same_as_polyline = true, const std::string& name = "")
+      const float nominal = 0.0, bool oriented_same_as_polyline = true,
+      const std::string& name = "")
       : TimeInvariantCost(1.0, name),
         polyline_(polyline),
         xidx_(position_idxs.first),
         yidx_(position_idxs.second),
+        nominal_(nominal),
         oriented_same_as_polyline_(oriented_same_as_polyline) {}
 
   // Evaluate this cost at the current input.
@@ -81,6 +83,9 @@ class Polyline2SignedDistanceCost : public TimeInvariantCost {
   // Dimensions of input corresponding to (x, y)-position.
   const Dimension xidx_;
   const Dimension yidx_;
+
+  // Nominal value.
+  const float nominal_;
 
   // Whether the orientation is the same or opposite that of the polyline.
   const bool oriented_same_as_polyline_;

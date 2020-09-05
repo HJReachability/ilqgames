@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,12 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Main GUI for three player intersection example.
+// Main GUI for minimally-invasive receding horizon intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/examples/minimally_invasive_receding_horizon_simulator.h>
 #include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/examples/three_player_intersection_example.h>
+#include <ilqgames/examples/three_player_intersection_reachability_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
@@ -98,7 +100,8 @@ static void glfw_error_callback(int error, const char* description) {
 
 int main(int argc, char** argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
+      ILQGAMES_LOG_DIR +
+      std::string("/minimally_invasive_intersection_example.log");
   google::SetLogDestination(0, log_file.c_str());
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -106,11 +109,6 @@ int main(int argc, char** argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
-  // params.max_backtracking_steps = 100;
-  // params.linesearch = FLAGS_linesearch;
-  // params.trust_region_size = FLAGS_trust_region_size;
-  // params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
-  // params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.enforce_constraints_in_linesearch = true;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
@@ -120,22 +118,32 @@ int main(int argc, char** argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.state_regularization = FLAGS_regularization;
   params.control_regularization = FLAGS_regularization;
-  auto problem =
+  auto original_problem =
       std::make_shared<ilqgames::ThreePlayerIntersectionExample>(params);
+  auto safety_problem =
+      std::make_shared<ilqgames::ThreePlayerIntersectionReachabilityExample>(
+          params);
 
   // Solve the game in a receding horizon.
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
   constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
-  const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
-      logs = {
-          RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get())};
+  std::vector<std::shared_ptr<const ilqgames::SolverLog>> original_logs;
+  std::vector<std::shared_ptr<const ilqgames::SolverLog>> safety_logs;
+  const std::vector<ilqgames::ActiveProblem> active_problem =
+      MinimallyInvasiveRecedingHorizonSimulator(
+          kFinalTime, kPlannerRuntime, original_problem.get(),
+          safety_problem.get(), &original_logs, &safety_logs);
+  // safety_logs = RecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
+  //                                        safety_problem.get());
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({logs}));
-  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+      new ilqgames::ControlSliders({original_logs, safety_logs}));
+  ilqgames::TopDownRenderer top_down_renderer(
+      sliders, {original_problem, safety_problem});
+  ilqgames::CostInspector cost_inspector(
+      sliders, {original_problem->Solver().PlayerCosts(),
+                safety_problem->Solver().PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

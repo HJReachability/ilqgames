@@ -36,30 +36,28 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Two player Air3D example from:
-// https://www.cs.ubc.ca/~mitchell/Papers/publishedIEEEtac05.pdf.
-//
+// Single player dynamics modeling a 2D point mass. 4 states, 2 control inputs.
+// State is [x, y, xdot, ydot], control is [ax, ay], and dynamics are:
+//                     \dot px    = vx
+//                     \dot py    = vy
+//                     \dot vx    = ax
+//                     \dot vy    = ay
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
-#define ILQGAMES_EXAMPLES_AIR_3D_EXAMPLE_H
-
-#include <ilqgames/solver/solver_params.h>
-#include <ilqgames/solver/top_down_renderable_problem.h>
+#include <ilqgames/dynamics/single_player_point_mass_2d.h>
 
 namespace ilqgames {
 
-class Air3DExample : public TopDownRenderableProblem {
- public:
-  ~Air3DExample() {}
-  Air3DExample(const SolverParams& params);
+// Constexprs for state indices.
+const Dimension SinglePlayerPointMass2D::kNumXDims = 4;
+const Dimension SinglePlayerPointMass2D::kPxIdx = 0;
+const Dimension SinglePlayerPointMass2D::kPyIdx = 1;
+const Dimension SinglePlayerPointMass2D::kVxIdx = 2;
+const Dimension SinglePlayerPointMass2D::kVyIdx = 3;
 
-  // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf& x) const;
-  std::vector<float> Ys(const VectorXf& x) const;
-  std::vector<float> Thetas(const VectorXf& x) const;
-};  // class Air3DExample
+// Constexprs for control indices.
+const Dimension SinglePlayerPointMass2D::kNumUDims = 2;
+const Dimension SinglePlayerPointMass2D::kAxIdx = 0;
+const Dimension SinglePlayerPointMass2D::kAyIdx = 1;
 
 }  // namespace ilqgames
-
-#endif
