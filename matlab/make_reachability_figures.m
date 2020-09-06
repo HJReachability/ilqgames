@@ -310,15 +310,15 @@ function minimally_invasive_example()
     if (safety_V1 > safety_threshold)
       safety_active = "Safety";
     else
-      safety_active = "Original";
+      safety_active = "Nominal";
     end
 
-    title(sprintf('$t_0 = %4.2f$, %s', t0, safety_active), ...
+    title(sprintf('$t_0 = %4.2f$ (s), %s', t0, safety_active), ...
           'Interpreter', 'latex');
     xlabel('$p_x$ (m)', 'Interpreter', 'latex');
     ylabel('$p_y$ (m)', 'Interpreter', 'latex');
     xlim([-12, 10]);
-    ylim([-10, 30]);
+    ylim([-10, 40]);
 
     hold on;
     plot(original_xs(:, 1), original_xs(:, 2), 'r');
