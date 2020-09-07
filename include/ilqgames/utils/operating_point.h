@@ -69,14 +69,13 @@ struct OperatingPoint {
                  Time initial_time);
 
   template <typename MultiPlayerSystemType>
-  OperatingPoint(size_t num_time_steps, PlayerIndex num_players,
-                 Time initial_time,
+  OperatingPoint(size_t num_time_steps, Time initial_time,
                  const std::shared_ptr<const MultiPlayerSystemType>& dynamics)
-      : OperatingPoint(num_time_steps, num_players, initial_time) {
+      : OperatingPoint(num_time_steps, dynamics->NumPlayers(), initial_time) {
     CHECK_NOTNULL(dynamics.get());
     for (size_t kk = 0; kk < num_time_steps; kk++) {
       xs[kk] = VectorXf::Zero(dynamics->XDim());
-      for (PlayerIndex ii = 0; ii < num_players; ii++)
+      for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
         us[kk][ii] = VectorXf::Zero(dynamics->UDim(ii));
     }
   }

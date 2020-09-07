@@ -67,12 +67,11 @@ namespace ilqgames {
 class ILQFlatSolver : public GameSolver {
  public:
   virtual ~ILQFlatSolver() {}
-  ILQFlatSolver(const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics,
-                const std::vector<PlayerCost>& player_costs, Time time_horizon,
+  ILQFlatSolver(const std::shared_ptr<Problem>& problem,
                 const SolverParams& params = SolverParams())
-    : GameSolver(dynamics, player_costs, time_horizon, params) {
+    : GameSolver(problem, params) {
     // Precompute linearization.
-    CHECK(dynamics_->TreatAsLinear());
+    CHECK(problem_->Dynamics()->TreatAsLinear());
     ComputeLinearization(&linearization_);
   }
 

@@ -59,6 +59,10 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+// Time horizon and step.
+DEFINE_double(time_horizon, 10.0, "Total time horizon (s).");
+DEFINE_double(time_step, 0.1, "Length of discrete time step (s).");
+
 // Optional log saving and visualization.
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
@@ -102,6 +106,10 @@ int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_logtostderr = true;
 
+  // Make a problem.
+  auto problem = std::make_shared<ilqgames::FlatRoundaboutMergingExample>(
+      FLAGS_time_horizon, FLAGS_time_step);
+
   // Set up the game.
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
@@ -110,8 +118,7 @@ int main(int argc, char** argv) {
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  auto problem =
-      std::make_shared<ilqgames::FlatRoundaboutMergingExample>(params);
+  params.trust_region_dimensions = problem->Dynamics()->PositionDimensions();
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();

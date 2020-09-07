@@ -66,10 +66,9 @@ namespace ilqgames {
 class ILQSolver : public GameSolver {
  public:
   virtual ~ILQSolver() {}
-  ILQSolver(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
-            const std::vector<PlayerCost>& player_costs, Time time_horizon,
+  ILQSolver(const std::shared_ptr<Problem>& problem,
             const SolverParams& params = SolverParams())
-      : GameSolver(dynamics, player_costs, time_horizon, params) {}
+      : GameSolver(problem, params) {}
 
  protected:
   // Populate the given vector with a linearization of the dynamics about

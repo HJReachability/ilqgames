@@ -69,12 +69,13 @@ void ILQSolver::ComputeLinearization(
     linearization->resize(op.xs.size());
 
   // Cast dynamics to appropriate type.
-  const auto dyn =
-      static_cast<const MultiPlayerDynamicalSystem*>(dynamics_.get());
+  const auto dyn = static_cast<const MultiPlayerDynamicalSystem*>(
+      problem_->Dynamics().get());
 
   // Populate one timestep at a time.
   for (size_t kk = 0; kk < op.xs.size(); kk++) {
-    const Time t = op.t0 + ComputeTimeStamp(kk);
+    const Time t =
+        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
     (*linearization)[kk] = dyn->Linearize(t, op.xs[kk], op.us[kk]);
   }
 }

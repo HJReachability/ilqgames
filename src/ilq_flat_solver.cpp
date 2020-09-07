@@ -63,7 +63,8 @@ void ILQFlatSolver::ComputeLinearization(
   CHECK_NOTNULL(linearization);
 
   // Cast dynamics to appropriate type.
-  const auto dyn = static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
+  const auto dyn =
+      static_cast<const MultiPlayerFlatSystem*>(problem_->Dynamics().get());
 
   // Populate one timestep at a time.
   for (size_t kk = 0; kk < linearization->size(); kk++)
@@ -72,7 +73,8 @@ void ILQFlatSolver::ComputeLinearization(
 
 float ILQFlatSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
                                    const std::vector<Dimension>& dims) const {
-  const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
+  const auto& dyn =
+      *static_cast<const MultiPlayerFlatSystem*>(problem_->Dynamics().get());
 
   // If singular return infinite distance and throw a warning. Otherwise, use
   // base class implementation but for nonlinear system states.

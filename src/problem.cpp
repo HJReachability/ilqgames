@@ -53,50 +53,25 @@
 #include <memory>
 #include <vector>
 
+// Time horizon and step.
+DEFINE_double(time_horizon, 10.0, "Total time horizon (s).");
+DEFINE_double(time_step, 0.1, "Length of discrete time step (s).");
+
 namespace ilqgames {
 
-std::shared_ptr<SolverLog> Problem::Solve(Time max_runtime) {
-  CHECK_NOTNULL(solver_.get());
-  CHECK_NOTNULL(strategies_.get());
-  CHECK_NOTNULL(operating_point_.get());
-
-  // Create empty log.
-  std::shared_ptr<SolverLog> log = CreateNewLog();
-
-  // Solve the problem.
-  OperatingPoint final_operating_point(*operating_point_);
-  std::vector<Strategy> final_strategies(*strategies_);
-  if (!solver_->Solve(x0_, *operating_point_, *strategies_,
-                      &final_operating_point, &final_strategies, log.get(),
-                      max_runtime)) {
-    VLOG(0) << "Solver failed. Not updating operating point and "
-               "strategies to failed solution.";
-    return log;
-  }
-
-  // Store these new strategies/operating point.
-  strategies_->swap(final_strategies);
-  operating_point_->swap(final_operating_point);
-
-  CHECK_LT((x0_ - operating_point_->xs[0]).cwiseAbs().maxCoeff(),
-           constants::kSmallNumber);
-  CHECK_LT((x0_ - log->FinalOperatingPoint().xs[0]).cwiseAbs().maxCoeff(),
-           constants::kSmallNumber);
-  return log;
-}
+Problem::Problem()
+    : time_horizon_(FLAGS_time_horizon),
+      time_step_(FLAGS_time_step),
+      num_time_steps_(static_cast<size_t>(
+          (constants::kSmallNumber + FLAGS_time_horizon) / FLAGS_time_step)),
+      initialized_(false) {}
 
 void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
                                        Time planner_runtime) {
-  CHECK_NOTNULL(strategies_.get());
-  CHECK_NOTNULL(operating_point_.get());
+  CHECK(initialized_);
   CHECK_GE(planner_runtime, 0.0);
-  CHECK_LE(
-      planner_runtime + t0,
-      operating_point_->t0 + solver_->TimeStep() * operating_point_->xs.size());
+  CHECK_LE(planner_runtime + t0, InitialTime() + TimeHorizon());
   CHECK_GE(t0, operating_point_->t0);
-  CHECK_GE(operating_point_->xs.size(), solver_->NumTimeSteps());
-
-  const MultiPlayerIntegrableSystem& dynamics = solver_->Dynamics();
 
   // Integrate x0 forward from t0 by approximately planner_runtime to get
   // actual initial state. Integrate up to the next discrete timestep, then
@@ -104,39 +79,38 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // timestep at least 'planner_runtime' has elapsed (done by rounding).
   constexpr float kRoundingError = 0.9;
   const Time relative_t0 = t0 - operating_point_->t0;
-  size_t current_timestep =
-      static_cast<size_t>(relative_t0 / solver_->TimeStep());
+  size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
   Time remaining_time_this_step =
-      (current_timestep + 1) * solver_->TimeStep() - relative_t0;
-  if (remaining_time_this_step < kRoundingError * solver_->TimeStep()) {
+      (current_timestep + 1) * time_step_ - relative_t0;
+  if (remaining_time_this_step < kRoundingError * time_step_) {
     current_timestep += 1;
-    remaining_time_this_step = solver_->TimeStep() - remaining_time_this_step;
+    remaining_time_this_step = time_step_ - remaining_time_this_step;
   }
 
-  CHECK_LT(remaining_time_this_step, solver_->TimeStep());
+  CHECK_LT(remaining_time_this_step, time_step_);
 
   // Initially, set x to the integrated version of x0 at the next timestep.
-  VectorXf x =
-      dynamics.IntegrateToNextTimeStep(t0, x0, *operating_point_, *strategies_);
+  VectorXf x = dynamics_->IntegrateToNextTimeStep(t0, x0, *operating_point_,
+                                                  *strategies_);
   operating_point_->t0 = t0 + remaining_time_this_step;
   if (remaining_time_this_step <= planner_runtime) {
     const size_t num_steps_to_integrate = static_cast<size_t>(
         constants::kSmallNumber +  // Add to avoid truncation error.
-        (planner_runtime - remaining_time_this_step) / solver_->TimeStep());
+        (planner_runtime - remaining_time_this_step) / time_step_);
     const size_t last_integration_timestep =
         current_timestep + num_steps_to_integrate;
 
-    x = dynamics.Integrate(current_timestep + 1, last_integration_timestep, x,
-                           *operating_point_, *strategies_);
-    operating_point_->t0 += solver_->TimeStep() * num_steps_to_integrate;
+    x = dynamics_->Integrate(current_timestep + 1, last_integration_timestep, x,
+                             *operating_point_, *strategies_);
+    operating_point_->t0 += time_step_ * num_steps_to_integrate;
   }
 
   // Find index of nearest state in the existing plan to this state.
   const auto nearest_iter =
       std::min_element(operating_point_->xs.begin(), operating_point_->xs.end(),
-                       [&dynamics, &x](const VectorXf& x1, const VectorXf& x2) {
-                         return dynamics.DistanceBetween(x, x1) <
-                                dynamics.DistanceBetween(x, x2);
+                       [this, &x](const VectorXf& x1, const VectorXf& x2) {
+                         return dynamics_->DistanceBetween(x, x1) <
+                                dynamics_->DistanceBetween(x, x2);
                        });
 
   // Set initial time to first timestamp in new problem.
@@ -144,15 +118,14 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
       std::distance(operating_point_->xs.begin(), nearest_iter);
 
   // Set initial state to this state.
-  x0_ = dynamics.Stitch(*nearest_iter, x);
-  //  x0_ = *nearest_iter;
+  x0_ = dynamics_->Stitch(*nearest_iter, x);
 
   // Update all costs to have the correct initial time.
   RelativeTimeTracker::ResetInitialTime(operating_point_->t0);
 
   // Set final timestep to consider in current operating point.
   const size_t after_final_timestep =
-      first_timestep_in_new_problem + solver_->NumTimeSteps();
+      first_timestep_in_new_problem + NumTimeSteps();
   const size_t timestep_iterator_end =
       std::min(after_final_timestep, operating_point_->xs.size());
 
@@ -166,7 +139,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
     operating_point_->xs[kk_new_problem].swap(operating_point_->xs[kk]);
     operating_point_->us[kk_new_problem].swap(operating_point_->us[kk]);
     CHECK_EQ(operating_point_->us[kk_new_problem].size(),
-             dynamics.NumPlayers());
+             dynamics_->NumPlayers());
 
     // Set current stategy.
     for (auto& strategy : *strategies_) {
@@ -176,73 +149,73 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   }
 
   // Make sure operating point is the right size.
-  CHECK_GE(operating_point_->xs.size(), solver_->NumTimeSteps());
-  if (operating_point_->xs.size() > solver_->NumTimeSteps()) {
-    operating_point_->xs.resize(solver_->NumTimeSteps());
-    operating_point_->us.resize(solver_->NumTimeSteps());
-    for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      (*strategies_)[ii].Ps.resize(solver_->NumTimeSteps());
-      (*strategies_)[ii].alphas.resize(solver_->NumTimeSteps());
+  CHECK_GE(operating_point_->xs.size(), NumTimeSteps());
+  if (operating_point_->xs.size() > NumTimeSteps()) {
+    operating_point_->xs.resize(NumTimeSteps());
+    operating_point_->us.resize(NumTimeSteps());
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      (*strategies_)[ii].Ps.resize(NumTimeSteps());
+      (*strategies_)[ii].alphas.resize(NumTimeSteps());
     }
   }
 
   // Set new operating point controls and strategies to zero and propagate
   // state forward accordingly.
   for (size_t kk = timestep_iterator_end - first_timestep_in_new_problem;
-       kk < solver_->NumTimeSteps(); kk++) {
-    operating_point_->us[kk].resize(dynamics.NumPlayers());
-    for (size_t ii = 0; ii < dynamics.NumPlayers(); ii++) {
-      (*strategies_)[ii].Ps[kk].setZero(dynamics.UDim(ii), dynamics.XDim());
-      (*strategies_)[ii].alphas[kk].setZero(dynamics.UDim(ii));
-      operating_point_->us[kk][ii].setZero(dynamics.UDim(ii));
+       kk < NumTimeSteps(); kk++) {
+    operating_point_->us[kk].resize(dynamics_->NumPlayers());
+    for (size_t ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      (*strategies_)[ii].Ps[kk].setZero(dynamics_->UDim(ii), dynamics_->XDim());
+      (*strategies_)[ii].alphas[kk].setZero(dynamics_->UDim(ii));
+      operating_point_->us[kk][ii].setZero(dynamics_->UDim(ii));
     }
 
-    operating_point_->xs[kk] = dynamics.Integrate(
-        operating_point_->t0 + solver_->ComputeTimeStamp(kk - 1),
-        solver_->TimeStep(), operating_point_->xs[kk - 1],
-        operating_point_->us[kk - 1]);
+    operating_point_->xs[kk] = dynamics_->Integrate(
+        InitialTime() + ComputeRelativeTimeStamp(kk - 1), time_step_,
+        operating_point_->xs[kk - 1], operating_point_->us[kk - 1]);
   }
 
   // Invariants.
-  CHECK_EQ(operating_point_->xs.size(), solver_->NumTimeSteps());
-  CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0),
-           solver_->TimeStep());
+  CHECK_EQ(operating_point_->xs.size(), NumTimeSteps());
+  CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0), time_step_);
 }
 
 size_t Problem::NumPrimals() const {
-  const auto& dynamics = solver_->Dynamics();
-  const auto horizon = solver_->NumTimeSteps();
-  const auto xdim = dynamics.XDim();
-  const auto udim = dynamics.TotalUDim();
+  CHECK(initialized_);
+
+  const auto horizon = NumTimeSteps();
+  const auto xdim = dynamics_->XDim();
+  const auto udim = dynamics_->TotalUDim();
 
   // Start by computing the number of shared variables - states and controls.
   size_t total = xdim * (horizon + 1) + udim * horizon;
 
   // Accumulate players' individual strategy parameters.
-  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
     total += (*strategies_)[ii].NumParameters();
 
   return total;
 }
 
 size_t Problem::NumDuals() const {
-  const auto& dynamics = solver_->Dynamics();
-  const auto horizon = solver_->NumTimeSteps();
-  const auto xdim = dynamics.XDim();
+  CHECK(initialized_);
+
+  const auto horizon = NumTimeSteps();
+  const auto xdim = dynamics_->XDim();
 
   // Start by computing the number of initial state multipliers and dynamics
   // multipliers and feedback multipliers (which should be the same).
-  size_t total = dynamics.NumPlayers() * xdim * (2 * horizon + 1);
+  size_t total = dynamics_->NumPlayers() * xdim * (2 * horizon + 1);
 
-  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
-    const auto& player_cost = solver_->PlayerCosts()[ii];
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+    const auto& player_cost = player_costs_[ii];
 
     // Accumulate the constraint multipliers for each state constraint.
     total += player_cost.NumStateConstraints() * xdim * horizon;
 
     // Accumulate the control constraint multipliers
     for (const auto& pair : player_cost.ControlConstraints())
-      total += dynamics.UDim(pair.first) * horizon;
+      total += dynamics_->UDim(pair.first) * horizon;
   }
 
   return total;
@@ -250,15 +223,10 @@ size_t Problem::NumDuals() const {
 
 void Problem::OverwriteSolution(const OperatingPoint& operating_point,
                                 const std::vector<Strategy>& strategies) {
-  CHECK_NOTNULL(operating_point_.get());
-  CHECK_NOTNULL(strategies_.get());
+  CHECK(initialized_);
 
   *operating_point_ = operating_point;
   *strategies_ = strategies;
-}
-
-std::shared_ptr<SolverLog> Problem::CreateNewLog() const {
-  return std::make_shared<SolverLog>(solver_->TimeStep());
 }
 
 }  // namespace ilqgames

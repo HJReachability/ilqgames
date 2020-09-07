@@ -83,12 +83,13 @@ class GameSolver {
   virtual ~GameSolver() {}
 
   // Solve this game. Returns true if converged.
-  virtual bool Solve(const VectorXf& x0, SolverLog* log = nullptr,
-                     Time max_runtime = std::numeric_limits<Time>::infinity());
+  virtual std::shared_ptr<SolverLog> Solve(
+      bool* success = nullptr,
+      Time max_runtime = std::numeric_limits<Time>::infinity());
 
  protected:
   GameSolver(const std::shared_ptr<Problem>& problem,
-             const SolverParams& params = SolverParams())
+             const SolverParams& params)
       : problem_(problem),
         linearization_(problem->NumTimeSteps()),
         quadraticization_(problem_->NumTimeSteps()),
@@ -109,6 +110,12 @@ class GameSolver {
     for (auto& quads : quadraticization_)
       quads.resize(dynamics->NumPlayers(),
                    QuadraticCostApproximation(dynamics->XDim()));
+  }
+
+  // Create a new log. This may be overridden by derived classes (e.g., to
+  // change the name of the log).
+  virtual std::shared_ptr<SolverLog> CreateNewLog() const {
+    return std::make_shared<SolverLog>(problem_->TimeStep());
   }
 
   // Populate the given vector with a linearization of the dynamics about

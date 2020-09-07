@@ -73,9 +73,11 @@ void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
 
 }  // anonymous namespace
 
-bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
-  // Start a stopwatch.
+std::shared_ptr<SolverLog> GameSolver::Solve(bool* success, Time max_runtime) {
   const auto solver_call_time = clock::now();
+
+  // Create a new log.
+  std::shared_ptr<SolverLog> log = CreateNewLog();
 
   // Keep iterating until convergence.
   auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
@@ -88,8 +90,8 @@ bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
   // constraint satisfaction check at the first iteration.
   OperatingPoint last_operating_point(problem_->CurrentOperatingPoint());
   OperatingPoint current_operating_point(problem_->CurrentOperatingPoint());
-  current_operating_point.xs[0] = x0;
-  last_operating_point.xs[0] = x0;
+  current_operating_point.xs[0] = problem_->InitialState();
+  last_operating_point.xs[0] = problem_->InitialState();
 
   // Current strategies.
   std::vector<Strategy> current_strategies(problem_->CurrentStrategies());
@@ -124,11 +126,9 @@ bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
                         &was_operating_point_feasible);
 
   // Log current iterate.
-  if (log) {
-    log->AddSolverIterate(current_operating_point, current_strategies,
-                          total_costs, elapsed_time(solver_call_time),
-                          has_converged);
-  }
+  log->AddSolverIterate(current_operating_point, current_strategies,
+                        total_costs, elapsed_time(solver_call_time),
+                        has_converged);
 
   // Main loop with timer for anytime execution.
   while (num_iterations < params_.max_solver_iters && !has_converged &&
@@ -159,16 +159,17 @@ bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
     // Linearize dynamics and quadraticize costs for all players about the new
     // operating point, only if the system can't be treated as linear from the
     // outset, in which case we've already linearized it.
-    if (!dynamics_->TreatAsLinear())
+    if (!problem_->Dynamics()->TreatAsLinear())
       ComputeLinearization(current_operating_point, &linearization_);
 
-    for (size_t kk = 0; kk < num_time_steps_; kk++) {
-      const Time t = initial_operating_point.t0 + ComputeTimeStamp(kk);
+    for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+      const Time t =
+          problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
       const auto& x = current_operating_point.xs[kk];
       const auto& us = current_operating_point.us[kk];
 
       // Quadraticize costs.
-      for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
         const PlayerCost& cost = problem_->PlayerCosts()[ii];
 
         if (cost.IsTimeAdditive() || times_of_extreme_costs[ii] == kk)
@@ -180,8 +181,8 @@ bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
     }
 
     // Solve LQ game.
-    current_strategies =
-        lq_solver_->Solve(linearization_, quadraticization_, x0);
+    current_strategies = lq_solver_->Solve(linearization_, quadraticization_,
+                                           problem_->InitialState());
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
@@ -200,21 +201,23 @@ bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
         }
       }
 
-      return false;
+      // Handle success flag.
+      if (success) *success = false;
+
+      return log;
     }
 
     // Log current iterate.
-    if (log) {
-      log->AddSolverIterate(current_operating_point, current_strategies,
-                            total_costs, elapsed_time(solver_call_time),
-                            has_converged);
-    }
+    log->AddSolverIterate(current_operating_point, current_strategies,
+                          total_costs, elapsed_time(solver_call_time),
+                          has_converged);
 
     // Record loop runtime.
     timer_.Toc();
   }
 
-  CHECK(!problem_->PlayerCosts().front().AreBarriersOn() || was_operating_point_feasible);
+  CHECK(!problem_->PlayerCosts().front().AreBarriersOn() ||
+        was_operating_point_feasible);
 
   // Maybe emit warning if exiting early.
   if (num_iterations == 1) {
@@ -225,14 +228,21 @@ bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
 
   if (!was_operating_point_feasible) {
     VLOG(1) << "Solver found an infeasible solution. Failing.";
-    return false;
+
+    // Handle success flag.
+    if (success) *success = false;
+
+    return log;
   }
 
   // Set final strategies and operating point.
-  final_strategies->swap(current_strategies);
-  final_operating_point->swap(current_operating_point);
+  // problem_->CurrentStrategies().swap(current_strategies);
+  // problem_->CurrentOperatingPoint().swap(current_operating_point);
 
-  return true;
+  // Handle success flag.
+  if (success) *success = true;
+
+  return log;
 }
 
 bool GameSolver::CurrentOperatingPoint(
@@ -253,25 +263,26 @@ bool GameSolver::CurrentOperatingPoint(
   if (satisfies_barriers) *satisfies_barriers = true;
 
   // Initialize total costs and times of extreme costs.
-  if (total_costs->size() != player_costs_.size())
-    total_costs->resize(player_costs_.size());
-  for (PlayerIndex ii = 0; ii < player_costs_.size(); ii++) {
-    if (player_costs_[ii].IsTimeAdditive())
+  if (total_costs->size() != problem_->PlayerCosts().size())
+    total_costs->resize(problem_->PlayerCosts().size());
+  for (PlayerIndex ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
+    if (problem_->PlayerCosts()[ii].IsTimeAdditive())
       (*total_costs)[ii] = 0.0;
-    else if (player_costs_[ii].IsMaxOverTime())
+    else if (problem_->PlayerCosts()[ii].IsMaxOverTime())
       (*total_costs)[ii] = -constants::kInfinity;
     else
       (*total_costs)[ii] = constants::kInfinity;
   }
 
-  if (times_of_extreme_costs->size() != player_costs_.size())
-    times_of_extreme_costs->resize(player_costs_.size());
+  if (times_of_extreme_costs->size() != problem_->PlayerCosts().size())
+    times_of_extreme_costs->resize(problem_->PlayerCosts().size());
   std::fill(times_of_extreme_costs->begin(), times_of_extreme_costs->end(), 0);
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
-  for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    const Time t = last_operating_point.t0 + ComputeTimeStamp(kk);
+  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    const Time t =
+        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
 
     // Unpack.
     const VectorXf delta_x = x - last_operating_point.xs[kk];
@@ -280,10 +291,12 @@ bool GameSolver::CurrentOperatingPoint(
 
     // Accumulate costs.
     for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
-      const float current_cost = problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
+      const float current_cost =
+          problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
 
       if (problem_->PlayerCosts()[ii].IsTimeAdditive())
-        (*total_costs)[ii] += problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
+        (*total_costs)[ii] +=
+            problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
       else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
                current_cost > (*total_costs)[ii]) {
         (*total_costs)[ii] = current_cost;
@@ -330,14 +343,15 @@ bool GameSolver::CurrentOperatingPoint(
     current_operating_point->xs[kk] = x;
 
     // Compute and record control for each player.
-    for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
+    for (PlayerIndex jj = 0; jj < problem_->Dynamics()->NumPlayers(); jj++) {
       const auto& strategy = current_strategies[jj];
       current_us[jj] = strategy(kk, delta_x, last_us[jj]);
     }
 
     // Integrate dynamics for one time step.
-    if (kk < num_time_steps_ - 1)
-      x = dynamics_->Integrate(t, time_step_, x, current_us);
+    if (kk < problem_->NumTimeSteps() - 1)
+      x = problem_->Dynamics()->Integrate(t, problem_->TimeStep(), x,
+                                          current_us);
   }
 
   return true;

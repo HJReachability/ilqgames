@@ -61,8 +61,15 @@ class Problem {
   virtual ~Problem() {}
 
   // Reset the initial time and change nothing else.
-  void ResetInitialTime(Time t0) { operating_point_->t0 = t0; }
-  void ResetInitialState(const VectorXf& x0) { x0_ = x0; }
+  void ResetInitialTime(Time t0) {
+    CHECK(initialized_);
+    operating_point_->t0 = t0;
+  }
+
+  void ResetInitialState(const VectorXf& x0) {
+    CHECK(initialized_);
+    x0_ = x0;
+  }
 
   // Update initial state and modify previous strategies and operating
   // points to start at the specified runtime after the current time t0.
@@ -93,6 +100,7 @@ class Problem {
 
   // Accessors.
   const VectorXf& InitialState() const { return x0_; }
+  Time InitialTime() const { return operating_point_->t0; }
   size_t NumTimeSteps() const { return num_time_steps_; }
   Time TimeStep() const { return time_step_; }
   Time TimeHorizon() const { return time_horizon_; }
@@ -104,22 +112,32 @@ class Problem {
   std::vector<Strategy>& CurrentStrategies() { return *strategies_; }
 
  protected:
-  Problem(Time time_horizon, Time time_step,
-          const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-          const std::vector<PlayerCost>& player_costs)
-      : time_horizon_(time_horizon),
-        time_step_(time_step),
-        num_time_steps_(static_cast<size_t>(
-            (constants::kSmallNumber + time_horizon) / time_step_)),
-        dynamics_(dynamics),
-        player_costs_(player_costs) {
-    CHECK_NOTNULL(dynamics_.get());
-    CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
+  Problem();
+
+  // Initialize this object.
+  void Initialize() {
+    ConstructDynamics();
+    ConstructPlayerCosts();
+    ConstructInitialState();
+    ConstructInitialOperatingPoint();
+    ConstructInitialStrategies();
+    initialized_ = true;
   }
 
-  // Create a new log. This may be overridden by derived classes (e.g., to
-  // change the name of the log).
-  virtual std::shared_ptr<SolverLog> CreateNewLog() const;
+  // Functions for initialization. By default, operating point and strategies
+  // are initialized to zero.
+  virtual void ConstructDynamics() = 0;
+  virtual void ConstructPlayerCosts() = 0;
+  virtual void ConstructInitialState() = 0;
+  virtual void ConstructInitialOperatingPoint() {
+    operating_point_.reset(new OperatingPoint(num_time_steps_, 0.0, dynamics_));
+  }
+  virtual void ConstructInitialStrategies() {
+    strategies_.reset(new std::vector<Strategy>());
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+      strategies_->emplace_back(num_time_steps_, dynamics_->XDim(),
+                                dynamics_->UDim(ii));
+  }
 
   // Time horizon (s), time step (s), and number of time steps.
   const Time time_horizon_;
@@ -127,7 +145,7 @@ class Problem {
   const size_t num_time_steps_;
 
   // Dynamical system.
-  const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
+  std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
 
   // Player costs. These will not change during operation of this solver.
   std::vector<PlayerCost> player_costs_;
@@ -138,7 +156,10 @@ class Problem {
   // Converged strategies and operating points for all players.
   std::unique_ptr<OperatingPoint> operating_point_;
   std::unique_ptr<std::vector<Strategy>> strategies_;
-};  // class Problem
+
+  // Has this object been initialized?
+  bool initialized_;
+};  // namespace ilqgames
 
 }  // namespace ilqgames
 
