@@ -99,8 +99,8 @@ class PlayerCost {
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
-  // Return empty cost quadraticization except for barriers.
-  QuadraticCostApproximation QuadraticizeBarriers(
+  // Return empty cost quadraticization except for barriers and control costs.
+  QuadraticCostApproximation QuadraticizeBarriersAndControlCosts(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
   // Turn all barriers either "on" or "off" (in which case they are replaced
@@ -141,7 +141,9 @@ class PlayerCost {
   const PtrVector<Cost>& StateCosts() const { return state_costs_; }
   const PlayerMap<Cost>& ControlCosts() const { return control_costs_; }
   const PtrVector<Barrier>& StateBarriers() const { return state_barriers_; }
-  const PlayerMap<Barrier>& ControlBarriers() const { return control_barriers_; }
+  const PlayerMap<Barrier>& ControlBarriers() const {
+    return control_barriers_;
+  }
   const PtrVector<EqualityConstraint>& StateConstraints() const {
     return state_constraints_;
   }

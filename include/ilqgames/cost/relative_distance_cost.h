@@ -36,60 +36,44 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Signed distance from a given polyline.
+// Distance between two state positions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_POLYLINE2_SIGNED_DISTANCE_COST_H
-#define ILQGAMES_COST_POLYLINE2_SIGNED_DISTANCE_COST_H
+#ifndef ILQGAMES_COST_RELATIVE_DISTANCE_COST_H
+#define ILQGAMES_COST_RELATIVE_DISTANCE_COST_H
 
 #include <ilqgames/cost/time_invariant_cost.h>
-#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
 #include <string>
-#include <tuple>
+#include <utility>
 
 namespace ilqgames {
 
-class Polyline2SignedDistanceCost : public TimeInvariantCost {
+class RelativeDistanceCost : public TimeInvariantCost {
  public:
-  // Construct from a multiplicative weight and the input dimensions
-  // corresponding to (x, y)-position.
-  Polyline2SignedDistanceCost(
-      const Polyline2& polyline,
-      const std::pair<Dimension, Dimension>& position_idxs,
-      const float nominal = 0.0, bool oriented_same_as_polyline = true,
-      const std::string& name = "")
-      : TimeInvariantCost(1.0, name),
-        polyline_(polyline),
-        xidx_(position_idxs.first),
-        yidx_(position_idxs.second),
-        nominal_(nominal),
-        oriented_same_as_polyline_(oriented_same_as_polyline) {}
+  // Construct from a multiplicative weight and the dimensions in which to apply
+  // the quadratic difference cost.
+  RelativeDistanceCost(float weight,
+                       const std::pair<Dimension, Dimension>& dims1,
+                       const std::pair<Dimension, Dimension>& dims2,
+                       const std::string& name = "")
+      : TimeInvariantCost(weight, name), dims1_(dims1), dims2_(dims2) {}
 
   // Evaluate this cost at the current input.
   float Evaluate(const VectorXf& input) const;
 
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians.
+  // Quadraticize this cost at the given input, and add to the running=
+  // sum of gradients and Hessians (if non-null).
   void Quadraticize(const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad) const;
 
  private:
-  // Polyline to compute distances from.
-  const Polyline2 polyline_;
-
-  // Dimensions of input corresponding to (x, y)-position.
-  const Dimension xidx_;
-  const Dimension yidx_;
-
-  // Nominal value.
-  const float nominal_;
-
-  // Whether the orientation is the same or opposite that of the polyline.
-  const bool oriented_same_as_polyline_;
-};  //\class Polyline2SignedDistanceCost
+  // Sets of dimensions whose pairwise differences will constitute the cost.
+  const std::pair<Dimension, Dimension> dims1_, dims2_;
+};  //\class RelativeDistanceCost
 
 }  // namespace ilqgames
 

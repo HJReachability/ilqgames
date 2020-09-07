@@ -82,11 +82,14 @@ void SignedDistanceCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   const float delta_y = input(ydim1_) - input(ydim2_);
   const float norm = std::hypot(delta_x, delta_y);
   const float norm_3 = norm * norm * norm;
-  const float dx1 = -s * delta_x / norm;
-  const float dy1 = -s * delta_y / norm;
-  const float ddx1 = -s * delta_y * delta_y / norm_3;
-  const float ddy1 = -s * delta_x * delta_x / norm_3;
-  const float dx1dy1 = s * delta_x * delta_y / norm_3;
+
+  // HACK! Scaling derivatives to amplify this cost without increasing value
+  // function. Remove before merge with master.
+  const float dx1 = -100.0 * s * delta_x / norm;
+  const float dy1 = -100.0 * s * delta_y / norm;
+  const float ddx1 = -100.0 * s * delta_y * delta_y / norm_3;
+  const float ddy1 = -100.0 * s * delta_x * delta_x / norm_3;
+  const float dx1dy1 = 100.0 * s * delta_x * delta_y / norm_3;
 
   (*grad)(xdim1_) += dx1;
   (*grad)(ydim1_) += dy1;

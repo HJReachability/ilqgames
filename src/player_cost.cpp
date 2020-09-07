@@ -103,8 +103,10 @@ void AccumulateControlBarriers(const PlayerMap<Barrier>& barriers, Time t,
     if (are_barriers_on) barrier.Quadraticize(t, u, hess, grad);
     barrier.EquivalentCost().Quadraticize(t, u, hess, grad);
   };
+
   AccumulateControlCostsBase(barriers, t, us, regularization, q, f);
 }
+
 }  // namespace
 
 void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
@@ -246,7 +248,7 @@ void PlayerCost::ResetBarrierWeights() {
   for (auto& pair : control_barriers_) pair.second->ResetBarrierWeight();
 }
 
-QuadraticCostApproximation PlayerCost::QuadraticizeBarriers(
+QuadraticCostApproximation PlayerCost::QuadraticizeBarriersAndControlCosts(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   QuadraticCostApproximation q(x.size(), state_regularization_);
 
@@ -264,6 +266,9 @@ QuadraticCostApproximation PlayerCost::QuadraticizeBarriers(
   // Account for control barriers.
   AccumulateControlBarriers(control_barriers_, t, us, control_regularization_,
                             &q, are_barriers_on_);
+
+  // Accumulate control costs.
+  AccumulateControlCosts(control_costs_, t, us, control_regularization_, &q);
 
   return q;
 }

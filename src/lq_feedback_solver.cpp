@@ -102,6 +102,11 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
     // players have the same Z.
     Dimension cumulative_udim_row = 0;
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      // // Check Nash existence condition (sufficient, not necessary).
+      // Eigen::LLT<MatrixXf> llt(quad[ii].control.find(ii)->second.hess +
+      //                          lin.Bs[ii].transpose() * Zs_[ii] * lin.Bs[ii]);
+      // CHECK(llt.info() != Eigen::NumericalIssue);
+
       // Intermediate variable to store B[ii]' * Z[ii].
       const MatrixXf BiZi = lin.Bs[ii].transpose() * Zs_[ii];
 
@@ -114,7 +119,8 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
         if (ii == jj) {
           // Does player ii's cost depend upon player jj's control?
           const auto control_iter = quad[ii].control.find(ii);
-          CHECK(control_iter != quad[ii].control.end());
+          CHECK(control_iter != quad[ii].control.end())
+              << "Player " << ii << " is missing a control Hessian.";
 
           S_block = BiZi * lin.Bs[ii] + control_iter->second.hess;
         } else {

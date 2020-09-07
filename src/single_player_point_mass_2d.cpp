@@ -36,61 +36,28 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Signed distance from a given polyline.
-//
+// Single player dynamics modeling a 2D point mass. 4 states, 2 control inputs.
+// State is [x, y, xdot, ydot], control is [ax, ay], and dynamics are:
+//                     \dot px    = vx
+//                     \dot py    = vy
+//                     \dot vx    = ax
+//                     \dot vy    = ay
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_POLYLINE2_SIGNED_DISTANCE_COST_H
-#define ILQGAMES_COST_POLYLINE2_SIGNED_DISTANCE_COST_H
-
-#include <ilqgames/cost/time_invariant_cost.h>
-#include <ilqgames/geometry/polyline2.h>
-#include <ilqgames/utils/types.h>
-
-#include <string>
-#include <tuple>
+#include <ilqgames/dynamics/single_player_point_mass_2d.h>
 
 namespace ilqgames {
 
-class Polyline2SignedDistanceCost : public TimeInvariantCost {
- public:
-  // Construct from a multiplicative weight and the input dimensions
-  // corresponding to (x, y)-position.
-  Polyline2SignedDistanceCost(
-      const Polyline2& polyline,
-      const std::pair<Dimension, Dimension>& position_idxs,
-      const float nominal = 0.0, bool oriented_same_as_polyline = true,
-      const std::string& name = "")
-      : TimeInvariantCost(1.0, name),
-        polyline_(polyline),
-        xidx_(position_idxs.first),
-        yidx_(position_idxs.second),
-        nominal_(nominal),
-        oriented_same_as_polyline_(oriented_same_as_polyline) {}
+// Constexprs for state indices.
+const Dimension SinglePlayerPointMass2D::kNumXDims = 4;
+const Dimension SinglePlayerPointMass2D::kPxIdx = 0;
+const Dimension SinglePlayerPointMass2D::kPyIdx = 1;
+const Dimension SinglePlayerPointMass2D::kVxIdx = 2;
+const Dimension SinglePlayerPointMass2D::kVyIdx = 3;
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
-
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
-
- private:
-  // Polyline to compute distances from.
-  const Polyline2 polyline_;
-
-  // Dimensions of input corresponding to (x, y)-position.
-  const Dimension xidx_;
-  const Dimension yidx_;
-
-  // Nominal value.
-  const float nominal_;
-
-  // Whether the orientation is the same or opposite that of the polyline.
-  const bool oriented_same_as_polyline_;
-};  //\class Polyline2SignedDistanceCost
+// Constexprs for control indices.
+const Dimension SinglePlayerPointMass2D::kNumUDims = 2;
+const Dimension SinglePlayerPointMass2D::kAxIdx = 0;
+const Dimension SinglePlayerPointMass2D::kAyIdx = 1;
 
 }  // namespace ilqgames
-
-#endif

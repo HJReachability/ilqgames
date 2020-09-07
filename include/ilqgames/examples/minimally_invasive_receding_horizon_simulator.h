@@ -36,60 +36,39 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Signed distance from a given polyline.
+// Utility for solving a problem using a receding horizon, simulating dynamics
+// forward at each stage to account for the passage of time and also switching
+// to a minimally-invasive control *for only the ego vehicle* if its safety
+// problem detects iminent danger.
+//
+// This class is intended as a facsimile of a real-time, online receding horizon
+// problem in which short horizon problems are solved asynchronously throughout
+// operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_POLYLINE2_SIGNED_DISTANCE_COST_H
-#define ILQGAMES_COST_POLYLINE2_SIGNED_DISTANCE_COST_H
+#ifndef ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
+#define ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
-#include <ilqgames/geometry/polyline2.h>
-#include <ilqgames/utils/types.h>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/solver_log.h>
 
-#include <string>
-#include <tuple>
+#include <memory>
+#include <vector>
 
 namespace ilqgames {
 
-class Polyline2SignedDistanceCost : public TimeInvariantCost {
- public:
-  // Construct from a multiplicative weight and the input dimensions
-  // corresponding to (x, y)-position.
-  Polyline2SignedDistanceCost(
-      const Polyline2& polyline,
-      const std::pair<Dimension, Dimension>& position_idxs,
-      const float nominal = 0.0, bool oriented_same_as_polyline = true,
-      const std::string& name = "")
-      : TimeInvariantCost(1.0, name),
-        polyline_(polyline),
-        xidx_(position_idxs.first),
-        yidx_(position_idxs.second),
-        nominal_(nominal),
-        oriented_same_as_polyline_(oriented_same_as_polyline) {}
+// Enumerated type for specifying which problem is active at each invocation.
+enum ActiveProblem { ORIGINAL, SAFETY };
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
-
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
-
- private:
-  // Polyline to compute distances from.
-  const Polyline2 polyline_;
-
-  // Dimensions of input corresponding to (x, y)-position.
-  const Dimension xidx_;
-  const Dimension yidx_;
-
-  // Nominal value.
-  const float nominal_;
-
-  // Whether the orientation is the same or opposite that of the polyline.
-  const bool oriented_same_as_polyline_;
-};  //\class Polyline2SignedDistanceCost
+// Solve this game following a receding horizon with a minimally-invasive
+// control scheme, accounting for the time used to solve each subproblem and
+// integrating dynamics forward accordingly.
+std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
+    Time final_time, Time planner_runtime, Problem* original_problem,
+    Problem* safety_problem,
+    std::vector<std::shared_ptr<const SolverLog>>* original_logs,
+    std::vector<std::shared_ptr<const SolverLog>>* safety_logs);
 
 }  // namespace ilqgames
 
