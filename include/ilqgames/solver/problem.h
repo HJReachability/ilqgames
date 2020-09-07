@@ -44,7 +44,8 @@
 #ifndef ILQGAMES_SOLVER_PROBLEM_H
 #define ILQGAMES_SOLVER_PROBLEM_H
 
-#include <ilqgames/solver/game_solver.h>
+#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -58,10 +59,6 @@ namespace ilqgames {
 class Problem {
  public:
   virtual ~Problem() {}
-
-  // Solve this game. Returns log populated by solver.
-  std::shared_ptr<SolverLog> Solve(
-      Time max_runtime = std::numeric_limits<Time>::infinity());
 
   // Reset the initial time and change nothing else.
   void ResetInitialTime(Time t0) { operating_point_->t0 = t0; }
@@ -89,27 +86,51 @@ class Problem {
   size_t NumPrimals() const;
   size_t NumDuals() const;
 
-  // Accessors.
-  const GameSolver& Solver() const { return *solver_; }
-  const VectorXf& InitialState() const { return x0_; }
-  const OperatingPoint& CurrentOperatingPoint() const {
-    return *operating_point_;
-  }
-  const std::vector<Strategy>& CurrentStrategies() const {
-    return *strategies_;
+  // Compute time stamp from time index.
+  Time ComputeRelativeTimeStamp(size_t time_index) const {
+    return time_step_ * static_cast<Time>(time_index);
   }
 
+  // Accessors.
+  const VectorXf& InitialState() const { return x0_; }
+  size_t NumTimeSteps() const { return num_time_steps_; }
+  Time TimeStep() const { return time_step_; }
+  Time TimeHorizon() const { return time_horizon_; }
+  std::vector<PlayerCost>& PlayerCosts() { return player_costs_; }
+  std::shared_ptr<const MultiPlayerIntegrableSystem> Dynamics() const {
+    return dynamics_;
+  }
+  OperatingPoint& CurrentOperatingPoint() { return *operating_point_; }
+  std::vector<Strategy>& CurrentStrategies() { return *strategies_; }
+
  protected:
-  Problem() {}
+  Problem(Time time_horizon, Time time_step,
+          const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
+          const std::vector<PlayerCost>& player_costs)
+      : time_horizon_(time_horizon),
+        time_step_(time_step),
+        num_time_steps_(static_cast<size_t>(
+            (constants::kSmallNumber + time_horizon) / time_step_)),
+        dynamics_(dynamics),
+        player_costs_(player_costs) {
+    CHECK_NOTNULL(dynamics_.get());
+    CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
+  }
 
   // Create a new log. This may be overridden by derived classes (e.g., to
   // change the name of the log).
   virtual std::shared_ptr<SolverLog> CreateNewLog() const;
 
-  // Set up
+  // Time horizon (s), time step (s), and number of time steps.
+  const Time time_horizon_;
+  const Time time_step_;
+  const size_t num_time_steps_;
 
-  // Solver.
-  std::unique_ptr<GameSolver> solver_;
+  // Dynamical system.
+  const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
+
+  // Player costs. These will not change during operation of this solver.
+  std::vector<PlayerCost> player_costs_;
 
   // Initial condition.
   VectorXf x0_;

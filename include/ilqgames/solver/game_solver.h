@@ -45,11 +45,11 @@
 #ifndef ILQGAMES_SOLVER_GAME_SOLVER_H
 #define ILQGAMES_SOLVER_GAME_SOLVER_H
 
-#include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
@@ -83,51 +83,32 @@ class GameSolver {
   virtual ~GameSolver() {}
 
   // Solve this game. Returns true if converged.
-  virtual bool Solve(const VectorXf& x0,
-                     const OperatingPoint& initial_operating_point,
-                     const std::vector<Strategy>& initial_strategies,
-                     OperatingPoint* final_operating_point,
-                     std::vector<Strategy>* final_strategies,
-                     SolverLog* log = nullptr,
+  virtual bool Solve(const VectorXf& x0, SolverLog* log = nullptr,
                      Time max_runtime = std::numeric_limits<Time>::infinity());
 
-  // Accessors.
-  Time TimeHorizon() const { return time_horizon_; }
-  size_t NumTimeSteps() const { return num_time_steps_; }
-  Time TimeStep() const { return time_step_; }
-  const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
-  const MultiPlayerIntegrableSystem& Dynamics() const { return *dynamics_; }
-
-  // Compute time stamp from time index.
-  Time ComputeTimeStamp(size_t time_index) const {
-    return time_step_ * static_cast<Time>(time_index);
-  }
-
  protected:
-  GameSolver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-             const std::vector<PlayerCost>& player_costs, Time time_horizon,
+  GameSolver(const std::shared_ptr<Problem>& problem,
              const SolverParams& params = SolverParams())
-      : dynamics_(dynamics),
-        player_costs_(player_costs),
-        time_horizon_(time_horizon),
-        time_step_(dynamics->TimeStep()),
-        num_time_steps_(static_cast<size_t>(
-            (constants::kSmallNumber + time_horizon) / time_step_)),
-        linearization_(num_time_steps_),
-        quadraticization_(num_time_steps_),
+      : problem_(problem),
+        linearization_(problem->NumTimeSteps()),
+        quadraticization_(problem_->NumTimeSteps()),
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
-    CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
+    CHECK_NOTNULL(problem_.get());
 
+    // Set up LQ solver.
+    const auto dynamics = problem_->Dynamics();
     if (params_.open_loop)
-      lq_solver_.reset(new LQOpenLoopSolver(dynamics_, num_time_steps_));
+      lq_solver_.reset(
+          new LQOpenLoopSolver(dynamics, problem_->NumTimeSteps()));
     else
-      lq_solver_.reset(new LQFeedbackSolver(dynamics_, num_time_steps_));
+      lq_solver_.reset(
+          new LQFeedbackSolver(dynamics, problem_->NumTimeSteps()));
 
     // Prepopulate quadraticization.
     for (auto& quads : quadraticization_)
-      quads.resize(dynamics_->NumPlayers(),
-                   QuadraticCostApproximation(dynamics_->XDim()));
+      quads.resize(dynamics->NumPlayers(),
+                   QuadraticCostApproximation(dynamics->XDim()));
   }
 
   // Populate the given vector with a linearization of the dynamics about
@@ -169,16 +150,8 @@ class GameSolver {
                              bool check_trust_region = true,
                              bool* satisfies_constraints = nullptr) const;
 
-  // Dynamical system.
-  const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
-
-  // Player costs. These will not change during operation of this solver.
-  std::vector<PlayerCost> player_costs_;
-
-  // Time horizon (s), time step (s), and number of time steps.
-  const Time time_horizon_;
-  const Time time_step_;
-  const size_t num_time_steps_;
+  // Store the underlying problem.
+  const std::shared_ptr<Problem> problem_;
 
   // Linearization and quadraticization. Both are time-indexed (and
   // quadraticizations' inner vector is indexed by player).

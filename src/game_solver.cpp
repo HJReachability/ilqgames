@@ -73,12 +73,7 @@ void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
 
 }  // anonymous namespace
 
-bool GameSolver::Solve(const VectorXf& x0,
-                       const OperatingPoint& initial_operating_point,
-                       const std::vector<Strategy>& initial_strategies,
-                       OperatingPoint* final_operating_point,
-                       std::vector<Strategy>* final_strategies, SolverLog* log,
-                       Time max_runtime) {
+bool GameSolver::Solve(const VectorXf& x0, SolverLog* log, Time max_runtime) {
   // Start a stopwatch.
   const auto solver_call_time = clock::now();
 
@@ -87,34 +82,20 @@ bool GameSolver::Solve(const VectorXf& x0,
     return std::chrono::duration<Time>(clock::now() - start).count();
   };  // elapsed_time
 
-  // Check return pointers not null.
-  CHECK_NOTNULL(final_strategies);
-  CHECK_NOTNULL(final_operating_point);
-
-  // Make sure we have enough strategies for each time step.
-  DCHECK_EQ(dynamics_->NumPlayers(), initial_strategies.size());
-  DCHECK(std::accumulate(
-      initial_strategies.begin(), initial_strategies.end(), true,
-      [this](bool correct_so_far, const Strategy& strategy) {
-        return correct_so_far &=
-               strategy.Ps.size() == this->num_time_steps_ &&
-               strategy.alphas.size() == this->num_time_steps_;
-      }));
-
   // Last and current operating points. Make sure the last one starts from the
   // current state so that the current one will start there as well.
   // NOTE: setting the current operating point to start at x0 is critical to the
   // constraint satisfaction check at the first iteration.
-  OperatingPoint last_operating_point(initial_operating_point);
-  OperatingPoint current_operating_point(initial_operating_point);
+  OperatingPoint last_operating_point(problem_->CurrentOperatingPoint());
+  OperatingPoint current_operating_point(problem_->CurrentOperatingPoint());
   current_operating_point.xs[0] = x0;
   last_operating_point.xs[0] = x0;
 
   // Current strategies.
-  std::vector<Strategy> current_strategies(initial_strategies);
+  std::vector<Strategy> current_strategies(problem_->CurrentStrategies());
 
   // Reset all constraint barrier weights to unity.
-  for (PlayerCost& cost : player_costs_) cost.ResetBarrierWeights();
+  for (auto& cost : problem_->PlayerCosts()) cost.ResetBarrierWeights();
 
   // Things to keep track of during each iteration.
   size_t num_iterations = 0;
@@ -123,11 +104,11 @@ bool GameSolver::Solve(const VectorXf& x0,
 
   // Turn barriers on/off.
   auto turn_barriers_on = [this]() {
-    for (auto& cost : player_costs_) cost.TurnBarriersOn();
+    for (auto& cost : problem_->PlayerCosts()) cost.TurnBarriersOn();
   };  // turn_barriers_on
 
   auto turn_barriers_off = [this]() {
-    for (auto& cost : player_costs_) cost.TurnBarriersOff();
+    for (auto& cost : problem_->PlayerCosts()) cost.TurnBarriersOff();
   };  // turn_barriers_off
 
   // Swap operating points and compute new current operating point. Future
@@ -164,7 +145,7 @@ bool GameSolver::Solve(const VectorXf& x0,
     if (num_iterations_since_barrier_rescaling >
         params_.barrier_scaling_iters) {
       num_iterations_since_barrier_rescaling = 0;
-      for (PlayerCost& cost : player_costs_)
+      for (PlayerCost& cost : problem_->PlayerCosts())
         cost.ScaleBarrierWeights(params_.geometric_barrier_scaling);
     }
 
@@ -188,7 +169,7 @@ bool GameSolver::Solve(const VectorXf& x0,
 
       // Quadraticize costs.
       for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-        const PlayerCost& cost = player_costs_[ii];
+        const PlayerCost& cost = problem_->PlayerCosts()[ii];
 
         if (cost.IsTimeAdditive() || times_of_extreme_costs[ii] == kk)
           quadraticization_[kk][ii] = cost.Quadraticize(t, x, us);
@@ -232,8 +213,7 @@ bool GameSolver::Solve(const VectorXf& x0,
     timer_.Toc();
   }
 
-  CHECK(!player_costs_.front().AreBarriersOn() ||
-        was_operating_point_feasible);
+  CHECK(!problem_->PlayerCosts().front().AreBarriersOn() || was_operating_point_feasible);
 
   // Maybe emit warning if exiting early.
   if (num_iterations == 1) {
@@ -272,11 +252,11 @@ bool GameSolver::CurrentOperatingPoint(
   if (satisfies_barriers) *satisfies_barriers = true;
 
   // Initialize total costs and times of extreme costs.
-  if (total_costs->size() != player_costs_.size())
-    total_costs->resize(player_costs_.size());
+  if (total_costs->size() != problem_->PlayerCosts().size())
+    total_costs->resize(problem_->PlayerCosts().size());
   std::fill(total_costs->begin(), total_costs->end(), 0.0);
-  if (times_of_extreme_costs->size() != player_costs_.size())
-    times_of_extreme_costs->resize(player_costs_.size());
+  if (times_of_extreme_costs->size() != problem_->PlayerCosts().size())
+    times_of_extreme_costs->resize(problem_->PlayerCosts().size());
   std::fill(times_of_extreme_costs->begin(), times_of_extreme_costs->end(), 0);
 
   // Integrate dynamics and populate operating point, one time step at a time.
@@ -290,16 +270,16 @@ bool GameSolver::CurrentOperatingPoint(
     auto& current_us = current_operating_point->us[kk];
 
     // Accumulate costs.
-    for (size_t ii = 0; ii < player_costs_.size(); ii++) {
-      const float current_cost = player_costs_[ii].Evaluate(t, x, current_us);
+    for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
+      const float current_cost = problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
 
-      if (player_costs_[ii].IsTimeAdditive())
-        (*total_costs)[ii] += player_costs_[ii].Evaluate(t, x, current_us);
-      else if (player_costs_[ii].IsMaxOverTime() &&
+      if (problem_->PlayerCosts()[ii].IsTimeAdditive())
+        (*total_costs)[ii] += problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
+      else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
                current_cost > (*total_costs)[ii]) {
         (*total_costs)[ii] = current_cost;
         (*times_of_extreme_costs)[ii] = kk;
-      } else if (player_costs_[ii].IsMinOverTime()) {
+      } else if (problem_->PlayerCosts()[ii].IsMinOverTime()) {
         if (current_cost < (*total_costs)[ii]) {
           (*total_costs)[ii] = current_cost;
           (*times_of_extreme_costs)[ii] = kk;
@@ -309,8 +289,8 @@ bool GameSolver::CurrentOperatingPoint(
 
     // Check convergence and trust region (including barriers).
     auto check_all_barriers = [this](Time t, const VectorXf& x,
-                                        const std::vector<VectorXf>& us) {
-      for (const auto& cost : this->player_costs_) {
+                                     const std::vector<VectorXf>& us) {
+      for (const auto& cost : problem_->PlayerCosts()) {
         if (!cost.CheckBarriers(t, x, us)) return false;
       }
       return true;
