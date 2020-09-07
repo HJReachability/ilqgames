@@ -209,6 +209,45 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
            solver_->TimeStep());
 }
 
+size_t Problem::NumPrimals() const {
+  const auto& dynamics = solver_->Dynamics();
+  const auto horizon = solver_->NumTimeSteps();
+  const auto xdim = dynamics.XDim();
+  const auto udim = dynamics.TotalUDim();
+
+  // Start by computing the number of shared variables - states and controls.
+  size_t total = xdim * (horizon + 1) + udim * horizon;
+
+  // Accumulate players' individual strategy parameters.
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++)
+    total += (*strategies_)[ii].NumParameters();
+
+  return total;
+}
+
+size_t Problem::NumDuals() const {
+  const auto& dynamics = solver_->Dynamics();
+  const auto horizon = solver_->NumTimeSteps();
+  const auto xdim = dynamics.XDim();
+
+  // Start by computing the number of initial state multipliers and dynamics
+  // multipliers and feedback multipliers (which should be the same).
+  size_t total = dynamics.NumPlayers() * xdim * (2 * horizon + 1);
+
+  for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
+    const auto& player_cost = solver_->PlayerCosts()[ii];
+
+    // Accumulate the constraint multipliers for each state constraint.
+    total += player_cost.NumStateConstraints() * xdim * horizon;
+
+    // Accumulate the control constraint multipliers
+    for (const auto& pair : player_cost.ControlConstraints())
+      total += dynamics.UDim(pair.first) * horizon;
+  }
+
+  return total;
+}
+
 void Problem::OverwriteSolution(const OperatingPoint& operating_point,
                                 const std::vector<Strategy>& strategies) {
   CHECK_NOTNULL(operating_point_.get());

@@ -85,6 +85,10 @@ class Problem {
   void OverwriteSolution(const OperatingPoint& operating_point,
                          const std::vector<Strategy>& strategies);
 
+  // Compute the number of primal and dual variables in this problem.
+  size_t NumPrimals() const;
+  size_t NumDuals() const;
+
   // Accessors.
   const GameSolver& Solver() const { return *solver_; }
   const VectorXf& InitialState() const { return x0_; }
@@ -101,6 +105,8 @@ class Problem {
   // Create a new log. This may be overridden by derived classes (e.g., to
   // change the name of the log).
   virtual std::shared_ptr<SolverLog> CreateNewLog() const;
+
+  // Set up
 
   // Solver.
   std::unique_ptr<GameSolver> solver_;

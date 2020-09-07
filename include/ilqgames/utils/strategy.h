@@ -74,6 +74,14 @@ struct Strategy {
     return u_ref - Ps[time_index] * delta_x - alphas[time_index];
   }
 
+  // Number of parameters.
+  size_t NumParameters() const {
+    const size_t horizon = Ps.size();
+    CHECK_EQ(horizon, alphas.size());
+
+    return horizon * (Ps.front().size() + alphas.front().size());
+  }
+
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };  // struct Strategy
 
