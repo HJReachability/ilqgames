@@ -48,6 +48,7 @@
 #ifndef ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
 #define ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
 
+#include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -56,7 +57,7 @@
 
 namespace ilqgames {
 
-class EqualityConstraint {
+class EqualityConstraint : public RelativeTimeTracker {
  public:
   virtual ~EqualityConstraint() {}
 
@@ -65,12 +66,13 @@ class EqualityConstraint {
   virtual bool IsSatisfied(Time t, const VectorXf& input,
                            float* level) const = 0;
 
-  // Compute the Jacobian of the constraint value.
+  // Compute the Jacobian of the constraint value, and keep a running sum.
   virtual void Linearize(Time t, const VectorXf& input,
-                         MatrixXf* jacobian) const = 0;
+                         Eigen::Ref<MatrixXf> jacobian) const = 0;
 
  protected:
-  explicit EqualityConstraint(const std::string& name = "") : name_(name) {}
+  explicit EqualityConstraint(const std::string& name)
+      : RelativeTimeTracker(name) {}
 
   // Name of this constraint.
   const std::string name_;

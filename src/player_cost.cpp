@@ -58,7 +58,7 @@ namespace {
 // Accumulate control costs and constraints into the given quadratic
 // approximation.
 template <typename T, typename F>
-void AccumulateControlCostsBase(const CostMap<T>& costs, Time t,
+void AccumulateControlCostsBase(const PlayerMap<T>& costs, Time t,
                                 const std::vector<VectorXf>& us,
                                 float regularization,
                                 QuadraticCostApproximation* q, F f) {
@@ -84,7 +84,7 @@ void AccumulateControlCostsBase(const CostMap<T>& costs, Time t,
   }
 }
 
-void AccumulateControlCosts(const CostMap<Cost>& costs, Time t,
+void AccumulateControlCosts(const PlayerMap<Cost>& costs, Time t,
                             const std::vector<VectorXf>& us,
                             float regularization,
                             QuadraticCostApproximation* q) {
@@ -93,7 +93,7 @@ void AccumulateControlCosts(const CostMap<Cost>& costs, Time t,
   AccumulateControlCostsBase(costs, t, us, regularization, q, f);
 }
 
-void AccumulateControlBarriers(const CostMap<Barrier>& barriers, Time t,
+void AccumulateControlBarriers(const PlayerMap<Barrier>& barriers, Time t,
                                const std::vector<VectorXf>& us,
                                float regularization,
                                QuadraticCostApproximation* q,

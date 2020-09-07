@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,39 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all cost functions. All costs must support evaluation and
-// quadraticization. By default, cost functions are of only state or control.
+// Base class for all named objects which depend upon the initial time. Examples
+// of derived classes are Cost and EqualityConstraint.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/cost.h>
+#ifndef ILQGAMES_UTILS_RELATIVE_TIME_TRACKER_H
+#define ILQGAMES_UTILS_RELATIVE_TIME_TRACKER_H
+
+#include <ilqgames/utils/types.h>
 
 namespace ilqgames {
 
-Time Cost::initial_time_ = 0.0;
+class RelativeTimeTracker {
+ public:
+  virtual ~RelativeTimeTracker() {}
+
+  // Reset the initial time associated to this cost.
+  static void ResetInitialTime(Time t0) { initial_time_ = t0; };
+
+  // Access the name of this object.
+  const std::string& Name() const { return name_; }
+
+ protected:
+  RelativeTimeTracker(const std::string& name)
+      : name_(name) {}
+
+  // Name associated to every cost.
+  const std::string name_;
+
+  // Initial time associated to this cost.
+  static Time initial_time_;
+};  //\class Cost
 
 }  // namespace ilqgames
+
+#endif

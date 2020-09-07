@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) linear equality constraint, i.e., Ax - b = 0.
+// Equality constraint that is only active after the threshold time.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_LINEAR_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_LINEAR_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_FINAL_TIME_EQUALITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_EXPLICIT_FINAL_TIME_EQUALITY_CONSTRAINT_H
 
-#include <ilqgames/constraint/explicit/time_invariant_equality_constraint.h>
+#include <ilqgames/constraint/explicit/equality_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,44 +52,42 @@
 
 namespace ilqgames {
 
-class LinearEqualityConstraint : public TimeInvariantEqualityConstraint {
+class FinalTimeEqualityConstraint : public EqualityConstraint {
  public:
-  ~LinearEqualityConstraint() {}
-  LinearEqualityConstraint(const MatrixXf& A, const VectorXf& b,
-                           const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name), A_(A), b_(b) {
-    CHECK_EQ(A_.rows(), b_.size());
+  ~FinalTimeEqualityConstraint() {}
+  FinalTimeEqualityConstraint(
+      const std::shared_ptr<EqualityConstraint>& constraint,
+      Time threshold_time, const std::string& name = "")
+      : EqualityConstraint(name),
+        constraint_(constraint),
+        threshold_time_(threshold_time) {
+    CHECK_NOTNULL(constraint_);
   }
-
-  // Separate constructor with no A, which is assumed to be identity.
-  LinearEqualityConstraint(const VectorXf& b, const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name),
-        A_(MatrixXf::Identity(b.rows(), b.cols())),
-        b_(b) {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), b_.size());
-    const VectorXf value = A_ * input + b_;
-
-    if (*level) *level = value.squaredNorm();
-    return value.cwiseAbs().maxCoeff() < constants::kSmallNumber;
+  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
+    if (t < initial_time_ + threshold_time_) {
+      if (*level) *level = 0.0;
+      return true;
+    } else
+      return constraint_->IsSatisfied(t, input, level);
   }
 
   // Compute the Jacobian of the constraint value, and keep a running sum.
-  void Linearize(const VectorXf& input, Eigen::Ref<MatrixXf> jacobian) const {
-    CHECK_EQ(jacobian.rows(), A_.rows());
-    CHECK_EQ(jacobian.cols(), A_.cols());
-
-    jacobian += A_;
+  void Linearize(Time t, const VectorXf& input,
+                 Eigen::Ref<MatrixXf> jacobian) const {
+    if (t >= initial_time_ + threshold_time_)
+      constraint_->Linearize(t, input, jacobian);
   }
 
  private:
-  // Coefficient matrix and nominal value.
-  const MatrixXf A_;
-  const VectorXf b_;
-};  //\class LinearEqualityConstraint
+  // Underlying constraint.
+  const std::shared_ptr<EqualityConstraint> constraint_;
+
+  // Time threshold relative to initial time after which to apply constraint.
+  const Time threshold_time_;
+};  //\class EqualityConstraint
 
 }  // namespace ilqgames
 

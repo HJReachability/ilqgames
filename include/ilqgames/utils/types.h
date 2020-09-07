@@ -52,8 +52,8 @@
 #include <memory>
 #include <random>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -112,7 +112,10 @@ class SinglePlayerFlatSystem;
 using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
 
 template <typename T>
-using CostMap = std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
+using PlayerMap = std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
+
+template <typename T>
+using PtrVector = std::vector<std::shared_ptr<T>>;
 
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
@@ -120,7 +123,7 @@ struct Empty {};
 // ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
 
 template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
+std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 

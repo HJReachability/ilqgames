@@ -43,6 +43,7 @@
 
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -147,7 +148,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   //  x0_ = *nearest_iter;
 
   // Update all costs to have the correct initial time.
-  Cost::ResetInitialTime(operating_point_->t0);
+  RelativeTimeTracker::ResetInitialTime(operating_point_->t0);
 
   // Set final timestep to consider in current operating point.
   const size_t after_final_timestep =

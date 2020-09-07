@@ -63,14 +63,16 @@ class TimeInvariantEqualityConstraint : public EqualityConstraint {
     return IsSatisfied(input, level);
   }
 
-  // Compute the Jacobian of the constraint value.
-  virtual void Linearize(const VectorXf& input, MatrixXf* jacobian) const = 0;
-  void Linearize(Time t, const VectorXf& input, MatrixXf* jacobian) const {
+  // Compute the Jacobian of the constraint value, and keep a running sum.
+  virtual void Linearize(const VectorXf& input,
+                         Eigen::Ref<MatrixXf> jacobian) const = 0;
+  void Linearize(Time t, const VectorXf& input,
+                 Eigen::Ref<MatrixXf> jacobian) const {
     return Linearize(input, jacobian);
   };
 
  protected:
-  explicit TimeInvariantEqualityConstraint(const std::string& name = "")
+  explicit TimeInvariantEqualityConstraint(const std::string& name)
       : EqualityConstraint(name) {}
 };  //\class TimeInvariantEqualityConstraint
 
