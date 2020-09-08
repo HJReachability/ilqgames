@@ -101,9 +101,9 @@ class MultiPlayerIntegrableSystem {
     for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) total += UDim(ii);
     return total;
   }
-
   virtual Dimension UDim(PlayerIndex player_idx) const = 0;
   virtual PlayerIndex NumPlayers() const = 0;
+  virtual std::vector<Dimension> PositionDimensions() const = 0;
 
   // Distance metric between two states. By default, just the *squared* 2-norm.
   virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {

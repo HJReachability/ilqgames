@@ -114,21 +114,18 @@ int main(int argc, char** argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.open_loop = kOpenLoop;
 
-  auto open_loop_problem =
-      std::make_shared<ilqgames::DubinsOriginExample>(params);
-  ILQSolver open_loop_solver(open_loop_problem, params);
+  auto open_loop_problem = std::make_shared<ilqgames::DubinsOriginExample>();
+  ilqgames::ILQSolver open_loop_solver(open_loop_problem, params);
 
-  std::shared_ptr<const ilqgames::SolverLog> log = open_loop_solver->Solve();
+  std::shared_ptr<const ilqgames::SolverLog> log = open_loop_solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> open_loop_logs =
       {log};
 
+  open_loop_problem->OverwriteSolution(log->FinalOperatingPoint(),
+                                       log->FinalStrategies());
   static constexpr float kMaxPerturbation = 1e-1;
   bool is_local_nash = NumericalCheckLocalNashEquilibrium(
-      open_loop_problem->Solver().PlayerCosts(),
-      open_loop_problem->CurrentStrategies(),
-      open_loop_problem->CurrentOperatingPoint(),
-      open_loop_problem->Solver().Dynamics(), open_loop_problem->InitialState(),
-      open_loop_problem->Solver().TimeStep(), kMaxPerturbation, kOpenLoop);
+      *open_loop_problem, kMaxPerturbation, kOpenLoop);
   if (is_local_nash)
     LOG(INFO) << "Open-loop solution is a local Nash.";
   else
@@ -144,21 +141,19 @@ int main(int argc, char** argv) {
 
   // Solve for feedback equilibrium.
   params.open_loop = !kOpenLoop;
-  auto feedback_problem =
-      std::make_shared<ilqgames::DubinsOriginExample>(params);
+  auto feedback_problem = std::make_shared<ilqgames::DubinsOriginExample>();
+  ilqgames::ILQSolver feedback_solver(feedback_problem, params);
 
   // Solve the game.
-  log = feedback_problem->Solve();
+  log = feedback_solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> feedback_logs =
       {log};
 
   // Check if solution satisfies sufficient conditions for being a local Nash.
+  feedback_problem->OverwriteSolution(log->FinalOperatingPoint(),
+                                      log->FinalStrategies());
   is_local_nash = NumericalCheckLocalNashEquilibrium(
-      feedback_problem->Solver().PlayerCosts(),
-      feedback_problem->CurrentStrategies(),
-      feedback_problem->CurrentOperatingPoint(),
-      feedback_problem->Solver().Dynamics(), feedback_problem->InitialState(),
-      feedback_problem->Solver().TimeStep(), kMaxPerturbation, !kOpenLoop);
+      *feedback_problem, kMaxPerturbation, !kOpenLoop);
   if (is_local_nash)
     LOG(INFO) << "Feedback solution is a local Nash.";
   else
@@ -180,8 +175,8 @@ int main(int argc, char** argv) {
   ilqgames::TopDownRenderer top_down_renderer(
       sliders, {open_loop_problem, feedback_problem});
   ilqgames::CostInspector cost_inspector(
-      sliders, {open_loop_problem->Solver().PlayerCosts(),
-                feedback_problem->Solver().PlayerCosts()});
+      sliders,
+      {open_loop_problem->PlayerCosts(), feedback_problem->PlayerCosts()});
   // std::shared_ptr<ilqgames::ControlSliders> sliders(
   //     new ilqgames::ControlSliders({feedback_logs, feedback_logs}));
   // ilqgames::TopDownRenderer top_down_renderer(

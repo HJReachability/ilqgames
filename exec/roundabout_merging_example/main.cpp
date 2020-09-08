@@ -44,6 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -110,11 +111,13 @@ int main(int argc, char** argv) {
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  auto problem = std::make_shared<ilqgames::RoundaboutMergingExample>(params);
+
+  auto problem = std::make_shared<ilqgames::RoundaboutMergingExample>();
+  ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
-  std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
+  std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
   LOG(INFO) << "Solver completed in "
             << std::chrono::duration<ilqgames::Time>(
@@ -123,9 +126,9 @@ int main(int argc, char** argv) {
             << " seconds.";
 
   // Check if solution satisfies sufficient conditions for being a local Nash.
-  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
-      problem->Solver().PlayerCosts(), problem->CurrentOperatingPoint(),
-      problem->Solver().TimeStep());
+  problem->OverwriteSolution(log->FinalOperatingPoint(),
+                             log->FinalStrategies());
+  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(*problem);
   if (is_local_nash)
     LOG(INFO) << "Solution is a local Nash.";
   else
@@ -145,8 +148,7 @@ int main(int argc, char** argv) {
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

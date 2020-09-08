@@ -45,6 +45,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/compute_strategy_costs.h>
@@ -121,11 +122,12 @@ int main(int argc, char** argv) {
   params.open_loop = false;
 
   // Solve for feedback equilibrium.
-  auto problem = std::make_shared<ilqgames::SkeletonExample>(params);
+  auto problem = std::make_shared<ilqgames::SkeletonExample>();
+  ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
-  const std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
+  const std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
   LOG(INFO) << "Solver completed in "
             << std::chrono::duration<ilqgames::Time>(
@@ -147,8 +149,7 @@ int main(int argc, char** argv) {
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
 
   // Setup window.
   glfwSetErrorCallback(glfw_error_callback);

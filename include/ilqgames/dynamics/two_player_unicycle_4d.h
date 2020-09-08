@@ -72,6 +72,9 @@ class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
+  // Position dimensions.
+  std::vector<Dimension> PositionDimensions() const { return {kPxIdx, kPyIdx}; }
+
   // Getters.
   Dimension UDim(PlayerIndex player_idx) const {
     DCHECK(player_idx == 0 || player_idx == 1);

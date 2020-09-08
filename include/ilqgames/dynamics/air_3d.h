@@ -87,6 +87,7 @@ class Air3D : public MultiPlayerDynamicalSystem {
     return (player_idx == 0) ? kNumU1Dims : kNumU2Dims;
   }
   PlayerIndex NumPlayers() const { return kNumPlayers; }
+  std::vector<Dimension> PositionDimensions() const { return {kRxIdx, kRyIdx}; }
 
   // Speed of each player.
   const float evader_speed_;

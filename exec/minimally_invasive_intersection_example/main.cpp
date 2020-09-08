@@ -47,6 +47,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/solver_log.h>
 
@@ -109,20 +110,22 @@ int main(int argc, char** argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
-  params.enforce_constraints_in_linesearch = true;
+  params.enforce_barriers_in_linesearch = true;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_constraints_in_linesearch = true;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.state_regularization = FLAGS_regularization;
   params.control_regularization = FLAGS_regularization;
+
   auto original_problem =
-      std::make_shared<ilqgames::ThreePlayerIntersectionExample>(params);
+      std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  ilqgames::ILQSolver original_solver(original_problem, params);
+
   auto safety_problem =
-      std::make_shared<ilqgames::ThreePlayerIntersectionReachabilityExample>(
-          params);
+      std::make_shared<ilqgames::ThreePlayerIntersectionReachabilityExample>();
+  ilqgames::ILQSolver safety_solver(safety_problem, params);
 
   // Solve the game in a receding horizon.
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
@@ -131,8 +134,8 @@ int main(int argc, char** argv) {
   std::vector<std::shared_ptr<const ilqgames::SolverLog>> safety_logs;
   const std::vector<ilqgames::ActiveProblem> active_problem =
       MinimallyInvasiveRecedingHorizonSimulator(
-          kFinalTime, kPlannerRuntime, original_problem.get(),
-          safety_problem.get(), &original_logs, &safety_logs);
+          kFinalTime, kPlannerRuntime, &original_solver, &safety_solver,
+          &original_logs, &safety_logs);
   // safety_logs = RecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
   //                                        safety_problem.get());
 
@@ -149,8 +152,8 @@ int main(int argc, char** argv) {
   ilqgames::TopDownRenderer top_down_renderer(
       sliders, {original_problem, safety_problem});
   ilqgames::CostInspector cost_inspector(
-      sliders, {original_problem->Solver().PlayerCosts(),
-                safety_problem->Solver().PlayerCosts()});
+      sliders,
+      {original_problem->PlayerCosts(), safety_problem->PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -175,7 +178,8 @@ int main(int argc, char** argv) {
 
   // Create window with graphics context
   GLFWwindow* window = glfwCreateWindow(
-      1280, 720, "ILQGames: Minimally Invasive Intersection Example", NULL, NULL);
+      1280, 720, "ILQGames: Minimally Invasive Intersection Example", NULL,
+      NULL);
   if (window == NULL) return 1;
   glfwMakeContextCurrent(window);
   glfwSwapInterval(1);  // Enable vsync

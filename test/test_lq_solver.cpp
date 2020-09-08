@@ -135,6 +135,8 @@ class SinglePlayerUtilityDynamics : public SinglePlayerDynamicalSystem {
     B = B_;
   }
 
+  std::vector<Dimension> PositionDimensions() const { return {0}; }
+
   const MatrixXf& A() const { return A_; }
   const MatrixXf& B() const { return B_; }
 
@@ -178,6 +180,9 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
     linearization.Bs[1] = B2_ * time_step_;
     return linearization;
   }
+
+  // Position dimensions.
+  std::vector<Dimension> PositionDimensions() const { return {0}; }
 
  private:
   // Continuous-time dynamics.

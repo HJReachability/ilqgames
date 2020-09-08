@@ -46,6 +46,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/compute_strategy_costs.h>
@@ -123,14 +124,14 @@ int main(int argc, char** argv) {
 
   // Solve for feedback equilibrium.
   auto problem = std::make_shared<
-      ilqgames::ThreePlayerCollisionAvoidanceReachabilityExample>(params);
+      ilqgames::ThreePlayerCollisionAvoidanceReachabilityExample>();
+  ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game in a receding horizon.
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
   constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
   const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
-      logs = {
-          RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get())};
+      logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &solver)};
 
   // Dump the logs and/or exit.
   if (FLAGS_save) {
@@ -146,8 +147,7 @@ int main(int argc, char** argv) {
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
 
   // Setup window.
   glfwSetErrorCallback(glfw_error_callback);
