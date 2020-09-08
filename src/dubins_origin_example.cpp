@@ -60,11 +60,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 15.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 100.0;
@@ -105,7 +100,8 @@ static const Dimension kP2OmegaIdx = 0;
 
 void DubinsOriginExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
-      {std::make_shared<P1>(kSpeed), std::make_shared<P2>(kSpeed)}, kTimeStep))
+      {std::make_shared<P1>(kSpeed), std::make_shared<P2>(kSpeed)},
+      time_step_));
 }
 
 void DubinsOriginExample::ConstructInitialState() {

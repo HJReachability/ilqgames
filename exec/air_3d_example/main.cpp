@@ -116,7 +116,7 @@ int main(int argc, char** argv) {
   params.state_regularization = FLAGS_regularization;
   params.control_regularization = FLAGS_regularization;
 
-  const auto problem = std::make_shared<ilqgames::Air3DExample>();
+  auto problem = std::make_shared<ilqgames::Air3DExample>();
   ILQSolver solver(problem, params);
 
   LOG(INFO) << "Computing feedback solution.";
@@ -131,9 +131,9 @@ int main(int argc, char** argv) {
 
   static constexpr float kMaxPerturbation = 1e-1;
   const bool is_local_nash = NumericalCheckLocalNashEquilibrium(
-      problem->Solver().PlayerCosts(), problem->CurrentStrategies(),
-      problem->CurrentOperatingPoint(), problem->Solver().Dynamics(),
-      problem->InitialState(), problem->Solver().TimeStep(), kMaxPerturbation,
+      problem->PlayerCosts(), problem->CurrentStrategies(),
+      problem->CurrentOperatingPoint(), *problem->Dynamics(),
+      problem->InitialState(), problem->TimeStep(), kMaxPerturbation,
       false);
   if (is_local_nash)
     LOG(INFO) << "Solution is a local Nash.";
@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
       new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
   ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+                                         {problem->PlayerCosts()});
   // std::shared_ptr<ilqgames::ControlSliders> sliders(
   //     new ilqgames::ControlSliders({feedback_logs, feedback_logs}));
   // ilqgames::TopDownRenderer top_down_renderer(

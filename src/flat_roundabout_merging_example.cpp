@@ -175,14 +175,15 @@ const std::vector<float> angles = {kAngleOffset,
                                    kAngleOffset + 2.0 * M_PI / 4.0,
                                    kAngleOffset + 2.0 * 2.0 * M_PI / 4.0,
                                    kAngleOffset + 3.0 * 2.0 * M_PI / 4.0};
-const PointList2 lane1 = Polyline2(RoundaboutLaneCenter(
-    angles[0], angles[0] + kWedgeSize, kP1InitialDistanceToRoundabout));
-const PointList2 lane2 = Polyline2(RoundaboutLaneCenter(
-    angles[1], angles[1] + kWedgeSize, kP2InitialDistanceToRoundabout));
-const PointList2 lane3 = Polyline2(RoundaboutLaneCenter(
-    angles[2], angles[2] + kWedgeSize, kP3InitialDistanceToRoundabout));
-const PointList2 lane4 = Polyline2(RoundaboutLaneCenter(
-    angles[3], angles[3] + kWedgeSize, kP4InitialDistanceToRoundabout));
+const Polyline2 lane1(RoundaboutLaneCenter(angles[0], angles[0] + kWedgeSize,
+                                           kP1InitialDistanceToRoundabout));
+const Polyline2 lane2(RoundaboutLaneCenter(angles[1], angles[1] + kWedgeSize,
+                                           kP2InitialDistanceToRoundabout));
+const Polyline2 lane3(RoundaboutLaneCenter(angles[2], angles[2] + kWedgeSize,
+                                           kP3InitialDistanceToRoundabout));
+const Polyline2 lane4(RoundaboutLaneCenter(angles[3], angles[3] + kWedgeSize,
+                                           kP4InitialDistanceToRoundabout));
+
 }  // anonymous namespace
 
 void FlatRoundaboutMergingExample::ConstructDynamics() {
@@ -197,20 +198,20 @@ void FlatRoundaboutMergingExample::ConstructDynamics() {
 void FlatRoundaboutMergingExample::ConstructInitialState() {
   VectorXf x0 = VectorXf::Zero(dynamics_->XDim());
   x0 = VectorXf::Zero(dynamics_->XDim());
-  x0(kP1XIdx) = lane1[0].x();
-  x0(kP1YIdx) = lane1[0].y();
+  x0(kP1XIdx) = lane1.Segments()[0].FirstPoint().x();
+  x0(kP1YIdx) = lane1.Segments()[0].FirstPoint().y();
   x0(kP1HeadingIdx) = lane1.Segments()[0].Heading();
   x0(kP1VIdx) = kP1InitialSpeed;
-  x0(kP2XIdx) = lane2[0].x();
-  x0(kP2YIdx) = lane2[0].y();
+  x0(kP2XIdx) = lane2.Segments()[0].FirstPoint().x();
+  x0(kP2YIdx) = lane2.Segments()[0].FirstPoint().y();
   x0(kP2HeadingIdx) = lane2.Segments()[0].Heading();
   x0(kP2VIdx) = kP2InitialSpeed;
-  x0(kP3XIdx) = lane3[0].x();
-  x0(kP3YIdx) = lane3[0].y();
+  x0(kP3XIdx) = lane3.Segments()[0].FirstPoint().x();
+  x0(kP3YIdx) = lane3.Segments()[0].FirstPoint().y();
   x0(kP3HeadingIdx) = lane3.Segments()[0].Heading();
   x0(kP3VIdx) = kP3InitialSpeed;
-  x0(kP4XIdx) = lane4[0].x();
-  x0(kP4YIdx) = lane4[0].y();
+  x0(kP4XIdx) = lane4.Segments()[0].FirstPoint().x();
+  x0(kP4YIdx) = lane4.Segments()[0].FirstPoint().y();
   x0(kP4HeadingIdx) = lane4.Segments()[0].Heading();
   x0(kP4VIdx) = kP4InitialSpeed;
 
@@ -239,7 +240,6 @@ void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
   auto& p2_cost = player_costs_[1];
   auto& p3_cost = player_costs_[2];
   auto& p4_cost = player_costs_[3];
-
 
   // Stay in lanes.
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(

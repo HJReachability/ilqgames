@@ -45,7 +45,6 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/lq_solver.h>
-#include <ilqgames/utils/compute_strategy_costs.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>

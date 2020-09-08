@@ -53,7 +53,12 @@ namespace ilqgames {
 class ThreePlayerFlatIntersectionExample : public TopDownRenderableProblem {
  public:
   ~ThreePlayerFlatIntersectionExample() {}
-  ThreePlayerFlatIntersectionExample(const SolverParams& params);
+  ThreePlayerFlatIntersectionExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
   // Unpack x, y, heading (for each player, potentially) from a given linear
   // system state.

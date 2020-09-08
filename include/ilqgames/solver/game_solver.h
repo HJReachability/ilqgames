@@ -87,6 +87,9 @@ class GameSolver {
       bool* success = nullptr,
       Time max_runtime = std::numeric_limits<Time>::infinity());
 
+  // Accessors.
+  Problem& GetProblem() { return *problem_; }
+
  protected:
   GameSolver(const std::shared_ptr<Problem>& problem,
              const SolverParams& params)

@@ -53,7 +53,12 @@ namespace ilqgames {
 class ThreePlayerFlatOvertakingExample : public TopDownRenderableProblem {
  public:
   ~ThreePlayerFlatOvertakingExample() {}
-  ThreePlayerFlatOvertakingExample(const SolverParams& params);
+  ThreePlayerFlatOvertakingExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
   // Unpack x, y, heading (for each player, potentially) from a given linear
   // system state.

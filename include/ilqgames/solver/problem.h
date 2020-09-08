@@ -105,11 +105,18 @@ class Problem {
   Time TimeStep() const { return time_step_; }
   Time TimeHorizon() const { return time_horizon_; }
   std::vector<PlayerCost>& PlayerCosts() { return player_costs_; }
+  const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
   std::shared_ptr<const MultiPlayerIntegrableSystem> Dynamics() const {
     return dynamics_;
   }
   OperatingPoint& CurrentOperatingPoint() { return *operating_point_; }
+  const OperatingPoint& CurrentOperatingPoint() const {
+    return *operating_point_;
+  }
   std::vector<Strategy>& CurrentStrategies() { return *strategies_; }
+  const std::vector<Strategy>& CurrentStrategies() const {
+    return *strategies_;
+  }
 
  protected:
   Problem();

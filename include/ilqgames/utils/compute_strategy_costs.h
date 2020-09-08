@@ -47,6 +47,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -66,6 +67,7 @@ std::vector<float> ComputeStrategyCosts(
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
     float time_step, bool open_loop = false);
+std::vector<float> ComputeStrategyCosts(const Problem& problem);
 
 }  // namespace ilqgames
 

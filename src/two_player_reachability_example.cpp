@@ -68,94 +68,43 @@ DEFINE_double(v0, 5.0, "Initial speed (m/s).");
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 2.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 static constexpr float kOmegaMax = 0.1;  // rad/s
 static constexpr float kAMax = 1.0;      // m/s/s
 static constexpr float kDMax = 0.5;      // m/s
+static constexpr float kControlCostWeight = 0.1;
 
 // State dimensions.
 using Dyn = TwoPlayerUnicycle4D;
+
 }  // anonymous namespace
 
-TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
-    const SolverParams& params) {
-  // Create dynamics.
-  const auto dynamics = std::make_shared<const TwoPlayerUnicycle4D>(kTimeStep);
+void TwoPlayerReachabilityExample::ConstructDynamics() {
+  dynamics_.reset(new TwoPlayerUnicycle4D(time_step_));
+}
 
-  // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+void TwoPlayerReachabilityExample::ConstructInitialState() {
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(Dyn::kPxIdx) = FLAGS_px0;
   x0_(Dyn::kPyIdx) = FLAGS_py0;
   x0_(Dyn::kThetaIdx) = FLAGS_theta0;
   x0_(Dyn::kVIdx) = FLAGS_v0;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-  constexpr size_t kNumTimeStepsInitialTurn = 0;
-  for (size_t kk = 0; kk < kNumTimeStepsInitialTurn; kk++)
-    operating_point_->us[kk][0](0) = -0.5;
-
+void TwoPlayerReachabilityExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
+  player_costs_.emplace_back("P1");
+  player_costs_.emplace_back("P2");
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
 
-  const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, -1, 0.0, "ControlCost");
+  const auto control_cost =
+      std::make_shared<QuadraticCost>(kControlCostWeight, -1, 0.0, "ControlCost");
   p1_cost.AddControlCost(0, control_cost);
   p2_cost.AddControlCost(1, control_cost);
 
-  // Constrain control effort.
-  // const auto p1_omega_max_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  // const auto p1_omega_min_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
-
-  // const auto p1_a_max_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  // const auto p1_a_min_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  // p1_cost.AddControlConstraint(0, p1_a_max_constraint);
-  // p1_cost.AddControlConstraint(0, p1_a_min_constraint);
-
-  // const auto p2_dx_max_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kDxIdx, kDMax, false, "Dx Constraint (Max)");
-  // const auto p2_dx_min_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kDxIdx, -kDMax, true, "Dx Constraint (Min)");
-  // p2_cost.AddControlConstraint(1, p2_dx_max_constraint);
-  // p2_cost.AddControlConstraint(1, p2_dx_min_constraint);
-
-  // const auto p2_dy_max_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kDyIdx, kDMax, false, "Dy Constraint (Max)");
-  // const auto p2_dy_min_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kDyIdx, -kDMax, true, "Dy Constraint (Min)");
-  // p2_cost.AddControlConstraint(1, p2_dy_max_constraint);
-  // p2_cost.AddControlConstraint(1, p2_dy_min_constraint);
 
   // Target cost.
-  //  const float distance_traveled = 0.5 * FLAGS_v0 * kTimeHorizon;
-  // const float target_radius =
-  //     std::hypot(FLAGS_px0 + distance_traveled * std::cos(FLAGS_theta0),
-  //                FLAGS_py0 + distance_traveled * std::sin(FLAGS_theta0));
   static constexpr bool kReach = true;
   const float kTargetRadius = 1.0;
   const Polyline2 circle = DrawCircle(Point2::Zero(), kTargetRadius, 10);
@@ -172,10 +121,6 @@ TwoPlayerReachabilityExample::TwoPlayerReachabilityExample(
   // Make sure costs are max-over-time.
   p1_cost.SetMaxOverTime();
   p2_cost.SetMinOverTime();
-
-  // Set up solver.
-  solver_.reset(
-      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> TwoPlayerReachabilityExample::Xs(

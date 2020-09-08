@@ -50,7 +50,7 @@
 #ifndef ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
 #define ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
 
-#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/game_solver.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <memory>
@@ -65,8 +65,8 @@ enum ActiveProblem { ORIGINAL, SAFETY };
 // control scheme, accounting for the time used to solve each subproblem and
 // integrating dynamics forward accordingly.
 std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, Problem* original_problem,
-    Problem* safety_problem,
+    Time final_time, Time planner_runtime, GameSolver* original,
+    GameSolver* safety,
     std::vector<std::shared_ptr<const SolverLog>>* original_logs,
     std::vector<std::shared_ptr<const SolverLog>>* safety_logs);
 

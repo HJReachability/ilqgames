@@ -76,11 +76,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 2.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0;  // m
@@ -91,6 +86,7 @@ static constexpr float kControlRegularization = 10.0;
 
 static constexpr float kOmegaCostWeight = 0.1;
 static constexpr float kACostWeight = 0.1;
+static constexpr float kP1ControlCostWeight = 0.1;
 
 static constexpr float kLaneCostWeight = 25.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
@@ -163,19 +159,18 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2AIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
+
 }  // anonymous namespace
 
-ThreePlayerIntersectionReachabilityExample::
-    ThreePlayerIntersectionReachabilityExample(const SolverParams& params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(kInterAxleLength),
-           std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
-          kTimeStep));
+void ThreePlayerIntersectionReachabilityExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kInterAxleLength),
+       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
+      time_step_));
+}
 
-  // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+void ThreePlayerIntersectionReachabilityExample::ConstructInitialState() {
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
@@ -188,20 +183,19 @@ ThreePlayerIntersectionReachabilityExample::
   x0_(kP3YIdx) = kP3InitialY;
   x0_(kP3HeadingIdx) = kP3InitialHeading;
   x0_(kP3VIdx) = kP3InitialSpeed;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void ThreePlayerIntersectionReachabilityExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1", kStateRegularization, kControlRegularization);
-  PlayerCost p2_cost("P2", kStateRegularization, kControlRegularization);
-  PlayerCost p3_cost("P3", kStateRegularization, kControlRegularization);
+  player_costs_.emplace_back("P1", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P2", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P3", kStateRegularization,
+                             kControlRegularization);
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
+  auto& p3_cost = player_costs_[2];
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -213,15 +207,6 @@ ThreePlayerIntersectionReachabilityExample::
        Point2(1000.0, 22.0)});
   const Polyline2 lane3(
       {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
-
-  // const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_r_cost(
-  //     new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx},
-  //                                     -kLaneHalfWidth, kOrientedRight,
-  //                                     "LaneRightBoundary"));
-  // const std::shared_ptr<Polyline2SignedDistanceCost> p1_lane_l_cost(
-  //     new Polyline2SignedDistanceCost(lane1, {kP1XIdx, kP1YIdx},
-  //                                     -kLaneHalfWidth, !kOrientedRight,
-  //                                     "LaneLeftBoundary"));
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
@@ -276,9 +261,9 @@ ThreePlayerIntersectionReachabilityExample::
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, kP1OmegaIdx, 0.0, "Steering");
+      kP1ControlCostWeight, kP1OmegaIdx, 0.0, "Steering");
   const auto p1_jerk_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, kP1AIdx, 0.0, "Acceleration");
+      kP1ControlCostWeight, kP1AIdx, 0.0, "Acceleration");
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
@@ -331,10 +316,6 @@ ThreePlayerIntersectionReachabilityExample::
 
   // Ego objective should be max over time.
   p1_cost.SetMaxOverTime();
-
-  // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
-                              kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerIntersectionReachabilityExample::Xs(

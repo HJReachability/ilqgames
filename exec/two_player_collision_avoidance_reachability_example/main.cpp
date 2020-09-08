@@ -44,6 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/compute_strategy_costs.h>
@@ -120,12 +121,13 @@ int main(int argc, char** argv) {
 
   // Solve for feedback equilibrium.
   auto feedback_problem = std::make_shared<
-      ilqgames::TwoPlayerCollisionAvoidanceReachabilityExample>(params);
+      ilqgames::TwoPlayerCollisionAvoidanceReachabilityExample>();
+  ilqgames::ILQSolver feedback_solver(feedback_problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
   const std::shared_ptr<const ilqgames::SolverLog> log =
-      feedback_problem->Solve();
+      feedback_solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> feedback_logs =
       {log};
   LOG(INFO) << "Solver completed in "
@@ -135,12 +137,10 @@ int main(int argc, char** argv) {
             << " seconds.";
 
   // Compute strategy costs.
-  const std::vector<float> total_costs = ComputeStrategyCosts(
-      feedback_problem->Solver().PlayerCosts(),
-      feedback_problem->CurrentStrategies(),
-      feedback_problem->CurrentOperatingPoint(),
-      feedback_problem->Solver().Dynamics(), feedback_problem->InitialState(),
-      feedback_problem->Solver().TimeStep());
+  feedback_problem->OverwriteSolution(log->FinalOperatingPoint(),
+                                      log->FinalStrategies());
+  const std::vector<float> total_costs =
+      ComputeStrategyCosts(*feedback_problem);
   LOG(INFO) << "Total strategy costs are: ";
   for (const float c : total_costs) LOG(INFO) << c;
 
@@ -148,11 +148,7 @@ int main(int argc, char** argv) {
   // Nash.
   constexpr float kMaxPerturbation = 0.1;
   const bool is_local_nash = NumericalCheckLocalNashEquilibrium(
-      feedback_problem->Solver().PlayerCosts(),
-      feedback_problem->CurrentStrategies(),
-      feedback_problem->CurrentOperatingPoint(),
-      feedback_problem->Solver().Dynamics(), feedback_problem->InitialState(),
-      feedback_problem->Solver().TimeStep(), kMaxPerturbation, false);
+      *feedback_problem, kMaxPerturbation, false);
   if (is_local_nash)
     LOG(INFO) << "Feedback solution is a local Nash.";
   else
@@ -172,8 +168,8 @@ int main(int argc, char** argv) {
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({feedback_logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {feedback_problem});
-  ilqgames::CostInspector cost_inspector(
-      sliders, {feedback_problem->Solver().PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders,
+                                         {feedback_problem->PlayerCosts()});
 
   // Setup window.
   glfwSetErrorCallback(glfw_error_callback);

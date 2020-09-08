@@ -44,7 +44,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/single_dimension_constraint.h>
+#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/relative_distance_cost.h>
@@ -74,14 +74,10 @@ DEFINE_double(vp, 1.0, "Pursuer speed (m/s).");
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
-// Input constraint.
+// Input constraint and cost weight.
 static constexpr float kOmegaMax = 1.0;  // rad/s
+static constexpr float kOmegaCostWeight = 0.1;
 
 // State dimensions.
 // using Dyn = SinglePlayerDubinsCar;
@@ -98,48 +94,42 @@ static const Dimension kP2PyIdx = Dyn::kNumXDims + Dyn::kPyIdx;
 // static const Dimension kP2ThetaIdx = Dyn::kNumXDims + Dyn::kThetaIdx;
 static const Dimension kP2VxIdx = Dyn::kNumXDims + Dyn::kVxIdx;
 static const Dimension kP2VyIdx = Dyn::kNumXDims + Dyn::kVyIdx;
+
 }  // anonymous namespace
 
-ModifiedAir3DExample::ModifiedAir3DExample(const SolverParams& params) {
-  // Create dynamics.
-  const auto dynamics = std::shared_ptr<const ConcatenatedDynamicalSystem>(
-      new ConcatenatedDynamicalSystem(
-          //   {std::make_shared<Dyn>(FLAGS_ve),
-          //   std::make_shared<Dyn>(FLAGS_vp)},
-          {std::make_shared<Dyn>(), std::make_shared<Dyn>()}, kTimeStep));
+void ModifiedAir3DExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<Dyn>(), std::make_shared<Dyn>()}, time_step_));
+}
 
+void ModifiedAir3DExample::ConstructInitialState() {
   // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1VxIdx) = FLAGS_ve;
   x0_(kP2PxIdx) = FLAGS_rx0;
   x0_(kP2PyIdx) = FLAGS_ry0;
-  //  x0_(kP2ThetaIdx) = FLAGS_rtheta0;
   x0_(kP2VxIdx) = FLAGS_vp * std::cos(FLAGS_rtheta0);
   x0_(kP2VyIdx) = FLAGS_vp * std::sin(FLAGS_rtheta0);
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void ModifiedAir3DExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1", 1.0, 0.0), p2_cost("P2", 1.0, 0.0);
+  player_costs_.emplace_back("P1", 1.0, 0.0);
+  player_costs_.emplace_back("P2", 1.0, 0.0);
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
 
-  const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, -1, 0.0, "ControlCost");
+  const auto control_cost =
+      std::make_shared<QuadraticCost>(kOmegaCostWeight, -1, 0.0, "ControlCost");
   p1_cost.AddControlCost(0, control_cost);
   p2_cost.AddControlCost(1, control_cost);
 
   // Constrain control effort.
   // const auto omega_max_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
+  // std::make_shared<SingleDimensionBarrier>(
   //     Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
   // const auto omega_min_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
+  // std::make_shared<SingleDimensionBarrier>(
   //     Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
   // p1_cost.AddControlConstraint(0, omega_max_constraint);
   // p1_cost.AddControlConstraint(0, omega_min_constraint);
@@ -168,10 +158,6 @@ ModifiedAir3DExample::ModifiedAir3DExample(const SolverParams& params) {
   // min-over-time.
   // p1_cost.SetMaxOverTime();
   // p2_cost.SetMinOverTime();
-
-  // Set up solver.
-  solver_.reset(
-      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> ModifiedAir3DExample::Xs(const VectorXf& x) const {

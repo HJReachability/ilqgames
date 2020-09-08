@@ -45,6 +45,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
@@ -115,7 +116,9 @@ int main(int argc, char** argv) {
 
   auto open_loop_problem =
       std::make_shared<ilqgames::DubinsOriginExample>(params);
-  std::shared_ptr<const ilqgames::SolverLog> log = open_loop_problem->Solve();
+  ILQSolver open_loop_solver(open_loop_problem, params);
+
+  std::shared_ptr<const ilqgames::SolverLog> log = open_loop_solver->Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> open_loop_logs =
       {log};
 

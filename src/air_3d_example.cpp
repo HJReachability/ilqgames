@@ -68,11 +68,6 @@ DEFINE_double(vp, 1.0, "Pursuer speed (m/s).");
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Input cost and constraint.
 static constexpr float kOmegaCostWeight = 0.1;
@@ -80,6 +75,7 @@ static constexpr float kOmegaMax = 1.0;  // rad/s
 
 // State dimensions.
 using Dyn = Air3D;
+
 }  // anonymous namespace
 
 void Air3DExample::ConstructDynamics() {

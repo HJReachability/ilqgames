@@ -48,7 +48,7 @@
 #ifndef ILQGAMES_EXAMPLES_RECEDING_HORIZON_SIMULATOR_H
 #define ILQGAMES_EXAMPLES_RECEDING_HORIZON_SIMULATOR_H
 
-#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/game_solver.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <memory>
@@ -59,7 +59,7 @@ namespace ilqgames {
 // Solve this game following a receding horizon, accounting for the time used
 // to solve each subproblem and integrating dynamics forward accordingly.
 std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, Problem* problem);
+    Time final_time, Time planner_runtime, GameSolver* solver);
 
 }  // namespace ilqgames
 

@@ -66,26 +66,25 @@ namespace ilqgames {
 using clock = std::chrono::system_clock;
 
 std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, Problem* original_problem,
-    Problem* safety_problem,
+    Time final_time, Time planner_runtime, GameSolver* original,
+    GameSolver* safety,
     std::vector<std::shared_ptr<const SolverLog>>* original_logs,
     std::vector<std::shared_ptr<const SolverLog>>* safety_logs) {
-  CHECK_NOTNULL(original_problem);
-  CHECK_NOTNULL(safety_problem);
+  CHECK_NOTNULL(original);
+  CHECK_NOTNULL(safety);
   CHECK_NOTNULL(original_logs);
   CHECK_NOTNULL(safety_logs);
 
   // Make sure the two problems have the same initial condition and time.
-  CHECK(original_problem->InitialState().isApprox(
-      safety_problem->InitialState(), constants::kSmallNumber));
-  CHECK_LT(std::abs(original_problem->CurrentOperatingPoint().t0 -
-                    safety_problem->CurrentOperatingPoint().t0),
-           constants::kSmallNumber);
+  CHECK(original->GetProblem().InitialState().isApprox(
+      safety->GetProblem().InitialState(), constants::kSmallNumber));
+  CHECK_NEAR(original->GetProblem().InitialTime(),
+             safety->GetProblem().InitialTime(), constants::kSmallNumber);
 
   // Unpack dynamics, and ensure that the two problems actually share the same
   // dynamics object type.
-  const auto& dynamics = original_problem->Solver().Dynamics();
-  const auto& safety_dynamics = safety_problem->Solver().Dynamics();
+  const auto& dynamics = *original->GetProblem().Dynamics();
+  const auto& safety_dynamics = *safety->GetProblem().Dynamics();
   CHECK(typeid(dynamics) == typeid(safety_dynamics));
 
   // Clear out the log arrays for us to save in.
@@ -93,9 +92,12 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
   safety_logs->clear();
 
   // Initial run of the solver. Keep track of time in order to know how much to
-  // integrate dynamics forward.
+  // integrate dynamics forward. Ensure that both solvers succeed at the first
+  // invocation.
   auto solver_call_time = clock::now();
-  original_logs->push_back(original_problem->Solve());
+  bool success = false;
+  original_logs->push_back(original->Solve(&success));
+  CHECK(success);
   Time elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
   VLOG(1) << "Solved initial original problem in " << elapsed_time
@@ -103,7 +105,8 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
           << " iterations.";
 
   solver_call_time = clock::now();
-  safety_logs->push_back(safety_problem->Solve());
+  safety_logs->push_back(safety->Solve(&success));
+  CHECK(success);
   elapsed_time =
       std::chrono::duration<Time>(clock::now() - solver_call_time).count();
   VLOG(1) << "Solved initial safety problem in " << elapsed_time
@@ -117,8 +120,8 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
 
   // Repeatedly integrate dynamics forward, reset original_problem initial
   // conditions, and resolve.
-  VectorXf x(original_problem->InitialState());
-  Time t = splicer.CurrentOperatingPoint().t0;
+  VectorXf x(original->GetProblem().InitialState());
+  Time t = original->GetProblem().InitialTime();
 
   while (true) {
     // Break the loop if it's been long enough.
@@ -128,7 +131,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
 
     if (t >= final_time ||
         !splicer.ContainsTime(t + planner_runtime +
-                              original_problem->Solver().TimeStep()))
+                              original->GetProblem().TimeStep()))
       break;
 
     x = dynamics.Integrate(t - kExtraTime, t, x,
@@ -137,28 +140,29 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
 
     // Find the active problem.
     const bool current_active_problem_flag = active_problem.back();
-    Problem* current_active_problem =
-        (current_active_problem_flag == ActiveProblem::ORIGINAL)
-            ? original_problem
-            : safety_problem;
+    auto current_active_problem =
+        (current_active_problem_flag == ActiveProblem::ORIGINAL) ? original
+                                                                 : safety;
 
     // Make sure both problems have the current solution from the splicer.
-    original_problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
-                                        splicer.CurrentStrategies());
-    safety_problem->OverwriteSolution(splicer.CurrentOperatingPoint(),
-                                      splicer.CurrentStrategies());
+    original->GetProblem().OverwriteSolution(splicer.CurrentOperatingPoint(),
+                                             splicer.CurrentStrategies());
+    safety->GetProblem().OverwriteSolution(splicer.CurrentOperatingPoint(),
+                                           splicer.CurrentStrategies());
 
     // Make sure both problems have the active problem's initial state.
-    original_problem->ResetInitialState(current_active_problem->InitialState());
-    safety_problem->ResetInitialState(current_active_problem->InitialState());
+    original->GetProblem().ResetInitialState(
+        current_active_problem->GetProblem().InitialState());
+    safety->GetProblem().ResetInitialState(
+        current_active_problem->GetProblem().InitialState());
 
     // Set up next receding horizon problem and solve, and make sure both
     // problems' initial state matches that of the active problem.
-    original_problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
-    safety_problem->SetUpNextRecedingHorizon(x, t, planner_runtime);
+    original->GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
+    safety->GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
 
     solver_call_time = clock::now();
-    original_logs->push_back(original_problem->Solve(planner_runtime));
+    original_logs->push_back(original->Solve(&success, planner_runtime));
     const Time original_elapsed_time =
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
@@ -167,7 +171,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
             << original_elapsed_time << " seconds.";
 
     solver_call_time = clock::now();
-    safety_logs->push_back(safety_problem->Solve(planner_runtime));
+    safety_logs->push_back(safety->Solve(&success, planner_runtime));
     const Time safety_elapsed_time =
         std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 

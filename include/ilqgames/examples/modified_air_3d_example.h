@@ -55,7 +55,12 @@ namespace ilqgames {
 class ModifiedAir3DExample : public TopDownRenderableProblem {
  public:
   ~ModifiedAir3DExample() {}
-  ModifiedAir3DExample(const SolverParams& params);
+  ModifiedAir3DExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;

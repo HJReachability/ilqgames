@@ -72,11 +72,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 2.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0;  // m
@@ -159,19 +154,18 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2AIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
+
 }  // anonymous namespace
 
-ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
-    const SolverParams& params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(kInterAxleLength),
-           std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
-          kTimeStep));
+void ThreePlayerIntersectionExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kInterAxleLength),
+       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
+      time_step_));
+}
 
-  // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+void ThreePlayerIntersectionExample::ConstructInitialState() {
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
@@ -184,20 +178,19 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
   x0_(kP3YIdx) = kP3InitialY;
   x0_(kP3HeadingIdx) = kP3InitialHeading;
   x0_(kP3VIdx) = kP3InitialSpeed;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1", kStateRegularization, kControlRegularization);
-  PlayerCost p2_cost("P2", kStateRegularization, kControlRegularization);
-  PlayerCost p3_cost("P3", kStateRegularization, kControlRegularization);
+  player_costs_.emplace_back("P1", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P2", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P3", kStateRegularization,
+                             kControlRegularization);
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
+  auto& p3_cost = player_costs_[2];
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -335,10 +328,6 @@ ThreePlayerIntersectionExample::ThreePlayerIntersectionExample(
                    kMinProximity, "ProxCostP2"));
   p3_cost.AddStateCost(p3p1_proximity_cost);
   p3_cost.AddStateCost(p3p2_proximity_cost);
-
-  // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
-                              kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerIntersectionExample::Xs(
