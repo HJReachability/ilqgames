@@ -55,6 +55,35 @@
 
 namespace ilqgames {
 
+struct StrategyRef {
+  std::vector<Eigen::Ref<MatrixXf>> Ps;
+  std::vector<Eigen::Ref<VectorXf>> alphas;
+
+  // Preallocate memory during construction.
+  StrategyRef(size_t horizon, Dimension xdim, Dimension udim, VectorXf& primals,
+              size_t primal_idx)
+      : Ps(horizon), alphas(horizon) {
+    for (size_t ii = 0; ii < horizon; ii++) {
+      Ps[ii] = MatrixXf::Zero(udim, xdim);
+      alphas[ii] = VectorXf::Zero(udim);
+    }
+  }
+
+  // Operator for computing control given time index and delta x.
+  VectorXf operator()(size_t time_index, const VectorXf& delta_x,
+                      const VectorXf& u_ref) const {
+    return u_ref - Ps[time_index] * delta_x - alphas[time_index];
+  }
+
+  // Number of parameters.
+  size_t NumParameters() const {
+    const size_t horizon = Ps.size();
+    CHECK_EQ(horizon, alphas.size());
+
+    return horizon * (Ps.front().size() + alphas.front().size());
+  }
+};  // struct StrategyRef
+
 struct Strategy {
   std::vector<MatrixXf> Ps;
   std::vector<VectorXf> alphas;
@@ -81,8 +110,6 @@ struct Strategy {
 
     return horizon * (Ps.front().size() + alphas.front().size());
   }
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };  // struct Strategy
 
 }  // namespace ilqgames

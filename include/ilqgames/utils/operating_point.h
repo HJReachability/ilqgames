@@ -52,6 +52,47 @@
 
 namespace ilqgames {
 
+struct OperatingPointRef {
+  // Time-indexed list of states as references.
+  std::vector<Eigen::Ref<VectorXf>> xs;
+
+  // Time-indexed list of controls (as references) for all players, i.e. us[kk]
+  // is the list of controls for all players at time index kk.
+  std::vector<std::vector<Eigen::Ref<VectorXf>>> us;
+
+  // Initial time stamp.
+  Time t0;
+
+  // Construct as above, but as a reference to parts of the given primal vector.
+  template <typename MultiPlayerSystemType>
+  OperatingPointRef(
+      size_t num_time_steps, Time initial_time,
+      const std::shared_ptr<const MultiPlayerSystemType>& dynamics,
+      VectorXf& primals)
+      : t0(initial_time) {
+    CHECK_NOTNULL(dynamics.get());
+
+    // Initialize the time-indexing of xs and us.
+    xs.resize(num_time_steps);
+    us.resize(num_time_steps);
+
+    // Populate xs and us.
+    size_t primal_idx = 0;
+    for (size_t kk = 0; kk < num_time_steps; kk++) {
+      // Handle xs.
+      xs[kk] = primals.segment(primal_idx, dynamics->XDim());
+      primal_idx += dynamics->XDim();
+
+      // Handle us.
+      us[kk].resize(dynamics->NumPlayers());
+      for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++) {
+        us[kk][ii] = primals.segment(primal_idx, dynamics->UDim(ii));
+        primal_idx += dynamics->UDim(ii);
+      }
+    }
+  }
+};  // struct OperatingPointRef
+
 struct OperatingPoint {
   // Time-indexed list of states.
   std::vector<VectorXf> xs;
@@ -82,8 +123,6 @@ struct OperatingPoint {
 
   // Custom swap function.
   void swap(OperatingPoint& other);
-
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };  // struct OperatingPoint
 
 }  // namespace ilqgames

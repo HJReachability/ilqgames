@@ -42,6 +42,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/solver/game_solver.h>
+#include <ilqgames/solver/newton_problem.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/solver_log.h>
@@ -53,21 +54,10 @@
 #include <memory>
 #include <vector>
 
-// Time horizon and step.
-DEFINE_double(time_horizon, 10.0, "Total time horizon (s).");
-DEFINE_double(time_step, 0.1, "Length of discrete time step (s).");
-
 namespace ilqgames {
 
-Problem::Problem()
-    : time_horizon_(FLAGS_time_horizon),
-      time_step_(FLAGS_time_step),
-      num_time_steps_(static_cast<size_t>(
-          (constants::kSmallNumber + FLAGS_time_horizon) / FLAGS_time_step)),
-      initialized_(false) {}
-
-void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
-                                       Time planner_runtime) {
+void NewtonProblem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
+                                             Time planner_runtime) {
   CHECK(initialized_);
   CHECK_GE(planner_runtime, 0.0);
   CHECK_LE(planner_runtime + t0, InitialTime() + TimeHorizon());
@@ -180,12 +170,45 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0), time_step_);
 }
 
-void Problem::OverwriteSolution(const OperatingPoint& operating_point,
-                                const std::vector<Strategy>& strategies) {
+size_t NewtonProblem::NumPrimals() const {
   CHECK(initialized_);
 
-  *operating_point_ = operating_point;
-  *strategies_ = strategies;
+  const auto horizon = NumTimeSteps();
+  const auto xdim = dynamics_->XDim();
+  const auto udim = dynamics_->TotalUDim();
+
+  // Start by computing the number of shared variables - states and controls.
+  size_t total = xdim * (horizon + 1) + udim * horizon;
+
+  // Accumulate players' individual strategy parameters.
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+    total += (*strategies_)[ii].NumParameters();
+
+  return total;
+}
+
+size_t NewtonProblem::NumDuals() const {
+  CHECK(initialized_);
+
+  const auto horizon = NumTimeSteps();
+  const auto xdim = dynamics_->XDim();
+
+  // Start by computing the number of initial state multipliers and dynamics
+  // multipliers and feedback multipliers (which should be the same).
+  size_t total = dynamics_->NumPlayers() * xdim * (2 * horizon + 1);
+
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+    const auto& player_cost = player_costs_[ii];
+
+    // Accumulate the constraint multipliers for each state constraint.
+    total += player_cost.NumStateConstraints() * xdim * horizon;
+
+    // Accumulate the control constraint multipliers
+    for (const auto& pair : player_cost.ControlConstraints())
+      total += dynamics_->UDim(pair.first) * horizon;
+  }
+
+  return total;
 }
 
 }  // namespace ilqgames

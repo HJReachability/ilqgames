@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,16 +36,19 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class specifying the problem interface for managing calls to the core
-// ILQGame solver. Specific examples will be derived from this class.
+// Newton problem, which derives from Problem but makes all operating points and
+// strategies references to a single primal vector, and also has an accompanying
+// dual vector which is referenced in each individual multiplier.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_PROBLEM_H
-#define ILQGAMES_SOLVER_PROBLEM_H
+#ifndef ILQGAMES_SOLVER_NEWTON_PROBLEM_H
+#define ILQGAMES_SOLVER_NEWTON_PROBLEM_H
 
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -56,20 +59,9 @@
 
 namespace ilqgames {
 
-class Problem {
+class NewtonProblem : public Problem {
  public:
-  virtual ~Problem() {}
-
-  // Reset the initial time and change nothing else.
-  void ResetInitialTime(Time t0) {
-    CHECK(initialized_);
-    operating_point_->t0 = t0;
-  }
-
-  void ResetInitialState(const VectorXf& x0) {
-    CHECK(initialized_);
-    x0_ = x0;
-  }
+  virtual ~NewtonProblem() {}
 
   // Update initial state and modify previous strategies and operating
   // points to start at the specified runtime after the current time t0.
@@ -84,82 +76,50 @@ class Problem {
   virtual void SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
                                         Time planner_runtime = 0.1);
 
-  // Overwrite existing solution with the given operating point and strategies.
-  // Truncates to fit in the same memory.
-  virtual void OverwriteSolution(const OperatingPoint& operating_point,
-                                 const std::vector<Strategy>& strategies);
-
-  // Compute time stamp from time index.
-  Time ComputeRelativeTimeStamp(size_t time_index) const {
-    return time_step_ * static_cast<Time>(time_index);
-  }
-
-  // Accessors.
-  const VectorXf& InitialState() const { return x0_; }
-  Time InitialTime() const { return operating_point_->t0; }
-  size_t NumTimeSteps() const { return num_time_steps_; }
-  Time TimeStep() const { return time_step_; }
-  Time TimeHorizon() const { return time_horizon_; }
-  std::vector<PlayerCost>& PlayerCosts() { return player_costs_; }
-  const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
-  std::shared_ptr<const MultiPlayerIntegrableSystem> Dynamics() const {
-    return dynamics_;
-  }
-  const OperatingPoint& CurrentOperatingPoint() const {
-    return *operating_point_;
-  }
-  const std::vector<Strategy>& CurrentStrategies() const {
-    return *strategies_;
-  }
+  // Compute the number of primal and dual variables in this problem.
+  size_t NumPrimals() const;
+  size_t NumDuals() const;
 
  protected:
-  Problem();
+  NewtonProblem() : Problem() {}
 
   // Initialize this object.
   virtual void Initialize() {
     ConstructDynamics();
     ConstructPlayerCosts();
     ConstructInitialState();
+    ConstructPrimalsAndDuals();
     ConstructInitialOperatingPoint();
     ConstructInitialStrategies();
     initialized_ = true;
   }
 
-  // Functions for initialization. By default, operating point and strategies
-  // are initialized to zero.
+  // Functions for initialization. By default, primals and duals are initialized
+  // to zero.
   virtual void ConstructDynamics() = 0;
   virtual void ConstructPlayerCosts() = 0;
   virtual void ConstructInitialState() = 0;
+  virtual void ConstructPrimalsAndDuals() {
+    primals_.setZero(NumPrimals());
+    duals_.setZero(NumDuals());
+  }
   virtual void ConstructInitialOperatingPoint() {
-    operating_point_.reset(new OperatingPoint(num_time_steps_, 0.0, dynamics_));
+    operating_point_ref_.reset(
+        new OperatingPointRef(num_time_steps_, 0.0, dynamics_, primals_));
   }
   virtual void ConstructInitialStrategies() {
-    strategies_.reset(new std::vector<Strategy>());
+    strategies_.reset(new std::vector<StrategyRef>());
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
       strategies_->emplace_back(num_time_steps_, dynamics_->XDim(),
-                                dynamics_->UDim(ii));
+                                dynamics_->UDim(ii), primals_);
   }
 
-  // Time horizon (s), time step (s), and number of time steps.
-  const Time time_horizon_;
-  const Time time_step_;
-  const size_t num_time_steps_;
+  // Primal variables.
+  VectorXf primals_;
+  std::unique_ptr<OperatingPointRef> operating_point_ref_;
 
-  // Dynamical system.
-  std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
-
-  // Player costs. These will not change during operation of this solver.
-  std::vector<PlayerCost> player_costs_;
-
-  // Initial condition.
-  VectorXf x0_;
-
-  // Strategies and operating points for all players.
-  std::unique_ptr<OperatingPoint> operating_point_;
-  std::unique_ptr<std::vector<Strategy>> strategies_;
-
-  // Has this object been initialized?
-  bool initialized_;
+  // Dual variables.
+  VectorXf duals_;
 };  // class NewtonProblem
 
 }  // namespace ilqgames
