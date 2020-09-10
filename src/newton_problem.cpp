@@ -159,4 +159,75 @@ size_t NewtonProblem::NumDuals() const {
   return total;
 }
 
+void NewtonProblem::ConstructPrimalsAndDuals() {
+  // Handle primals.
+  primals_.setZero(NumPrimals());
+  ConstructInitialOperatingPoint();
+  ConstructInitialStrategies();
+
+  // Handle duals.
+  duals_.setZero(NumDuals());
+  ConstructInitialLambdas();
+}
+
+void NewtonProblem::ConstructInitialOperatingPoint() {
+  operating_point_ref_.reset(
+      new OperatingPointRef(num_time_steps_, 0.0, dynamics_, primals_));
+}
+
+void NewtonProblem::ConstructInitialStrategies() {
+  strategy_refs_.reset(new std::vector<StrategyRef>());
+  size_t primal_idx = NumOperatingPointVariables();
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+    strategy_refs_->emplace_back(num_time_steps_, dynamics_->XDim(),
+                                 dynamics_->UDim(ii), primals_, primal_idx);
+    primal_idx += strategies_->back().NumVariables();
+  }
+}
+
+void NewtonProblem::ConstructInitialLambdas() {
+  lambda_dyns_.reset(new std::vector<RefVector>(num_time_steps_));
+  lambda_feedbacks_.reset(new std::vector<RefVector>(num_time_steps_));
+  lambda_state_constraints_.reset(
+      new std::vector<std::vector<RefVector>>(num_time_steps_));
+  lambda_control_constraints_.reset(
+      new std::vector<std::vector<PlayerDualMap>>(num_time_steps_));
+
+  // Keep the ordering broken out by timesteps. Outer index is always time, and
+  // inner one is player ID.
+  size_t dual_idx = 0;
+  for (size_t kk = 0; kk < num_time_steps_; kk++) {
+    // Preallocate memory for state and control constraints for each player.
+    (*lambda_state_constraints_)[kk].resize(dynamics_->NumPlayers());
+    (*lambda_control_constraints_)[kk].resize(dynamics_->NumPlayers());
+
+    // Populate for each player.
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      (*lambda_dyns_)[kk].emplace_back(
+          duals_.segment(dual_idx, dynamics_->XDim()));
+      dual_idx += dynamics_->XDim();
+
+      (*lambda_feedbacks_)[kk].emplace_back(
+          duals_.segment(dual_idx, dynamics_->XDim()));
+      dual_idx += dynamics_->XDim();
+
+      // Add a separate dual variable for each state constraint for this player
+      // at this time.
+      for (const auto& c : player_costs_[ii].StateConstraints()) {
+        (*lambda_state_constraints_)[kk][ii].emplace_back(
+            duals_.segment(dual_idx, dynamics_->XDim()));
+        dual_idx += dynamics_->XDim();
+      }
+
+      // Do likewise for control costs, though they are stored in a different
+      // data structure.
+      for (const auto& pair : player_costs_[ii].ControlConstraints()) {
+        (*lambda_control_constraints_)[kk][ii].emplace(
+            pair.first, duals_.segment(dual_idx, dynamics_->UDim(pair.first)));
+        dual_idx += dynamics_->UDim(pair.first);
+      }
+    }
+  }
+}
+
 }  // namespace ilqgames

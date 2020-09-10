@@ -91,6 +91,11 @@ static constexpr double kInvalidValue = std::numeric_limits<float>::quiet_NaN();
 #endif
 }  // namespace constants
 
+// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
+
+using Eigen::MatrixXf;
+using Eigen::VectorXf;
+
 // --------------------------------- TYPES ---------------------------------- //
 
 using PlayerIndex = unsigned short;
@@ -114,8 +119,13 @@ using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
 template <typename T>
 using PlayerMap = std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
 
+using PlayerDualMap =
+    std::unordered_multimap<PlayerIndex, Eigen::Ref<VectorXf>>;
+
 template <typename T>
 using PtrVector = std::vector<std::shared_ptr<T>>;
+
+using RefVector = std::vector<Eigen::Ref<VectorXf>>;
 
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
@@ -141,11 +151,6 @@ template <typename T>
 inline constexpr T sgn(T x) {
   return sgn(x, std::is_signed<T>());
 }
-
-// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
-
-using Eigen::MatrixXf;
-using Eigen::VectorXf;
 
 }  // namespace ilqgames
 

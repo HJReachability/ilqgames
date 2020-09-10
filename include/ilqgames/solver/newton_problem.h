@@ -90,8 +90,6 @@ class NewtonProblem : public Problem {
     ConstructPlayerCosts();
     ConstructInitialState();
     ConstructPrimalsAndDuals();
-    ConstructInitialOperatingPoint();
-    ConstructInitialStrategies();
     initialized_ = true;
   }
 
@@ -100,23 +98,10 @@ class NewtonProblem : public Problem {
   virtual void ConstructDynamics() = 0;
   virtual void ConstructPlayerCosts() = 0;
   virtual void ConstructInitialState() = 0;
-  virtual void ConstructPrimalsAndDuals() {
-    primals_.setZero(NumPrimals());
-    duals_.setZero(NumDuals());
-  }
-  virtual void ConstructInitialOperatingPoint() {
-    operating_point_ref_.reset(
-        new OperatingPointRef(num_time_steps_, 0.0, dynamics_, primals_));
-  }
-  virtual void ConstructInitialStrategies() {
-    strategy_refs_.reset(new std::vector<StrategyRef>());
-    size_t primal_idx = NumOperatingPointVariables();
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      strategy_refs_->emplace_back(num_time_steps_, dynamics_->XDim(),
-                                   dynamics_->UDim(ii), primals_, primal_idx);
-      primal_idx += strategies_->back().NumVariables();
-    }
-  }
+  virtual void ConstructPrimalsAndDuals();
+  virtual void ConstructInitialOperatingPoint();
+  virtual void ConstructInitialStrategies();
+  virtual void ConstructInitialLambdas();
 
   // Primal variables.
   VectorXf primals_;
@@ -125,7 +110,11 @@ class NewtonProblem : public Problem {
 
   // Dual variables.
   VectorXf duals_;
-  // TODO! Make accessors.
+  std::unique_ptr<std::vector<RefVector>> lambda_dyns_;
+  std::unique_ptr<std::vector<RefVector>> lambda_feedbacks_;
+  std::unique_ptr<std::vector<std::vector<RefVector>>> lambda_state_constraints_;
+  std::unique_ptr<std::vector<std::vector<PlayerDualMap>>>
+      lambda_control_constraints_;
 };  // class NewtonProblem
 
 }  // namespace ilqgames
