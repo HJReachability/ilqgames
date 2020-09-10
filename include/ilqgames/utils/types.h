@@ -47,6 +47,7 @@
 
 #include <math.h>
 #include <algorithm>
+#include <chrono>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -101,6 +102,9 @@ using Eigen::VectorXf;
 using PlayerIndex = unsigned short;
 using Dimension = int;
 using Point2 = Eigen::Vector2f;
+
+// Rename the system clock for easier usage.
+using clock = std::chrono::system_clock;
 
 #ifdef __APPLE__
 using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;

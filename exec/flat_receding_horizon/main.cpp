@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
   constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
-      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &solver);
+      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, solver);
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(

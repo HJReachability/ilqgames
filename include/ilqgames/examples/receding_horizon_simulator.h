@@ -48,7 +48,7 @@
 #ifndef ILQGAMES_EXAMPLES_RECEDING_HORIZON_SIMULATOR_H
 #define ILQGAMES_EXAMPLES_RECEDING_HORIZON_SIMULATOR_H
 
-#include <ilqgames/solver/game_solver.h>
+#include <ilqgames/solver/solution_splicer.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <memory>
@@ -58,8 +58,81 @@ namespace ilqgames {
 
 // Solve this game following a receding horizon, accounting for the time used
 // to solve each subproblem and integrating dynamics forward accordingly.
+// Templated on the type of the solver (must do this because the base GameSolver
+// class is templated).
+template <typename S>
 std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, GameSolver* solver);
+    Time final_time, Time planner_runtime, S& solver) {
+  // Set up a list of solver logs, one per solver invocation.
+  std::vector<std::shared_ptr<const SolverLog>> logs;
+
+  // Initial run of the solver. Keep track of time in order to know how much to
+  // integrate dynamics forward.
+  auto solver_call_time = clock::now();
+  bool success = false;
+  logs.push_back(solver.Solve(&success));
+  CHECK(success);
+  Time elapsed_time =
+      std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+
+  VLOG(1) << "Solved initial problem in " << elapsed_time << " seconds, with "
+          << logs.back()->NumIterates() << " iterations.";
+  const auto& dynamics = solver.GetProblem().Dynamics();
+
+  // Keep a solution splicer to incorporate new receding horizon solutions.
+  SolutionSplicer splicer(*logs.front());
+
+  // Repeatedly integrate dynamics forward, reset problem initial conditions,
+  // and resolve.
+  VectorXf x(solver.GetProblem().InitialState());
+  Time t = splicer.CurrentOperatingPoint().t0;
+
+  while (true) {
+    // Break the loop if it's been long enough.
+    // Integrate a little more.
+    constexpr Time kExtraTime = 0.25;
+    t += kExtraTime;  // + planner_runtime;
+
+    if (t >= final_time ||
+        !splicer.ContainsTime(t + planner_runtime +
+                              solver.GetProblem().TimeStep()))
+      break;
+
+    x = solver.GetProblem().Dynamics()->Integrate(
+        t - kExtraTime, t, x, splicer.CurrentOperatingPoint(),
+        splicer.CurrentStrategies());
+
+    // Overwrite problem with spliced solution.
+    solver.GetProblem().OverwriteSolution(splicer.CurrentOperatingPoint(),
+                                           splicer.CurrentStrategies());
+
+    // Set up next receding horizon problem and solve.
+    solver.GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
+
+    solver_call_time = clock::now();
+    logs.push_back(solver.Solve(&success, planner_runtime));
+    elapsed_time =
+        std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+
+    CHECK_LE(elapsed_time, planner_runtime);
+    VLOG(1) << "t = " << t << ": Solved warm-started problem in "
+            << elapsed_time << " seconds.";
+
+    // Break the loop if it's been long enough.
+    t += elapsed_time;
+    if (t >= final_time || !splicer.ContainsTime(t)) break;
+
+    // Integrate dynamics forward to account for solve time.
+    x = solver.GetProblem().Dynamics()->Integrate(
+        t - elapsed_time, t, x, splicer.CurrentOperatingPoint(),
+        splicer.CurrentStrategies());
+
+    // Add new solution to splicer if it converged.
+    if (logs.back()->WasConverged()) splicer.Splice(*logs.back());
+  }
+
+  return logs;
+}
 
 }  // namespace ilqgames
 

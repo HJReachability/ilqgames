@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
   constexpr ilqgames::Time kFinalTime = 10.0;       // s
   constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
   const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
-      logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &solver)};
+      logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, solver)};
 
   // Dump the logs and/or exit.
   if (FLAGS_save) {

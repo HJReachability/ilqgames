@@ -63,7 +63,8 @@
 
 namespace ilqgames {
 
-class ILQSolver : public GameSolver {
+class ILQSolver : public GameSolver<LinearDynamicsApproximation,
+                                    QuadraticCostApproximation> {
  public:
   virtual ~ILQSolver() {}
   ILQSolver(const std::shared_ptr<Problem>& problem,
@@ -76,6 +77,11 @@ class ILQSolver : public GameSolver {
     else
       lq_solver_.reset(
           new LQFeedbackSolver(problem_->Dynamics(), problem_->NumTimeSteps()));
+
+    // Prepopulate quadraticization.
+    for (auto& quads : quadraticization_)
+      quads.resize(problem_->Dynamics()->NumPlayers(),
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
   }
 
   // Solve this game. Returns true if converged.
