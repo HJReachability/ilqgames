@@ -85,7 +85,7 @@ class GameSolver {
   // Solve this game. Returns true if converged.
   virtual std::shared_ptr<SolverLog> Solve(
       bool* success = nullptr,
-      Time max_runtime = std::numeric_limits<Time>::infinity());
+      Time max_runtime = std::numeric_limits<Time>::infinity()) = 0;
 
   // Accessors.
   Problem& GetProblem() { return *problem_; }
@@ -100,19 +100,10 @@ class GameSolver {
         timer_(kMaxLoopTimesToRecord) {
     CHECK_NOTNULL(problem_.get());
 
-    // Set up LQ solver.
-    const auto dynamics = problem_->Dynamics();
-    if (params_.open_loop)
-      lq_solver_.reset(
-          new LQOpenLoopSolver(dynamics, problem_->NumTimeSteps()));
-    else
-      lq_solver_.reset(
-          new LQFeedbackSolver(dynamics, problem_->NumTimeSteps()));
-
     // Prepopulate quadraticization.
     for (auto& quads : quadraticization_)
-      quads.resize(dynamics->NumPlayers(),
-                   QuadraticCostApproximation(dynamics->XDim()));
+      quads.resize(problem_->Dynamics()->NumPlayers(),
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
   }
 
   // Create a new log. This may be overridden by derived classes (e.g., to
@@ -125,40 +116,12 @@ class GameSolver {
   // the given operating point.
   virtual void ComputeLinearization(
       const OperatingPoint& op,
-      std::vector<LinearDynamicsApproximation>* linearization) = 0;
+      std::vector<LinearDynamicsApproximation>* linearization);
 
-  // Modify LQ strategies to improve convergence properties.
-  // This function replaces an Armijo linesearch that would take place in ILQR.
-  // Returns true if successful, and records if we have converged and the total
-  // costs for all players at the new operating point, as well as the times at
-  // which each player achieves an extreme cost.
-  virtual bool ModifyLQStrategies(
-      std::vector<Strategy>* strategies,
-      OperatingPoint* current_operating_point,
-      bool* is_new_operating_point_feasible, bool* has_converged,
-      std::vector<float>* total_costs,
-      std::vector<size_t>* times_of_extreme_costs) const;
-
-  // Compute distance (infinity norm) between states in the given dimensions.
-  // If dimensions empty, checks all dimensions.
-  virtual float StateDistance(const VectorXf& x1, const VectorXf& x2,
-                              const std::vector<Dimension>& dims) const;
-
-  // Compute the current operating point based on the current set of strategies
-  // and the last operating point. Checks whether the solver has converged and
-  // populates the total costs for all players of the new operating point.
-  // Returns true if the new operating point satisfies the trust region
-  // (including all explicit inequality constraints), or if the
-  // `check_trust_region` flag is false. Optionally also returns the times of
-  // extreme costs.
-  bool CurrentOperatingPoint(const OperatingPoint& last_operating_point,
-                             const std::vector<Strategy>& current_strategies,
-                             OperatingPoint* current_operating_point,
-                             bool* has_converged,
-                             std::vector<float>* total_costs,
-                             std::vector<size_t>* times_of_extreme_costs,
-                             bool check_trust_region = true,
-                             bool* satisfies_constraints = nullptr) const;
+  // Compute the quadratic cost approximation at the given operating point.
+  void ComputeQuadraticization(
+      const OperatingPoint& op,
+      std::vector<std::vector<QuadraticCostApproximation>>* quadraticization);
 
   // Store the underlying problem.
   const std::shared_ptr<Problem> problem_;
@@ -167,9 +130,6 @@ class GameSolver {
   // quadraticizations' inner vector is indexed by player).
   std::vector<LinearDynamicsApproximation> linearization_;
   std::vector<std::vector<QuadraticCostApproximation>> quadraticization_;
-
-  // Core LQ Solver.
-  std::unique_ptr<LQSolver> lq_solver_;
 
   // Solver parameters.
   const SolverParams params_;

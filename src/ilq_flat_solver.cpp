@@ -84,8 +84,8 @@ float ILQFlatSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
     return std::numeric_limits<float>::infinity();
   }
 
-  return GameSolver::StateDistance(dyn.FromLinearSystemState(x1),
-                                   dyn.FromLinearSystemState(x2), dims);
+  return ILQSolver::StateDistance(dyn.FromLinearSystemState(x1),
+                                  dyn.FromLinearSystemState(x2), dims);
 }
 
 }  // namespace ilqgames

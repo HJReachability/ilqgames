@@ -65,7 +65,8 @@ class PlayerCost {
         state_regularization_(state_regularization),
         control_regularization_(control_regularization),
         are_barriers_on_(true),
-        cost_structure_(CostStructure::SUM) {}
+        cost_structure_(CostStructure::SUM),
+        time_of_extreme_cost_(0) {}
 
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
@@ -137,6 +138,10 @@ class PlayerCost {
   bool IsMaxOverTime() const { return cost_structure_ == MAX; }
   bool IsMinOverTime() const { return cost_structure_ == MIN; }
 
+  // Keep track of the time of extreme costs.
+  size_t TimeOfExtremeCost() { return time_of_extreme_cost_; }
+  void SetTimeOfExtremeCost(size_t kk) { time_of_extreme_cost_ = kk; }
+
   // Accessors.
   const PtrVector<Cost>& StateCosts() const { return state_costs_; }
   const PlayerMap<Cost>& ControlCosts() const { return control_costs_; }
@@ -177,6 +182,11 @@ class PlayerCost {
   // Ternary variable whether this objective is time-additive, max-over-time, or
   // min-over-time.
   CostStructure cost_structure_;
+
+  // Keep track of the time of extreme costs. This will depend upon the current
+  // operating point, and it will only be meaningful if the cost structure is an
+  // extremum over time.
+  size_t time_of_extreme_cost_;
 };  //\class PlayerCost
 
 }  // namespace ilqgames
