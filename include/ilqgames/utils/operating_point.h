@@ -69,24 +69,19 @@ struct OperatingPointRef {
       size_t num_time_steps, Time initial_time,
       const std::shared_ptr<const MultiPlayerSystemType>& dynamics,
       VectorXf& primals)
-      : t0(initial_time) {
+    : us(num_time_steps), t0(initial_time) {
     CHECK_NOTNULL(dynamics.get());
-
-    // Initialize the time-indexing of xs and us.
-    xs.resize(num_time_steps);
-    us.resize(num_time_steps);
 
     // Populate xs and us.
     size_t primal_idx = 0;
     for (size_t kk = 0; kk < num_time_steps; kk++) {
       // Handle xs.
-      xs[kk] = primals.segment(primal_idx, dynamics->XDim());
+      xs.emplace_back(primals.segment(primal_idx, dynamics->XDim()));
       primal_idx += dynamics->XDim();
 
       // Handle us.
-      us[kk].resize(dynamics->NumPlayers());
       for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++) {
-        us[kk][ii] = primals.segment(primal_idx, dynamics->UDim(ii));
+        us[kk].emplace_back(primals.segment(primal_idx, dynamics->UDim(ii)));
         primal_idx += dynamics->UDim(ii);
       }
     }

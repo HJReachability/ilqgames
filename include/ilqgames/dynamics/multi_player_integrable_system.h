@@ -74,9 +74,14 @@ class MultiPlayerIntegrableSystem {
       Time t, const VectorXf& x0, const OperatingPoint& operating_point,
       const std::vector<Strategy>& strategies) const;
 
+  // Make a utility version of the above that operates on Eigen::Refs.
+  VectorXf Integrate(Time t0, Time time_interval,
+                     const Eigen::Ref<VectorXf>& x0,
+                     const std::vector<Eigen::Ref<VectorXf>>& us) const;
+
   // Can this system be treated as linear for the purposes of LQ solves?
-  // For example, linear systems and feedback linearizable systems should return
-  // true here.
+  // For example, linear systems and feedback linearizable systems should
+  // return true here.
   virtual bool TreatAsLinear() const { return false; }
 
   // Stitch between two states of the system. By default, just takes the

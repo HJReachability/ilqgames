@@ -56,16 +56,18 @@
 namespace ilqgames {
 
 struct StrategyRef {
-  std::vector<Eigen::Ref<MatrixXf>> Ps;
+  std::vector<Eigen::Map<MatrixXf>> Ps;
   std::vector<Eigen::Ref<VectorXf>> alphas;
 
   // Preallocate memory during construction.
   StrategyRef(size_t horizon, Dimension xdim, Dimension udim, VectorXf& primals,
-              size_t primal_idx)
-      : Ps(horizon), alphas(horizon) {
-    for (size_t ii = 0; ii < horizon; ii++) {
-      Ps[ii] = MatrixXf::Zero(udim, xdim);
-      alphas[ii] = VectorXf::Zero(udim);
+              size_t initial_idx) {
+    size_t primal_idx = initial_idx;
+    for (size_t kk = 0; kk < horizon; kk++) {
+      Ps.emplace_back(&primals(primal_idx), xdim, udim);
+      primal_idx += xdim * udim;
+      alphas.emplace_back(primals.segment(primal_idx, udim));
+      primal_idx += udim;
     }
   }
 
@@ -75,8 +77,8 @@ struct StrategyRef {
     return u_ref - Ps[time_index] * delta_x - alphas[time_index];
   }
 
-  // Number of parameters.
-  size_t NumParameters() const {
+  // Number of variables.
+  size_t NumVariables() const {
     const size_t horizon = Ps.size();
     CHECK_EQ(horizon, alphas.size());
 
@@ -103,8 +105,8 @@ struct Strategy {
     return u_ref - Ps[time_index] * delta_x - alphas[time_index];
   }
 
-  // Number of parameters.
-  size_t NumParameters() const {
+  // Number of variables.
+  size_t NumVariables() const {
     const size_t horizon = Ps.size();
     CHECK_EQ(horizon, alphas.size());
 

@@ -69,59 +69,10 @@ Problem::Problem()
 void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
                                        Time planner_runtime) {
   CHECK(initialized_);
-  CHECK_GE(planner_runtime, 0.0);
-  CHECK_LE(planner_runtime + t0, InitialTime() + TimeHorizon());
-  CHECK_GE(t0, operating_point_->t0);
 
-  // Integrate x0 forward from t0 by approximately planner_runtime to get
-  // actual initial state. Integrate up to the next discrete timestep, then
-  // integrate for an integer number of discrete timesteps until by the *next*
-  // timestep at least 'planner_runtime' has elapsed (done by rounding).
-  constexpr float kRoundingError = 0.9;
-  const Time relative_t0 = t0 - operating_point_->t0;
-  size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
-  Time remaining_time_this_step =
-      (current_timestep + 1) * time_step_ - relative_t0;
-  if (remaining_time_this_step < kRoundingError * time_step_) {
-    current_timestep += 1;
-    remaining_time_this_step = time_step_ - remaining_time_this_step;
-  }
-
-  CHECK_LT(remaining_time_this_step, time_step_);
-
-  // Initially, set x to the integrated version of x0 at the next timestep.
-  VectorXf x = dynamics_->IntegrateToNextTimeStep(t0, x0, *operating_point_,
-                                                  *strategies_);
-  operating_point_->t0 = t0 + remaining_time_this_step;
-  if (remaining_time_this_step <= planner_runtime) {
-    const size_t num_steps_to_integrate = static_cast<size_t>(
-        constants::kSmallNumber +  // Add to avoid truncation error.
-        (planner_runtime - remaining_time_this_step) / time_step_);
-    const size_t last_integration_timestep =
-        current_timestep + num_steps_to_integrate;
-
-    x = dynamics_->Integrate(current_timestep + 1, last_integration_timestep, x,
-                             *operating_point_, *strategies_);
-    operating_point_->t0 += time_step_ * num_steps_to_integrate;
-  }
-
-  // Find index of nearest state in the existing plan to this state.
-  const auto nearest_iter =
-      std::min_element(operating_point_->xs.begin(), operating_point_->xs.end(),
-                       [this, &x](const VectorXf& x1, const VectorXf& x2) {
-                         return dynamics_->DistanceBetween(x, x1) <
-                                dynamics_->DistanceBetween(x, x2);
-                       });
-
-  // Set initial time to first timestamp in new problem.
+  // Sync to existing problem.
   const size_t first_timestep_in_new_problem =
-      std::distance(operating_point_->xs.begin(), nearest_iter);
-
-  // Set initial state to this state.
-  x0_ = dynamics_->Stitch(*nearest_iter, x);
-
-  // Update all costs to have the correct initial time.
-  RelativeTimeTracker::ResetInitialTime(operating_point_->t0);
+      SyncToExistingProblem(x0, t0, planner_runtime, *operating_point_);
 
   // Set final timestep to consider in current operating point.
   const size_t after_final_timestep =
@@ -174,10 +125,6 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
         InitialTime() + ComputeRelativeTimeStamp(kk - 1), time_step_,
         operating_point_->xs[kk - 1], operating_point_->us[kk - 1]);
   }
-
-  // Invariants.
-  CHECK_EQ(operating_point_->xs.size(), NumTimeSteps());
-  CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0), time_step_);
 }
 
 void Problem::OverwriteSolution(const OperatingPoint& operating_point,

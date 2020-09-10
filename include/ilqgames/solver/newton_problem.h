@@ -79,6 +79,7 @@ class NewtonProblem : public Problem {
   // Compute the number of primal and dual variables in this problem.
   size_t NumPrimals() const;
   size_t NumDuals() const;
+  size_t NumOperatingPointVariables() const;
 
  protected:
   NewtonProblem() : Problem() {}
@@ -108,18 +109,23 @@ class NewtonProblem : public Problem {
         new OperatingPointRef(num_time_steps_, 0.0, dynamics_, primals_));
   }
   virtual void ConstructInitialStrategies() {
-    strategies_.reset(new std::vector<StrategyRef>());
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-      strategies_->emplace_back(num_time_steps_, dynamics_->XDim(),
-                                dynamics_->UDim(ii), primals_);
+    strategy_refs_.reset(new std::vector<StrategyRef>());
+    size_t primal_idx = NumOperatingPointVariables();
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      strategy_refs_->emplace_back(num_time_steps_, dynamics_->XDim(),
+                                   dynamics_->UDim(ii), primals_, primal_idx);
+      primal_idx += strategies_->back().NumVariables();
+    }
   }
 
   // Primal variables.
   VectorXf primals_;
   std::unique_ptr<OperatingPointRef> operating_point_ref_;
+  std::unique_ptr<std::vector<StrategyRef>> strategy_refs_;
 
   // Dual variables.
   VectorXf duals_;
+  // TODO! Make accessors.
 };  // class NewtonProblem
 
 }  // namespace ilqgames

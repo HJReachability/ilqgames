@@ -59,65 +59,17 @@ namespace ilqgames {
 void NewtonProblem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
                                              Time planner_runtime) {
   CHECK(initialized_);
-  CHECK_GE(planner_runtime, 0.0);
-  CHECK_LE(planner_runtime + t0, InitialTime() + TimeHorizon());
-  CHECK_GE(t0, operating_point_->t0);
+  auto& op = *operating_point_ref_;
 
-  // Integrate x0 forward from t0 by approximately planner_runtime to get
-  // actual initial state. Integrate up to the next discrete timestep, then
-  // integrate for an integer number of discrete timesteps until by the *next*
-  // timestep at least 'planner_runtime' has elapsed (done by rounding).
-  constexpr float kRoundingError = 0.9;
-  const Time relative_t0 = t0 - operating_point_->t0;
-  size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
-  Time remaining_time_this_step =
-      (current_timestep + 1) * time_step_ - relative_t0;
-  if (remaining_time_this_step < kRoundingError * time_step_) {
-    current_timestep += 1;
-    remaining_time_this_step = time_step_ - remaining_time_this_step;
-  }
-
-  CHECK_LT(remaining_time_this_step, time_step_);
-
-  // Initially, set x to the integrated version of x0 at the next timestep.
-  VectorXf x = dynamics_->IntegrateToNextTimeStep(t0, x0, *operating_point_,
-                                                  *strategies_);
-  operating_point_->t0 = t0 + remaining_time_this_step;
-  if (remaining_time_this_step <= planner_runtime) {
-    const size_t num_steps_to_integrate = static_cast<size_t>(
-        constants::kSmallNumber +  // Add to avoid truncation error.
-        (planner_runtime - remaining_time_this_step) / time_step_);
-    const size_t last_integration_timestep =
-        current_timestep + num_steps_to_integrate;
-
-    x = dynamics_->Integrate(current_timestep + 1, last_integration_timestep, x,
-                             *operating_point_, *strategies_);
-    operating_point_->t0 += time_step_ * num_steps_to_integrate;
-  }
-
-  // Find index of nearest state in the existing plan to this state.
-  const auto nearest_iter =
-      std::min_element(operating_point_->xs.begin(), operating_point_->xs.end(),
-                       [this, &x](const VectorXf& x1, const VectorXf& x2) {
-                         return dynamics_->DistanceBetween(x, x1) <
-                                dynamics_->DistanceBetween(x, x2);
-                       });
-
-  // Set initial time to first timestamp in new problem.
+  // Sync to existing problem.
   const size_t first_timestep_in_new_problem =
-      std::distance(operating_point_->xs.begin(), nearest_iter);
-
-  // Set initial state to this state.
-  x0_ = dynamics_->Stitch(*nearest_iter, x);
-
-  // Update all costs to have the correct initial time.
-  RelativeTimeTracker::ResetInitialTime(operating_point_->t0);
+      SyncToExistingProblem(x0, t0, planner_runtime, op);
 
   // Set final timestep to consider in current operating point.
   const size_t after_final_timestep =
       first_timestep_in_new_problem + NumTimeSteps();
   const size_t timestep_iterator_end =
-      std::min(after_final_timestep, operating_point_->xs.size());
+      std::min(after_final_timestep, op.xs.size());
 
   // Populate strategies and opeating point for the remainder of the
   // existing plan, reusing the old operating point when possible.
@@ -125,66 +77,62 @@ void NewtonProblem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
        kk++) {
     const size_t kk_new_problem = kk - first_timestep_in_new_problem;
 
-    // Set current state and controls in operating point.
-    operating_point_->xs[kk_new_problem].swap(operating_point_->xs[kk]);
-    operating_point_->us[kk_new_problem].swap(operating_point_->us[kk]);
-    CHECK_EQ(operating_point_->us[kk_new_problem].size(),
-             dynamics_->NumPlayers());
+    // Set current state and controls in operating point. To avoid unintended
+    // swapping issues with Eigen::Refs just copy.
+    op.xs[kk_new_problem] = op.xs[kk];
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+      op.us[kk_new_problem][ii] = op.us[kk][ii];
 
     // Set current stategy.
-    for (auto& strategy : *strategies_) {
-      strategy.Ps[kk_new_problem].swap(strategy.Ps[kk]);
-      strategy.alphas[kk_new_problem].swap(strategy.alphas[kk]);
+    for (auto& strategy : *strategy_refs_) {
+      strategy.Ps[kk_new_problem] = strategy.Ps[kk];
+      strategy.alphas[kk_new_problem] = strategy.alphas[kk];
     }
+
+    // Make sure to do this for dual variables too.
+    // TODO!
   }
 
   // Make sure operating point is the right size.
-  CHECK_GE(operating_point_->xs.size(), NumTimeSteps());
-  if (operating_point_->xs.size() > NumTimeSteps()) {
-    operating_point_->xs.resize(NumTimeSteps());
-    operating_point_->us.resize(NumTimeSteps());
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      (*strategies_)[ii].Ps.resize(NumTimeSteps());
-      (*strategies_)[ii].alphas.resize(NumTimeSteps());
-    }
-  }
+  CHECK_EQ(op.xs.size(), NumTimeSteps());
 
   // Set new operating point controls and strategies to zero and propagate
-  // state forward accordingly.
+  // state forward accordingly. Set new dual variables to zero.
   for (size_t kk = timestep_iterator_end - first_timestep_in_new_problem;
        kk < NumTimeSteps(); kk++) {
-    operating_point_->us[kk].resize(dynamics_->NumPlayers());
     for (size_t ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      (*strategies_)[ii].Ps[kk].setZero(dynamics_->UDim(ii), dynamics_->XDim());
-      (*strategies_)[ii].alphas[kk].setZero(dynamics_->UDim(ii));
-      operating_point_->us[kk][ii].setZero(dynamics_->UDim(ii));
+      auto& strategy = (*strategy_refs_)[ii];
+      strategy.Ps[kk].setZero();
+      strategy.alphas[kk].setZero();
+      op.us[kk][ii].setZero();
+
+      // Make sure to do this for dual variables too.
+      // TODO!
     }
 
-    operating_point_->xs[kk] = dynamics_->Integrate(
-        InitialTime() + ComputeRelativeTimeStamp(kk - 1), time_step_,
-        operating_point_->xs[kk - 1], operating_point_->us[kk - 1]);
+    op.xs[kk] =
+        dynamics_->Integrate(InitialTime() + ComputeRelativeTimeStamp(kk - 1),
+                             time_step_, op.xs[kk - 1], op.us[kk - 1]);
   }
-
-  // Invariants.
-  CHECK_EQ(operating_point_->xs.size(), NumTimeSteps());
-  CHECK_LE(std::abs(t0 + planner_runtime - operating_point_->t0), time_step_);
 }
 
 size_t NewtonProblem::NumPrimals() const {
   CHECK(initialized_);
 
-  const auto horizon = NumTimeSteps();
-  const auto xdim = dynamics_->XDim();
-  const auto udim = dynamics_->TotalUDim();
-
   // Start by computing the number of shared variables - states and controls.
-  size_t total = xdim * (horizon + 1) + udim * horizon;
+  size_t total = NumOperatingPointVariables();
 
   // Accumulate players' individual strategy parameters.
   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-    total += (*strategies_)[ii].NumParameters();
+    total += (*strategy_refs_)[ii].NumVariables();
 
   return total;
+}
+
+size_t NewtonProblem::NumOperatingPointVariables() const {
+  CHECK(initialized_);
+
+  return NumTimeSteps() * (dynamics_->XDim() + dynamics_->TotalUDim());
 }
 
 size_t NewtonProblem::NumDuals() const {
