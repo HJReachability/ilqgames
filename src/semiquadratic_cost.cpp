@@ -76,8 +76,12 @@ void SemiquadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), hess->cols());
   CHECK_EQ(input.size(), grad->size());
 
-  (*hess)(dimension_, dimension_) += weight_;
-  (*grad)(dimension_) += weight_ * diff;
+  // Compute gradient and Hessian.
+  const float dx = weight_ * diff;
+  const float ddx = weight_;
+
+  (*grad)(dimension_) += dx;
+  (*hess)(dimension_, dimension_) += ddx;
 }
 
 }  // namespace ilqgames

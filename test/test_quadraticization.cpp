@@ -44,10 +44,11 @@
 #include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
+#include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
 #include <ilqgames/cost/nominal_path_length_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
-#include <ilqgames/cost/orientation_flat_cost.h>
+#include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
@@ -57,6 +58,7 @@
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
 #include <ilqgames/cost/semiquadratic_polyline2_cost.h>
+#include <ilqgames/cost/signed_distance_cost.h>
 #include <ilqgames/cost/weighted_convex_proximity_cost.h>
 #include <ilqgames/dynamics/concatenated_flat_system.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
@@ -79,6 +81,7 @@ static constexpr Dimension kInputDimension = 10;
 static constexpr float kGradForwardStep = 1e-3;
 static constexpr float kHessForwardStep = 1e-3;
 static constexpr float kNumericalPrecision = 0.15;
+static constexpr float kNumericalPrecisionFraction = 0.1;
 
 // Function to compute numerical gradient of a cost.
 VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
@@ -178,7 +181,7 @@ void CheckQuadraticization(const Cost& cost) {
   std::default_random_engine rng(0);
   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
   std::bernoulli_distribution sign_distribution;
-  std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
+  std::uniform_real_distribution<float> entry_distribution(0.5, 5.0);
 
   // Try a bunch of random points.
   constexpr size_t kNumRandomPoints = 20;
@@ -200,9 +203,13 @@ void CheckQuadraticization(const Cost& cost) {
 
 #if 1
     if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
-            kNumericalPrecision ||
+            std::max(kNumericalPrecision,
+                     kNumericalPrecisionFraction *
+                         hess_analytic.cwiseAbs().maxCoeff()) ||
         (grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>() >=
-            kNumericalPrecision) {
+            std::max(kNumericalPrecision,
+                     kNumericalPrecisionFraction *
+                         grad_analytic.cwiseAbs().maxCoeff())) {
       std::cout << "input: " << input.transpose() << std::endl;
       std::cout << "numeric hess: \n" << hess_numerical << std::endl;
       std::cout << "analytic hess: \n" << hess_analytic << std::endl;
@@ -211,10 +218,14 @@ void CheckQuadraticization(const Cost& cost) {
     }
 #endif
 
-    EXPECT_LT((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
-              kNumericalPrecision);
-    EXPECT_LT((grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
-              kNumericalPrecision);
+    EXPECT_LT(
+        (hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>(),
+        std::max(kNumericalPrecision, kNumericalPrecisionFraction *
+                                          hess_analytic.cwiseAbs().maxCoeff()));
+    EXPECT_LT(
+        (grad_analytic - grad_numerical).lpNorm<Eigen::Infinity>(),
+        std::max(kNumericalPrecision, kNumericalPrecisionFraction *
+                                          grad_analytic.cwiseAbs().maxCoeff()));
   }
 }
 
@@ -254,7 +265,6 @@ void CheckQuadraticization(const Cost& cost) {
 //     VectorXf grad_xi_analytic(VectorXf::Zero(xdim));
 //     cost.Quadraticize(t, xi, v, &hess_v_analytic, &hess_xi_analytic,
 //                       &grad_xi_analytic);
-
 //     // Numerical xi derivatives.
 //     const MatrixXf hess_xi_numerical = NumericalStateHessian(cost, t, xi, v);
 //     const VectorXf grad_xi_numerical = NumericalStateGradient(cost, t, xi,
@@ -361,11 +371,6 @@ TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(OrientationFlatCostTest, QuadraticizesCorrectly) {
-  OrientationFlatCost cost(kCostWeight, {1, 2}, 1.0);
-  CheckQuadraticization(cost);
-}
-
 TEST(OrientationCostTest, QuadraticizesCorrectly) {
   OrientationCost cost(kCostWeight, 1, M_PI_2);
   CheckQuadraticization(cost);
@@ -376,22 +381,30 @@ TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
   CheckQuadraticization(outside_constraint);
 }
 
-TEST(Polyline2SignedDistanceConstraintTest, QuadraticizesCorrectly) {
-  const Polyline2 polyline(
-      {Point2(2.0, -2.0), Point2(-0.5, 1.0), Point2(2.0, 2.0)});
-  Polyline2SignedDistanceConstraint left_constraint(polyline, {0, 1}, 10.0,
-                                                    false);
-  CheckQuadraticization(left_constraint);
-
-  Polyline2SignedDistanceConstraint right_constraint(polyline, {0, 1}, -10.0,
-                                                     true);
-  CheckQuadraticization(right_constraint);
-}
-
 TEST(SingleDimensionConstraintTest, SingleDimensionCorrectly) {
   SingleDimensionConstraint left_constraint(0, 10.0, false);
   CheckQuadraticization(left_constraint);
 
   SingleDimensionConstraint right_constraint(0, -10.0, true);
   CheckQuadraticization(right_constraint);
+}
+
+TEST(Polyline2SignedDistanceCostTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  Polyline2SignedDistanceCost cost(polyline, {0, 1});
+  CheckQuadraticization(cost);
+}
+
+TEST(SignedDistanceCostTest, QuadraticizesCorrectly) {
+  SignedDistanceCost cost({0, 1}, {2, 3}, 5.0);
+  CheckQuadraticization(cost);
+}
+
+TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
+  const std::shared_ptr<const SignedDistanceCost> cost1(
+      new SignedDistanceCost({0, 1}, {2, 3}, 5.0));
+  const std::shared_ptr<const QuadraticCost> cost2(
+      new QuadraticCost(kCostWeight, -1, 1.0));
+  ExtremeValueCost cost({cost1, cost2}, true);
+  CheckQuadraticization(cost);
 }

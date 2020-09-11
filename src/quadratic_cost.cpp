@@ -44,6 +44,7 @@
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <numeric>
 
 namespace ilqgames {
 
@@ -74,15 +75,21 @@ void QuadraticCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
 
   // Handle single dimension case first.
   if (dimension_ >= 0) {
-    (*hess)(dimension_, dimension_) += weight_;
-    (*grad)(dimension_) += weight_ * (input(dimension_) - nominal_);
+    const float delta = input(dimension_) - nominal_;
+    const float dx = weight_ * delta;
+    const float ddx = weight_;
+
+    (*grad)(dimension_) += dx;
+    (*hess)(dimension_, dimension_) += ddx;
   }
 
   // Handle dimension < 0 case.
   else {
+    const VectorXf delta = input - VectorXf::Constant(input.size(), nominal_);
+
+    *grad += weight_ * delta;
     hess->diagonal() =
-        hess->diagonal() + VectorXf::Constant(input.size(), weight_);
-    *grad += weight_ * (input - VectorXf::Constant(input.size(), nominal_));
+      hess->diagonal() + VectorXf::Constant(input.size(), weight_);
   }
 }
 

@@ -45,7 +45,6 @@
 
 namespace ilqgames {
 
-// Initial time associated to this cost.
 Time Cost::initial_time_ = 0.0;
 
 }  // namespace ilqgames

@@ -36,11 +36,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Tests for Orientation Flat Cost.
+// Tests for OrientationCost.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/orientation_flat_cost.h>
 #include <ilqgames/cost/orientation_cost.h>
 #include <ilqgames/utils/types.h>
 
@@ -49,59 +48,11 @@
 
 using namespace ilqgames;
 
-// Check that the semiquadratic applies in the correct dimension.
-TEST(OrientationFlatCostTest, EvaluatesCorrectCosts) {
-  constexpr float kNominalHeadingCostWeight = 1.0;
-  constexpr float kP1NominalHeading = M_PI_2;
-  const OrientationFlatCost orientation_cost(kNominalHeadingCostWeight, {0 ,1},
-                                             kP1NominalHeading);
-
-  // Try vectors of different lengths.
-  // ASSERT_DEATH(right_cost.Evaluate(VectorXf::Random(2)), "Check failed");
-  // ASSERT_DEATH(left_cost.Evaluate(VectorXf::Random(2)), "Check failed");
-
-  VectorXf input(2);
-  // Costs should increase as orientation goes from pi/2 to -pi/2
-  input << std::cos(M_PI_2), std::sin(M_PI_2);
-  const float cost_11 = orientation_cost.Evaluate(input);
-  input << std::cos(M_PI_2/2.0), std::sin(M_PI_2/2.0);
-  const float cost_12 = orientation_cost.Evaluate(input);
-  input << std::cos(0), std::sin(0);
-  const float cost_13 = orientation_cost.Evaluate(input);
-
-
-  input << std::cos(-M_PI/4.0), std::sin(-M_PI/4.0);
-  const float cost_14 = orientation_cost.Evaluate(input);
-
-  // Costs should increase as orientation goes from pi/2 to 3pi/2
-  input << std::cos(M_PI_2/2.0 + M_PI_2), std::sin(M_PI_2/2.0 + M_PI_2);
-  const float cost_21 = orientation_cost.Evaluate(input);
-  input << std::cos(M_PI), std::sin(M_PI);
-  const float cost_31 = orientation_cost.Evaluate(input);
-
-
-  input << std::cos(M_PI + M_PI/4.0), std::sin(M_PI + M_PI/4.0);
-  const float cost_41 = orientation_cost.Evaluate(input);
-
-  orientation_cost.Evaluate(input);
-  EXPECT_GT(cost_12, cost_11);
-  EXPECT_GT(cost_13, cost_12);
-  EXPECT_GT(cost_14, cost_13);
-
-  EXPECT_GT(cost_21, cost_11);
-  EXPECT_GT(cost_31, cost_21);
-  EXPECT_GT(cost_41, cost_31);
-
-  EXPECT_NEAR(cost_12, cost_21, constants::kSmallNumber);
-  EXPECT_NEAR(cost_13, cost_31, constants::kSmallNumber);
-  EXPECT_NEAR(cost_14, cost_41, constants::kSmallNumber);
-}
-
 TEST(OrientationCostTest, EvaluatesCorrectCosts) {
   constexpr float kNominalHeadingCostWeight = 1.0;
   constexpr float kP1NominalHeading = M_PI_2;
   const OrientationCost orientation_cost(kNominalHeadingCostWeight, 0,
-                                             kP1NominalHeading);
+                                         kP1NominalHeading);
 
   // Try vectors of different lengths.
   // ASSERT_DEATH(right_cost.Evaluate(VectorXf::Random(2)), "Check failed");
@@ -111,19 +62,19 @@ TEST(OrientationCostTest, EvaluatesCorrectCosts) {
   // Costs should increase as orientation goes from pi/2 to -pi/2
   input << M_PI_2;
   const float cost_11 = orientation_cost.Evaluate(input);
-  input << M_PI_2/2.0;
+  input << M_PI_2 / 2.0;
   const float cost_12 = orientation_cost.Evaluate(input);
   input << 0;
   const float cost_13 = orientation_cost.Evaluate(input);
-  input << -M_PI_2/2.0;
+  input << -M_PI_2 / 2.0;
   const float cost_14 = orientation_cost.Evaluate(input);
 
   // Costs should increase as orientation goes from pi/2 to 3pi/2
-  input << M_PI_2/2.0 + M_PI_2;
+  input << M_PI_2 / 2.0 + M_PI_2;
   const float cost_21 = orientation_cost.Evaluate(input);
   input << M_PI;
   const float cost_31 = orientation_cost.Evaluate(input);
-  input << M_PI + M_PI_2/2.0;
+  input << M_PI + M_PI_2 / 2.0;
   const float cost_41 = orientation_cost.Evaluate(input);
 
   orientation_cost.Evaluate(input);
@@ -177,6 +128,7 @@ TEST(OrientationCostTest, EvaluatesCorrectCosts) {
 //   EXPECT_NEAR(hess(kCostDimension, kCostDimension), kCostWeight,
 //               constants::kSmallNumber);
 //   EXPECT_NEAR(hess.norm(), std::abs(kCostWeight), constants::kSmallNumber);
-//   EXPECT_NEAR(grad(kCostDimension), deriv1 + deriv2, constants::kSmallNumber);
-//   EXPECT_NEAR(grad.norm(), std::abs(deriv1 + deriv2), constants::kSmallNumber);
+//   EXPECT_NEAR(grad(kCostDimension), deriv1 + deriv2,
+//   constants::kSmallNumber); EXPECT_NEAR(grad.norm(), std::abs(deriv1 +
+//   deriv2), constants::kSmallNumber);
 // }

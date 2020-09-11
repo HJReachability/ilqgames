@@ -63,7 +63,8 @@ class PlayerCost {
       : name_(name),
         state_regularization_(state_regularization),
         control_regularization_(control_regularization),
-        are_constraints_on_(true) {}
+        are_constraints_on_(true),
+        cost_structure_(SUM) {}
 
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
@@ -89,6 +90,10 @@ class PlayerCost {
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
+  // Return empty cost quadraticization except for constraints.
+  QuadraticCostApproximation QuadraticizeConstraints(
+      Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
+
   // Turn all constraints either "on" or "off" (in which case they are replaced
   // with their"equivalent" costs).
   void TurnConstraintsOn() { are_constraints_on_ = true; }
@@ -106,6 +111,16 @@ class PlayerCost {
   // to 1.0.
   void ScaleConstraintBarrierWeights(float scale = 0.5);
   void ResetConstraintBarrierWeights();
+
+  // Set whether this is a time-additive, max-over-time, or min-over-time cost.
+  // At each specific time, all costs are added.
+  enum CostStructure { SUM, MAX, MIN };
+  void SetTimeAdditive() { cost_structure_ = SUM; }
+  void SetMaxOverTime() { cost_structure_ = MAX; }
+  void SetMinOverTime() { cost_structure_ = MIN; }
+  bool IsTimeAdditive() const { return cost_structure_ == SUM; }
+  bool IsMaxOverTime() const { return cost_structure_ == MAX; }
+  bool IsMinOverTime() const { return cost_structure_ == MIN; }
 
   // Accessors.
   const std::vector<std::shared_ptr<Cost>>& StateCosts() const {
@@ -136,6 +151,10 @@ class PlayerCost {
 
   // Regularization on costs.
   const float state_regularization_, control_regularization_;
+
+  // Ternary variable whether this objective is time-additive, max-over-time, or
+  // min-over-time.
+  CostStructure cost_structure_;
 };  //\class PlayerCost
 
 }  // namespace ilqgames

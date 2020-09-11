@@ -45,6 +45,14 @@
 
 namespace ilqgames {
 
+bool LineSegment2::Side(const Point2& query) const {
+  const Point2 relative_query = query - p1_;
+  const float cross_product = relative_query.x() * unit_direction_.y() -
+                              unit_direction_.x() * relative_query.y();
+
+  return cross_product > 0.0;
+}
+
 Point2 LineSegment2::ClosestPoint(const Point2& query, bool* is_endpoint,
                                   float* signed_squared_distance) const {
   // Find query relative to p1.

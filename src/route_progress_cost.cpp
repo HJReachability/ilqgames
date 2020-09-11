@@ -56,8 +56,7 @@ float RouteProgressCost::Evaluate(Time t, const VectorXf& input) const {
 
   const float desired_route_pos =
       initial_route_pos_ + (t - initial_time_) * nominal_speed_;
-  const Point2 desired =
-      polyline_.PointAt(desired_route_pos, nullptr, nullptr);
+  const Point2 desired = polyline_.PointAt(desired_route_pos, nullptr, nullptr);
 
   const float dx = input(xidx_) - desired.x();
   const float dy = input(yidx_) - desired.y();
@@ -84,11 +83,22 @@ void RouteProgressCost::Quadraticize(Time t, const VectorXf& input,
   const Point2 route_point =
       polyline_.PointAt(desired_route_pos, nullptr, nullptr, &is_endpoint);
 
-  (*hess)(xidx_, xidx_) += weight_;
-  (*hess)(yidx_, yidx_) += weight_;
+  // Compute gradient and Hessian.
+  const float diff_x = current_position.x() - route_point.x();
+  const float diff_y = current_position.y() - route_point.y();
+  const float dx = weight_ * diff_x;
+  const float dy = weight_ * diff_y;
+  const float ddx = weight_;
+  const float ddy = weight_;
+  const float dxdy = 0.0;
 
-  (*grad)(xidx_) += weight_ * (current_position.x() - route_point.x());
-  (*grad)(yidx_) += weight_ * (current_position.y() - route_point.y());
+  (*grad)(xidx_) += dx;
+  (*grad)(yidx_) += dy;
+
+  (*hess)(xidx_, xidx_) += ddx;
+  (*hess)(yidx_, yidx_) += ddy;
+  (*hess)(xidx_, yidx_) += dxdy;
+  (*hess)(yidx_, xidx_) += dxdy;
 }
 
 }  // namespace ilqgames

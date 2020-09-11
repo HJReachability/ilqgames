@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,52 +36,29 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost function of the norm of two states (difference from some
-// nominal norm value), i.e. 0.5 * w * (||(x, y)|| - nominal)^2.
+// Three player collision-avoidance example using approximate HJ reachability.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_COST_ORIENTATION_FLAT_COST_H
-#define ILQGAMES_COST_ORIENTATION_FLAT_COST_H
+#ifndef ILQGAMES_EXAMPLES_THREE_PLAYER_COLLISION_AVOIDANCE_REACHABILITY_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_THREE_PLAYER_COLLISION_AVOIDANCE_REACHABILITY_EXAMPLE_H
 
-#include <ilqgames/cost/time_invariant_cost.h>
-#include <ilqgames/utils/types.h>
-
-#include <glog/logging.h>
-#include <string>
-#include <utility>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-class OrientationFlatCost : public TimeInvariantCost {
+class ThreePlayerCollisionAvoidanceReachabilityExample
+    : public TopDownRenderableProblem {
  public:
-  // Construct from a multiplicative weight, the dimensions in which to apply
-  // the quadratic cost, a threshold, and a flag for which side to apply it.
-  OrientationFlatCost(float weight, const std::pair<Dimension, Dimension>& dims,
-                      float nominal = 0.0, const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        dim1_(dims.first),
-        dim2_(dims.second),
-        nominal_(nominal) {
-    CHECK_GE(dim1_, 0);
-    CHECK_GE(dim2_, 0);
-  }
+  ~ThreePlayerCollisionAvoidanceReachabilityExample() {}
+  ThreePlayerCollisionAvoidanceReachabilityExample(const SolverParams& params);
 
-  // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
-
-  // Quadraticize this cost at the given input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
-
- private:
-  // Dimensions in which to apply the quadratic cost.
-  const Dimension dim1_, dim2_;
-
-  // Nominal value in this (or all) dimensions.
-  const float nominal_;
-};  //\class QuadraticCost
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class ThreePlayerCollisionAvoidanceReachabilityExample
 
 }  // namespace ilqgames
 

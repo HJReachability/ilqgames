@@ -53,6 +53,9 @@
 
 namespace ilqgames {
 
+// Default experiment name to use.
+std::string DefaultExperimentName();
+
 class SolverLog : private Uncopyable {
  public:
   ~SolverLog() {}
@@ -166,13 +169,10 @@ class SolverLog : private Uncopyable {
   }
 
   // Save to disk.
-  bool Save(const bool only_last_trajectory = false,
+  bool Save(bool only_last_trajectory = false,
             const std::string& experiment_name = DefaultExperimentName()) const;
 
  private:
-  // Convert current time into a default experiment name for unique log saving.
-  static std::string DefaultExperimentName();
-
   // Time discretization.
   const Time time_step_;
 
@@ -184,6 +184,14 @@ class SolverLog : private Uncopyable {
   std::vector<Time> cumulative_runtimes_;
   std::vector<bool> was_converged_;
 };  // class SolverLog
+
+// Utility to save a list of logs.
+bool SaveLogs(const std::vector<SolverLog>& logs,
+              bool only_last_trajectory = true,
+              const std::string& experiment_name = DefaultExperimentName());
+bool SaveLogs(const std::vector<std::shared_ptr<const SolverLog>>& logs,
+              bool only_last_trajectory = true,
+              const std::string& experiment_name = DefaultExperimentName());
 
 }  // namespace ilqgames
 

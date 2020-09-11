@@ -44,6 +44,8 @@
 #include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
+#include <ilqgames/dynamics/single_player_delayed_dubins_car.h>
+#include <ilqgames/dynamics/single_player_dubins_car.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
 #include <ilqgames/dynamics/two_player_unicycle_4d.h>
@@ -60,6 +62,9 @@ namespace {
 static constexpr float kForwardStep = 1e-3;
 static constexpr float kNumericalPrecision = 1e-2;
 static constexpr Time kTimeStep = 0.1;
+
+// Dubins car speed.
+static constexpr float kDubinsSpeed = 1.0;
 
 // Functions to compute numerical Jacobians.
 void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
@@ -190,6 +195,16 @@ void CheckLinearization(const MultiPlayerDynamicalSystem& system) {
 }
 
 }  // anonymous namespace
+
+TEST(SinglePlayerDubinsTest, LinearizesCorrectly) {
+  const SinglePlayerDubinsCar system(kDubinsSpeed);
+  CheckLinearization(system);
+}
+
+TEST(SinglePlayerDelayedDubinsTest, LinearizesCorrectly) {
+  const SinglePlayerDelayedDubinsCar system(kDubinsSpeed);
+  CheckLinearization(system);
+}
 
 TEST(SinglePlayerUnicycle4DTest, LinearizesCorrectly) {
   const SinglePlayerUnicycle4D system;

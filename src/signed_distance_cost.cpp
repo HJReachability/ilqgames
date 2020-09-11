@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,35 +36,38 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Quadratic cost function of the norm of two states (difference from some
-// nominal norm value), i.e. 0.5 * weight_ * (||(x, y)|| - nominal)^2.
+// Nominal value minus distance between two points in the given dimensions.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/orientation_flat_cost.h>
+#include <ilqgames/cost/signed_distance_cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <numeric>
 
 namespace ilqgames {
 
-float OrientationFlatCost::Evaluate(const VectorXf& input) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
+float SignedDistanceCost::Evaluate(const VectorXf& input) const {
+  CHECK_LT(xdim1_, input.size());
+  CHECK_LT(ydim1_, input.size());
+  CHECK_LT(xdim2_, input.size());
+  CHECK_LT(ydim2_, input.size());
 
-  const float rotated_vx =
-      input(dim1_) * std::cos(nominal_) + input(dim2_) * std::sin(nominal_);
-  const float rotated_vy =
-      -input(dim1_) * std::sin(nominal_) + input(dim2_) * std::cos(nominal_);
+  // Otherwise, cost is squared 2-norm of entire input.
+  const float dx = input(xdim1_) - input(xdim2_);
+  const float dy = input(ydim1_) - input(ydim2_);
+  const float cost = nominal_ - std::hypot(dx, dy);
 
-  const float diff = std::atan2(rotated_vy, rotated_vx);
-  return 0.5 * weight_ * diff * diff;
+  return (less_is_positive_) ? cost : -cost;
 }
 
-void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                       VectorXf* grad) const {
-  CHECK_LT(dim1_, input.size());
-  CHECK_LT(dim2_, input.size());
+void SignedDistanceCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
+                                      VectorXf* grad) const {
+  CHECK_LT(xdim1_, input.size());
+  CHECK_LT(ydim1_, input.size());
+  CHECK_LT(xdim2_, input.size());
+  CHECK_LT(ydim2_, input.size());
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
 
@@ -73,26 +76,39 @@ void OrientationFlatCost::Quadraticize(const VectorXf& input, MatrixXf* hess,
   CHECK_EQ(input.size(), hess->cols());
   CHECK_EQ(input.size(), grad->size());
 
-  // Populate Hessian and gradient.
-  const float vx = input(dim1_);
-  const float vy = input(dim2_);
-  const float cos_tn = std::cos(nominal_);
-  const float sin_tn = std::sin(nominal_);
-  const float angle =
-      std::atan2(vy * cos_tn - vx * sin_tn, vx * cos_tn + vy * sin_tn);
-  const float norm = std::hypot(input(dim1_), input(dim2_));
-  const float norm2 = norm * norm;
-  (*hess)(dim1_, dim1_) +=
-      (vy * weight_ * (vy + 2 * vx * angle)) / (norm2 * norm2);
-  (*hess)(dim1_, dim2_) +=
-      -(weight_ * (vx * vx * angle - vy * vy * angle + vx * vy)) /
-      (norm2 * norm2);
-  (*hess)(dim2_, dim2_) +=
-      (vx * weight_ * (vx - 2 * vy * angle)) / (norm2 * norm2);
-  (*hess)(dim2_, dim1_) += (*hess)(dim1_, dim2_);
+  // Compute gradient and Hessian.
+  const float s = (less_is_positive_) ? 1.0 : -1.0;
+  const float delta_x = input(xdim1_) - input(xdim2_);
+  const float delta_y = input(ydim1_) - input(ydim2_);
+  const float norm = std::hypot(delta_x, delta_y);
+  const float norm_3 = norm * norm * norm;
+  const float dx1 = -s * delta_x / norm;
+  const float dy1 = -s * delta_y / norm;
+  const float ddx1 = -s * delta_y * delta_y / norm_3;
+  const float ddy1 = -s * delta_x * delta_x / norm_3;
+  const float dx1dy1 = s * delta_x * delta_y / norm_3;
 
-  (*grad)(dim1_) += -(vy * weight_ * angle) / norm2;
-  (*grad)(dim2_) += (vx * weight_ * angle) / norm2;
+  (*grad)(xdim1_) += dx1;
+  (*grad)(ydim1_) += dy1;
+  (*grad)(xdim2_) -= dx1;
+  (*grad)(ydim2_) -= dy1;
+
+  (*hess)(xdim1_, xdim1_) += ddx1;
+  (*hess)(ydim1_, ydim1_) += ddy1;
+  (*hess)(xdim1_, ydim1_) += dx1dy1;
+  (*hess)(ydim1_, xdim1_) += dx1dy1;
+  (*hess)(xdim2_, xdim2_) += ddx1;
+  (*hess)(ydim2_, ydim2_) += ddy1;
+  (*hess)(xdim2_, ydim2_) += dx1dy1;
+  (*hess)(ydim2_, xdim2_) += dx1dy1;
+  (*hess)(xdim1_, xdim2_) -= ddx1;
+  (*hess)(xdim1_, ydim2_) -= dx1dy1;
+  (*hess)(ydim1_, xdim2_) -= dx1dy1;
+  (*hess)(ydim1_, ydim2_) -= ddy1;
+  (*hess)(xdim2_, xdim1_) -= ddx1;
+  (*hess)(xdim2_, ydim1_) -= dx1dy1;
+  (*hess)(ydim2_, xdim1_) -= dx1dy1;
+  (*hess)(ydim2_, ydim1_) -= ddy1;
 }
 
 }  // namespace ilqgames
