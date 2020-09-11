@@ -75,8 +75,6 @@ static constexpr size_t kMaxLoopTimesToRecord = 10;
 
 }  // anonymous namespace
 
-// Template on the type of linearization and quadraticization.
-template <typename L, typename Q>
 class GameSolver {
  public:
   virtual ~GameSolver() {}
@@ -98,6 +96,12 @@ class GameSolver {
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_NOTNULL(problem_.get());
+
+    // Prepopulate quadraticization.
+    for (auto& quads : quadraticization_)
+      quads.resize(problem_->Dynamics()->NumPlayers(),
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
+
   }
 
   // Create a new log. This may be overridden by derived classes (e.g., to
@@ -108,20 +112,22 @@ class GameSolver {
 
   // Populate the given vector with a linearization of the dynamics about
   // the given operating point.
-  virtual void ComputeLinearization(const OperatingPoint& op,
-                                    std::vector<L>* linearization);
+  virtual void ComputeLinearization(
+      const OperatingPoint& op,
+      std::vector<LinearDynamicsApproximation>* linearization);
 
   // Compute the quadratic cost approximation at the given operating point.
-  void ComputeQuadraticization(const OperatingPoint& op,
-                               std::vector<std::vector<Q>>* quadraticization);
+  void ComputeQuadraticization(
+      const OperatingPoint& op,
+      std::vector<std::vector<QuadraticCostApproximation>>* quadraticization);
 
   // Store the underlying problem.
   const std::shared_ptr<Problem> problem_;
 
   // Linearization and quadraticization. Both are time-indexed (and
   // quadraticizations' inner vector is indexed by player).
-  std::vector<L> linearization_;
-  std::vector<std::vector<Q>> quadraticization_;
+  std::vector<LinearDynamicsApproximation> linearization_;
+  std::vector<std::vector<QuadraticCostApproximation>> quadraticization_;
 
   // Solver parameters.
   const SolverParams params_;
@@ -129,52 +135,6 @@ class GameSolver {
   // Timer to keep track of loop execution times.
   LoopTimer timer_;
 };  // class GameSolver
-
-// ----------------------------- IMPLEMENTATION ---------------------------- //
-
-template <typename L, typename Q>
-void GameSolver<L, Q>::ComputeLinearization(const OperatingPoint& op,
-                                            std::vector<L>* linearization) {
-  CHECK_NOTNULL(linearization);
-
-  // Check if linearization is the right length.
-  if (linearization->size() != op.xs.size())
-    linearization->resize(op.xs.size());
-
-  // Cast dynamics to appropriate type.
-  const auto dyn = static_cast<const MultiPlayerDynamicalSystem*>(
-      problem_->Dynamics().get());
-
-  // Populate one timestep at a time.
-  for (size_t kk = 0; kk < op.xs.size(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
-    (*linearization)[kk] = dyn->Linearize(t, op.xs[kk], op.us[kk]);
-  }
-}
-
-template <typename L, typename Q>
-void GameSolver<L, Q>::ComputeQuadraticization(
-    const OperatingPoint& op, std::vector<std::vector<Q>>* quadraticization) {
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
-    const auto& x = op.xs[kk];
-    const auto& us = op.us[kk];
-
-    // Quadraticize costs.
-    for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
-      const PlayerCost& cost = problem_->PlayerCosts()[ii];
-
-      if (cost.IsTimeAdditive() ||
-          problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
-        (*quadraticization)[kk][ii] = cost.Quadraticize(t, x, us);
-      else
-        (*quadraticization)[kk][ii] =
-            cost.QuadraticizeBarriersAndControlCosts(t, x, us);
-    }
-  }
-}
 
 }  // namespace ilqgames
 

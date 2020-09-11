@@ -50,6 +50,7 @@
 #ifndef ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
 #define ILQGAMES_EXAMPLES_MINIMALLY_INVASIVE_RECEDING_HORIZON_SIMULATOR_H
 
+#include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/solution_splicer.h>
 #include <ilqgames/utils/solver_log.h>
 
@@ -64,158 +65,11 @@ enum ActiveProblem { ORIGINAL, SAFETY };
 // Solve this game following a receding horizon with a minimally-invasive
 // control scheme, accounting for the time used to solve each subproblem and
 // integrating dynamics forward accordingly.
-// Templated on the type of the solver (must do this because the base GameSolver
-// class is templated).
-template <typename OriginalSolverType, typename SafetySolverType>
 std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, OriginalSolverType& original,
-    SafetySolverType& safety,
+    Time final_time, Time planner_runtime, GameSolver* original,
+    GameSolver* safety,
     std::vector<std::shared_ptr<const SolverLog>>* original_logs,
-    std::vector<std::shared_ptr<const SolverLog>>* safety_logs) {
-  CHECK_NOTNULL(original_logs);
-  CHECK_NOTNULL(safety_logs);
-
-  // Make sure the two problems have the same initial condition and time.
-  CHECK(original.GetProblem().InitialState().isApprox(
-      safety.GetProblem().InitialState(), constants::kSmallNumber));
-  CHECK_NEAR(original.GetProblem().InitialTime(),
-             safety.GetProblem().InitialTime(), constants::kSmallNumber);
-
-  // Unpack dynamics, and ensure that the two problems actually share the same
-  // dynamics object type.
-  const auto& dynamics = *original.GetProblem().Dynamics();
-  const auto& safety_dynamics = *safety.GetProblem().Dynamics();
-  CHECK(typeid(dynamics) == typeid(safety_dynamics));
-
-  // Clear out the log arrays for us to save in.
-  original_logs->clear();
-  safety_logs->clear();
-
-  // Initial run of the solver. Keep track of time in order to know how much to
-  // integrate dynamics forward. Ensure that both solvers succeed at the first
-  // invocation.
-  auto solver_call_time = clock::now();
-  bool success = false;
-  original_logs->push_back(original.Solve(&success));
-  CHECK(success);
-  Time elapsed_time =
-      std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-  VLOG(1) << "Solved initial original problem in " << elapsed_time
-          << " seconds, with " << original_logs->back()->NumIterates()
-          << " iterations.";
-
-  solver_call_time = clock::now();
-  safety_logs->push_back(safety.Solve(&success));
-  CHECK(success);
-  elapsed_time =
-      std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-  VLOG(1) << "Solved initial safety problem in " << elapsed_time
-          << " seconds, with " << safety_logs->back()->NumIterates()
-          << " iterations.";
-
-  // Keep a solution splicer to incorporate new receding horizon solutions.
-  // NOTE: by default, this always just starts with the original controller.
-  SolutionSplicer splicer(*original_logs->front());
-  std::vector<ActiveProblem> active_problem = {ActiveProblem::ORIGINAL};
-
-  // Repeatedly integrate dynamics forward, reset original_problem initial
-  // conditions, and resolve.
-  VectorXf x(original.GetProblem().InitialState());
-  Time t = original.GetProblem().InitialTime();
-
-  while (true) {
-    // Break the loop if it's been long enough.
-    // Integrate a little more.
-    constexpr Time kExtraTime = 0.25;
-    t += kExtraTime;  // + planner_runtime;
-
-    if (t >= final_time ||
-        !splicer.ContainsTime(t + planner_runtime +
-                              original.GetProblem().TimeStep()))
-      break;
-
-    x = dynamics.Integrate(t - kExtraTime, t, x,
-                           splicer.CurrentOperatingPoint(),
-                           splicer.CurrentStrategies());
-
-    // Find the active problem.
-    const bool current_active_problem_flag = active_problem.back();
-    auto current_active_problem =
-        (current_active_problem_flag == ActiveProblem::ORIGINAL) ? &original
-                                                                 : &safety;
-
-    // Make sure both problems have the current solution from the splicer.
-    original.GetProblem().OverwriteSolution(splicer.CurrentOperatingPoint(),
-                                            splicer.CurrentStrategies());
-    safety.GetProblem().OverwriteSolution(splicer.CurrentOperatingPoint(),
-                                          splicer.CurrentStrategies());
-
-    // Make sure both problems have the active problem's initial state.
-    original.GetProblem().ResetInitialState(
-        current_active_problem->GetProblem().InitialState());
-    safety.GetProblem().ResetInitialState(
-        current_active_problem->GetProblem().InitialState());
-
-    // Set up next receding horizon problem and solve, and make sure both
-    // problems' initial state matches that of the active problem.
-    original.GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
-    safety.GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
-
-    solver_call_time = clock::now();
-    original_logs->push_back(original.Solve(&success, planner_runtime));
-    const Time original_elapsed_time =
-        std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-
-    CHECK_LE(original_elapsed_time, planner_runtime);
-    VLOG(1) << "t = " << t << ": Solved warm-started original problem in "
-            << original_elapsed_time << " seconds.";
-
-    solver_call_time = clock::now();
-    safety_logs->push_back(safety.Solve(&success, planner_runtime));
-    const Time safety_elapsed_time =
-        std::chrono::duration<Time>(clock::now() - solver_call_time).count();
-
-    CHECK_LE(safety_elapsed_time, planner_runtime);
-    VLOG(1) << "t = " << t << ": Solved warm-started safety problem in "
-            << safety_elapsed_time << " seconds.";
-
-    // Break the loop if it's been long enough.
-    elapsed_time = std::max(original_elapsed_time, safety_elapsed_time);
-    t += elapsed_time;
-    if (t >= final_time || !splicer.ContainsTime(t)) break;
-
-    // Integrate dynamics forward to account for solve time.
-    x = dynamics.Integrate(t - elapsed_time, t, x,
-                           splicer.CurrentOperatingPoint(),
-                           splicer.CurrentStrategies());
-
-    // Check if problems converged.
-    if (!original_logs->back()->WasConverged())
-      VLOG(2) << "Original planner was not converged.";
-    if (!safety_logs->back()->WasConverged())
-      VLOG(2) << "Safety planner was not converged.";
-
-    // Check the safety criterion, i.e., if the safety problem's value function
-    // for P1 is above kSafetyThreshold (which usually has the units of meters).
-    // That said, make sure the next planner has converged if at all possible.
-    constexpr float kSafetyThreshold = -1.0;
-    const float p1_safety_cost = safety_logs->back()->TotalCosts().front();
-
-    if (p1_safety_cost > kSafetyThreshold ||
-        (safety_logs->back()->WasConverged() &&
-         !original_logs->back()->WasConverged())) {
-      active_problem.push_back(ActiveProblem::SAFETY);
-      splicer.Splice(*safety_logs->back());
-      VLOG(2) << "Using safety controller.";
-    } else {
-      active_problem.push_back(ActiveProblem::ORIGINAL);
-      if (original_logs->back()->WasConverged())
-        splicer.Splice(*original_logs->back());
-    }
-  }
-
-  return active_problem;
-}
+    std::vector<std::shared_ptr<const SolverLog>>* safety_logs);
 
 }  // namespace ilqgames
 

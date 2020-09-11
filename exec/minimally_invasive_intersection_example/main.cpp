@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
   std::vector<std::shared_ptr<const ilqgames::SolverLog>> safety_logs;
   const std::vector<ilqgames::ActiveProblem> active_problem =
       MinimallyInvasiveRecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
-                                                original_solver, safety_solver,
+                                                &original_solver, &safety_solver,
                                                 &original_logs, &safety_logs);
   // safety_logs = RecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
   //                                        safety_problem.get());
