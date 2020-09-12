@@ -126,12 +126,14 @@ bool GameSolver::Solve(const VectorXf &x0,
 
   // Turn constraints on/off.
   auto turn_constraints_on = [this]() {
-    for (auto& cost : player_costs_) cost.TurnConstraintsOn();
-  };  // turn_constraints_on
+    for (auto &cost : player_costs_)
+      cost.TurnConstraintsOn();
+  }; // turn_constraints_on
 
   auto turn_constraints_off = [this]() {
-    for (auto& cost : player_costs_) cost.TurnConstraintsOff();
-  };  // turn_constraints_off
+    for (auto &cost : player_costs_)
+      cost.TurnConstraintsOff();
+  }; // turn_constraints_off
 
   // Swap operating points and compute new current operating point. Future
   // operating points will be computed during the call to `ModifyLQStrategies`
@@ -190,22 +192,14 @@ bool GameSolver::Solve(const VectorXf &x0,
       const auto &us = current_operating_point.us[kk];
 
       // Quadraticize costs.
-<<<<<<< HEAD
-      std::transform(player_costs_.begin(), player_costs_.end(),
-                     quadraticization_[kk].begin(),
-                     [&t, &x, &us](const PlayerCost &cost) {
-                       return cost.Quadraticize(t, x, us);
-                     });
-=======
       for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-        const PlayerCost& cost = player_costs_[ii];
+        const PlayerCost &cost = player_costs_[ii];
 
         if (cost.IsTimeAdditive() || times_of_extreme_costs[ii] == kk)
           quadraticization_[kk][ii] = cost.Quadraticize(t, x, us);
         else
           quadraticization_[kk][ii] = cost.QuadraticizeConstraints(t, x, us);
       }
->>>>>>> master
     }
 
     // Print out quadraticization per iteration.
@@ -271,12 +265,12 @@ bool GameSolver::Solve(const VectorXf &x0,
 }
 
 bool GameSolver::CurrentOperatingPoint(
-    const OperatingPoint& last_operating_point,
-    const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point, bool* has_converged,
-    std::vector<float>* total_costs,
-    std::vector<size_t>* times_of_extreme_costs, bool check_trust_region,
-    bool* satisfies_constraints) const {
+    const OperatingPoint &last_operating_point,
+    const std::vector<Strategy> &current_strategies,
+    OperatingPoint *current_operating_point, bool *has_converged,
+    std::vector<float> *total_costs,
+    std::vector<size_t> *times_of_extreme_costs, bool check_trust_region,
+    bool *satisfies_constraints) const {
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
   CHECK_NOTNULL(total_costs);
@@ -285,7 +279,8 @@ bool GameSolver::CurrentOperatingPoint(
   // Initialize time, convergence, and constraint satisfaction checks.
   current_operating_point->t0 = last_operating_point.t0;
   *has_converged = true;
-  if (satisfies_constraints) *satisfies_constraints = true;
+  if (satisfies_constraints)
+    *satisfies_constraints = true;
 
   // Initialize total costs and times of extreme costs.
   if (total_costs->size() != player_costs_.size())
@@ -325,10 +320,11 @@ bool GameSolver::CurrentOperatingPoint(
 
     // Check convergence and trust region (including explicit inequality
     // constraints).
-    auto check_all_constraints = [this](Time t, const VectorXf& x,
-                                        const std::vector<VectorXf>& us) {
-      for (const auto& cost : this->player_costs_) {
-        if (!cost.CheckConstraints(t, x, us)) return false;
+    auto check_all_constraints = [this](Time t, const VectorXf &x,
+                                        const std::vector<VectorXf> &us) {
+      for (const auto &cost : this->player_costs_) {
+        if (!cost.CheckConstraints(t, x, us))
+          return false;
       }
       return true;
     }; // check_all_constraints
@@ -338,7 +334,8 @@ bool GameSolver::CurrentOperatingPoint(
     const bool checked_constraints = check_all_constraints(t, x, current_us);
 
     *has_converged &= delta_x_distance <= params_.convergence_tolerance;
-    if (satisfies_constraints) *satisfies_constraints &= checked_constraints;
+    if (satisfies_constraints)
+      *satisfies_constraints &= checked_constraints;
 
     if (check_trust_region) {
       if (delta_x_distance > params_.trust_region_size ||
@@ -383,12 +380,11 @@ float GameSolver::StateDistance(const VectorXf &x1, const VectorXf &x2,
   return distance;
 }
 
-
 bool GameSolver::ModifyLQStrategies(
-    std::vector<Strategy>* strategies, OperatingPoint* current_operating_point,
-    bool* is_new_operating_point_feasible, bool* has_converged,
-    std::vector<float>* total_costs,
-    std::vector<size_t>* times_of_extreme_costs) const {
+    std::vector<Strategy> *strategies, OperatingPoint *current_operating_point,
+    bool *is_new_operating_point_feasible, bool *has_converged,
+    std::vector<float> *total_costs,
+    std::vector<size_t> *times_of_extreme_costs) const {
 
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
@@ -406,8 +402,8 @@ bool GameSolver::ModifyLQStrategies(
       total_costs, times_of_extreme_costs, true,
       is_new_operating_point_feasible);
 
-  if (!params_.linesearch) return true;
-
+  if (!params_.linesearch)
+    return true;
 
   // Keep reducing alphas until we satisfy the trust region constraint.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
@@ -423,7 +419,8 @@ bool GameSolver::ModifyLQStrategies(
 
   // Output a warning. Solver should revert to last valid operating point.
   VLOG(1) << "Exceeded maximum number of backtracking steps.";
-  if (!params_.enforce_constraints_in_linesearch) CHECK(!*has_converged);
+  if (!params_.enforce_constraints_in_linesearch)
+    CHECK(!*has_converged);
   return false;
 }
 

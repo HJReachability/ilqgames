@@ -4,8 +4,8 @@ receding_horizon_example();
 function receding_horizon_example()
   close all;
 
-  exec = "receding_horizon_three_player_collision_avoidance_reachability_example";
-  experiment_name = "receding_horizon_example";
+  exec = "receding_horizon_intersection";
+  experiment_name = "receding_horizon_intersection___test";
   x0_flag = " --d0=10 --v0=5";
   regularization = 0.01;
 
@@ -62,7 +62,7 @@ ylim([-5.5, 5.5]);
 hold on;
 ii = 1;
 for regularization = regularization_vals
-  [ilq_traj, values] = run_ilqgames("three_player_collision_avoidance_reachability_example", "", ...
+  [ilq_traj, values] = run_ilqgames("receding_horizon_intersection_example", "", ...
                                     regularization, x0_flag);
   if max(abs(values(1) - values(2)), abs(values(1) - values(3))) > 0.01
     disp(char("Error! Values do not match: " + values(1) + ", " + values(2) + ", " + values(3)));

@@ -79,13 +79,12 @@ struct SolverParams {
   // State and control regularization.
   float state_regularization = 0.0;
   float control_regularization = 0.0;
-};  // struct SolverParams
 
   // Adersarial time: Pure Cooperative (adversarial_time = 0), or
   // Adversarial-to-Cooperative (adversarial_time != 0)
   float adversarial_time = 0;
 }; // struct SolverParams
 
-} // namespace ilqgames
+}; // namespace ilqgames
 
 #endif
