@@ -58,6 +58,16 @@
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
+// Optional log saving and visualization.
+DEFINE_bool(save, false, "Optionally save solver logs to disk.");
+DEFINE_bool(viz, true, "Visualize results in a GUI.");
+DEFINE_bool(last_traj, false,
+            "Should the solver only dump the last trajectory?");
+DEFINE_string(experiment_name, "", "Name for the experiment.");
+
+// Regularization.
+DEFINE_double(regularization, 1.0, "Regularization.");
+
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
@@ -107,6 +117,10 @@ int main(int argc, char **argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   // params.adversarial_time = 0.0;
   params.adversarial_time = FLAGS_adversarial_time;
+  params.convergence_tolerance = FLAGS_convergence_tolerance;
+  params.state_regularization = FLAGS_regularization;
+  params.control_regularization = FLAGS_regularization;
+  params.open_loop = false;
 
   auto problem = std::make_shared<ilqgames::OncomingExample>(params);
 
@@ -115,6 +129,15 @@ int main(int argc, char **argv) {
   constexpr ilqgames::Time kPlannerRuntime = 0.25; // s
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
       RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get());
+
+  // Dump the logs and/or exit.
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(SaveLogs(logs.front(), true));
+    } else {
+      CHECK(SaveLogs(logs.front(), true, FLAGS_experiment_name));
+    }
+  }
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(

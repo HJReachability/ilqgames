@@ -66,6 +66,9 @@ DEFINE_bool(last_traj, false,
             "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
+// Regularization.
+DEFINE_double(regularization, 1.0, "Regularization.");
+
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
@@ -109,14 +112,16 @@ int main(int argc, char **argv) {
   // Set up the game.
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
-  params.enforce_constraints_in_linesearch = true;
   params.linesearch = FLAGS_linesearch;
-  params.max_solver_iters = 3;
   params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   // params.adversarial_time = 0.0;
   params.adversarial_time = FLAGS_adversarial_time;
+  params.convergence_tolerance = FLAGS_convergence_tolerance;
+  params.state_regularization = FLAGS_regularization;
+  params.control_regularization = FLAGS_regularization;
+  params.open_loop = false;
 
   auto problem =
       std::make_shared<ilqgames::ThreePlayerOvertakingExample>(params);
@@ -127,14 +132,23 @@ int main(int argc, char **argv) {
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
       RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get());
 
-  // Check if solution satisfies sufficient conditions for being a local Nash.
-  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
-      problem->Solver().PlayerCosts(), problem->CurrentOperatingPoint(),
-      problem->Solver().TimeStep());
-  if (is_local_nash)
-    LOG(INFO) << "Solution is a local Nash.";
-  else
-    LOG(INFO) << "Solution may not be a local Nash.";
+  // Dump the logs and/or exit.
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(SaveLogs(logs.front(), true));
+    } else {
+      CHECK(SaveLogs(logs.front(), true, FLAGS_experiment_name));
+    }
+  }
+
+  // // Check if solution satisfies sufficient conditions for being a local
+  // Nash. const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
+  //     problem->Solver().PlayerCosts(), problem->CurrentOperatingPoint(),
+  //     problem->Solver().TimeStep());
+  // if (is_local_nash)
+  //   LOG(INFO) << "Solution is a local Nash.";
+  // else
+  //   LOG(INFO) << "Solution may not be a local Nash.";
 
   //     // Dump the logs and/or exit.
   //     if (FLAGS_save) {
