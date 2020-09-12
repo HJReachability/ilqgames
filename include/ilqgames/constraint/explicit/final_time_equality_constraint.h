@@ -74,11 +74,12 @@ class FinalTimeEqualityConstraint : public EqualityConstraint {
       return constraint_->IsSatisfied(t, input, level);
   }
 
-  // Compute the Jacobian of the constraint value, and keep a running sum.
-  void Linearize(Time t, const VectorXf& input,
-                 Eigen::Ref<MatrixXf> jacobian) const {
+  // Quadraticize the constraint value. Do *not* keep a running sum since we
+  // keep separate multipliers for each constraint.
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const {
     if (t >= initial_time_ + threshold_time_)
-      constraint_->Linearize(t, input, jacobian);
+      constraint_->Quadraticize(t, input, hess, grad);
   }
 
  private:

@@ -144,15 +144,15 @@ class PlayerCost {
 
   // Accessors.
   const PtrVector<Cost>& StateCosts() const { return state_costs_; }
-  const PlayerMap<Cost>& ControlCosts() const { return control_costs_; }
+  const PlayerPtrMap<Cost>& ControlCosts() const { return control_costs_; }
   const PtrVector<Barrier>& StateBarriers() const { return state_barriers_; }
-  const PlayerMap<Barrier>& ControlBarriers() const {
+  const PlayerPtrMap<Barrier>& ControlBarriers() const {
     return control_barriers_;
   }
   const PtrVector<EqualityConstraint>& StateConstraints() const {
     return state_constraints_;
   }
-  const PlayerMap<EqualityConstraint>& ControlConstraints() const {
+  const PlayerPtrMap<EqualityConstraint>& ControlConstraints() const {
     return control_constraints_;
   }
 
@@ -162,18 +162,18 @@ class PlayerCost {
 
   // State costs and control costs.
   PtrVector<Cost> state_costs_;
-  PlayerMap<Cost> control_costs_;
+  PlayerPtrMap<Cost> control_costs_;
 
   // State and control barriers. Control barriers can apply to any
   // player's control input, though it likely only makes sense to apply them to
   // this player's input.
   PtrVector<Barrier> state_barriers_;
-  PlayerMap<Barrier> control_barriers_;
+  PlayerPtrMap<Barrier> control_barriers_;
   bool are_barriers_on_;
 
   // State and control constraints.
   PtrVector<EqualityConstraint> state_constraints_;
-  PlayerMap<EqualityConstraint> control_constraints_;
+  PlayerPtrMap<EqualityConstraint> control_constraints_;
 
   // Regularization on costs.
   const float state_regularization_;

@@ -36,49 +36,49 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all explicit equality constraints. These constraints are of
-// the form: g(x) = 0 for some vector x.
-//
-// In addition to checking for satisfaction (and returning the squared norm of
-// the constraint value g(x)), they also support computing a Jacobian of the
-// constraint value.
+// Runs Newton's algorithm on the coupled KKT system for all players.
+// Currently also incorporating equality constraints of the form
+//                  u^i_k = gamma(x_k; theta^i_k)
+// in hopes that this leads to a feedback Nash representation.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
-
-#include <ilqgames/utils/relative_time_tracker.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/solver/game_solver.h>
+#include <ilqgames/solver/lq_feedback_solver.h>
+#include <ilqgames/solver/lq_open_loop_solver.h>
+#include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/solver/newton_problem.h>
+#include <ilqgames/solver/newton_solver.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/loop_timer.h>
+#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/quadratic_cost_approximation.h>
+#include <ilqgames/utils/solver_log.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <chrono>
+#include <limits>
 #include <memory>
-#include <string>
+#include <utility>
+#include <vector>
 
 namespace ilqgames {
 
-class EqualityConstraint : public RelativeTimeTracker {
- public:
-  virtual ~EqualityConstraint() {}
+// Solve this game. Returns true if converged.
+std::shared_ptr<SolverLog> NewtonSolver::Solve(bool* success,
+                                               Time max_runtime) {
+  // TODO! Fill this in.
+  return CreateNewLog();
+}
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  virtual bool IsSatisfied(Time t, const VectorXf& input,
-                           float* level) const = 0;
-
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
-
- protected:
-  explicit EqualityConstraint(const std::string& name)
-      : RelativeTimeTracker(name) {}
-
-  // Name of this constraint.
-  const std::string name_;
-};  //\class EqualityConstraint
+float NewtonSolver::KKTSystemSquaredError() const {
+  // NOTE: Assumes that we've already got a valid quadratic cost approximation
+  // and quadratic constraint approximation for every player.
+  return 0.0;
+}
 
 }  // namespace ilqgames
-
-#endif

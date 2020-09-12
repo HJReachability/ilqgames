@@ -63,18 +63,19 @@ class TimeInvariantEqualityConstraint : public EqualityConstraint {
     return IsSatisfied(input, level);
   }
 
-  // Compute the Jacobian of the constraint value, and keep a running sum.
-  virtual void Linearize(const VectorXf& input,
-                         Eigen::Ref<MatrixXf> jacobian) const = 0;
-  void Linearize(Time t, const VectorXf& input,
-                 Eigen::Ref<MatrixXf> jacobian) const {
-    return Linearize(input, jacobian);
+  // Quadraticize the constraint value. Do *not* keep a running sum since we
+  // keep separate multipliers for each constraint.
+  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const = 0;
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    return Quadraticize(input, hess, grad);
   };
 
  protected:
   explicit TimeInvariantEqualityConstraint(const std::string& name)
       : EqualityConstraint(name) {}
-};  //\class TimeInvariantEqualityConstraint
+};  // namespace ilqgames
 
 }  // namespace ilqgames
 

@@ -77,9 +77,11 @@ class NewtonProblem : public Problem {
                                         Time planner_runtime = 0.1);
 
   // Compute the number of primal and dual variables in this problem.
-  size_t NumPrimals() const;
-  size_t NumDuals() const;
+  size_t NumVariables() const { return NumPrimals() + NumDuals(); }
+  virtual size_t NumPrimals() const;
+  virtual size_t NumDuals() const;
   size_t NumOperatingPointVariables() const;
+  virtual size_t KKTSystemSize() const;
 
  protected:
   NewtonProblem() : Problem() {}
@@ -112,7 +114,8 @@ class NewtonProblem : public Problem {
   VectorXf duals_;
   std::unique_ptr<std::vector<RefVector>> lambda_dyns_;
   std::unique_ptr<std::vector<RefVector>> lambda_feedbacks_;
-  std::unique_ptr<std::vector<std::vector<RefVector>>> lambda_state_constraints_;
+  std::unique_ptr<std::vector<std::vector<RefVector>>>
+      lambda_state_constraints_;
   std::unique_ptr<std::vector<std::vector<PlayerDualMap>>>
       lambda_control_constraints_;
 };  // class NewtonProblem

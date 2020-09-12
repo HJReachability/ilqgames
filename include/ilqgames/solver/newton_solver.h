@@ -51,11 +51,12 @@
 #include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/solver/lq_solver.h>
-#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/newton_problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
+#include <ilqgames/utils/quadratic_contraint_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -73,12 +74,12 @@ namespace ilqgames {
 class NewtonSolver : public GameSolver {
  public:
   virtual ~NewtonSolver() {}
-  NewtonSolver(const std::shared_ptr<Problem>& problem,
+  NewtonSolver(const std::shared_ptr<NewtonProblem>& problem,
                const SolverParams& params = SolverParams())
       : GameSolver(problem, params) {
     // Start the Jacobian matrix off with zeros.
     jacobian_ =
-        MatrixXf::Zero(problem_->KKTSystemSize(), problem_->NumVariables());
+        MatrixXf::Zero(problem->KKTSystemSize(), problem->NumVariables());
   }
 
   // Solve this game. Returns true if converged.
@@ -86,9 +87,17 @@ class NewtonSolver : public GameSolver {
       bool* success = nullptr,
       Time max_runtime = std::numeric_limits<Time>::infinity());
 
- private:
+ protected:
+  // Evaluate the KKT system squared error.
+  virtual float KKTSystemSquaredError() const;
+
   // Jacobian of the KKT system.
   MatrixXf jacobian_;
+
+  // Quadratic constraint approximation, to mirror the quadraticization_
+  // variable which stores the cost approximation.
+  std::vector<std::vector<QuadraticConstraintApproximation>>
+      constraint_quadraticization_;
 };  // class GameSolver
 
 }  // namespace ilqgames

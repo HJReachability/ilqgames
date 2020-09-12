@@ -36,60 +36,51 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) linear equality constraint, i.e., Ax - b = 0.
+// Container to store a quadratic approximation of a single player's constraint
+// much as the QuadraticCostApproximation struct stores the analogous quantity
+// for each player's costs. Here, note that it is important to track the
+// quadratic approximation *for each constraint* and not the sum of costs.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_LINEAR_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_LINEAR_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_UTILS_QUADRATIC_CONSTRAINT_APPROXIMATION_H
+#define ILQGAMES_UTILS_QUADRATIC_CONSTRAINT_APPROXIMATION_H
 
-#include <ilqgames/constraint/explicit/time_invariant_equality_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
-#include <memory>
-#include <string>
 
 namespace ilqgames {
 
-class LinearEqualityConstraint : public TimeInvariantEqualityConstraint {
- public:
-  ~LinearEqualityConstraint() {}
-  LinearEqualityConstraint(const MatrixXf& A, const VectorXf& b,
-                           const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name), A_(A), b_(b) {
-    CHECK_EQ(A_.rows(), b_.size());
+struct SingleConstraintApproximation {
+  MatrixXf hess;
+  VectorXf grad;
+
+  // Construct from matrix/vector directly.
+  SingleConstraintApproximation(const MatrixXf& hessian,
+                                const VectorXf& gradient)
+      : hess(hessian), grad(gradient) {
+    CHECK_EQ(hess.rows(), hess.cols());
+    CHECK_EQ(hess.rows(), grad.size());
   }
 
-  // Separate constructor with no A, which is assumed to be identity.
-  LinearEqualityConstraint(const VectorXf& b, const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name),
-        A_(MatrixXf::Identity(b.rows(), b.cols())),
-        b_(b) {}
+  // Construct with zeros.
+  SingleConstraintApproximation(Dimension dim, float regularization = 0.0)
+      : hess(regularization * MatrixXf::Identity(dim, dim)),
+        grad(VectorXf::Zero(dim)) {}
+};  // struct SingleConstraintApproximation
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), b_.size());
-    const VectorXf value = A_ * input + b_;
+struct QuadraticConstraintApproximation {
+  std::vector<SingleConstraintApproximation> state;
+  PlayerMap<SingleConstraintApproximation> control;
 
-    if (*level) *level = value.squaredNorm();
-    return value.cwiseAbs().maxCoeff() < constants::kSmallNumber;
-  }
-
-  // Compute the Jacobian of the constraint value, and keep a running sum.
-  void Linearize(const VectorXf& input, Eigen::Ref<MatrixXf> jacobian) const {
-    CHECK_EQ(jacobian.rows(), A_.rows());
-    CHECK_EQ(jacobian.cols(), A_.cols());
-
-    jacobian += A_;
-  }
-
- private:
-  // Coefficient matrix and nominal value.
-  const MatrixXf A_;
-  const VectorXf b_;
-};  //\class LinearEqualityConstraint
+  // Construct from state dimension.
+  explicit QuadraticConstraintApproximation(Dimension xdim,
+                                            size_t num_state_constraints,
+                                            float regularization = 0.0)
+      : state(num_state_constraints,
+              SingleConstraintApproximation(xdim, regularization)) {}
+};  // struct QuadraticConstraintApproximation
 
 }  // namespace ilqgames
 

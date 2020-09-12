@@ -159,6 +159,30 @@ size_t NewtonProblem::NumDuals() const {
   return total;
 }
 
+size_t NewtonProblem::KKTSystemSize() const {
+  CHECK(initialized_);
+
+  // Count the number of equations in the overall KKT system comprising all
+  // players' problems. To start, the gradient of the Lagrangian has as many
+  // dimensions as there are primal variables.
+  size_t total = NumPrimals();
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+    // Handle state constraints.
+    total += dynamics_->XDim() * num_time_steps_ *
+             player_costs_[ii].NumStateConstraints();
+
+    // Handle feedback constraints.
+    total += dynamics_->UDim(ii) * num_time_steps_;
+
+    // Handle control constraints.
+    const auto& control_constraints = player_costs_[ii].ControlConstraints();
+    for (const auto& pair : control_constraints)
+      total += dynamics_->UDim(pair.first) * num_time_steps_;
+  }
+
+  return total;
+}
+
 void NewtonProblem::ConstructPrimalsAndDuals() {
   // Handle primals.
   primals_.setZero(NumPrimals());
