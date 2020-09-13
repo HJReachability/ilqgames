@@ -54,7 +54,18 @@
 namespace ilqgames {
 
 using SingleConstraintApproximation = SingleCostApproximation;
-using QuadraticConstraintApproximation = QuadraticCostApproximation;
+
+struct QuadraticConstraintApproximation {
+  std::vector<SingleConstraintApproximation> state;
+  PlayerMap<SingleConstraintApproximation> control;
+
+  // Construct from state dimension.
+  explicit QuadraticConstraintApproximation(Dimension xdim,
+                                            size_t num_state_constraints,
+                                            float regularization = 0.0)
+      : state(num_state_constraints,
+              SingleConstraintApproximation(xdim, regularization)) {}
+};  // struct QuadraticConstraintApproximation
 
 }  // namespace ilqgames
 

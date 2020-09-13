@@ -120,14 +120,11 @@ using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
 class SinglePlayerFlatSystem;
 using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
 
-// Use maps so that there can only be one object (here assumed to be a cost or
-// constraint) per player. These are going to be indexed by time and by player
-// to which they apply.
 template <typename T>
-using PlayerPtrMap = std::unordered_map<PlayerIndex, std::shared_ptr<T>>;
+using PlayerPtrMap = std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
 
 template <typename T>
-using PlayerMap = std::unordered_map<PlayerIndex, T>;
+using PlayerMap = std::unordered_multimap<PlayerIndex, T>;
 
 using PlayerDualMap = std::unordered_map<PlayerIndex, Eigen::Ref<VectorXf>>;
 
