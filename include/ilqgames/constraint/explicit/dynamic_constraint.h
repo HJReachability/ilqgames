@@ -89,7 +89,6 @@ class DynamicConstraint : public RelativeTimeTracker {
     CHECK_NOTNULL(q);
     CHECK_NOTNULL(next_q);
 
-    // TODO!
   }
 
  private:

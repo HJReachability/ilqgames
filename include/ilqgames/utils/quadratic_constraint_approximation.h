@@ -46,41 +46,15 @@
 #ifndef ILQGAMES_UTILS_QUADRATIC_CONSTRAINT_APPROXIMATION_H
 #define ILQGAMES_UTILS_QUADRATIC_CONSTRAINT_APPROXIMATION_H
 
+#include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
 
 namespace ilqgames {
 
-struct SingleConstraintApproximation {
-  MatrixXf hess;
-  VectorXf grad;
-
-  // Construct from matrix/vector directly.
-  SingleConstraintApproximation(const MatrixXf& hessian,
-                                const VectorXf& gradient)
-      : hess(hessian), grad(gradient) {
-    CHECK_EQ(hess.rows(), hess.cols());
-    CHECK_EQ(hess.rows(), grad.size());
-  }
-
-  // Construct with zeros.
-  SingleConstraintApproximation(Dimension dim, float regularization = 0.0)
-      : hess(regularization * MatrixXf::Identity(dim, dim)),
-        grad(VectorXf::Zero(dim)) {}
-};  // struct SingleConstraintApproximation
-
-struct QuadraticConstraintApproximation {
-  std::vector<SingleConstraintApproximation> state;
-  PlayerMap<SingleConstraintApproximation> control;
-
-  // Construct from state dimension.
-  explicit QuadraticConstraintApproximation(Dimension xdim,
-                                            size_t num_state_constraints,
-                                            float regularization = 0.0)
-      : state(num_state_constraints,
-              SingleConstraintApproximation(xdim, regularization)) {}
-};  // struct QuadraticConstraintApproximation
+using SingleConstraintApproximation = SingleCostApproximation;
+using QuadraticConstraintApproximation = QuadraticCostApproximation;
 
 }  // namespace ilqgames
 
