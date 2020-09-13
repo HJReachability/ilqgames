@@ -171,6 +171,12 @@ class PlayerCost {
   PlayerPtrMap<Barrier> control_barriers_;
   bool are_barriers_on_;
 
+  // Dynamic constraints.
+  PtrVector<DynamicConstraint> dynamic_constraints_;
+
+  // Feedback constraints.
+  PtrVector<FeedbackConstraints> feedback_constraints_;
+
   // State and control constraints.
   PtrVector<EqualityConstraint> state_constraints_;
   PlayerPtrMap<EqualityConstraint> control_constraints_;
