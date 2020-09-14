@@ -45,7 +45,9 @@
 #define ILQGAMES_COST_PLAYER_COST_H
 
 #include <ilqgames/constraint/barrier/barrier.h>
+#include <ilqgames/constraint/explicit/dynamic_constraint.h>
 #include <ilqgames/constraint/explicit/equality_constraint.h>
+#include <ilqgames/constraint/explicit/feedback_constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -155,6 +157,12 @@ class PlayerCost {
   const PlayerPtrMap<EqualityConstraint>& ControlConstraints() const {
     return control_constraints_;
   }
+  const PtrVector<DynamicConstraint> DynamicConstraints() const {
+    return dynamic_constraints_;
+  }
+  const PtrVector<FeedbackConstraint> FeedbackConstraints() const {
+    return feedback_constraints_;
+  }
 
  private:
   // Name to be used with error msgs.
@@ -175,7 +183,7 @@ class PlayerCost {
   PtrVector<DynamicConstraint> dynamic_constraints_;
 
   // Feedback constraints.
-  PtrVector<FeedbackConstraints> feedback_constraints_;
+  PtrVector<FeedbackConstraint> feedback_constraints_;
 
   // State and control constraints.
   PtrVector<EqualityConstraint> state_constraints_;

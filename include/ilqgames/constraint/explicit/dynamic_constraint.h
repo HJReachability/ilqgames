@@ -79,8 +79,14 @@ class DynamicConstraint : public RelativeTimeTracker {
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  // NOTE: this truncates the dynamics derivates at first order, i.e., it
-  // linearizes the dynamics.
+  // NOTE: this truncates the dynamics derivatives at first order, i.e., it
+  // uses only a linearization of the dynamics, which it assumes to be correct
+  // for the given arguments.
+  // NOTE: this quadraticization is intended to be only one per game and not one
+  // per player, since each player can just reuse this.
+  // NOTE: for simplicity, we'll ignore cross terms like dxdui and duiduj, and
+  // we'll also ignore second-order dependence of the dynamics on x and ui (part
+  // of the LQ approximation).
   void Quadraticize(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
                     const VectorXf& next_x,
                     const LinearDynamicsApproximation& lin,
@@ -89,6 +95,18 @@ class DynamicConstraint : public RelativeTimeTracker {
     CHECK_NOTNULL(q);
     CHECK_NOTNULL(next_q);
 
+    // Compute mismatch vector.
+    const VectorXf error = next_x - dynamics_->Evaluate(t, x, us);
+
+    // Populate quadraticizations.
+    q->state.emplace_back(lin.A.transpose() * lin.A,
+                          -lin.A.transpose() * error);
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+      q->control.emplace(ii, lin.Bs[ii].transpose() * lin.Bs[ii],
+                         -lin.Bs[ii].transpose() * error);
+
+    next_q->state.emplace_back(
+        MatrixXf::Identity(dynamics_->XDim(), dynamics_->XDim()), error);
   }
 
  private:
