@@ -46,6 +46,8 @@
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/utils/check_local_nash_equilibrium.h>
+#include <ilqgames/utils/compute_strategy_costs.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
