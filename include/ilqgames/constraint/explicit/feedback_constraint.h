@@ -36,18 +36,17 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-varying) dynamic constraint,
-// i.e., 0.5*||x_{t+1} - f(t, x_t, us_t)||^2 = 0.
+// (Time-varying) feedback constraint,
+// i.e., 0.5*||u_t^i - gamma(x_t; theta_t^i)||^2 = 0.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_DYNAMIC_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_DYNAMIC_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_FEEDBACK_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_FEEDBACK_CONSTRAINT_H
 
-#include <ilqgames/dynamics/multi_player_dynamical_system.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_constraint_approximation.h>
 #include <ilqgames/utils/relative_time_tracker.h>
+#include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -56,63 +55,42 @@
 
 namespace ilqgames {
 
-class DynamicConstraint : public RelativeTimeTracker {
+class FeedbackConstraint : public RelativeTimeTracker {
  public:
-  ~DynamicConstraint() {}
-  DynamicConstraint(
-      const MultiPlayerDynamicalSystem* dynamics,
-      const std::string& name = "")
-      : RelativeTimeTracker(name), dynamics_(dynamics) {
-    CHECK_NOTNULL(dynamics_);
+  ~FeedbackConstraint() {}
+  FeedbackConstraint(const StrategyRef* strategy_ref,
+                     const std::string& name = "")
+      : RelativeTimeTracker(name), strategy_(strategy_ref) {
+    CHECK_NOTNULL(strategy_);
   }
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
   bool IsSatisfied(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
                    const VectorXf& next_x, float* level) const {
-    const float value =
-        0.5 * (next_x - dynamics_->Evaluate(t, x, us)).squaredNorm();
-    if (*level) *level = value;
+    // const float value =
+    //     0.5 * (next_x - dynamics_->Evaluate(t, x, us)).squaredNorm();
+    // if (*level) *level = value;
 
-    return std::abs(value) < constants::kSmallNumber;
+    // return std::abs(value) < constants::kSmallNumber;
+    return false;
   }
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  // NOTE: this truncates the dynamics derivatives at first order, i.e., it
-  // uses only a linearization of the dynamics, which it assumes to be correct
-  // for the given arguments.
-  // NOTE: this quadraticization is intended to be only one per game and not one
-  // per player, since each player can just reuse this.
   // NOTE: for simplicity, we'll ignore cross terms like dxdui and duiduj, and
   // we'll also ignore second-order dependence of the dynamics on x and ui (part
   // of the LQ approximation).
   void Quadraticize(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
-                    const VectorXf& next_x,
-                    const LinearDynamicsApproximation& lin,
                     QuadraticConstraintApproximation* q,
                     QuadraticConstraintApproximation* next_q) const {
     CHECK_NOTNULL(q);
     CHECK_NOTNULL(next_q);
-
-    // Compute mismatch vector.
-    const VectorXf error = next_x - dynamics_->Evaluate(t, x, us);
-
-    // Populate quadraticizations.
-    q->state.emplace_back(lin.A.transpose() * lin.A,
-                          -lin.A.transpose() * error);
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-      q->control.emplace(
-          ii, SingleConstraintApproximation(lin.Bs[ii].transpose() * lin.Bs[ii],
-                                            -lin.Bs[ii].transpose() * error));
-
-    next_q->state.emplace_back(
-        MatrixXf::Identity(dynamics_->XDim(), dynamics_->XDim()), error);
   }
 
  private:
-  // Dynamics of the underlying game.
-  const MultiPlayerDynamicalSystem* dynamics_;
+  // Strategy of a single player.
+  const StrategyRef* strategy_;
 };  //\class DynamicConstraint
 
 }  // namespace ilqgames

@@ -48,6 +48,7 @@
 #include <math.h>
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <memory>
@@ -121,12 +122,19 @@ class SinglePlayerFlatSystem;
 using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
 
 template <typename T>
-using PlayerPtrMap = std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
+using PlayerPtrMap = std::unordered_map<PlayerIndex, std::shared_ptr<T>>;
 
 template <typename T>
-using PlayerMap = std::unordered_multimap<PlayerIndex, T>;
+using PlayerPtrMultiMap =
+    std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
 
-using PlayerDualMap = std::unordered_map<PlayerIndex, Eigen::Ref<VectorXf>>;
+template <typename T>
+using PlayerMap = std::unordered_map<PlayerIndex, T>;
+
+template <typename T>
+using PlayerMultiMap = std::unordered_multimap<PlayerIndex, T>;
+
+using PlayerDualMap = std::unordered_map<PlayerIndex, float*>;
 
 template <typename T>
 using PtrVector = std::vector<std::shared_ptr<T>>;

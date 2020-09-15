@@ -118,6 +118,16 @@ void PlayerCost::AddControlCost(PlayerIndex idx,
   control_costs_.emplace(idx, cost);
 }
 
+void PlayerCost::AddStateConstraint(
+    const std::shared_ptr<EqualityConstraint>& constraint) {
+  state_constraints_.emplace_back(constraint);
+}
+
+void PlayerCost::AddControlConstraint(
+    PlayerIndex idx, const std::shared_ptr<EqualityConstraint>& constraint) {
+  control_constraints_.emplace(idx, constraint);
+}
+
 void PlayerCost::AddStateBarrier(const std::shared_ptr<Barrier>& barrier) {
   state_barriers_.emplace_back(barrier);
 }

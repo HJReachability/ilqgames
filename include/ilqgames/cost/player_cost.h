@@ -154,14 +154,8 @@ class PlayerCost {
   const PtrVector<EqualityConstraint>& StateConstraints() const {
     return state_constraints_;
   }
-  const PlayerPtrMap<EqualityConstraint>& ControlConstraints() const {
+  const PlayerPtrMultiMap<EqualityConstraint>& ControlConstraints() const {
     return control_constraints_;
-  }
-  const PtrVector<DynamicConstraint> DynamicConstraints() const {
-    return dynamic_constraints_;
-  }
-  const PtrVector<FeedbackConstraint> FeedbackConstraints() const {
-    return feedback_constraints_;
   }
 
  private:
@@ -179,15 +173,9 @@ class PlayerCost {
   PlayerPtrMap<Barrier> control_barriers_;
   bool are_barriers_on_;
 
-  // Dynamic constraints.
-  PtrVector<DynamicConstraint> dynamic_constraints_;
-
-  // Feedback constraints.
-  PtrVector<FeedbackConstraint> feedback_constraints_;
-
   // State and control constraints.
   PtrVector<EqualityConstraint> state_constraints_;
-  PlayerPtrMap<EqualityConstraint> control_constraints_;
+  PlayerPtrMultiMap<EqualityConstraint> control_constraints_;
 
   // Regularization on costs.
   const float state_regularization_;

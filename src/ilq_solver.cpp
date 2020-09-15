@@ -159,11 +159,12 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     if (!problem_->Dynamics()->TreatAsLinear())
       ComputeLinearization(current_operating_point, &linearization_);
 
-    ComputeQuadraticization(current_operating_point, &quadraticization_);
+    ComputeCostQuadraticization(current_operating_point,
+                                &cost_quadraticization_);
 
     // Solve LQ game.
-    current_strategies = lq_solver_->Solve(linearization_, quadraticization_,
-                                           problem_->InitialState());
+    current_strategies = lq_solver_->Solve(
+        linearization_, cost_quadraticization_, problem_->InitialState());
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,

@@ -45,6 +45,8 @@
 #ifndef ILQGAMES_SOLVER_NEWTON_PROBLEM_H
 #define ILQGAMES_SOLVER_NEWTON_PROBLEM_H
 
+#include <ilqgames/constraint/explicit/dynamic_constraint.h>
+#include <ilqgames/constraint/explicit/feedback_constraint.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/problem.h>
@@ -82,6 +84,12 @@ class NewtonProblem : public Problem {
   virtual size_t NumDuals() const;
   size_t NumOperatingPointVariables() const;
   virtual size_t KKTSystemSize() const;
+  const DynamicConstraint& DynamicConstraints() const {
+    return *dynamic_constraint_;
+  }
+  const std::vector<FeedbackConstraint>& FeedbackConstraints() const {
+    return *feedback_constraints_;
+  }
 
  protected:
   NewtonProblem() : Problem() {}
@@ -92,6 +100,8 @@ class NewtonProblem : public Problem {
     ConstructPlayerCosts();
     ConstructInitialState();
     ConstructPrimalsAndDuals();
+    ConstructDynamicConstraint();
+    ConstructFeedbackConstraints();
     initialized_ = true;
   }
 
@@ -104,6 +114,8 @@ class NewtonProblem : public Problem {
   virtual void ConstructInitialOperatingPoint();
   virtual void ConstructInitialStrategies();
   virtual void ConstructInitialLambdas();
+  virtual void ConstructDynamicConstraint();
+  virtual void ConstructFeedbackConstraints();
 
   // Primal variables.
   VectorXf primals_;
@@ -112,12 +124,18 @@ class NewtonProblem : public Problem {
 
   // Dual variables.
   VectorXf duals_;
-  std::unique_ptr<std::vector<RefVector>> lambda_dyns_;
-  std::unique_ptr<std::vector<RefVector>> lambda_feedbacks_;
-  std::unique_ptr<std::vector<std::vector<RefVector>>>
+  std::unique_ptr<std::vector<std::vector<float*>>> lambda_dyns_;
+  std::unique_ptr<std::vector<std::vector<float*>>> lambda_feedbacks_;
+  std::unique_ptr<std::vector<std::vector<std::vector<float*>>>>
       lambda_state_constraints_;
   std::unique_ptr<std::vector<std::vector<PlayerDualMap>>>
       lambda_control_constraints_;
+
+  // Dynamic constraint.
+  std::unique_ptr<DynamicConstraint> dynamic_constraint_;
+
+  // Feedback constraints.
+  std::unique_ptr<std::vector<FeedbackConstraint>> feedback_constraints_;
 };  // class NewtonProblem
 
 }  // namespace ilqgames

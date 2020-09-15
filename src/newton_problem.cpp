@@ -41,6 +41,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/explicit/dynamic_constraint.h>
+#include <ilqgames/constraint/explicit/feedback_constraint.h>
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/newton_problem.h>
 #include <ilqgames/solver/problem.h>
@@ -51,6 +53,7 @@
 
 #include <glog/logging.h>
 #include <algorithm>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -77,20 +80,45 @@ void NewtonProblem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
        kk++) {
     const size_t kk_new_problem = kk - first_timestep_in_new_problem;
 
-    // Set current state and controls in operating point. To avoid unintended
-    // swapping issues with Eigen::Refs just copy.
-    op.xs[kk_new_problem] = op.xs[kk];
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-      op.us[kk_new_problem][ii] = op.us[kk][ii];
-
     // Set current stategy.
     for (auto& strategy : *strategy_refs_) {
       strategy.Ps[kk_new_problem] = strategy.Ps[kk];
       strategy.alphas[kk_new_problem] = strategy.alphas[kk];
     }
 
-    // Make sure to do this for dual variables too.
-    // TODO!
+    // Set current state and controls in operating point. To avoid unintended
+    // swapping issues with Eigen::Refs just copy.
+    op.xs[kk_new_problem] = op.xs[kk];
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      op.us[kk_new_problem][ii] = op.us[kk][ii];
+
+      // Make sure to do this for dual variables too.
+      *(*lambda_dyns_)[kk_new_problem][ii] = *(*lambda_dyns_)[kk][ii];
+      *(*lambda_feedbacks_)[kk_new_problem][ii] = *(*lambda_feedbacks_)[kk][ii];
+
+      const size_t num_state_constraints =
+          player_costs_[ii].NumStateConstraints();
+      auto& new_lambdas = (*lambda_state_constraints_)[kk_new_problem][ii];
+      auto& old_lambdas = (*lambda_state_constraints_)[kk][ii];
+      for (size_t jj = 0; jj < num_state_constraints; jj++) {
+        CHECK_EQ(new_lambdas.size(), num_state_constraints);
+        CHECK_EQ(old_lambdas.size(), num_state_constraints);
+        *new_lambdas[jj] = *old_lambdas[jj];
+      }
+
+      CHECK_EQ((*lambda_control_constraints_)[kk_new_problem][ii].size(),
+               (*lambda_control_constraints_)[kk][ii].size());
+      auto new_iter =
+          (*lambda_control_constraints_)[kk_new_problem][ii].begin();
+      auto old_iter = (*lambda_control_constraints_)[kk][ii].begin();
+      for (; new_iter !=
+                 (*lambda_control_constraints_)[kk_new_problem][ii].end() &&
+             old_iter != (*lambda_control_constraints_)[kk][ii].end();
+           new_iter++, old_iter++) {
+        CHECK_EQ(new_iter->first, old_iter->first);
+        *new_iter->second = *old_iter->second;
+      }
+    }
   }
 
   // Make sure operating point is the right size.
@@ -100,6 +128,12 @@ void NewtonProblem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   // state forward accordingly. Set new dual variables to zero.
   for (size_t kk = timestep_iterator_end - first_timestep_in_new_problem;
        kk < NumTimeSteps(); kk++) {
+    // First integrate the previous state and controls.
+    op.xs[kk] =
+        dynamics_->Integrate(InitialTime() + ComputeRelativeTimeStamp(kk - 1),
+                             time_step_, op.xs[kk - 1], op.us[kk - 1]);
+
+    // Now update everything per player.
     for (size_t ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       auto& strategy = (*strategy_refs_)[ii];
       strategy.Ps[kk].setZero();
@@ -107,12 +141,15 @@ void NewtonProblem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
       op.us[kk][ii].setZero();
 
       // Make sure to do this for dual variables too.
-      // TODO!
-    }
+      *(*lambda_dyns_)[kk][ii] = 0.0;
+      *(*lambda_feedbacks_)[kk][ii] = 0.0;
 
-    op.xs[kk] =
-        dynamics_->Integrate(InitialTime() + ComputeRelativeTimeStamp(kk - 1),
-                             time_step_, op.xs[kk - 1], op.us[kk - 1]);
+      for (auto& lambda_state : (*lambda_state_constraints_)[kk][ii])
+        *lambda_state = 0.0;
+
+      for (auto& pair : (*lambda_control_constraints_)[kk][ii])
+        *pair.second = 0.0;
+    }
   }
 }
 
@@ -138,22 +175,18 @@ size_t NewtonProblem::NumOperatingPointVariables() const {
 size_t NewtonProblem::NumDuals() const {
   CHECK(initialized_);
 
-  const auto horizon = NumTimeSteps();
-  const auto xdim = dynamics_->XDim();
-
   // Start by computing the number of initial state multipliers and dynamics
   // multipliers and feedback multipliers (which should be the same).
-  size_t total = dynamics_->NumPlayers() * xdim * (2 * horizon + 1);
+  size_t total = dynamics_->NumPlayers() * (2 * num_time_steps_ + 1);
 
   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
     const auto& player_cost = player_costs_[ii];
 
     // Accumulate the constraint multipliers for each state constraint.
-    total += player_cost.NumStateConstraints() * xdim * horizon;
+    total += player_cost.NumStateConstraints() * num_time_steps_;
 
     // Accumulate the control constraint multipliers
-    for (const auto& pair : player_cost.ControlConstraints())
-      total += dynamics_->UDim(pair.first) * horizon;
+    total += player_cost.NumControlConstraints() * num_time_steps_;
   }
 
   return total;
@@ -166,19 +199,11 @@ size_t NewtonProblem::KKTSystemSize() const {
   // players' problems. To start, the gradient of the Lagrangian has as many
   // dimensions as there are primal variables.
   size_t total = NumPrimals();
-  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-    // Handle state constraints.
-    total += dynamics_->XDim() * num_time_steps_ *
-             player_costs_[ii].NumStateConstraints();
 
-    // Handle feedback constraints.
-    total += dynamics_->UDim(ii) * num_time_steps_;
-
-    // Handle control constraints.
-    const auto& control_constraints = player_costs_[ii].ControlConstraints();
-    for (const auto& pair : control_constraints)
-      total += dynamics_->UDim(pair.first) * num_time_steps_;
-  }
+  // Each constraint (for each player) has a dual variable associated with it,
+  // so the contribution from constraints is just the number of dual
+  // variables.
+  total += NumDuals();
 
   return total;
 }
@@ -210,15 +235,16 @@ void NewtonProblem::ConstructInitialStrategies() {
 }
 
 void NewtonProblem::ConstructInitialLambdas() {
-  lambda_dyns_.reset(new std::vector<RefVector>(num_time_steps_));
-  lambda_feedbacks_.reset(new std::vector<RefVector>(num_time_steps_));
+  lambda_dyns_.reset(new std::vector<std::vector<float*>>(num_time_steps_));
+  lambda_feedbacks_.reset(
+      new std::vector<std::vector<float*>>(num_time_steps_));
   lambda_state_constraints_.reset(
-      new std::vector<std::vector<RefVector>>(num_time_steps_));
+      new std::vector<std::vector<std::vector<float*>>>(num_time_steps_));
   lambda_control_constraints_.reset(
       new std::vector<std::vector<PlayerDualMap>>(num_time_steps_));
 
-  // Keep the ordering broken out by timesteps. Outer index is always time, and
-  // inner one is player ID.
+  // Keep the ordering broken out by timesteps. Outer index is always time,
+  // and inner one is player ID.
   size_t dual_idx = 0;
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
     // Preallocate memory for state and control constraints for each player.
@@ -227,31 +253,40 @@ void NewtonProblem::ConstructInitialLambdas() {
 
     // Populate for each player.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      (*lambda_dyns_)[kk].emplace_back(
-          duals_.segment(dual_idx, dynamics_->XDim()));
-      dual_idx += dynamics_->XDim();
+      (*lambda_dyns_)[kk].emplace_back(&duals_(dual_idx));
+      dual_idx++;
 
-      (*lambda_feedbacks_)[kk].emplace_back(
-          duals_.segment(dual_idx, dynamics_->XDim()));
-      dual_idx += dynamics_->XDim();
+      (*lambda_feedbacks_)[kk].emplace_back(&duals_(dual_idx));
+      dual_idx++;
 
-      // Add a separate dual variable for each state constraint for this player
-      // at this time.
+      // Add a separate dual variable for each state constraint for this
+      // player at this time.
       for (const auto& c : player_costs_[ii].StateConstraints()) {
-        (*lambda_state_constraints_)[kk][ii].emplace_back(
-            duals_.segment(dual_idx, dynamics_->XDim()));
-        dual_idx += dynamics_->XDim();
+        (*lambda_state_constraints_)[kk][ii].emplace_back(&duals_(dual_idx));
+        dual_idx++;
       }
 
       // Do likewise for control costs, though they are stored in a different
       // data structure.
       for (const auto& pair : player_costs_[ii].ControlConstraints()) {
-        (*lambda_control_constraints_)[kk][ii].emplace(
-            pair.first, duals_.segment(dual_idx, dynamics_->UDim(pair.first)));
-        dual_idx += dynamics_->UDim(pair.first);
+        (*lambda_control_constraints_)[kk][ii].emplace(pair.first,
+                                                       &duals_(dual_idx));
+        dual_idx++;
       }
     }
   }
 }
 
+void NewtonProblem::ConstructDynamicConstraint() {
+  dynamic_constraint_.reset(
+      new DynamicConstraint(&NormalDynamics(), "Dynamic constraint"));
+}
+
+void NewtonProblem::ConstructFeedbackConstraints() {
+  feedback_constraints_.reset(new std::vector<FeedbackConstraint>());
+  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+    feedback_constraints_->emplace_back(
+        &(*strategy_refs_)[ii],
+        "Feedback Constraint (" + std::to_string(ii) + ")");
+}
 }  // namespace ilqgames

@@ -92,16 +92,15 @@ class GameSolver {
              const SolverParams& params)
       : problem_(problem),
         linearization_(problem->NumTimeSteps()),
-        quadraticization_(problem_->NumTimeSteps()),
+        cost_quadraticization_(problem_->NumTimeSteps()),
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_NOTNULL(problem_.get());
 
     // Prepopulate quadraticization.
-    for (auto& quads : quadraticization_)
+    for (auto& quads : cost_quadraticization_)
       quads.resize(problem_->Dynamics()->NumPlayers(),
                    QuadraticCostApproximation(problem_->Dynamics()->XDim()));
-
   }
 
   // Create a new log. This may be overridden by derived classes (e.g., to
@@ -117,9 +116,9 @@ class GameSolver {
       std::vector<LinearDynamicsApproximation>* linearization);
 
   // Compute the quadratic cost approximation at the given operating point.
-  void ComputeQuadraticization(
+  void ComputeCostQuadraticization(
       const OperatingPoint& op,
-      std::vector<std::vector<QuadraticCostApproximation>>* quadraticization);
+      std::vector<std::vector<QuadraticCostApproximation>>* q);
 
   // Store the underlying problem.
   const std::shared_ptr<Problem> problem_;
@@ -127,7 +126,7 @@ class GameSolver {
   // Linearization and quadraticization. Both are time-indexed (and
   // quadraticizations' inner vector is indexed by player).
   std::vector<LinearDynamicsApproximation> linearization_;
-  std::vector<std::vector<QuadraticCostApproximation>> quadraticization_;
+  std::vector<std::vector<QuadraticCostApproximation>> cost_quadraticization_;
 
   // Solver parameters.
   const SolverParams params_;

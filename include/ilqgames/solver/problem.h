@@ -45,6 +45,8 @@
 #define ILQGAMES_SOLVER_PROBLEM_H
 
 #include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -102,8 +104,16 @@ class Problem {
   Time TimeHorizon() const { return time_horizon_; }
   std::vector<PlayerCost>& PlayerCosts() { return player_costs_; }
   const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
-  std::shared_ptr<const MultiPlayerIntegrableSystem> Dynamics() const {
+  const std::shared_ptr<const MultiPlayerIntegrableSystem>& Dynamics() const {
     return dynamics_;
+  }
+  const MultiPlayerDynamicalSystem& NormalDynamics() const {
+    CHECK(!dynamics_->TreatAsLinear());
+    return *static_cast<const MultiPlayerDynamicalSystem*>(dynamics_.get());
+  }
+  const MultiPlayerFlatSystem& FlatDynamics() const {
+    CHECK(dynamics_->TreatAsLinear());
+    return *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
   }
   const OperatingPoint& CurrentOperatingPoint() const {
     return *operating_point_;

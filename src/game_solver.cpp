@@ -81,9 +81,9 @@ void GameSolver::ComputeLinearization(
   }
 }
 
-void GameSolver::ComputeQuadraticization(
+void GameSolver::ComputeCostQuadraticization(
     const OperatingPoint& op,
-    std::vector<std::vector<QuadraticCostApproximation>>* quadraticization) {
+    std::vector<std::vector<QuadraticCostApproximation>>* q) {
   for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
     const Time t =
         problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
@@ -96,10 +96,9 @@ void GameSolver::ComputeQuadraticization(
 
       if (cost.IsTimeAdditive() ||
           problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
-        (*quadraticization)[kk][ii] = cost.Quadraticize(t, x, us);
+        (*q)[kk][ii] = cost.Quadraticize(t, x, us);
       else
-        (*quadraticization)[kk][ii] =
-            cost.QuadraticizeBarriersAndControlCosts(t, x, us);
+        (*q)[kk][ii] = cost.QuadraticizeBarriersAndControlCosts(t, x, us);
     }
   }
 }

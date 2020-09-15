@@ -56,7 +56,7 @@
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/quadratic_contraint_approximation.h>
+#include <ilqgames/utils/quadratic_constraint_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -98,7 +98,11 @@ class NewtonSolver : public GameSolver {
   // variable which stores the cost approximation.
   std::vector<std::vector<QuadraticConstraintApproximation>>
       constraint_quadraticization_;
-};  // class GameSolver
+
+  // Separate dynamic constraint quadraticization.
+  std::vector<std::vector<QuadraticConstraintApproximation>>
+      dynamic_constraint_quadraticization_;
+};  // class NewtonSolver
 
 }  // namespace ilqgames
 
