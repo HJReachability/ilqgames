@@ -128,6 +128,20 @@ struct OperatingPoint {
     }
   }
 
+  // Copy-assign operator.
+  void operator=(const OperatingPointRef& other) {
+    xs.resize(other.xs.size());
+    us.resize(other.us.size());
+
+    for (size_t kk = 0; kk < xs.size(); kk++) {
+      xs[kk] = other.xs[kk];
+
+      us[kk].resize(other.us[kk].size());
+      for (PlayerIndex ii = 0; ii < us[kk].size(); ii++)
+        us[kk][ii] = other.us[kk][ii];
+    }
+  }
+
   // Custom swap function.
   void swap(OperatingPoint& other);
 };  // struct OperatingPoint

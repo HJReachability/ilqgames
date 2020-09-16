@@ -84,11 +84,23 @@ class NewtonProblem : public Problem {
   virtual size_t NumDuals() const;
   size_t NumOperatingPointVariables() const;
   virtual size_t KKTSystemSize() const;
+
+  // Accessors.
   const DynamicConstraint& DynamicConstraints() const {
     return *dynamic_constraint_;
   }
   const std::vector<FeedbackConstraint>& FeedbackConstraints() const {
     return *feedback_constraints_;
+  }
+  const OperatingPoint& CurrentOperatingPoint() const {
+    *operating_point_ = *operating_point_ref_;
+    return *operating_point_;
+  }
+  const std::vector<Strategy>& CurrentStrategies() const {
+    for (PlayerIndex ii = 0; ii < strategies_->size(); ii++)
+      (*strategies_)[ii].Copy((*strategy_refs_)[ii], *operating_point_ref_, ii);
+
+    return *strategies_;
   }
 
  protected:

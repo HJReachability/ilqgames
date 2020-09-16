@@ -227,10 +227,15 @@ void NewtonProblem::ConstructInitialOperatingPoint() {
 
 void NewtonProblem::ConstructInitialStrategies() {
   strategy_refs_.reset(new std::vector<StrategyRef>());
+  strategies_.reset(new std::vector<Strategy>());
+
   size_t primal_idx = NumOperatingPointVariables();
   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
     strategy_refs_->emplace_back(num_time_steps_, dynamics_->XDim(),
                                  dynamics_->UDim(ii), primals_, primal_idx);
+    strategies_->emplace_back(strategy_refs_->back(), *operating_point_ref_,
+                              ii);
+
     primal_idx += strategies_->back().NumVariables();
   }
 }

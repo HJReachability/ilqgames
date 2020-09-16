@@ -111,6 +111,19 @@ struct Strategy {
     }
   }
 
+  // Copy-assign operator.
+  void Copy(const StrategyRef& other, const OperatingPointRef& op,
+            PlayerIndex player_idx) {
+    Ps.resize(other.Ps.size());
+    alphas.resize(other.alphas.size());
+
+    for (size_t kk = 0; kk < Ps.size(); kk++) {
+      Ps[kk] = other.Ps[kk];
+      alphas[kk] =
+          other.alphas[kk] + op.us[kk][player_idx] - Ps[kk] * op.xs[kk];
+    }
+  }
+
   // Operator for computing control given time index and delta x.
   VectorXf operator()(size_t time_index, const VectorXf& delta_x,
                       const VectorXf& u_ref) const {

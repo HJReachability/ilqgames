@@ -115,10 +115,10 @@ class Problem {
     CHECK(dynamics_->TreatAsLinear());
     return *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
   }
-  const OperatingPoint& CurrentOperatingPoint() const {
+  virtual const OperatingPoint& CurrentOperatingPoint() const {
     return *operating_point_;
   }
-  const std::vector<Strategy>& CurrentStrategies() const {
+  virtual const std::vector<Strategy>& CurrentStrategies() const {
     return *strategies_;
   }
 
