@@ -69,7 +69,7 @@ struct OperatingPointRef {
       size_t num_time_steps, Time initial_time,
       const std::shared_ptr<const MultiPlayerSystemType>& dynamics,
       VectorXf& primals)
-    : us(num_time_steps), t0(initial_time) {
+      : us(num_time_steps), t0(initial_time) {
     CHECK_NOTNULL(dynamics.get());
 
     // Populate xs and us.
@@ -113,6 +113,18 @@ struct OperatingPoint {
       xs[kk] = VectorXf::Zero(dynamics->XDim());
       for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
         us[kk][ii] = VectorXf::Zero(dynamics->UDim(ii));
+    }
+  }
+
+  // Construct from an OperatingPointRef.
+  OperatingPoint(const OperatingPointRef& other)
+      : xs(other.xs.size()), us(other.us.size()), t0(other.t0) {
+    for (size_t kk = 0; kk < xs.size(); kk++) {
+      xs[kk] = other.xs[kk];
+
+      us[kk].resize(other.us[kk].size());
+      for (PlayerIndex ii = 0; ii < us[kk].size(); ii++)
+        us[kk][ii] = other.us[kk][ii];
     }
   }
 

@@ -44,6 +44,7 @@
 #ifndef ILQGAMES_CONSTRAINT_FEEDBACK_CONSTRAINT_H
 #define ILQGAMES_CONSTRAINT_FEEDBACK_CONSTRAINT_H
 
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_constraint_approximation.h>
 #include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/strategy.h>
@@ -66,26 +67,19 @@ class FeedbackConstraint : public RelativeTimeTracker {
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
-                   const VectorXf& next_x, float* level) const {
-    // const float value =
-    //     0.5 * (next_x - dynamics_->Evaluate(t, x, us)).squaredNorm();
-    // if (*level) *level = value;
+  bool IsSatisfied(size_t time_step, const VectorXf& x, const VectorXf& u,
+                   float* level) {
+    const float value = 0.5 * (u - (*strategy_)(time_step, x)).squaredNorm();
+    if (*level) *level = value;
 
-    // return std::abs(value) < constants::kSmallNumber;
-    return false;
+    return std::abs(value) < constants::kSmallNumber;
   }
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  // NOTE: for simplicity, we'll ignore cross terms like dxdui and duiduj, and
-  // we'll also ignore second-order dependence of the dynamics on x and ui (part
-  // of the LQ approximation).
-  void Quadraticize(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
-                    QuadraticConstraintApproximation* q,
-                    QuadraticConstraintApproximation* next_q) const {
+  void Quadraticize(size_t time_step, const VectorXf& x, const VectorXf& u,
+                    QuadraticConstraintApproximation* q) const {
     CHECK_NOTNULL(q);
-    CHECK_NOTNULL(next_q);
   }
 
  private:

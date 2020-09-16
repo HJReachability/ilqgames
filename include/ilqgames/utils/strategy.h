@@ -48,6 +48,7 @@
 #ifndef ILQGAMES_UTILS_STRATEGY_H
 #define ILQGAMES_UTILS_STRATEGY_H
 
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -71,10 +72,10 @@ struct StrategyRef {
     }
   }
 
-  // Operator for computing control given time index and delta x.
-  VectorXf operator()(size_t time_index, const VectorXf& delta_x,
-                      const VectorXf& u_ref) const {
-    return u_ref - Ps[time_index] * delta_x - alphas[time_index];
+  // Operator for computing control given time index and x.
+  // NOTE: this is simpler than the assumption made in
+  VectorXf operator()(size_t time_index, const VectorXf& x) const {
+    return -Ps[time_index] * x - alphas[time_index];
   }
 
   // Number of variables.
@@ -96,6 +97,17 @@ struct Strategy {
     for (size_t ii = 0; ii < horizon; ii++) {
       Ps[ii] = MatrixXf::Zero(udim, xdim);
       alphas[ii] = VectorXf::Zero(udim);
+    }
+  }
+
+  // Construct from a StrategyRef and an OperatingPointRef.
+  Strategy(const StrategyRef& other, const OperatingPointRef& op,
+           PlayerIndex player_idx)
+      : Ps(other.Ps.size()), alphas(other.alphas.size()) {
+    for (size_t kk = 0; kk < Ps.size(); kk++) {
+      Ps[kk] = other.Ps[kk];
+      alphas[kk] =
+          other.alphas[kk] + op.us[kk][player_idx] - Ps[kk] * op.xs[kk];
     }
   }
 

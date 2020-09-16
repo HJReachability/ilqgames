@@ -222,6 +222,7 @@ void NewtonProblem::ConstructPrimalsAndDuals() {
 void NewtonProblem::ConstructInitialOperatingPoint() {
   operating_point_ref_.reset(
       new OperatingPointRef(num_time_steps_, 0.0, dynamics_, primals_));
+  operating_point_.reset(new OperatingPoint(*operating_point_ref_));
 }
 
 void NewtonProblem::ConstructInitialStrategies() {
@@ -289,4 +290,5 @@ void NewtonProblem::ConstructFeedbackConstraints() {
         &(*strategy_refs_)[ii],
         "Feedback Constraint (" + std::to_string(ii) + ")");
 }
+
 }  // namespace ilqgames
