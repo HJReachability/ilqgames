@@ -124,8 +124,21 @@ class DynamicConstraint : public RelativeTimeTracker {
     hess_nextx.setIdentity();
     grad_nextx = error;
 
-    // Handle x cross terms.
+    // Handle xus cross terms.
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      hess_xus[ii] = lin.A.transpose() * lin.Bs[ii];
+      hess_usx[ii] = hess_xus[ii].transpose();
+    }
 
+    // Handle xnextx cross terms.
+    hess_xnextx = -lin.A;
+    hess_nextxx = hess_xnextx.transpose();
+
+    // Handle usnextx cross terms.
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      hess_nextxus[ii] = -lin.Bs[ii];
+      hess_usnextx[ii] = hess_nextxus[ii].transpose();
+    }
   }
 
  private:
