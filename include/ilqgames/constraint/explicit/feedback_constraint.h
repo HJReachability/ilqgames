@@ -79,11 +79,46 @@ class FeedbackConstraint : public RelativeTimeTracker {
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
   void Quadraticize(size_t time_step, const VectorXf& x, const VectorXf& u,
-                    QuadraticConstraintApproximation* q) const {
-    CHECK_NOTNULL(q);
+                    Eigen::Ref<MatrixXf> hess_x, Eigen::Ref<MatrixXf> hess_u,
+                    Eigen::Ref<MatrixXf> hess_strategy,
+                    Eigen::Ref<MatrixXf> hess_xu, Eigen::Ref<MatrixXf> hess_ux,
+                    Eigen::Ref<MatrixXf> hess_xstrategy,
+                    Eigen::Ref<MatrixXf> hess_strategyx,
+                    Eigen::Ref<MatrixXf> hess_ustrategy,
+                    Eigen::Ref<MatrixXf> hess_strategyu,
+                    Eigen::Ref<VectorXf> grad_x, Eigen::Ref<VectorXf> grad_u,
+                    Eigen::Ref<VectorXf> grad_strategy) const {
+    // NOTE: assuming that all the dimensions are correct, just because checking
+    // would be a lot of unnecessary operations, but eventually these should be
+    // a factored into DCHECKs.
 
-    // Initialize with all zeros.
-    q->state
+    // Compute mismatch vector.
+    const VectorXf error = u - (*strategy_ref_)(time_step, x);
+
+    // Unpack P and alpha.
+    const auto& P = strategy_refs_->Ps[time_step];
+    const auto& alpha = strategy_refs_->alphas[time_step];
+
+    // Handle x terms.
+    hess_x = -P.transpose() * P;
+    grad_x = -P.transpose() * error;
+
+    // Handle u terms.
+    hess_u.setIdentity();
+    grad_u = error;
+
+    // Handle strategy terms.
+    // TODO!
+
+    // Handle xu terms.
+    hess_ux = P;
+    hess_xu = hess_ux.transpose();
+
+    // Handle xfeedback terms.
+    // TODO!
+
+    // Handle ufeedback terms.
+    // TODO!
   }
 
  private:
