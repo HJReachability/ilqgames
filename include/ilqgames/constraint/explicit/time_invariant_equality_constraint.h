@@ -65,10 +65,10 @@ class TimeInvariantEqualityConstraint : public EqualityConstraint {
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
-  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
+  virtual void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+                            Eigen::Ref<VectorXf> grad) const = 0;
+  void Quadraticize(Time t, const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+                    Eigen::Ref<VectorXf> grad) const {
     return Quadraticize(input, hess, grad);
   };
 

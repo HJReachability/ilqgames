@@ -59,9 +59,8 @@ namespace ilqgames {
 class DynamicConstraint : public RelativeTimeTracker {
  public:
   ~DynamicConstraint() {}
-  DynamicConstraint(
-      const MultiPlayerDynamicalSystem* dynamics,
-      const std::string& name = "")
+  DynamicConstraint(const MultiPlayerDynamicalSystem* dynamics,
+                    const std::string& name = "")
       : RelativeTimeTracker(name), dynamics_(dynamics) {
     CHECK_NOTNULL(dynamics_);
   }
@@ -82,18 +81,16 @@ class DynamicConstraint : public RelativeTimeTracker {
   // NOTE: this truncates the dynamics derivatives at first order, i.e., it
   // uses only a linearization of the dynamics, which it assumes to be correct
   // for the given arguments.
-  // NOTE: this quadraticization is intended to be only one per game and not one
-  // per player, since each player can just reuse this.
-  // NOTE: for simplicity, we'll ignore cross terms like dxdui and duiduj, and
-  // we'll also ignore second-order dependence of the dynamics on x and ui (part
-  // of the LQ approximation).
   void Quadraticize(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
                     const VectorXf& next_x,
                     const LinearDynamicsApproximation& lin,
-                    QuadraticConstraintApproximation* q,
-                    QuadraticConstraintApproximation* next_q) const {
-    CHECK_NOTNULL(q);
-    CHECK_NOTNULL(next_q);
+                    Eigen::Ref<MatrixXf> hess_nextx,
+                    Eigen::Ref<MatrixXf> hess_x,
+                    std::vector<std::vector<Eigen::Ref<MatrixXf>>>& hess_us,
+                    Eigen::Ref<MatrixXf> hess_nextxx,
+                    std::vector<Eigen::Ref<MatrixXf>>& hess_nextxus,
+                    std::vector<Eigen::Ref<MatrixXf>>& hess_xus) const {
+    // TODO!
 
     // Compute mismatch vector.
     const VectorXf error = next_x - dynamics_->Evaluate(t, x, us);

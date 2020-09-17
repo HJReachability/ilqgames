@@ -61,15 +61,16 @@ class FeedbackConstraint : public RelativeTimeTracker {
   ~FeedbackConstraint() {}
   FeedbackConstraint(const StrategyRef* strategy_ref,
                      const std::string& name = "")
-      : RelativeTimeTracker(name), strategy_(strategy_ref) {
-    CHECK_NOTNULL(strategy_);
+      : RelativeTimeTracker(name), strategy_ref_(strategy_ref) {
+    CHECK_NOTNULL(strategy_ref_);
   }
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
   bool IsSatisfied(size_t time_step, const VectorXf& x, const VectorXf& u,
                    float* level) {
-    const float value = 0.5 * (u - (*strategy_)(time_step, x)).squaredNorm();
+    const float value =
+        0.5 * (u - (*strategy_ref_)(time_step, x)).squaredNorm();
     if (*level) *level = value;
 
     return std::abs(value) < constants::kSmallNumber;
@@ -80,11 +81,14 @@ class FeedbackConstraint : public RelativeTimeTracker {
   void Quadraticize(size_t time_step, const VectorXf& x, const VectorXf& u,
                     QuadraticConstraintApproximation* q) const {
     CHECK_NOTNULL(q);
+
+    // Initialize with all zeros.
+    q->state
   }
 
  private:
   // Strategy of a single player.
-  const StrategyRef* strategy_;
+  const StrategyRef* strategy_ref_;
 };  //\class DynamicConstraint
 
 }  // namespace ilqgames

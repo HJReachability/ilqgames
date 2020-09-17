@@ -76,8 +76,8 @@ class FinalTimeEqualityConstraint : public EqualityConstraint {
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const {
+  void Quadraticize(Time t, const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+                    Eigen::Ref<VectorXf> grad) const {
     if (t >= initial_time_ + threshold_time_)
       constraint_->Quadraticize(t, input, hess, grad);
   }

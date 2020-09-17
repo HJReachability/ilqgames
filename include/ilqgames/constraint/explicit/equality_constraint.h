@@ -68,8 +68,9 @@ class EqualityConstraint : public RelativeTimeTracker {
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+  virtual void Quadraticize(Time t, const VectorXf& input,
+                            Eigen::Ref<MatrixXf> hess,
+                            Eigen::Ref<VectorXf> grad) const = 0;
 
  protected:
   explicit EqualityConstraint(const std::string& name)

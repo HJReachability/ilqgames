@@ -71,15 +71,15 @@ class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
-    CHECK_NOTNULL(hess);
-    hess->resize(input.size(), input.size());
+  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+                    Eigen::Ref<VectorXf> grad) const {
+    CHECK_EQ(input.size(), nominal_.size());
+    CHECK_EQ(hess.rows(), input.size());
+    CHECK_EQ(hess.cols(), input.size());
+    CHECK_EQ(grad.size(), input.size());
 
-    CHECK_NOTNULL(grad);
-
-    hess->setIdentity();
-    (*grad) = input - nominal_;
+    hess.setIdentity();
+    grad = input - nominal_;
   }
 
  private:
