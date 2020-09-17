@@ -161,37 +161,37 @@ class FeedbackConstraint : public RelativeTimeTracker {
     hess_ux = P;
     hess_xu = hess_ux.transpose();
 
-    // (5) Handle xfeedback terms (xP and xalpha separately).
+    // (5) Handle xstrategy terms (xP and xalpha separately).
     for (size_t jj = 0; jj < P.cols(); jj++) {
       for (size_t ii = 0; ii < P.rows(); ii++) {
         for (size_t kk = 0; kk < x.size(); kk++) {
           const size_t P_idx = ii + jj * P.rows();  // X idx is just kk.
 
-          hess_xfeedback(kk, P_idx) = P(ii, kk) * x(jj);
-          if (jj == kk) hess_xfeedback(kk, P_idx) -= error(ii);
+          hess_xstrategy(kk, P_idx) = P(ii, kk) * x(jj);
+          if (jj == kk) hess_xstrategy(kk, P_idx) -= error(ii);
 
-          hess_feedbackx(P_idx, kk) = hess_xfeedback(kk, P_idx);
+          hess_strategyx(P_idx, kk) = hess_xstrategy(kk, P_idx);
         }
       }
     }
 
-    Eigen::Ref<MatrixXf> hess_xalpha = hess_xfeedback.rightCols(num_alphas);
-    Eigen::Ref<MatrixXf> hess_alphax = hess_feedbackx.bottomRows(num_alphas);
+    Eigen::Ref<MatrixXf> hess_xalpha = hess_xstrategy.rightCols(num_alphas);
+    Eigen::Ref<MatrixXf> hess_alphax = hess_strategyx.bottomRows(num_alphas);
     hess_xalpha = P.transpose();
     hess_alphax = hess_xalpha.transpose();
 
-    // (6) Handle ufeedback terms (uP and ualpha separately again).
+    // (6) Handle ustrategy terms (uP and ualpha separately again).
     for (size_t jj = 0; jj < P.cols(); jj++) {
       const size_t offset = jj * P.rows();
       for (size_t ii = 0; ii < P.rows(); ii++) {
         const size_t P_idx = ii + jj * P.rows();  // Alpha idx is just ii.
-        hess_ufeedback(ii, P_idx) = -x(jj);
-        hess_feedbacku(P_idx, ii) = hess_ufeedback(ii, P_idx);
+        hess_ustrategy(ii, P_idx) = -x(jj);
+        hess_strategyu(P_idx, ii) = hess_ustrategy(ii, P_idx);
       }
     }
 
-    Eigen::Ref<MatrixXf> hess_ualpha = hess_ufeedback.rightCols(num_alphas);
-    Eigen::Ref<MatrixXf> hess_alphau = hess_feedbacku.bottomRows(num_alphas);
+    Eigen::Ref<MatrixXf> hess_ualpha = hess_ustrategy.rightCols(num_alphas);
+    Eigen::Ref<MatrixXf> hess_alphau = hess_strategyu.bottomRows(num_alphas);
     hess_ualpha.SetIdentity() *= -1.0;
     hess_alphau.SetIdentity() *= -1.0;
   }
