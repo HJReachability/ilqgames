@@ -81,30 +81,51 @@ class DynamicConstraint : public RelativeTimeTracker {
   // NOTE: this truncates the dynamics derivatives at first order, i.e., it
   // uses only a linearization of the dynamics, which it assumes to be correct
   // for the given arguments.
+  // NOTE: Hessian cross terms are all duplicated for the transposes, i.e., this
+  // function assumes that the underlying references are for symmetric parts of
+  // the big matrix this is populating.
   void Quadraticize(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
                     const VectorXf& next_x,
                     const LinearDynamicsApproximation& lin,
-                    Eigen::Ref<MatrixXf> hess_nextx,
                     Eigen::Ref<MatrixXf> hess_x,
                     std::vector<std::vector<Eigen::Ref<MatrixXf>>>& hess_us,
+                    Eigen::Ref<MatrixXf> hess_nextx,
+                    std::vector<Eigen::Ref<MatrixXf>>& hess_xus,
+                    std::vector<Eigen::Ref<MatrixXf>>& hess_usx,
+                    Eigen::Ref<MatrixXf> hess_xnextx,
                     Eigen::Ref<MatrixXf> hess_nextxx,
+                    std::vector<Eigen::Ref<MatrixXf>>& hess_usnextx,
                     std::vector<Eigen::Ref<MatrixXf>>& hess_nextxus,
-                    std::vector<Eigen::Ref<MatrixXf>>& hess_xus) const {
-    // TODO!
+                    Eigen::Ref<VectorXf> grad_x,
+                    std::vector<Eigen::Ref<VectorXf>>& grad_us,
+                    Eigen::Ref<VectorXf> grad_nextx) const {
+    // NOTE: assuming that all the dimensions are correct, just because checking
+    // would be a lot of unnecessary operations, but eventually these should be
+    // a factored into DCHECKs.
 
     // Compute mismatch vector.
     const VectorXf error = next_x - dynamics_->Evaluate(t, x, us);
 
-    // Populate quadraticizations.
-    q->state.emplace_back(lin.A.transpose() * lin.A,
-                          -lin.A.transpose() * error);
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-      q->control.emplace(
-          ii, SingleConstraintApproximation(lin.Bs[ii].transpose() * lin.Bs[ii],
-                                            -lin.Bs[ii].transpose() * error));
+    // Handle x terms.
+    hess_x = lin.A.transpose() * lin.A;
+    grad_x = -lin.A.transpose() * error;
 
-    next_q->state.emplace_back(
-        MatrixXf::Identity(dynamics_->XDim(), dynamics_->XDim()), error);
+    // Handle us terms.
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      for (PlayerIndex jj = ii; jj < dynamics_->NumPlayers(); jj++) {
+        hess_us[ii][jj] = lin.Bs[ii].transpose() * lin.Bs[jj];
+        if (ii != jj) hess_us[jj][ii] = hess_us[ii][jj].transpose();
+      }
+
+      grad_us[ii] = -lin.Bs[ii].transpose() * error;
+    }
+
+    // Handle nextx terms.
+    hess_nextx.setIdentity();
+    grad_nextx = error;
+
+    // Handle x cross terms.
+
   }
 
  private:
