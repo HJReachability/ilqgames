@@ -101,7 +101,7 @@ class DynamicConstraint : public RelativeTimeTracker {
                     Eigen::Ref<VectorXf> grad_nextx) const {
     // NOTE: assuming that all the dimensions are correct, just because checking
     // would be a lot of unnecessary operations, but eventually these should be
-    // a factored into DCHECKs.
+    // factored into DCHECKs.
 
     // Compute mismatch vector.
     const VectorXf error = next_x - dynamics_->Evaluate(t, x, us);

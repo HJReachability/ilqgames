@@ -90,7 +90,7 @@ class FeedbackConstraint : public RelativeTimeTracker {
                     Eigen::Ref<VectorXf> grad_strategy) const {
     // NOTE: assuming that all the dimensions are correct, just because checking
     // would be a lot of unnecessary operations, but eventually these should be
-    // a factored into DCHECKs.
+    // factored into DCHECKs.
 
     // Compute mismatch vector.
     const VectorXf error = u - (*strategy_ref_)(time_step, x);
@@ -99,26 +99,101 @@ class FeedbackConstraint : public RelativeTimeTracker {
     const auto& P = strategy_refs_->Ps[time_step];
     const auto& alpha = strategy_refs_->alphas[time_step];
 
-    // Handle x terms.
+    // (1) Handle x terms.
     hess_x = -P.transpose() * P;
     grad_x = -P.transpose() * error;
 
-    // Handle u terms.
+    // (2) Handle u terms.
     hess_u.setIdentity();
     grad_u = error;
 
-    // Handle strategy terms.
-    // TODO!
+    // (3) Handle strategy terms.
+    const size_t num_Ps = strategy_refs_->SizeP();
+    const size_t num_alphas = strategy_refs_->SizeAlpha();
 
-    // Handle xu terms.
+    // P Hessian.
+    for (size_t kk = 0; kk < P.cols(); kk++) {
+      for (size_t jj = kk; jj < P.cols(); jj++) {
+        for (size_t ii = 0; ii < P.rows(); ii++) {
+          const size_t row = ii + kk * P.rows();
+          const size_t col = ii + jj * P.rows();
+
+          hess_strategy(row, col) = x(jj) * x(kk);
+          if (jj == kk) hess_strategy(row, col) -= error(ii);
+
+          hess_strategy(col, row) = hess_strategy(row, col);
+        }
+      }
+    }
+
+    // P gradient.
+    for (size_t jj = 0; jj < P.cols(); jj++) {
+      const size_t offset =
+          jj * P.rows();  // Eigen::Map uses column-major storage by default.
+      for (size_t ii = 0; ii < P.rows(); ii++)
+        grad_strategy[offset + ii] =
+            (u(ii) - P.row(ii) * x - alpha(ii)) * (-x(jj));
+    }
+
+    // Alpha Hessian.
+    hess_strategy.block(num_Ps, num_Ps, num_alphas, num_alphas).setIdentity();
+
+    // P alpha cross terms. Assumes already set to zero so only accessing the
+    // nonzero elements.
+    // Top-right and bottom-left blocks.
+    Eigen::Ref<MatrixXf> hess_tr =
+        hess_strategy.topRightCorner(num_Ps, num_alphas);
+    Eigen::Ref<MatrixXf> hess_bl =
+        hess_strategy.bottomLeftCorner(num_alphas, num_Ps);
+    for (size_t jj = 0; jj < Ps.cols(); jj++) {
+      const size_t offset = jj * P.rows();
+      for (size_t ii = 0; ii < Ps.rows(); ii++) {
+        const size_t P_idx = offset + ii;  // Alpha idx is just ii.
+        hess_tr(P_idx, ii) = alpha(ii) * x(jj);
+        hess_bl(ii, P_idx) = hess_tr(P_idx, ii);
+      }
+    }
+
+    // Alpha gradient.
+    grad_strategy.tail(num_alphas) = -error;
+
+    // (4) Handle xu terms.
     hess_ux = P;
     hess_xu = hess_ux.transpose();
 
-    // Handle xfeedback terms.
-    // TODO!
+    // (5) Handle xfeedback terms (xP and xalpha separately).
+    for (size_t jj = 0; jj < P.cols(); jj++) {
+      for (size_t ii = 0; ii < P.rows(); ii++) {
+        for (size_t kk = 0; kk < x.size(); kk++) {
+          const size_t P_idx = ii + jj * P.rows();  // X idx is just kk.
 
-    // Handle ufeedback terms.
-    // TODO!
+          hess_xfeedback(kk, P_idx) = P(ii, kk) * x(jj);
+          if (jj == kk) hess_xfeedback(kk, P_idx) -= error(ii);
+
+          hess_feedbackx(P_idx, kk) = hess_xfeedback(kk, P_idx);
+        }
+      }
+    }
+
+    Eigen::Ref<MatrixXf> hess_xalpha = hess_xfeedback.rightCols(num_alphas);
+    Eigen::Ref<MatrixXf> hess_alphax = hess_feedbackx.bottomRows(num_alphas);
+    hess_xalpha = P.transpose();
+    hess_alphax = hess_xalpha.transpose();
+
+    // (6) Handle ufeedback terms (uP and ualpha separately again).
+    for (size_t jj = 0; jj < P.cols(); jj++) {
+      const size_t offset = jj * P.rows();
+      for (size_t ii = 0; ii < P.rows(); ii++) {
+        const size_t P_idx = ii + jj * P.rows();  // Alpha idx is just ii.
+        hess_ufeedback(ii, P_idx) = -x(jj);
+        hess_feedbacku(P_idx, ii) = hess_ufeedback(ii, P_idx);
+      }
+    }
+
+    Eigen::Ref<MatrixXf> hess_ualpha = hess_ufeedback.rightCols(num_alphas);
+    Eigen::Ref<MatrixXf> hess_alphau = hess_feedbacku.bottomRows(num_alphas);
+    hess_ualpha.SetIdentity() *= -1.0;
+    hess_alphau.SetIdentity() *= -1.0;
   }
 
  private:

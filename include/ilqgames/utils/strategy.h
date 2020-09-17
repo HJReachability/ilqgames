@@ -79,12 +79,15 @@ struct StrategyRef {
   }
 
   // Number of variables.
+  size_t SizeP() const { return Ps.front().size(); }
+  size_t SizeAlpha() const { return alphas.front().size(); }
   size_t NumVariables() const {
     const size_t horizon = Ps.size();
     CHECK_EQ(horizon, alphas.size());
 
     return horizon * (Ps.front().size() + alphas.front().size());
   }
+
 };  // struct StrategyRef
 
 struct Strategy {
