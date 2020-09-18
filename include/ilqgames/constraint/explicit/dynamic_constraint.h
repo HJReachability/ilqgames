@@ -46,7 +46,6 @@
 
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/quadratic_constraint_approximation.h>
 #include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/types.h>
 
@@ -68,13 +67,7 @@ class DynamicConstraint : public RelativeTimeTracker {
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
   bool IsSatisfied(Time t, const VectorXf& x, const std::vector<VectorXf>& us,
-                   const VectorXf& next_x, float* level) const {
-    const float value =
-        0.5 * (next_x - dynamics_->Evaluate(t, x, us)).squaredNorm();
-    if (*level) *level = value;
-
-    return std::abs(value) < constants::kSmallNumber;
-  }
+                   const VectorXf& next_x, float* level) const;
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
@@ -98,48 +91,7 @@ class DynamicConstraint : public RelativeTimeTracker {
                     std::vector<Eigen::Ref<MatrixXf>>& hess_nextxus,
                     Eigen::Ref<VectorXf> grad_x,
                     std::vector<Eigen::Ref<VectorXf>>& grad_us,
-                    Eigen::Ref<VectorXf> grad_nextx) const {
-    // NOTE: assuming that all the dimensions are correct, just because checking
-    // would be a lot of unnecessary operations, but eventually these should be
-    // factored into DCHECKs.
-
-    // Compute mismatch vector.
-    const VectorXf error = next_x - dynamics_->Evaluate(t, x, us);
-
-    // Handle x terms.
-    hess_x = lin.A.transpose() * lin.A;
-    grad_x = -lin.A.transpose() * error;
-
-    // Handle us terms.
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      for (PlayerIndex jj = ii; jj < dynamics_->NumPlayers(); jj++) {
-        hess_us[ii][jj] = lin.Bs[ii].transpose() * lin.Bs[jj];
-        if (ii != jj) hess_us[jj][ii] = hess_us[ii][jj].transpose();
-      }
-
-      grad_us[ii] = -lin.Bs[ii].transpose() * error;
-    }
-
-    // Handle nextx terms.
-    hess_nextx.setIdentity();
-    grad_nextx = error;
-
-    // Handle xus cross terms.
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      hess_xus[ii] = lin.A.transpose() * lin.Bs[ii];
-      hess_usx[ii] = hess_xus[ii].transpose();
-    }
-
-    // Handle xnextx cross terms.
-    hess_xnextx = -lin.A;
-    hess_nextxx = hess_xnextx.transpose();
-
-    // Handle usnextx cross terms.
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      hess_nextxus[ii] = -lin.Bs[ii];
-      hess_usnextx[ii] = hess_nextxus[ii].transpose();
-    }
-  }
+                    Eigen::Ref<VectorXf> grad_nextx) const;
 
  private:
   // Dynamics of the underlying game.
