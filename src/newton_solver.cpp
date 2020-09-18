@@ -76,9 +76,7 @@ std::shared_ptr<SolverLog> NewtonSolver::Solve(bool* success,
 }
 
 float NewtonSolver::KKTSystemSquaredError() const {
-  // NOTE: Assumes that we've already got a valid quadratic cost approximation
-  // and quadratic constraint approximation for every player.
-  return 0.0;
+  return kkt_system_.squaredNorm();
 }
 
 }  // namespace ilqgames

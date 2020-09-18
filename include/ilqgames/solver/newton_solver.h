@@ -76,7 +76,8 @@ class NewtonSolver : public GameSolver {
   NewtonSolver(const std::shared_ptr<NewtonProblem>& problem,
                const SolverParams& params = SolverParams())
       : GameSolver(problem, params) {
-    // Start the Jacobian matrix off with zeros.
+    // Start the KKT system and Jacobian matrix off with zeros.
+    kkt_system_ = VectorXf::Zero(problem->KKTSystemSize());
     jacobian_ =
         MatrixXf::Zero(problem->KKTSystemSize(), problem->NumVariables());
   }
@@ -86,9 +87,12 @@ class NewtonSolver : public GameSolver {
       bool* success = nullptr,
       Time max_runtime = std::numeric_limits<Time>::infinity());
 
- protected:
   // Evaluate the KKT system squared error.
-  virtual float KKTSystemSquaredError() const;
+  float KKTSystemSquaredError() const;
+
+ protected:
+  // KKT system (this vector should equal zero at equilibrium).
+  VectorXf kkt_system_;
 
   // Jacobian of the KKT system.
   MatrixXf jacobian_;
