@@ -90,7 +90,19 @@ class NewtonSolver : public GameSolver {
   // Evaluate the KKT system squared error.
   float KKTSystemSquaredError() const;
 
+  // Access the problem as a NewtonProblem.
+  NewtonProblem& GetProblem() {
+    return *static_cast<NewtonProblem*>(problem_.get());
+  }
+
  protected:
+  // Populate the KKT system and its Jacobian.
+  virtual void Populate();
+
+  // Linesearch. By default, this is an Armijo linesearch on the squared norm of
+  // the KKT system.
+  virtual void Linesearch();
+
   // KKT system (this vector should equal zero at equilibrium).
   VectorXf kkt_system_;
 

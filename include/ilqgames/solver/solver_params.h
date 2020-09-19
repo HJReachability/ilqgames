@@ -60,11 +60,13 @@ struct SolverParams {
   float initial_alpha_scaling = 0.5;
   float geometric_alpha_scaling = 0.5;
   size_t max_backtracking_steps = 10;
+  float expected_decrease_fraction = 0.9;
   bool enforce_barriers_in_linesearch = false;
 
   // Maximum absolute difference between states in the given dimension to
-  // satisfy trust region. Only active if linesearching is on. If dimensions
-  // empty then applies in all dimensions.
+  // satisfy trust region. Only active if linesearching is on and used by
+  // non-Newton solvers. Newton solvers use the expected decrease fraction
+  // criterion. If dimensions empty then applies in all dimensions.
   float trust_region_size = 10.0;
   std::vector<Dimension> trust_region_dimensions;
 

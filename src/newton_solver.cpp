@@ -71,12 +71,24 @@ namespace ilqgames {
 // Solve this game. Returns true if converged.
 std::shared_ptr<SolverLog> NewtonSolver::Solve(bool* success,
                                                Time max_runtime) {
-  // TODO! Fill this in.
-  return CreateNewLog();
+  std::shared_ptr<SolverLog> log = CreateNewLog();
+
+  for (size_t iter = 0; iter < params_.max_solver_iters; iter++) {
+    // Check convergence criterion and exit if satisfied.
+    if ()
+  }
 }
 
 float NewtonSolver::KKTSystemSquaredError() const {
   return kkt_system_.squaredNorm();
+}
+
+void NewtonSolver::Populate() {
+  // TODO!
+}
+
+void NewtonSolver::Linesearch() {
+  // TODO!
 }
 
 }  // namespace ilqgames
