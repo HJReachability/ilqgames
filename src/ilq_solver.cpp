@@ -396,8 +396,25 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
   float total_expected_decrease = 0.0;
 
   for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    // TODO!
+    for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
+      const auto& quad = cost_quadraticization_[kk][ii];
+
+      total_expected_decrease +=
+          quad.state.hess.llt().solve(quad.state.grad).squaredNorm();
+      total_expected_decrease += std::accumulate(
+          quad.control.begin(), quad.control.end(), total_expected_decrease,
+          [](float total,
+             const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
+            return total + entry.second.hess.llt()
+                               .solve(entry.second.grad)
+                               .squaredNorm();
+          });
+    }
   }
+
+  // Adjust total expected decrease.
+  total_expected_decrease *=
+      2.0 * current_stepsize * params_.expected_decrease_fraction;
 
   return (last_kkt_squared_error_ - *current_kkt_squared_error >=
           total_expected_decrease);
@@ -414,9 +431,9 @@ float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
       const auto& quad = cost_quadraticization_[kk][ii];
 
       // Accumulate state and control gradient squared norms.
-      float current_squared_error = quad.state.grad.squaredNorm();
+      total_squared_error += quad.state.grad.squaredNorm();
       total_squared_error += std::accumulate(
-          quad.control.begin(), quad.control.end(), current_squared_error,
+          quad.control.begin(), quad.control.end(), total_squared_error,
           [](float total,
              const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
             return total + entry.second.grad.squaredNorm();
