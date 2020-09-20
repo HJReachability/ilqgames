@@ -52,42 +52,6 @@
 
 namespace ilqgames {
 
-struct OperatingPointRef {
-  // Time-indexed list of states as references.
-  std::vector<Eigen::Ref<VectorXf>> xs;
-
-  // Time-indexed list of controls (as references) for all players, i.e. us[kk]
-  // is the list of controls for all players at time index kk.
-  std::vector<std::vector<Eigen::Ref<VectorXf>>> us;
-
-  // Initial time stamp.
-  Time t0;
-
-  // Construct as above, but as a reference to parts of the given primal vector.
-  template <typename MultiPlayerSystemType>
-  OperatingPointRef(
-      size_t num_time_steps, Time initial_time,
-      const std::shared_ptr<const MultiPlayerSystemType>& dynamics,
-      VectorXf& primals)
-      : us(num_time_steps), t0(initial_time) {
-    CHECK_NOTNULL(dynamics.get());
-
-    // Populate xs and us.
-    size_t primal_idx = 0;
-    for (size_t kk = 0; kk < num_time_steps; kk++) {
-      // Handle xs.
-      xs.emplace_back(primals.segment(primal_idx, dynamics->XDim()));
-      primal_idx += dynamics->XDim();
-
-      // Handle us.
-      for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++) {
-        us[kk].emplace_back(primals.segment(primal_idx, dynamics->UDim(ii)));
-        primal_idx += dynamics->UDim(ii);
-      }
-    }
-  }
-};  // struct OperatingPointRef
-
 struct OperatingPoint {
   // Time-indexed list of states.
   std::vector<VectorXf> xs;
@@ -113,32 +77,6 @@ struct OperatingPoint {
       xs[kk] = VectorXf::Zero(dynamics->XDim());
       for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
         us[kk][ii] = VectorXf::Zero(dynamics->UDim(ii));
-    }
-  }
-
-  // Construct from an OperatingPointRef.
-  OperatingPoint(const OperatingPointRef& other)
-      : xs(other.xs.size()), us(other.us.size()), t0(other.t0) {
-    for (size_t kk = 0; kk < xs.size(); kk++) {
-      xs[kk] = other.xs[kk];
-
-      us[kk].resize(other.us[kk].size());
-      for (PlayerIndex ii = 0; ii < us[kk].size(); ii++)
-        us[kk][ii] = other.us[kk][ii];
-    }
-  }
-
-  // Copy-assign operator.
-  void operator=(const OperatingPointRef& other) {
-    xs.resize(other.xs.size());
-    us.resize(other.us.size());
-
-    for (size_t kk = 0; kk < xs.size(); kk++) {
-      xs[kk] = other.xs[kk];
-
-      us[kk].resize(other.us[kk].size());
-      for (PlayerIndex ii = 0; ii < us[kk].size(); ii++)
-        us[kk][ii] = other.us[kk][ii];
     }
   }
 

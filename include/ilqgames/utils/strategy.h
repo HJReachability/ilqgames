@@ -56,40 +56,6 @@
 
 namespace ilqgames {
 
-struct StrategyRef {
-  std::vector<Eigen::Map<MatrixXf>> Ps;
-  std::vector<Eigen::Ref<VectorXf>> alphas;
-
-  // Preallocate memory during construction.
-  StrategyRef(size_t horizon, Dimension xdim, Dimension udim, VectorXf& primals,
-              size_t initial_idx) {
-    size_t primal_idx = initial_idx;
-    for (size_t kk = 0; kk < horizon; kk++) {
-      Ps.emplace_back(&primals(primal_idx), xdim, udim);
-      primal_idx += xdim * udim;
-      alphas.emplace_back(primals.segment(primal_idx, udim));
-      primal_idx += udim;
-    }
-  }
-
-  // Operator for computing control given time index and x.
-  // NOTE: this is simpler than the assumption made in
-  VectorXf operator()(size_t time_index, const VectorXf& x) const {
-    return -Ps[time_index] * x - alphas[time_index];
-  }
-
-  // Number of variables.
-  size_t SizeP() const { return Ps.front().size(); }
-  size_t SizeAlpha() const { return alphas.front().size(); }
-  size_t NumVariables() const {
-    const size_t horizon = Ps.size();
-    CHECK_EQ(horizon, alphas.size());
-
-    return horizon * (Ps.front().size() + alphas.front().size());
-  }
-
-};  // struct StrategyRef
-
 struct Strategy {
   std::vector<MatrixXf> Ps;
   std::vector<VectorXf> alphas;
@@ -100,30 +66,6 @@ struct Strategy {
     for (size_t ii = 0; ii < horizon; ii++) {
       Ps[ii] = MatrixXf::Zero(udim, xdim);
       alphas[ii] = VectorXf::Zero(udim);
-    }
-  }
-
-  // Construct from a StrategyRef and an OperatingPointRef.
-  Strategy(const StrategyRef& other, const OperatingPointRef& op,
-           PlayerIndex player_idx)
-      : Ps(other.Ps.size()), alphas(other.alphas.size()) {
-    for (size_t kk = 0; kk < Ps.size(); kk++) {
-      Ps[kk] = other.Ps[kk];
-      alphas[kk] =
-          other.alphas[kk] + op.us[kk][player_idx] - Ps[kk] * op.xs[kk];
-    }
-  }
-
-  // Copy-assign operator.
-  void Copy(const StrategyRef& other, const OperatingPointRef& op,
-            PlayerIndex player_idx) {
-    Ps.resize(other.Ps.size());
-    alphas.resize(other.alphas.size());
-
-    for (size_t kk = 0; kk < Ps.size(); kk++) {
-      Ps[kk] = other.Ps[kk];
-      alphas[kk] =
-          other.alphas[kk] + op.us[kk][player_idx] - Ps[kk] * op.xs[kk];
     }
   }
 
