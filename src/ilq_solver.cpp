@@ -119,8 +119,11 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   std::vector<float> total_costs;
   last_operating_point.swap(current_operating_point);
   CurrentOperatingPoint(last_operating_point, current_strategies,
-                        &current_operating_point, &has_converged, &total_costs,
-                        false, &was_operating_point_feasible);
+                        &current_operating_point, nullptr,
+                        &was_operating_point_feasible);
+
+  // Compute total costs.
+  TotalCosts(current_operating_point, &total_costs);
 
   // Log current iterate.
   log->AddSolverIterate(current_operating_point, current_strategies,
@@ -168,8 +171,7 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
-                            &was_operating_point_feasible, &has_converged,
-                            &total_costs)) {
+                            &was_operating_point_feasible)) {
       // Maybe emit warning if exiting early.
       if (num_iterations == 1) {
         VLOG(1)
@@ -188,6 +190,10 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
       return log;
     }
+
+    // Compute total costs and check if we've converged.
+    TotalCosts(current_operating_point, &total_costs);
+    has_converged = HasConverged(last_operating_point, current_operating_point);
 
     // Log current iterate.
     log->AddSolverIterate(current_operating_point, current_strategies,
@@ -226,29 +232,14 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 bool ILQSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point, bool* has_converged,
-    std::vector<float>* total_costs, bool check_trust_region,
+    OperatingPoint* current_operating_point, bool* satisfies_armijo,
     bool* satisfies_barriers) const {
   CHECK_NOTNULL(current_operating_point);
-  CHECK_NOTNULL(has_converged);
-  CHECK_NOTNULL(total_costs);
 
   // Initialize time, convergence, and barrier satisfaction checks.
   current_operating_point->t0 = last_operating_point.t0;
-  *has_converged = true;
+  if (satisfies_armijo) *satisfies_armijo = true;
   if (satisfies_barriers) *satisfies_barriers = true;
-
-  // Initialize total costs.
-  if (total_costs->size() != problem_->PlayerCosts().size())
-    total_costs->resize(problem_->PlayerCosts().size());
-  for (PlayerIndex ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
-    if (problem_->PlayerCosts()[ii].IsTimeAdditive())
-      (*total_costs)[ii] = 0.0;
-    else if (problem_->PlayerCosts()[ii].IsMaxOverTime())
-      (*total_costs)[ii] = -constants::kInfinity;
-    else
-      (*total_costs)[ii] = constants::kInfinity;
-  }
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
@@ -261,26 +252,6 @@ bool ILQSolver::CurrentOperatingPoint(
     const auto& last_us = last_operating_point.us[kk];
     auto& current_us = current_operating_point->us[kk];
 
-    // Accumulate costs.
-    for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
-      const float current_cost =
-          problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
-
-      if (problem_->PlayerCosts()[ii].IsTimeAdditive())
-        (*total_costs)[ii] +=
-            problem_->PlayerCosts()[ii].Evaluate(t, x, current_us);
-      else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
-               current_cost > (*total_costs)[ii]) {
-        (*total_costs)[ii] = current_cost;
-        problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
-      } else if (problem_->PlayerCosts()[ii].IsMinOverTime()) {
-        if (current_cost < (*total_costs)[ii]) {
-          (*total_costs)[ii] = current_cost;
-          problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
-        }
-      }
-    }
-
     // Check convergence and trust region (including barriers).
     auto check_all_barriers = [this](Time t, const VectorXf& x,
                                      const std::vector<VectorXf>& us) {
@@ -290,26 +261,12 @@ bool ILQSolver::CurrentOperatingPoint(
       return true;
     };  // check_all_barriers
 
-    const float delta_x_distance = StateDistance(
-        x, last_operating_point.xs[kk], params_.trust_region_dimensions);
     const bool checked_barriers = check_all_barriers(t, x, current_us);
 
-    *has_converged &= delta_x_distance <= params_.convergence_tolerance;
+    // TODO!
+    if (satisfies_armijo) *satisfies_armijo &= true;
+
     if (satisfies_barriers) *satisfies_barriers &= checked_barriers;
-
-    if (check_trust_region) {
-      if (delta_x_distance > params_.trust_region_size ||
-          (params_.enforce_barriers_in_linesearch && !checked_barriers)) {
-        // If we still satisfy barriers then log a warning. This shouldn't
-        // really ever lead to a fault though since the solver should be
-        // backtracking if this returns false anyway.
-        if (params_.enforce_barriers_in_linesearch && checked_barriers)
-          VLOG(2) << "Failed trust region on time step " << kk
-                  << " but satisfied barriers up till then.";
-
-        return false;
-      }
-    }
 
     // Record state.
     current_operating_point->xs[kk] = x;
@@ -329,6 +286,58 @@ bool ILQSolver::CurrentOperatingPoint(
   return true;
 }
 
+bool ILQSolver::HasConverged(const OperatingPoint& last_op,
+                             const OperatingPoint& current_op) const {
+  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    const float delta_x_distance = StateDistance(
+        current_op.xs[kk], last_op.xs[kk], params_.trust_region_dimensions);
+
+    if (delta_x_distance > params_.convergence_tolerance) return false;
+  }
+
+  return true;
+}
+
+void ILQSolver::TotalCosts(const OperatingPoint& current_op,
+                           std::vector<float>* total_costs) const {
+  // Initialize appropriately.
+  if (total_costs->size() != problem_->PlayerCosts().size())
+    total_costs->resize(problem_->PlayerCosts().size());
+  for (PlayerIndex ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
+    if (problem_->PlayerCosts()[ii].IsTimeAdditive())
+      (*total_costs)[ii] = 0.0;
+    else if (problem_->PlayerCosts()[ii].IsMaxOverTime())
+      (*total_costs)[ii] = -constants::kInfinity;
+    else
+      (*total_costs)[ii] = constants::kInfinity;
+  }
+
+  // Accumulate costs.
+  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    const Time t =
+        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+
+    for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
+      const float current_cost = problem_->PlayerCosts()[ii].Evaluate(
+          t, current_op.xs[kk], current_op.us[kk]);
+
+      if (problem_->PlayerCosts()[ii].IsTimeAdditive())
+        (*total_costs)[ii] += problem_->PlayerCosts()[ii].Evaluate(
+            t, current_op.xs[kk], current_op.us[kk]);
+      else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
+               current_cost > (*total_costs)[ii]) {
+        (*total_costs)[ii] = current_cost;
+        problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
+      } else if (problem_->PlayerCosts()[ii].IsMinOverTime()) {
+        if (current_cost < (*total_costs)[ii]) {
+          (*total_costs)[ii] = current_cost;
+          problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
+        }
+      }
+    }
+  }
+}
+
 float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
                                const std::vector<Dimension>& dims) const {
   if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
@@ -339,25 +348,23 @@ float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
   return distance;
 }
 
-bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
-                                   OperatingPoint* current_operating_point,
-                                   bool* is_new_operating_point_feasible,
-                                   bool* has_converged,
-                                   std::vector<float>* total_costs) const {
+bool ILQSolver::ModifyLQStrategies(
+    std::vector<Strategy>* strategies, OperatingPoint* current_operating_point,
+    bool* is_new_operating_point_feasible) const {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
-  CHECK_NOTNULL(has_converged);
-  CHECK_NOTNULL(total_costs);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary
   // backtracking.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
 
-  // Compute next operating point.
+  // Compute next operating point and keep track of whether it satisfies the
+  // Armijo condition.
   const OperatingPoint last_operating_point(*current_operating_point);
+  bool satisfies_armijo = true;
   bool satisfies_trust_region = CurrentOperatingPoint(
-      last_operating_point, *strategies, current_operating_point, has_converged,
-      total_costs, true, is_new_operating_point_feasible);
+      last_operating_point, *strategies, current_operating_point,
+      &satisfies_armijo, is_new_operating_point_feasible);
 
   if (!params_.linesearch) return true;
 
@@ -368,12 +375,11 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
     satisfies_trust_region = CurrentOperatingPoint(
         last_operating_point, *strategies, current_operating_point,
-        has_converged, total_costs, true, is_new_operating_point_feasible);
+        &satisfies_armijo, is_new_operating_point_feasible);
   }
 
   // Output a warning. Solver should revert to last valid operating point.
   VLOG(1) << "Exceeded maximum number of backtracking steps.";
-  if (!params_.enforce_barriers_in_linesearch) CHECK(!*has_converged);
   return false;
 }
 
