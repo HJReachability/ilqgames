@@ -68,7 +68,8 @@ class ILQSolver : public GameSolver {
   virtual ~ILQSolver() {}
   ILQSolver(const std::shared_ptr<Problem>& problem,
             const SolverParams& params = SolverParams())
-      : GameSolver(problem, params) {
+      : GameSolver(problem, params),
+        last_kkt_squared_error_(constants::kInfinity) {
     // Set up LQ solver.
     if (params_.open_loop)
       lq_solver_.reset(
@@ -88,7 +89,7 @@ class ILQSolver : public GameSolver {
   // This function performs an Armijo linesearch and returns true if successful.
   bool ModifyLQStrategies(std::vector<Strategy>* strategies,
                           OperatingPoint* current_operating_point,
-                          bool* is_new_operating_point_feasible) const;
+                          bool* is_new_operating_point_feasible);
 
   // Compute distance (infinity norm) between states in the given dimensions.
   // If dimensions empty, checks all dimensions.
@@ -103,19 +104,28 @@ class ILQSolver : public GameSolver {
   void TotalCosts(const OperatingPoint& current_op,
                   std::vector<float>* total_costs) const;
 
-  // Compute the current operating point based on the current set of strategies
-  // and the last operating point. Returns true if the new operating point
-  // satisfies the Armijo condition, or if the `check_armijo` flag is false
-  // (returns early if will return false). Optionally also returns the times of
-  // extreme costs.
-  bool CurrentOperatingPoint(const OperatingPoint& last_operating_point,
+  // Armijo condition check. Returns true if the new operating point satisfies
+  // the Armijo condition, and also returns current kkt squared error.
+  bool CheckArmijoCondition(const OperatingPoint& current_op,
+                            float current_stepsize,
+                            float* current_kkt_squared_error);
+
+  // Compute current KKT squared error. In the process, update the
+  // quadraticization.
+  float KKTSquaredError(const OperatingPoint& current_op);
+
+  // Compute the current operating point based on the current set of
+  // strategies and the last operating point.
+  void CurrentOperatingPoint(const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
                              OperatingPoint* current_operating_point,
-                             bool* satisfies_armijo = nullptr,
                              bool* satisfies_barriers = nullptr) const;
 
   // Core LQ Solver.
   std::unique_ptr<LQSolver> lq_solver_;
+
+  // Last KKT squared error.
+  float last_kkt_squared_error_;
 };  // class ILQSolver
 
 }  // namespace ilqgames

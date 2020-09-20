@@ -101,6 +101,9 @@ class GameSolver {
     for (auto& quads : cost_quadraticization_)
       quads.resize(problem_->Dynamics()->NumPlayers(),
                    QuadraticCostApproximation(problem_->Dynamics()->XDim()));
+
+    // Set last quadraticization to current, to start.
+    last_cost_quadraticization_ = cost_quadraticization_;
   }
 
   // Create a new log. This may be overridden by derived classes (e.g., to
@@ -124,9 +127,12 @@ class GameSolver {
   const std::shared_ptr<Problem> problem_;
 
   // Linearization and quadraticization. Both are time-indexed (and
-  // quadraticizations' inner vector is indexed by player).
+  // quadraticizations' inner vector is indexed by player). Also keep track of
+  // the quadraticization from last iteration.
   std::vector<LinearDynamicsApproximation> linearization_;
   std::vector<std::vector<QuadraticCostApproximation>> cost_quadraticization_;
+  std::vector<std::vector<QuadraticCostApproximation>>
+      last_cost_quadraticization_;
 
   // Solver parameters.
   const SolverParams params_;

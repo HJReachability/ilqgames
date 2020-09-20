@@ -55,6 +55,7 @@
 #include <glog/logging.h>
 #include <chrono>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 namespace ilqgames {
@@ -119,7 +120,7 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   std::vector<float> total_costs;
   last_operating_point.swap(current_operating_point);
   CurrentOperatingPoint(last_operating_point, current_strategies,
-                        &current_operating_point, nullptr,
+                        &current_operating_point,
                         &was_operating_point_feasible);
 
   // Compute total costs.
@@ -156,14 +157,13 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     else
       turn_barriers_off();
 
-    // Linearize dynamics and quadraticize costs for all players about the new
-    // operating point, only if the system can't be treated as linear from the
-    // outset, in which case we've already linearized it.
+    // Linearize dynamics about the new operating point, only if the system
+    // can't be treated as linear from the outset, in which case we've already
+    // linearized it.
+    // NOTE: we are already computing a new quadraticization
+    // during the linesearch process.
     if (!problem_->Dynamics()->TreatAsLinear())
       ComputeLinearization(current_operating_point, &linearization_);
-
-    ComputeCostQuadraticization(current_operating_point,
-                                &cost_quadraticization_);
 
     // Solve LQ game.
     current_strategies = lq_solver_->Solve(
@@ -229,16 +229,14 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   return log;
 }
 
-bool ILQSolver::CurrentOperatingPoint(
+void ILQSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point, bool* satisfies_armijo,
-    bool* satisfies_barriers) const {
+    OperatingPoint* current_operating_point, bool* satisfies_barriers) const {
   CHECK_NOTNULL(current_operating_point);
 
   // Initialize time, convergence, and barrier satisfaction checks.
   current_operating_point->t0 = last_operating_point.t0;
-  if (satisfies_armijo) *satisfies_armijo = true;
   if (satisfies_barriers) *satisfies_barriers = true;
 
   // Integrate dynamics and populate operating point, one time step at a time.
@@ -252,7 +250,7 @@ bool ILQSolver::CurrentOperatingPoint(
     const auto& last_us = last_operating_point.us[kk];
     auto& current_us = current_operating_point->us[kk];
 
-    // Check convergence and trust region (including barriers).
+    // Check barriers.
     auto check_all_barriers = [this](Time t, const VectorXf& x,
                                      const std::vector<VectorXf>& us) {
       for (const auto& cost : problem_->PlayerCosts()) {
@@ -262,9 +260,6 @@ bool ILQSolver::CurrentOperatingPoint(
     };  // check_all_barriers
 
     const bool checked_barriers = check_all_barriers(t, x, current_us);
-
-    // TODO!
-    if (satisfies_armijo) *satisfies_armijo &= true;
 
     if (satisfies_barriers) *satisfies_barriers &= checked_barriers;
 
@@ -282,8 +277,6 @@ bool ILQSolver::CurrentOperatingPoint(
       x = problem_->Dynamics()->Integrate(t, problem_->TimeStep(), x,
                                           current_us);
   }
-
-  return true;
 }
 
 bool ILQSolver::HasConverged(const OperatingPoint& last_op,
@@ -348,9 +341,9 @@ float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
   return distance;
 }
 
-bool ILQSolver::ModifyLQStrategies(
-    std::vector<Strategy>* strategies, OperatingPoint* current_operating_point,
-    bool* is_new_operating_point_feasible) const {
+bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
+                                   OperatingPoint* current_operating_point,
+                                   bool* is_new_operating_point_feasible) {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
 
@@ -361,26 +354,77 @@ bool ILQSolver::ModifyLQStrategies(
   // Compute next operating point and keep track of whether it satisfies the
   // Armijo condition.
   const OperatingPoint last_operating_point(*current_operating_point);
-  bool satisfies_armijo = true;
-  bool satisfies_trust_region = CurrentOperatingPoint(
-      last_operating_point, *strategies, current_operating_point,
-      &satisfies_armijo, is_new_operating_point_feasible);
+  float current_stepsize = params_.initial_alpha_scaling;
+  float current_kkt_squared_error = constants::kInfinity;
+  CurrentOperatingPoint(last_operating_point, *strategies,
+                        current_operating_point,
+                        is_new_operating_point_feasible);
 
   if (!params_.linesearch) return true;
 
   // Keep reducing alphas until we satisfy the trust region.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
-    if (satisfies_trust_region) return true;
+    if (CheckArmijoCondition(*current_operating_point, current_stepsize,
+                             &current_kkt_squared_error)) {
+      last_kkt_squared_error_ = current_kkt_squared_error;
+      return true;
+    }
 
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
-    satisfies_trust_region = CurrentOperatingPoint(
-        last_operating_point, *strategies, current_operating_point,
-        &satisfies_armijo, is_new_operating_point_feasible);
+    current_stepsize *= params_.geometric_alpha_scaling;
+    CurrentOperatingPoint(last_operating_point, *strategies,
+                          current_operating_point,
+                          is_new_operating_point_feasible);
   }
 
   // Output a warning. Solver should revert to last valid operating point.
   VLOG(1) << "Exceeded maximum number of backtracking steps.";
   return false;
+}
+
+bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
+                                     float current_stepsize,
+                                     float* current_kkt_squared_error) {
+  CHECK_NOTNULL(current_kkt_squared_error);
+
+  // Compute current KKT squared error. In the process, this will compute a new
+  // quadratic approximation at the current operating point and save the old
+  // quadraticization.
+  *current_kkt_squared_error = KKTSquaredError(current_op);
+
+  // Compute total expected decrease of KKT squared error.
+  float total_expected_decrease = 0.0;
+
+  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    // TODO!
+  }
+
+  return (last_kkt_squared_error_ - *current_kkt_squared_error >=
+          total_expected_decrease);
+}
+
+float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
+  // NOTE: this will update the current quadraticization and save the old one.
+  last_cost_quadraticization_.swap(cost_quadraticization_);
+  ComputeCostQuadraticization(current_op, &cost_quadraticization_);
+
+  float total_squared_error = 0.0;
+  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
+      const auto& quad = cost_quadraticization_[kk][ii];
+
+      // Accumulate state and control gradient squared norms.
+      float current_squared_error = quad.state.grad.squaredNorm();
+      total_squared_error += std::accumulate(
+          quad.control.begin(), quad.control.end(), current_squared_error,
+          [](float total,
+             const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
+            return total + entry.second.grad.squaredNorm();
+          });
+    }
+  }
+
+  return total_squared_error;
 }
 
 }  // namespace ilqgames
