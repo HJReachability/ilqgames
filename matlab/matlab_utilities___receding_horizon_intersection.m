@@ -21,7 +21,7 @@ function receding_horizon_example()
 %     system(char(instruction));
 %   end
   
-  instruction = "../bin/" + exec + " --noviz " + ... % --noviz == No GUI displayed.
+  instruction = "../bin/" + exec + " --viz " + ... % --noviz == No GUI displayed.
                   "--save" + ...
                   " --last_traj --experiment_name=" + experiment_name + ...
                   " --trust_region_size=1.1 --adversarial_time=1.0";
