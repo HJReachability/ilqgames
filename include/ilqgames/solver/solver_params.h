@@ -60,7 +60,7 @@ struct SolverParams {
   float initial_alpha_scaling = 0.5;
   float geometric_alpha_scaling = 0.5;
   size_t max_backtracking_steps = 10;
-  float expected_decrease_fraction = 0.9;
+  float expected_decrease_fraction = 0.1;
   bool enforce_barriers_in_linesearch = false;
 
   // Maximum absolute difference between states in the given dimension to
