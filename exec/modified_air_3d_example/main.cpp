@@ -117,6 +117,7 @@ int main(int argc, char** argv) {
   params.control_regularization = FLAGS_regularization;
 
   const auto problem = std::make_shared<ilqgames::ModifiedAir3DExample>();
+  problem->Initialize();
   ilqgames::ILQSolver solver(problem, params);
 
   LOG(INFO) << "Computing feedback solution.";

@@ -122,6 +122,7 @@ int main(int argc, char** argv) {
   params.control_regularization = FLAGS_regularization;
 
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  problem->Initialize();
   ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game in a receding horizon.

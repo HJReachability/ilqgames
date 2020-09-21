@@ -96,6 +96,7 @@ class GameSolver {
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_NOTNULL(problem_.get());
+    CHECK_NOTNULL(problem_->Dynamics().get());
 
     // Prepopulate quadraticization.
     for (auto& quads : cost_quadraticization_)

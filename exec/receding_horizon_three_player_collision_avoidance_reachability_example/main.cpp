@@ -125,6 +125,7 @@ int main(int argc, char** argv) {
   // Solve for feedback equilibrium.
   auto problem = std::make_shared<
       ilqgames::ThreePlayerCollisionAvoidanceReachabilityExample>();
+  problem->Initialize();
   ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game in a receding horizon.

@@ -105,6 +105,7 @@ int main(int argc, char** argv) {
 
   auto problem =
       std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>();
+  problem->Initialize();
   ilqgames::ILQFlatSolver solver(problem, params);
 
   // Solve the game in a receding horizon.

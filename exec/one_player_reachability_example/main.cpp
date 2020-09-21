@@ -125,6 +125,7 @@ int main(int argc, char** argv) {
   auto start = std::chrono::system_clock::now();
   auto open_loop_problem =
       std::make_shared<ilqgames::OnePlayerReachabilityExample>();
+  open_loop_problem->Initialize();
   ilqgames::ILQSolver open_loop_solver(open_loop_problem, params);
 
   LOG(INFO) << "Computing open-loop solution.";
@@ -160,6 +161,7 @@ int main(int argc, char** argv) {
   params.open_loop = !kOpenLoop;
   auto feedback_problem =
       std::make_shared<ilqgames::OnePlayerReachabilityExample>();
+  feedback_problem->Initialize();
   ilqgames::ILQSolver feedback_solver(feedback_problem, params);
   // Solve the game.
   LOG(INFO) << "Computing feedback solution.";

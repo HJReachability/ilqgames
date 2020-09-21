@@ -117,10 +117,12 @@ int main(int argc, char** argv) {
   //  params.open_loop = true;
 
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  problem->Initialize();
   ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
+  std::cout << "about to solve" << std::endl;
   std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
   LOG(INFO) << "Solver completed in "

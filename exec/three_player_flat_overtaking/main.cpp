@@ -115,6 +115,7 @@ int main(int argc, char** argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
 
   auto problem = std::make_shared<ilqgames::ThreePlayerFlatOvertakingExample>();
+  problem->Initialize();
   ilqgames::ILQFlatSolver solver(problem, params);
 
   // Solve the game.

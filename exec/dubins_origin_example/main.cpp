@@ -115,6 +115,7 @@ int main(int argc, char** argv) {
   params.open_loop = kOpenLoop;
 
   auto open_loop_problem = std::make_shared<ilqgames::DubinsOriginExample>();
+  open_loop_problem->Initialize();
   ilqgames::ILQSolver open_loop_solver(open_loop_problem, params);
 
   std::shared_ptr<const ilqgames::SolverLog> log = open_loop_solver.Solve();
@@ -142,6 +143,7 @@ int main(int argc, char** argv) {
   // Solve for feedback equilibrium.
   params.open_loop = !kOpenLoop;
   auto feedback_problem = std::make_shared<ilqgames::DubinsOriginExample>();
+  feedback_problem->Initialize();
   ilqgames::ILQSolver feedback_solver(feedback_problem, params);
 
   // Solve the game.

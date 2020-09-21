@@ -122,6 +122,7 @@ int main(int argc, char** argv) {
   // Solve for feedback equilibrium.
   auto feedback_problem = std::make_shared<
       ilqgames::TwoPlayerCollisionAvoidanceReachabilityExample>();
+  feedback_problem->Initialize();
   ilqgames::ILQSolver feedback_solver(feedback_problem, params);
 
   // Solve the game.

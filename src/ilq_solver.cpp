@@ -165,6 +165,11 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     if (!problem_->Dynamics()->TreatAsLinear())
       ComputeLinearization(current_operating_point, &linearization_);
 
+    // Do quadraticize in the first iteration.
+    if (num_iterations == 1)
+      ComputeCostQuadraticization(current_operating_point,
+                                  &cost_quadraticization_);
+
     // Solve LQ game.
     current_strategies = lq_solver_->Solve(
         linearization_, cost_quadraticization_, problem_->InitialState());
@@ -399,15 +404,15 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
 
-      total_expected_decrease +=
-          quad.state.hess.llt().solve(quad.state.grad).squaredNorm();
+      const Eigen::HouseholderQR<MatrixXf> state_qr(quad.state.hess);
+      const float current_expected_decrease =
+          state_qr.solve(quad.state.grad).squaredNorm();
       total_expected_decrease += std::accumulate(
-          quad.control.begin(), quad.control.end(), total_expected_decrease,
+          quad.control.begin(), quad.control.end(), current_expected_decrease,
           [](float total,
              const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
-            return total + entry.second.hess.llt()
-                               .solve(entry.second.grad)
-                               .squaredNorm();
+            const Eigen::HouseholderQR<MatrixXf> control_qr(entry.second.hess);
+            return total + control_qr.solve(entry.second.grad).squaredNorm();
           });
     }
   }
@@ -415,6 +420,11 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
   // Adjust total expected decrease.
   total_expected_decrease *=
       2.0 * current_stepsize * params_.expected_decrease_fraction;
+
+  // std::cout << "expected: " << total_expected_decrease << "\n"
+  //           << "actual: "
+  //           << last_kkt_squared_error_ - *current_kkt_squared_error
+  //           << std::endl;
 
   return (last_kkt_squared_error_ - *current_kkt_squared_error >=
           total_expected_decrease);
@@ -431,9 +441,9 @@ float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
       const auto& quad = cost_quadraticization_[kk][ii];
 
       // Accumulate state and control gradient squared norms.
-      total_squared_error += quad.state.grad.squaredNorm();
+      const float current_squared_error = quad.state.grad.squaredNorm();
       total_squared_error += std::accumulate(
-          quad.control.begin(), quad.control.end(), total_squared_error,
+          quad.control.begin(), quad.control.end(), current_squared_error,
           [](float total,
              const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
             return total + entry.second.grad.squaredNorm();

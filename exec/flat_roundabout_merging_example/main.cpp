@@ -105,6 +105,7 @@ int main(int argc, char** argv) {
 
   // Make a problem.
   auto problem = std::make_shared<ilqgames::FlatRoundaboutMergingExample>();
+  problem->Initialize();
 
   // Set up the game.
   ilqgames::SolverParams params;

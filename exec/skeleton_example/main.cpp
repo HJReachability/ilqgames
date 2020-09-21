@@ -123,6 +123,7 @@ int main(int argc, char** argv) {
 
   // Solve for feedback equilibrium.
   auto problem = std::make_shared<ilqgames::SkeletonExample>();
+  problem->Initialize();
   ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game.

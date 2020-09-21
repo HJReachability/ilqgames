@@ -121,10 +121,12 @@ int main(int argc, char** argv) {
 
   auto original_problem =
       std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  original_problem->Initialize();
   ilqgames::ILQSolver original_solver(original_problem, params);
 
   auto safety_problem =
       std::make_shared<ilqgames::ThreePlayerIntersectionReachabilityExample>();
+  safety_problem->Initialize();
   ilqgames::ILQSolver safety_solver(safety_problem, params);
 
   // Solve the game in a receding horizon.

@@ -120,6 +120,7 @@ int main(int argc, char** argv) {
   const auto start = std::chrono::system_clock::now();
   const auto problem =
       std::make_shared<ilqgames::TwoPlayerReachabilityExample>();
+  problem->Initialize();
   ilqgames::ILQSolver solver(problem, params);
 
   LOG(INFO) << "Computing feedback solution.";

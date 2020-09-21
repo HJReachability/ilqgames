@@ -113,6 +113,7 @@ int main(int argc, char** argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
 
   auto problem = std::make_shared<ilqgames::RoundaboutMergingExample>();
+  problem->Initialize();
   ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game.
