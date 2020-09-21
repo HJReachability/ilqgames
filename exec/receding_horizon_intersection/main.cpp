@@ -141,6 +141,9 @@ int main(int argc, char **argv) {
     }
   }
 
+  if (!FLAGS_viz)
+    return 0;
+
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({logs}));

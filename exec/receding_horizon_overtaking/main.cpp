@@ -136,9 +136,9 @@ int main(int argc, char **argv) {
   // Dump the logs and/or exit.
   if (FLAGS_save) {
     if (FLAGS_experiment_name == "") {
-      CHECK(SaveLogs(logs.front(), true));
+      CHECK(SaveLogs(logs, true));
     } else {
-      CHECK(SaveLogs(logs.front(), true, FLAGS_experiment_name));
+      CHECK(SaveLogs(logs, true, FLAGS_experiment_name));
     }
   }
 

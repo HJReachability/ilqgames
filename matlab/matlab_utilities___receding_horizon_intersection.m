@@ -5,24 +5,36 @@ function receding_horizon_example()
   close all;
 
   exec = "receding_horizon_intersection";
-  experiment_name = "receding_horizon_intersection___test";
-  x0_flag = " --d0=10 --v0=5";
-  regularization = 0.01;
+  % Name of directory where everything is saved.
+  experiment_name = "receding_horizon_intersection___TRS_1.1_advtime_1.0"; 
+  % x0_flag = " --d0=10 --v0=5";
+%   regularization = 0.01;
 
-  if ~experiment_already_run(char(experiment_name))
-    %% Stitch together the command for the executable.
-    instruction = "../bin/" + exec + " --noviz " + "--save" + ...
+%   if ~experiment_already_run(char(experiment_name))
+%     %% Stitch together the command for the executable.
+%     instruction = "../bin/" + exec + " --noviz " + "--save" + ...
+%                   " --last_traj --experiment_name=" + experiment_name + ...
+%                   " --convergence_tolerance=0.5 --initial_alpha_scaling=0.75" + ...
+%                   " --trust_region_size=1.1 --adversarial_time=1.0";
+% %               + ...
+% %                   " --regularization=" + regularization + x0_flag;
+%     system(char(instruction));
+%   end
+  
+  instruction = "../bin/" + exec + " --noviz " + ... % --noviz == No GUI displayed.
+                  "--save" + ...
                   " --last_traj --experiment_name=" + experiment_name + ...
-                  " --convergence_tolerance=0.02 --initial_alpha_scaling=0.9" + ...
-                  " --regularization=" + regularization + x0_flag;
-    system(char(instruction));
-  end
+                  " --trust_region_size=1.1 --adversarial_time=1.0";
+%               + ...
+%                   " --regularization=" + regularization + x0_flag;
+  system(char(instruction));
 
   figure;
   set(gca, 'FontSize', 16');
 
   dt = 0.1;
   iters = 1:2:10;
+%   iters = 30;
   for ii = 1:numel(iters)
     iter = iters(ii);
     subplot(1, numel(iters), ii);
@@ -31,12 +43,12 @@ function receding_horizon_example()
     title(sprintf('$t_0 = %4.2f$', t0), 'Interpreter', 'latex');
     xlabel('$p_x$ (m)', 'Interpreter', 'latex');
     ylabel('$p_y$ (m)', 'Interpreter', 'latex');
-    xlim([-8, 8]);
-    ylim([-8, 8]);
+    xlim([-20, 20]);
+    ylim([-20, 20]);
 
     hold on;
     plot(xs(:, 1), xs(:, 2), 'r');
-    plot(xs(:, 6), xs(:, 7), 'g');
+    plot(xs(:, 6), xs(:, 7), 'Color', [0, 0.3, 0]);
     plot(xs(:, 11), xs(:, 12), 'b');
     hold off;
   end
@@ -55,7 +67,7 @@ figure;
 set(gca, 'FontSize', 24');
 title('Sensitivity to Regularization', 'Interpreter', 'latex');
 xlabel('$p_x$ (m)', 'Interpreter', 'latex');
-ylabel('$p_y$ (m)', 'Interpreter', 'latex');
+ylabel('$p_y$ (m)', 'Interpreter', 'latex');    
 xlim([-5.5, 5.5]);
 ylim([-5.5, 5.5]);
 
@@ -70,7 +82,7 @@ for regularization = regularization_vals
 
   pe(ii) = plot(ilq_traj(:, 1), ilq_traj(:, 2), 'x-', ...
                 'Color', colormap(regularization, regularization_vals, false), ...
-                'DisplayName', sprintf('$\\epsilon = %1.2f$', regularization));
+                'DisplayName', sprintf('$\epsilon = %1.2f$', regularization));
   plot(ilq_traj(:, 6), ilq_traj(:, 7), 'x:', 'color', ...
        colormap(regularization, regularization_vals, false));
   plot(ilq_traj(:, 11), ilq_traj(:, 12), 'x--', 'color', ...
