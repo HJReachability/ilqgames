@@ -97,8 +97,10 @@ class ILQSolver : public GameSolver {
                               const std::vector<Dimension>& dims) const;
 
   // Check if solver has converged.
-  bool HasConverged(const OperatingPoint& last_op,
-                    const OperatingPoint& current_op) const;
+  virtual bool HasConverged(const OperatingPoint& last_op,
+                            const OperatingPoint& current_op) const {
+    return last_kkt_squared_error_ < params_.convergence_tolerance;
+  }
 
   // Compute overall costs and set times of extreme costs.
   void TotalCosts(const OperatingPoint& current_op,

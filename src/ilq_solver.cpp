@@ -284,17 +284,17 @@ void ILQSolver::CurrentOperatingPoint(
   }
 }
 
-bool ILQSolver::HasConverged(const OperatingPoint& last_op,
-                             const OperatingPoint& current_op) const {
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    const float delta_x_distance = StateDistance(
-        current_op.xs[kk], last_op.xs[kk], params_.trust_region_dimensions);
+// bool ILQSolver::HasConverged(const OperatingPoint& last_op,
+//                              const OperatingPoint& current_op) const {
+//   for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+//     const float delta_x_distance = StateDistance(
+//         current_op.xs[kk], last_op.xs[kk], params_.trust_region_dimensions);
 
-    if (delta_x_distance > params_.convergence_tolerance) return false;
-  }
+//     if (delta_x_distance > params_.convergence_tolerance) return false;
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
 void ILQSolver::TotalCosts(const OperatingPoint& current_op,
                            std::vector<float>* total_costs) const {
