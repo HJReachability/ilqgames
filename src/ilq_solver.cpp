@@ -395,6 +395,9 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
   // Compute current KKT squared error. In the process, this will compute a new
   // quadratic approximation at the current operating point and save the old
   // quadraticization.
+  // NOTE: Currently, all KKT computations assume an *open loop* KKT structure.
+  // It remains to show that this is correct for *feedback* games, but
+  // empirically it seems to work ok.
   *current_kkt_squared_error = KKTSquaredError(current_op);
 
   // Compute total expected decrease of KKT squared error.
@@ -431,6 +434,9 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
 }
 
 float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
+  // NOTE: Currently, all KKT computations assume an *open loop* KKT structure.
+  // It remains to show that this is correct for *feedback* games, but
+  // empirically it seems to work ok.
   // NOTE: this will update the current quadraticization and save the old one.
   last_cost_quadraticization_.swap(cost_quadraticization_);
   ComputeCostQuadraticization(current_op, &cost_quadraticization_);
