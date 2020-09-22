@@ -70,8 +70,8 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 0.5, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
+DEFINE_double(convergence_tolerance, 0.1, "KKT squared error tolerance.");
+DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -109,8 +109,8 @@ int main(int argc, char** argv) {
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
   params.enforce_barriers_in_linesearch = true;
-  params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
+  params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.open_loop = kOpenLoop;
 

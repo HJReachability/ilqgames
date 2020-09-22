@@ -367,7 +367,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
 
   if (!params_.linesearch) return true;
 
-  // Keep reducing alphas until we satisfy the trust region.
+  // Keep reducing alphas until we satisfy the Armijo condition.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
     if (CheckArmijoCondition(*current_operating_point, current_stepsize,
                              &current_kkt_squared_error)) {

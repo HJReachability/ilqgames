@@ -63,13 +63,6 @@ struct SolverParams {
   float expected_decrease_fraction = 0.1;
   bool enforce_barriers_in_linesearch = false;
 
-  // Maximum absolute difference between states in the given dimension to
-  // satisfy trust region. Only active if linesearching is on and used by
-  // non-Newton solvers. Newton solvers use the expected decrease fraction
-  // criterion. If dimensions empty then applies in all dimensions.
-  float trust_region_size = 10.0;
-  std::vector<Dimension> trust_region_dimensions;
-
   // Number of iterations until each constraint barrier weights are scaled by
   // the given factor (< 1).
   size_t barrier_scaling_iters = 10;
