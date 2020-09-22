@@ -42,7 +42,7 @@
 
 #include <ilqgames/examples/minimally_invasive_receding_horizon_simulator.h>
 #include <ilqgames/examples/receding_horizon_simulator.h>
-#include <ilqgames/examples/three_player_intersection_example.h>
+#include <ilqgames/examples/modified_three_player_intersection_example.h>
 #include <ilqgames/examples/three_player_intersection_reachability_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
   params.control_regularization = FLAGS_control_regularization;
 
   auto original_problem =
-      std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+      std::make_shared<ilqgames::ModifiedThreePlayerIntersectionExample>();
   original_problem->Initialize();
   ilqgames::ILQSolver original_solver(original_problem, params);
 
