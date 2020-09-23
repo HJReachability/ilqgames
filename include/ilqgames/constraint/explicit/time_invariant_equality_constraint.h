@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,47 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all cost functions. All costs must support evaluation and
-// quadraticization. By default, cost functions are of only state or control.
+// Base class for all time-invariant explicit equality constraints.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/cost.h>
+#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_TIME_INVARIANT_EQUALITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_EXPLICIT_TIME_INVARIANT_EQUALITY_CONSTRAINT_H
+
+#include <ilqgames/constraint/explicit/equality_constraint.h>
+#include <ilqgames/utils/types.h>
+
+#include <glog/logging.h>
+#include <memory>
+#include <string>
 
 namespace ilqgames {
 
-Time Cost::initial_time_ = 0.0;
+class TimeInvariantEqualityConstraint : public EqualityConstraint {
+ public:
+  virtual ~TimeInvariantEqualityConstraint() {}
+
+  // Check if this constraint is satisfied, and optionally return the constraint
+  // value, which equals zero if the constraint is satisfied.
+  virtual bool IsSatisfied(const VectorXf& input, float* level) const = 0;
+  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
+    return IsSatisfied(input, level);
+  }
+
+  // Quadraticize the constraint value. Do *not* keep a running sum since we
+  // keep separate multipliers for each constraint.
+  virtual void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+                            Eigen::Ref<VectorXf> grad) const = 0;
+  void Quadraticize(Time t, const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+                    Eigen::Ref<VectorXf> grad) const {
+    return Quadraticize(input, hess, grad);
+  };
+
+ protected:
+  explicit TimeInvariantEqualityConstraint(const std::string& name)
+      : EqualityConstraint(name) {}
+};  // namespace ilqgames
 
 }  // namespace ilqgames
+
+#endif

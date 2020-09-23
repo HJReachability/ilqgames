@@ -104,6 +104,9 @@ class SolverLog : private Uncopyable {
                    (constants::kSmallNumber + FinalTime() - InitialTime()) /
                    time_step_);
   }
+  std::vector<float> TotalCosts() const {
+    return total_player_costs_.back();
+  }
 
   const std::vector<Strategy>& InitialStrategies() const {
     return strategies_.front();

@@ -36,49 +36,35 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the value of a single dimension of the input. This constraint
-// can be oriented either `left` or `right`, i.e., enforcing that the input is <
-// or > the specified threshold, respectively.
+// Three player intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/single_dimension_constraint.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_EXAMPLES_MODIFIED_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_MODIFIED_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
-#include <glog/logging.h>
-#include <string>
-#include <utility>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-bool SingleDimensionConstraint::IsSatisfiedLevel(const VectorXf& input,
-                                                 float* level) const {
-  // Sign corresponding to the orientation of this constraint.
-  const float sign = (oriented_right_) ? 1.0 : -1.0;
+class ModifiedThreePlayerIntersectionExample : public TopDownRenderableProblem {
+ public:
+  ~ModifiedThreePlayerIntersectionExample() {}
+  ModifiedThreePlayerIntersectionExample() : TopDownRenderableProblem() {}
 
-  // Maybe populate level.
-  const float delta = threshold_ - input(dimension_);
-  *level = sign * delta;
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
-  return (oriented_right_) ? delta < 0.0 : delta > 0.0;
-}
-
-void SingleDimensionConstraint::Quadraticize(const VectorXf& input,
-                                             MatrixXf* hess,
-                                             VectorXf* grad) const {
-  CHECK_NOTNULL(hess);
-  CHECK_NOTNULL(grad);
-
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
-
-  // Compute Hessian and gradient.
-  const float delta_inv = 1.0 / (threshold_ - input(dimension_));
-  const float weighted_delta_inv = weight_ * delta_inv;
-  (*grad)(dimension_) += weighted_delta_inv;
-  (*hess)(dimension_, dimension_) += weighted_delta_inv * delta_inv;
-}
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class ModifiedThreePlayerIntersectionExample
 
 }  // namespace ilqgames
+
+#endif

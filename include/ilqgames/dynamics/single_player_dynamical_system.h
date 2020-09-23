@@ -73,6 +73,7 @@ class SinglePlayerDynamicalSystem {
   // Getters.
   Dimension XDim() const { return xdim_; }
   Dimension UDim() const { return udim_; }
+  virtual std::vector<Dimension> PositionDimensions() const = 0;
 
  protected:
   SinglePlayerDynamicalSystem(Dimension xdim, Dimension udim)

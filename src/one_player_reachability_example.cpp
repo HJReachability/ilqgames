@@ -41,7 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/single_dimension_constraint.h>
+#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
@@ -67,11 +67,6 @@ DEFINE_double(theta0, 0.0, "Initial heading (rad).");
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 2.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Reach or avoid?
 static constexpr bool kAvoid = true;
@@ -79,8 +74,9 @@ static constexpr bool kAvoid = true;
 // Target radius.
 static constexpr float kTargetRadius = 2.0;  // m
 
-// Input constraint.
+// Input constraint and cost weight.
 static constexpr float kOmegaMax = 1.0;  // rad/s
+static constexpr float kOmegaCostWeight = 0.1;
 
 // Speed.
 static constexpr float kSpeed = 1.0;  // m/s
@@ -98,49 +94,38 @@ static const Dimension kP1ThetaIdx = P1::kThetaIdx;
 
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
+
 }  // anonymous namespace
 
-OnePlayerReachabilityExample::OnePlayerReachabilityExample(
-    const SolverParams& params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem({std::make_shared<P1>(kSpeed)},
-                                      kTimeStep));
+void OnePlayerReachabilityExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kSpeed)}, time_step_));
+}
 
+void OnePlayerReachabilityExample::ConstructInitialState() {
   // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = FLAGS_px0;
   x0_(kP1YIdx) = FLAGS_py0;
   x0_(kP1ThetaIdx) = FLAGS_theta0;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-  constexpr size_t kNumTimeStepsInitialTurn = 0;
-  for (size_t kk = 0; kk < kNumTimeStepsInitialTurn; kk++)
-    operating_point_->us[kk][0](0) = -0.5;
-
+void OnePlayerReachabilityExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1");
+  player_costs_.emplace_back("P1");
+  auto& p1_cost = player_costs_[0];
 
-  const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, -1, 0.0, "ControlCost");
+  const auto control_cost =
+      std::make_shared<QuadraticCost>(kOmegaCostWeight, -1, 0.0, "ControlCost");
   p1_cost.AddControlCost(0, control_cost);
 
   // Constrain control effort.
-  const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, false,
-                                                  "Input Constraint (Max)");
-  const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax, true,
-                                                  "Input Constraint (Min)");
-  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  const auto p1_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      kP1OmegaIdx, kOmegaMax, false, "Input Barrier (Max)");
+  const auto p1_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      kP1OmegaIdx, -kOmegaMax, true, "Input Barrier (Min)");
+  p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
+  p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
 
   // Target cost.
   const Polyline2 circle =
@@ -153,9 +138,6 @@ OnePlayerReachabilityExample::OnePlayerReachabilityExample(
 
   // Make sure costs are maxima-over-time.
   p1_cost.SetMaxOverTime();
-
-  // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> OnePlayerReachabilityExample::Xs(

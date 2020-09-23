@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,56 +36,56 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the value of a single dimension of the input. This constraint
-// can be oriented either `left` or `right`, i.e., enforcing that the input is <
-// or > the specified threshold, respectively.
+// (Time-invariant) vector equality constraint, i.e., 0.5*||x - \hat x||^2 = 0.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_VECTOR_EQUALITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_EXPLICIT_VECTOR_EQUALITY_CONSTRAINT_H
 
-#include <ilqgames/constraint/time_invariant_constraint.h>
-#include <ilqgames/cost/semiquadratic_cost.h>
+#include <ilqgames/constraint/explicit/time_invariant_equality_constraint.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-class SingleDimensionConstraint : public TimeInvariantConstraint {
+class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
  public:
-  SingleDimensionConstraint(Dimension dimension, float threshold,
-                            bool oriented_right, const std::string& name = "")
-      : TimeInvariantConstraint(name),
-        dimension_(dimension),
-        threshold_(threshold),
-        oriented_right_(oriented_right) {
-    // Set equivalent cost pointer.
-    const float new_threshold =
-        (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
-    CHECK_GE(dimension, 0);
-    equivalent_cost_.reset(
-        new SemiquadraticCost(kInitialEquivalentCostWeight, dimension,
-                              new_threshold, !oriented_right, name + "/Cost"));
+  ~VectorEqualityConstraint() {}
+  VectorEqualityConstraint(const VectorXf& nominal,
+                           const std::string& name = "")
+      : TimeInvariantEqualityConstraint(name), nominal_(nominal) {}
+
+  // Check if this constraint is satisfied, and optionally return the constraint
+  // value, which equals zero if the constraint is satisfied.
+  bool IsSatisfied(const VectorXf& input, float* level) const {
+    CHECK_EQ(input.size(), nominal_.size());
+    const float value = 0.5 * (input - nominal_).squaredNorm();
+
+    if (*level) *level = value;
+    return std::abs(value) < constants::kSmallNumber;
   }
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
+  // Quadraticize the constraint value. Do *not* keep a running sum since we
+  // keep separate multipliers for each constraint.
+  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+                    Eigen::Ref<VectorXf> grad) const {
+    CHECK_EQ(input.size(), nominal_.size());
+    CHECK_EQ(hess.rows(), input.size());
+    CHECK_EQ(hess.cols(), input.size());
+    CHECK_EQ(grad.size(), input.size());
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+    hess.setIdentity();
+    grad = input - nominal_;
+  }
 
  private:
-  // Dimension, threshold, and orientation.
-  const Dimension dimension_;
-  const float threshold_;
-  const bool oriented_right_;
-};  //\class SingleDimensionConstraint
+  // Nominal vector.
+  const VectorXf nominal_;
+};  //\class VectorEqualityConstraint
 
 }  // namespace ilqgames
 

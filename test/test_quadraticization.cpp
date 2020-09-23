@@ -40,9 +40,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
-#include <ilqgames/constraint/proximity_constraint.h>
-#include <ilqgames/constraint/single_dimension_constraint.h>
+#include <ilqgames/constraint/barrier/polyline2_signed_distance_barrier.h>
+#include <ilqgames/constraint/barrier/proximity_barrier.h>
+#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -51,8 +51,10 @@
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/relative_distance_cost.h>
 #include <ilqgames/cost/route_progress_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
@@ -310,6 +312,16 @@ TEST(QuadraticCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
+TEST(QuadraticDifferenceCostTest, QuadraticizesCorrectly) {
+  QuadraticDifferenceCost cost(kCostWeight, {0, 1}, {1, 2});
+  CheckQuadraticization(cost);
+}
+
+TEST(RelativeDistanceCostTest, QuadraticizesCorrectly) {
+  RelativeDistanceCost cost(kCostWeight, {0, 1}, {1, 2});
+  CheckQuadraticization(cost);
+}
+
 TEST(QuadraticNormCostTest, QuadraticizesCorrectly) {
   QuadraticNormCost cost(kCostWeight, {1, 2}, 1.0);
   CheckQuadraticization(cost);
@@ -375,23 +387,33 @@ TEST(OrientationCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost);
 }
 
-TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
-  ProximityConstraint outside_constraint({0, 1}, {2, 3}, 0.0, false);
-  CheckQuadraticization(outside_constraint);
+TEST(ProximityBarrierTest, QuadraticizesCorrectly) {
+  ProximityBarrier outside_barrier({0, 1}, {2, 3}, 0.0, false);
+  CheckQuadraticization(outside_barrier);
 }
 
-TEST(SingleDimensionConstraintTest, SingleDimensionCorrectly) {
-  SingleDimensionConstraint left_constraint(0, 10.0, false);
-  CheckQuadraticization(left_constraint);
+TEST(SingleDimensionBarrierTest, SingleDimensionCorrectly) {
+  SingleDimensionBarrier left_barrier(0, 10.0, false);
+  CheckQuadraticization(left_barrier);
 
-  SingleDimensionConstraint right_constraint(0, -10.0, true);
-  CheckQuadraticization(right_constraint);
+  SingleDimensionBarrier right_barrier(0, -10.0, true);
+  CheckQuadraticization(right_barrier);
 }
 
 TEST(Polyline2SignedDistanceCostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   Polyline2SignedDistanceCost cost(polyline, {0, 1});
   CheckQuadraticization(cost);
+}
+
+TEST(Polyline2SignedDistanceBarrierTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+
+  Polyline2SignedDistanceBarrier left_barrier(polyline, {0, 1}, 10.0, false);
+  CheckQuadraticization(left_barrier);
+
+  Polyline2SignedDistanceBarrier right_barrier(polyline, {0, 1}, -10.0, true);
+  CheckQuadraticization(right_barrier);
 }
 
 TEST(SignedDistanceCostTest, QuadraticizesCorrectly) {

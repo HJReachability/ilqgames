@@ -100,6 +100,7 @@ class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
   Dimension UDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->UDim();
   }
+  std::vector<Dimension> PositionDimensions() const;
 
  private:
   // List of subsystems, each of which controls the affects of a single player.

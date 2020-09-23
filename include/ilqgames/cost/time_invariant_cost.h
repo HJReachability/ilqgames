@@ -70,7 +70,7 @@ class TimeInvariantCost : public Cost {
   }
 
  protected:
-  explicit TimeInvariantCost(float weight, const std::string& name = "")
+  explicit TimeInvariantCost(float weight, const std::string& name)
       : Cost(weight, name) {}
 };  //\class TimeInvariantCost
 

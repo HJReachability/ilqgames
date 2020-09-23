@@ -47,6 +47,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -63,6 +64,9 @@ bool NumericalCheckLocalNashEquilibrium(
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
     Time time_step, float max_perturbation, bool open_loop = false);
+bool NumericalCheckLocalNashEquilibrium(const Problem& problem,
+                                        float max_perturbation,
+                                        bool open_loop = false);
 
 // Check sufficient conditions for local Nash equilibrium, i.e., Q_i, R_ij all
 // positive semidefinite for each player. Optionally takes in a pointer to flat
@@ -71,7 +75,9 @@ bool NumericalCheckLocalNashEquilibrium(
 bool CheckSufficientLocalNashEquilibrium(
     const std::vector<PlayerCost>& player_costs,
     const OperatingPoint& operating_point, Time time_step,
-    const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics = nullptr);
+    const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics =
+        nullptr);
+bool CheckSufficientLocalNashEquilibrium(const Problem& problem);
 
 }  // namespace ilqgames
 

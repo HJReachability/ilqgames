@@ -71,6 +71,9 @@ class SinglePlayerDelayedDubinsCar : public SinglePlayerDynamicalSystem {
   void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
+  // Position dimensions.
+  std::vector<Dimension> PositionDimensions() const { return {kPxIdx, kPyIdx}; }
+
   // Constexprs for state indices.
   static const Dimension kNumXDims;
   static const Dimension kPxIdx;

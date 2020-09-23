@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,53 +36,37 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all time-invariant constraints.
+// Air3D dynamics, from:
+// https://www.cs.ubc.ca/~mitchell/Papers/publishedIEEEtac05.pdf.
+//
+// Here, two Dubins cars are navigating in relative coordinates, and the usual
+// setup is a pursuit-evasion game.
+//
+// Dynamics are:
+//                 \dot r_x = -v_e + v_p cos(r_theta) + u_e r_y
+//                 \dot r_y = v_p sin(r_theta) - u_e r_x
+//                 \dot r_theta = u_p - u_e
+// and the convention below is that controls are "omega" and the evader is P1
+// and the pursuer is P2.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
-
-#include <ilqgames/constraint/constraint.h>
-#include <ilqgames/cost/cost.h>
-#include <ilqgames/utils/types.h>
-
-#include <string>
+#include <ilqgames/dynamics/air_3d.h>
 
 namespace ilqgames {
 
-class TimeInvariantConstraint : public Constraint {
- public:
-  virtual ~TimeInvariantConstraint() {}
+// Constexprs for state indices.
+const Dimension Air3D::kNumXDims = 3;
+const Dimension Air3D::kRxIdx = 0;
+const Dimension Air3D::kRyIdx = 1;
+const Dimension Air3D::kRThetaIdx = 2;
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(Time t, const VectorXf& input, float* level) const {
-    CHECK_NOTNULL(level);
-    return IsSatisfiedLevel(input, level);
-  };
-  virtual bool IsSatisfiedLevel(const VectorXf& input, float* level) const = 0;
+// Constexprs for control indices.
+const PlayerIndex Air3D::kNumPlayers = 2;
 
-  // Evaluate the barrier at the current input (use base class implementation
-  // and provide arbitrary time).
-  float Evaluate(const VectorXf& input) const {
-    return Constraint::Evaluate(0.0, input);
-  };
+const Dimension Air3D::kNumU1Dims = 1;
+const Dimension Air3D::kOmega1Idx = 0;
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
-    Quadraticize(input, hess, grad);
-  };
-  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
-
- protected:
-  explicit TimeInvariantConstraint(const std::string& name = "")
-      : Constraint(name) {}
-};  //\class TimeInvariantConstraint
-
-}  // namespace ilqgames
-
-#endif
+const Dimension Air3D::kNumU2Dims = 1;
+const Dimension Air3D::kOmega2Idx = 0;
+}

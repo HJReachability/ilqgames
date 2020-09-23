@@ -77,7 +77,7 @@ struct SingleCostApproximation {
 
 struct QuadraticCostApproximation {
   SingleCostApproximation state;
-  std::unordered_map<PlayerIndex, SingleCostApproximation> control;
+  PlayerMap<SingleCostApproximation> control;
 
   // Construct from state dimension.
   explicit QuadraticCostApproximation(Dimension xdim,

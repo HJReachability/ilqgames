@@ -60,7 +60,8 @@ float Polyline2SignedDistanceCost::Evaluate(const VectorXf& input) const {
   if (!oriented_same_as_polyline_) signed_squared_distance *= -1.0;
 
   return sgn(signed_squared_distance) *
-         std::sqrt(std::abs(signed_squared_distance));
+             std::sqrt(std::abs(signed_squared_distance)) -
+         nominal_;
 }
 
 void Polyline2SignedDistanceCost::Quadraticize(const VectorXf& input,

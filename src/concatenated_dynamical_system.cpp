@@ -129,4 +129,15 @@ float ConcatenatedDynamicalSystem::DistanceBetween(const VectorXf& x0,
   // return total;
 }
 
+std::vector<Dimension> ConcatenatedDynamicalSystem::PositionDimensions() const {
+  std::vector<Dimension> dims;
+
+  for (const auto& s : subsystems_) {
+    const std::vector<Dimension> sub_dims = s->PositionDimensions();
+    dims.insert(dims.end(), sub_dims.begin(), sub_dims.end());
+  }
+
+  return dims;
+}
+
 }  // namespace ilqgames

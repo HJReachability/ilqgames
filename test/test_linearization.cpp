@@ -40,12 +40,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/air_3d.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
 #include <ilqgames/dynamics/single_player_delayed_dubins_car.h>
 #include <ilqgames/dynamics/single_player_dubins_car.h>
+#include <ilqgames/dynamics/single_player_point_mass_2d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
 #include <ilqgames/dynamics/two_player_unicycle_4d.h>
@@ -245,5 +247,16 @@ TEST(ConcatenatedDynamicalSystemTest, LinearizesCorrectly) {
       {std::make_shared<SinglePlayerUnicycle4D>(),
        std::make_shared<SinglePlayerCar5D>(kInterAxleLength)},
       kTimeStep);
+  CheckLinearization(system);
+}
+
+TEST(Air3DTest, LinearizesCorrectly) {
+  constexpr float kSpeed = 3.0;  // m/s
+  const Air3D system(kSpeed, kSpeed, kTimeStep);
+  CheckLinearization(system);
+}
+
+TEST(SinglePlayerPointMass2DTest, LinearizesCorrectly) {
+  const SinglePlayerPointMass2D system;
   CheckLinearization(system);
 }

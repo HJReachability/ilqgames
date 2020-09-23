@@ -36,7 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all constraints. We assume that all constraints are
+// Base class for all barrier constraints. We assume that all constraints are
 // *inequalities*, which support a check for satisfaction. All constraints must
 // also implement the cost interface corresponding to a barrier function.
 // Further, all constraints also must have a corresponding cost associated to
@@ -46,8 +46,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_BARRIER_BARRIER_H
+#define ILQGAMES_CONSTRAINT_BARRIER_BARRIER_H
 
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
@@ -58,9 +58,9 @@
 
 namespace ilqgames {
 
-class Constraint : public Cost {
+class Barrier : public Cost {
  public:
-  virtual ~Constraint() {}
+  virtual ~Barrier() {}
 
   // Set or multiplicatively scale the barrier weight. This will typically
   // decrease with successive solves in order to improve the approximation of
@@ -99,16 +99,16 @@ class Constraint : public Cost {
   }
 
  protected:
-  explicit Constraint(const std::string& name = "")
+  explicit Barrier(const std::string& name = "")
       : Cost(kInitialBarrierWeight, name) {}
 
   // "Equivalent" well-defined cost to encourage constraint satisfaction, e.g.,
   // when an initial iterate is infeasible.
   std::unique_ptr<Cost> equivalent_cost_;
-  static constexpr float kInitialBarrierWeight = 1e2;
-  static constexpr float kInitialEquivalentCostWeight = 1e6;
+  static constexpr float kInitialBarrierWeight = 1.0;
+  static constexpr float kInitialEquivalentCostWeight = 0.1;
   static constexpr float kCostBuffer = 1.0;
-};  //\class Constraint
+};  //\class Barrier
 
 }  // namespace ilqgames
 

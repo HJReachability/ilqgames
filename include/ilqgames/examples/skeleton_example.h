@@ -54,7 +54,12 @@ namespace ilqgames {
 class SkeletonExample : public TopDownRenderableProblem {
  public:
   ~SkeletonExample() {}
-  SkeletonExample(const SolverParams& params);
+  SkeletonExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;

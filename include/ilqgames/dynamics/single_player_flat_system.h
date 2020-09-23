@@ -81,6 +81,7 @@ class SinglePlayerFlatSystem {
   // Getters.
   Dimension XDim() const { return xdim_; }
   Dimension UDim() const { return udim_; }
+  virtual std::vector<Dimension> PositionDimensions() const = 0;
 
  protected:
   SinglePlayerFlatSystem(Dimension xdim, Dimension udim)

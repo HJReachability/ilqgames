@@ -77,6 +77,9 @@ class SinglePlayerCar7D : public SinglePlayerDynamicalSystem {
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
 
+  // Position dimensions.
+  std::vector<Dimension> PositionDimensions() const { return {kPxIdx, kPyIdx}; }
+
   // Constexprs for state indices.
   static const Dimension kNumXDims;
   static const Dimension kPxIdx;

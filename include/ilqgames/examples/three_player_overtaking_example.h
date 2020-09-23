@@ -44,15 +44,20 @@
 #define ILQGAMES_EXAMPLES_THREE_PLAYER_OVERTAKING_EXAMPLE_H
 
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/solver/top_down_renderable_problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
 class ThreePlayerOvertakingExample : public TopDownRenderableProblem {
  public:
   ~ThreePlayerOvertakingExample() {}
-  ThreePlayerOvertakingExample(const SolverParams& params);
+  ThreePlayerOvertakingExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;

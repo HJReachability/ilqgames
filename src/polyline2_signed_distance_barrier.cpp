@@ -42,7 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
+#include <ilqgames/constraint/barrier/polyline2_signed_distance_barrier.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
@@ -51,8 +51,8 @@
 
 namespace ilqgames {
 
-bool Polyline2SignedDistanceConstraint::IsSatisfiedLevel(const VectorXf& input,
-                                                         float* level) const {
+bool Polyline2SignedDistanceBarrier::IsSatisfiedLevel(const VectorXf& input,
+                                                      float* level) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 
@@ -69,9 +69,9 @@ bool Polyline2SignedDistanceConstraint::IsSatisfiedLevel(const VectorXf& input,
                            : signed_distance_sq < signed_threshold_sq_;
 }
 
-void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
-                                                     MatrixXf* hess,
-                                                     VectorXf* grad) const {
+void Polyline2SignedDistanceBarrier::Quadraticize(const VectorXf& input,
+                                                  MatrixXf* hess,
+                                                  VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 

@@ -133,10 +133,19 @@ bool NumericalCheckLocalNashEquilibrium(
   return true;
 }
 
+bool NumericalCheckLocalNashEquilibrium(const Problem& problem,
+                                        float max_perturbation,
+                                        bool open_loop) {
+  return NumericalCheckLocalNashEquilibrium(
+      problem.PlayerCosts(), problem.CurrentStrategies(),
+      problem.CurrentOperatingPoint(), *problem.Dynamics(),
+      problem.InitialState(), problem.TimeStep(), max_perturbation, open_loop);
+}
+
 bool CheckSufficientLocalNashEquilibrium(
     const std::vector<PlayerCost>& player_costs,
     const OperatingPoint& operating_point, Time time_step,
-    const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics) {
+    const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics) {
   // Unpack number of players and number of time steps.
   const PlayerIndex num_players = player_costs.size();
   const size_t num_time_steps = operating_point.xs.size();
@@ -152,10 +161,14 @@ bool CheckSufficientLocalNashEquilibrium(
     VectorXf x = operating_point.xs[kk];
     std::vector<VectorXf> us = operating_point.us[kk];
 
-    if (dynamics.get()) {
+    // Maybe convert out of linear system coordinates.
+    if (dynamics.get() && dynamics->TreatAsLinear()) {
+      const auto& dyn =
+          *static_cast<const MultiPlayerFlatSystem*>(dynamics.get());
+
       // Previous x, us are actually xi, vs.
-      x = dynamics->FromLinearSystemState(x.eval());
-      us = dynamics->LinearizingControls(x, std::vector<VectorXf>(us));
+      x = dyn.FromLinearSystemState(x.eval());
+      us = dyn.LinearizingControls(x, std::vector<VectorXf>(us));
     }
 
     std::transform(player_costs.begin(), player_costs.end(),
@@ -185,6 +198,12 @@ bool CheckSufficientLocalNashEquilibrium(
   }
 
   return true;
+}
+
+bool CheckSufficientLocalNashEquilibrium(const Problem& problem) {
+  return CheckSufficientLocalNashEquilibrium(
+      problem.PlayerCosts(), problem.CurrentOperatingPoint(),
+      problem.TimeStep(), problem.Dynamics());
 }
 
 }  // namespace ilqgames

@@ -44,6 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/ilq_flat_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -69,8 +70,8 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 50.0, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.45, "L_inf tolerance for convergence.");
+DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
+DEFINE_double(convergence_tolerance, 0.01, "KKT squared error tolerance.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -102,20 +103,25 @@ int main(int argc, char** argv) {
   gflags::ParseCommandLineFlags(&argc, &argv, true);
   FLAGS_logtostderr = true;
 
+  // Make a problem.
+  auto problem = std::make_shared<ilqgames::FlatRoundaboutMergingExample>();
+  problem->Initialize();
+
   // Set up the game.
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_constraints_in_linesearch = true;
-  params.trust_region_size = FLAGS_trust_region_size;
+  params.enforce_barriers_in_linesearch = true;
+  params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  auto problem =
-      std::make_shared<ilqgames::FlatRoundaboutMergingExample>(params);
+
+  // Make a solver.
+  ilqgames::ILQFlatSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
-  std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
+  std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
   LOG(INFO) << "Solver completed in "
             << std::chrono::duration<ilqgames::Time>(
@@ -124,9 +130,9 @@ int main(int argc, char** argv) {
             << " seconds.";
 
   // Check if solution satisfies sufficient conditions for being a local Nash.
-  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(
-      problem->Solver().PlayerCosts(), problem->CurrentOperatingPoint(),
-      problem->Solver().TimeStep());
+  problem->OverwriteSolution(log->FinalOperatingPoint(),
+                             log->FinalStrategies());
+  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(*problem);
   if (is_local_nash)
     LOG(INFO) << "Solution is a local Nash.";
   else
@@ -146,8 +152,7 @@ int main(int argc, char** argv) {
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
