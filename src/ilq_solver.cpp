@@ -352,6 +352,10 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
 
+  // DEBUG: show how alphas are decaying - i.e., we're finding a fixed point.
+  //  std::cout << strategies->front().alphas.front().squaredNorm() <<
+  //  std::endl;
+
   // Initially scale alphas by a fixed amount to avoid unnecessary
   // backtracking.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
