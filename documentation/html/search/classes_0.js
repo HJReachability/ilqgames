@@ -1,10 +1,6 @@
 var searchData=
 [
-  ['concatenateddynamicalsystem',['ConcatenatedDynamicalSystem',['../classilqgames_1_1_concatenated_dynamical_system.html',1,'ilqgames']]],
-  ['concatenatedflatsystem',['ConcatenatedFlatSystem',['../classilqgames_1_1_concatenated_flat_system.html',1,'ilqgames']]],
-  ['constraint',['Constraint',['../classilqgames_1_1_constraint.html',1,'ilqgames']]],
-  ['controlsliders',['ControlSliders',['../classilqgames_1_1_control_sliders.html',1,'ilqgames']]],
-  ['cost',['Cost',['../classilqgames_1_1_cost.html',1,'ilqgames']]],
-  ['costinspector',['CostInspector',['../classilqgames_1_1_cost_inspector.html',1,'ilqgames']]],
-  ['curvaturecost',['CurvatureCost',['../classilqgames_1_1_curvature_cost.html',1,'ilqgames']]]
+  ['affineequalityconstraint',['AffineEqualityConstraint',['../classilqgames_1_1_affine_equality_constraint.html',1,'ilqgames']]],
+  ['air3d',['Air3D',['../classilqgames_1_1_air3_d.html',1,'ilqgames']]],
+  ['air3dexample',['Air3DExample',['../classilqgames_1_1_air3_d_example.html',1,'ilqgames']]]
 ];

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,20 +36,20 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all iterative LQ game solvers.
-// Structured so that derived classes may only modify the `ModifyLQStrategies`
-// and `HasConverged` virtual functions.
+// Base class for all game solvers. All solvers will need linearization,
+// quadraticization, and loop timing.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef ILQGAMES_SOLVER_GAME_SOLVER_H
 #define ILQGAMES_SOLVER_GAME_SOLVER_H
 
-#include <ilqgames/cost/player_cost.h>
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/loop_timer.h>
@@ -70,9 +70,6 @@ namespace ilqgames {
 
 namespace {
 
-// Rename the system clock for easier usage.
-using clock = std::chrono::system_clock;
-
 // Maximum number of loop times to store in loop timer.
 static constexpr size_t kMaxLoopTimesToRecord = 10;
 
@@ -83,110 +80,60 @@ class GameSolver {
   virtual ~GameSolver() {}
 
   // Solve this game. Returns true if converged.
-  virtual bool Solve(const VectorXf& x0,
-                     const OperatingPoint& initial_operating_point,
-                     const std::vector<Strategy>& initial_strategies,
-                     OperatingPoint* final_operating_point,
-                     std::vector<Strategy>* final_strategies,
-                     SolverLog* log = nullptr,
-                     Time max_runtime = std::numeric_limits<Time>::infinity());
+  virtual std::shared_ptr<SolverLog> Solve(
+      bool* success = nullptr,
+      Time max_runtime = std::numeric_limits<Time>::infinity()) = 0;
 
   // Accessors.
-  Time TimeHorizon() const { return time_horizon_; }
-  size_t NumTimeSteps() const { return num_time_steps_; }
-  Time TimeStep() const { return time_step_; }
-  const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
-  const MultiPlayerIntegrableSystem& Dynamics() const { return *dynamics_; }
-
-  // Compute time stamp from time index.
-  Time ComputeTimeStamp(size_t time_index) const {
-    return time_step_ * static_cast<Time>(time_index);
-  }
+  Problem& GetProblem() { return *problem_; }
 
  protected:
-  GameSolver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-             const std::vector<PlayerCost>& player_costs, Time time_horizon,
-             const SolverParams& params = SolverParams())
-      : dynamics_(dynamics),
-        player_costs_(player_costs),
-        time_horizon_(time_horizon),
-        time_step_(dynamics->TimeStep()),
-        num_time_steps_(static_cast<size_t>(
-            (constants::kSmallNumber + time_horizon) / time_step_)),
-        linearization_(num_time_steps_),
-        quadraticization_(num_time_steps_),
+  GameSolver(const std::shared_ptr<Problem>& problem,
+             const SolverParams& params)
+      : problem_(problem),
+        linearization_(problem->NumTimeSteps()),
+        cost_quadraticization_(problem_->NumTimeSteps()),
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
-    CHECK_EQ(player_costs_.size(), dynamics_->NumPlayers());
-
-    if (params_.open_loop)
-      lq_solver_.reset(new LQOpenLoopSolver(dynamics_, num_time_steps_));
-    else
-      lq_solver_.reset(new LQFeedbackSolver(dynamics_, num_time_steps_));
+    CHECK_NOTNULL(problem_.get());
+    CHECK_NOTNULL(problem_->Dynamics().get());
 
     // Prepopulate quadraticization.
-    for (auto& quads : quadraticization_)
-      quads.resize(dynamics_->NumPlayers(),
-                   QuadraticCostApproximation(dynamics_->XDim()));
+    for (auto& quads : cost_quadraticization_)
+      quads.resize(problem_->Dynamics()->NumPlayers(),
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
+
+    // Set last quadraticization to current, to start.
+    last_cost_quadraticization_ = cost_quadraticization_;
+  }
+
+  // Create a new log. This may be overridden by derived classes (e.g., to
+  // change the name of the log).
+  virtual std::shared_ptr<SolverLog> CreateNewLog() const {
+    return std::make_shared<SolverLog>(problem_->TimeStep());
   }
 
   // Populate the given vector with a linearization of the dynamics about
   // the given operating point.
   virtual void ComputeLinearization(
       const OperatingPoint& op,
-      std::vector<LinearDynamicsApproximation>* linearization) = 0;
+      std::vector<LinearDynamicsApproximation>* linearization);
 
-  // Modify LQ strategies to improve convergence properties.
-  // This function replaces an Armijo linesearch that would take place in ILQR.
-  // Returns true if successful, and records if we have converged and the total
-  // costs for all players at the new operating point, as well as the times at
-  // which each player achieves an extreme cost.
-  virtual bool ModifyLQStrategies(
-      std::vector<Strategy>* strategies,
-      OperatingPoint* current_operating_point,
-      bool* is_new_operating_point_feasible, bool* has_converged,
-      std::vector<float>* total_costs,
-      std::vector<size_t>* times_of_extreme_costs) const;
+  // Compute the quadratic cost approximation at the given operating point.
+  void ComputeCostQuadraticization(
+      const OperatingPoint& op,
+      std::vector<std::vector<QuadraticCostApproximation>>* q);
 
-  // Compute distance (infinity norm) between states in the given dimensions.
-  // If dimensions empty, checks all dimensions.
-  virtual float StateDistance(const VectorXf& x1, const VectorXf& x2,
-                              const std::vector<Dimension>& dims) const;
-
-  // Compute the current operating point based on the current set of strategies
-  // and the last operating point. Checks whether the solver has converged and
-  // populates the total costs for all players of the new operating point.
-  // Returns true if the new operating point satisfies the trust region
-  // (including all explicit inequality constraints), or if the
-  // `check_trust_region` flag is false. Optionally also returns the times of
-  // extreme costs.
-  bool CurrentOperatingPoint(const OperatingPoint& last_operating_point,
-                             const std::vector<Strategy>& current_strategies,
-                             OperatingPoint* current_operating_point,
-                             bool* has_converged,
-                             std::vector<float>* total_costs,
-                             std::vector<size_t>* times_of_extreme_costs,
-                             bool check_trust_region = true,
-                             bool* satisfies_constraints = nullptr) const;
-
-  // Dynamical system.
-  const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;
-
-  // Player costs. These will not change during operation of this solver.
-  std::vector<PlayerCost> player_costs_;
-
-  // Time horizon (s), time step (s), and number of time steps.
-  const Time time_horizon_;
-  const Time time_step_;
-  const size_t num_time_steps_;
+  // Store the underlying problem.
+  const std::shared_ptr<Problem> problem_;
 
   // Linearization and quadraticization. Both are time-indexed (and
-  // quadraticizations' inner vector is indexed by player).
+  // quadraticizations' inner vector is indexed by player). Also keep track of
+  // the quadraticization from last iteration.
   std::vector<LinearDynamicsApproximation> linearization_;
-  std::vector<std::vector<QuadraticCostApproximation>> quadraticization_;
-
-  // Core LQ Solver.
-  std::unique_ptr<LQSolver> lq_solver_;
+  std::vector<std::vector<QuadraticCostApproximation>> cost_quadraticization_;
+  std::vector<std::vector<QuadraticCostApproximation>>
+      last_cost_quadraticization_;
 
   // Solver parameters.
   const SolverParams params_;

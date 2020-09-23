@@ -5,7 +5,7 @@
 %%For: 
 %Magnification: 1.00
 %%Orientation: Portrait
-%%BoundingBox: 0 0 500 186.588921
+%%BoundingBox: 0 0 500 209.912536
 %%Pages: 0
 %%BeginSetup
 %%EndSetup
@@ -19,12 +19,12 @@
 /marginwidth 10 def
 /distx 20 def
 /disty 40 def
-/boundaspect 2.679688 def  % aspect ratio of the BoundingBox (width/height)
+/boundaspect 2.381944 def  % aspect ratio of the BoundingBox (width/height)
 /boundx 500 def
 /boundy boundx boundaspect div def
 /xspacing 0 def
 /yspacing 0 def
-/rows 16 def
+/rows 18 def
 /cols 7 def
 /scalefactor 0 def
 /boxfont /Times-Roman findfont fontheight scalefont def
@@ -174,13 +174,14 @@
 boxfont setfont
 1 boundaspect scale
 (ilqgames::Cost) cw
-(ilqgames::Constraint) cw
+(ilqgames::RelativeTimeTracker) cw
+(ilqgames::Barrier) cw
 (ilqgames::ExtremeValueCost) cw
 (ilqgames::FinalTimeCost) cw
 (ilqgames::NominalPathLengthCost) cw
 (ilqgames::RouteProgressCost) cw
 (ilqgames::TimeInvariantCost) cw
-(ilqgames::TimeInvariantConstraint) cw
+(ilqgames::TimeInvariantBarrier) cw
 (ilqgames::CurvatureCost) cw
 (ilqgames::LocallyConvexProximityCost) cw
 (ilqgames::OrientationCost) cw
@@ -190,6 +191,7 @@ boxfont setfont
 (ilqgames::QuadraticDifferenceCost) cw
 (ilqgames::QuadraticNormCost) cw
 (ilqgames::QuadraticPolyline2Cost) cw
+(ilqgames::RelativeDistanceCost) cw
 (ilqgames::SemiquadraticCost) cw
 (ilqgames::SemiquadraticNormCost) cw
 (ilqgames::SemiquadraticPolyline2Cost) cw
@@ -206,24 +208,26 @@ boundx scalefactor div boundy scalefactor div scale
 
 % ----- classes -----
 
- (ilqgames::Cost) 2.500000 15.000000 box
- (ilqgames::Constraint) 0.000000 14.000000 box
- (ilqgames::ExtremeValueCost) 1.000000 14.000000 box
- (ilqgames::FinalTimeCost) 2.000000 14.000000 box
- (ilqgames::NominalPathLengthCost) 3.000000 14.000000 box
- (ilqgames::RouteProgressCost) 4.000000 14.000000 box
- (ilqgames::TimeInvariantCost) 5.000000 14.000000 box
- (ilqgames::TimeInvariantConstraint) 0.000000 13.000000 box
-0.000000 13.000000 mark
- (ilqgames::CurvatureCost) 6.000000 13.000000 box
- (ilqgames::LocallyConvexProximityCost) 6.000000 12.000000 box
- (ilqgames::OrientationCost) 6.000000 11.000000 box
- (ilqgames::Polyline2SignedDistanceCost) 6.000000 10.000000 box
- (ilqgames::ProximityCost) 6.000000 9.000000 box
- (ilqgames::QuadraticCost) 6.000000 8.000000 box
- (ilqgames::QuadraticDifferenceCost) 6.000000 7.000000 box
- (ilqgames::QuadraticNormCost) 6.000000 6.000000 box
- (ilqgames::QuadraticPolyline2Cost) 6.000000 5.000000 box
+ (ilqgames::Cost) 2.500000 16.000000 box
+ (ilqgames::RelativeTimeTracker) 2.500000 17.000000 box
+ (ilqgames::Barrier) 0.000000 15.000000 box
+ (ilqgames::ExtremeValueCost) 1.000000 15.000000 box
+ (ilqgames::FinalTimeCost) 2.000000 15.000000 box
+ (ilqgames::NominalPathLengthCost) 3.000000 15.000000 box
+ (ilqgames::RouteProgressCost) 4.000000 15.000000 box
+ (ilqgames::TimeInvariantCost) 5.000000 15.000000 box
+ (ilqgames::TimeInvariantBarrier) 0.000000 14.000000 box
+0.000000 14.000000 mark
+ (ilqgames::CurvatureCost) 6.000000 14.000000 box
+ (ilqgames::LocallyConvexProximityCost) 6.000000 13.000000 box
+ (ilqgames::OrientationCost) 6.000000 12.000000 box
+ (ilqgames::Polyline2SignedDistanceCost) 6.000000 11.000000 box
+ (ilqgames::ProximityCost) 6.000000 10.000000 box
+ (ilqgames::QuadraticCost) 6.000000 9.000000 box
+ (ilqgames::QuadraticDifferenceCost) 6.000000 8.000000 box
+ (ilqgames::QuadraticNormCost) 6.000000 7.000000 box
+ (ilqgames::QuadraticPolyline2Cost) 6.000000 6.000000 box
+ (ilqgames::RelativeDistanceCost) 6.000000 5.000000 box
  (ilqgames::SemiquadraticCost) 6.000000 4.000000 box
  (ilqgames::SemiquadraticNormCost) 6.000000 3.000000 box
  (ilqgames::SemiquadraticPolyline2Cost) 6.000000 2.000000 box
@@ -233,27 +237,33 @@ boundx scalefactor div boundy scalefactor div scale
 % ----- relations -----
 
 solid
-1 2.500000 14.250000 out
+0 2.500000 16.000000 out
 solid
-0.000000 5.000000 15.000000 conn
+1 2.500000 17.000000 in
+solid
+1 2.500000 15.250000 out
+solid
+0.000000 5.000000 16.000000 conn
+solid
+0 0.000000 15.750000 in
+solid
+1 0.000000 14.250000 out
+solid
+0 1.000000 15.750000 in
+solid
+0 2.000000 15.750000 in
+solid
+0 3.000000 15.750000 in
+solid
+0 4.000000 15.750000 in
+solid
+0 5.000000 15.750000 in
+solid
+1 5.000000 14.250000 out
 solid
 0 0.000000 14.750000 in
 solid
-1 0.000000 13.250000 out
-solid
-0 1.000000 14.750000 in
-solid
-0 2.000000 14.750000 in
-solid
-0 3.000000 14.750000 in
-solid
-0 4.000000 14.750000 in
-solid
-0 5.000000 14.750000 in
-solid
-1 5.000000 13.250000 out
-solid
-0 0.000000 13.750000 in
+0 5.000000 14.500000 hedge
 solid
 0 5.000000 13.500000 hedge
 solid
@@ -283,4 +293,4 @@ solid
 solid
 0 5.000000 0.500000 hedge
 solid
-5.000000 14.000000 0.500000 vedge
+5.000000 15.000000 0.500000 vedge

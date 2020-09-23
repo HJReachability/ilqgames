@@ -47,13 +47,15 @@
 
 #include <math.h>
 #include <algorithm>
+#include <chrono>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <random>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
@@ -91,11 +93,19 @@ static constexpr double kInvalidValue = std::numeric_limits<float>::quiet_NaN();
 #endif
 }  // namespace constants
 
+// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
+
+using Eigen::MatrixXf;
+using Eigen::VectorXf;
+
 // --------------------------------- TYPES ---------------------------------- //
 
 using PlayerIndex = unsigned short;
 using Dimension = int;
 using Point2 = Eigen::Vector2f;
+
+// Rename the system clock for easier usage.
+using clock = std::chrono::system_clock;
 
 #ifdef __APPLE__
 using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
@@ -112,7 +122,24 @@ class SinglePlayerFlatSystem;
 using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
 
 template <typename T>
-using CostMap = std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
+using PlayerPtrMap = std::unordered_map<PlayerIndex, std::shared_ptr<T>>;
+
+template <typename T>
+using PlayerPtrMultiMap =
+    std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
+
+template <typename T>
+using PlayerMap = std::unordered_map<PlayerIndex, T>;
+
+template <typename T>
+using PlayerMultiMap = std::unordered_multimap<PlayerIndex, T>;
+
+using PlayerDualMap = std::unordered_map<PlayerIndex, float*>;
+
+template <typename T>
+using PtrVector = std::vector<std::shared_ptr<T>>;
+
+using RefVector = std::vector<Eigen::Ref<VectorXf>>;
 
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
@@ -120,7 +147,7 @@ struct Empty {};
 // ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
 
 template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
+std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
@@ -138,11 +165,6 @@ template <typename T>
 inline constexpr T sgn(T x) {
   return sgn(x, std::is_signed<T>());
 }
-
-// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
-
-using Eigen::MatrixXf;
-using Eigen::VectorXf;
 
 }  // namespace ilqgames
 

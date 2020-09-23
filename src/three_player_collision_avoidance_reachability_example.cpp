@@ -40,7 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/single_dimension_constraint.h>
+#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
 #include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/signed_distance_cost.h>
@@ -66,16 +66,13 @@ DEFINE_double(v0, 5.0, "Initial speed (m/s).");
 DEFINE_double(buffer, 3.0, "Nominal signed distance cost (m).");
 
 namespace ilqgames {
-namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 2.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
-// Input contraints.
+namespace {
+
+// Input contraints and cost
 static constexpr float kOmegaMax = 1.0;
 static constexpr float kAMax = 0.1;
+static constexpr float kControlCostWeight = 0.1;
 
 // State dimensions.
 using P1 = SinglePlayerCar5D;
@@ -98,22 +95,21 @@ static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
 static const Dimension kP3HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
 static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
+
 }  // anonymous namespace
 
-ThreePlayerCollisionAvoidanceReachabilityExample::
-    ThreePlayerCollisionAvoidanceReachabilityExample(
-        const SolverParams& params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(kInterAxleDistance),
-           std::make_shared<P2>(kInterAxleDistance),
-           std::make_shared<P3>(kInterAxleDistance)},
-          kTimeStep));
+void ThreePlayerCollisionAvoidanceReachabilityExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kInterAxleDistance),
+       std::make_shared<P2>(kInterAxleDistance),
+       std::make_shared<P3>(kInterAxleDistance)},
+      time_step_));
+}
 
+void ThreePlayerCollisionAvoidanceReachabilityExample::ConstructInitialState() {
   // Set up initial state.
   constexpr float kAnglePerturbation = 0.1;  // rad
-  x0_ = VectorXf::Zero(dynamics->XDim());
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = FLAGS_d0;
   x0_(kP1YIdx) = 0.0;
   x0_(kP1HeadingIdx) = -M_PI + kAnglePerturbation;
@@ -126,71 +122,63 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
   x0_(kP3YIdx) = -0.5 * std::sqrt(3.0) * FLAGS_d0;
   x0_(kP3HeadingIdx) = M_PI / 3.0 + kAnglePerturbation;
   x0_(kP3VIdx) = FLAGS_v0;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void ThreePlayerCollisionAvoidanceReachabilityExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
+  player_costs_.emplace_back("P1");
+  player_costs_.emplace_back("P2");
+  player_costs_.emplace_back("P3");
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
+  auto& p3_cost = player_costs_[2];
 
   // Quadratic control costs.
   const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, -1, 0.0, "ControlCost");
+      kControlCostWeight, -1, 0.0, "ControlCost");
   p1_cost.AddControlCost(0, control_cost);
   p2_cost.AddControlCost(1, control_cost);
   p3_cost.AddControlCost(2, control_cost);
 
   // Constrain control input.
-  const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P1::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P1::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
-  p1_cost.AddControlConstraint(0, p1_a_max_constraint);
-  p1_cost.AddControlConstraint(0, p1_a_min_constraint);
+  const auto p1_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      P1::kOmegaIdx, kOmegaMax, false, "Omega Barrier (Max)");
+  const auto p1_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      P1::kOmegaIdx, -kOmegaMax, true, "Omega Barrier (Min)");
+  const auto p1_a_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      P1::kAIdx, kAMax, false, "Acceleration Barrier (Max)");
+  const auto p1_a_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      P1::kAIdx, -kAMax, true, "Acceleration Barrier (Min)");
+  p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
+  p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
+  p1_cost.AddControlBarrier(0, p1_a_max_barrier);
+  p1_cost.AddControlBarrier(0, p1_a_min_barrier);
 
-  const auto p2_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P2::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p2_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P2::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
-  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
-  p2_cost.AddControlConstraint(1, p2_a_max_constraint);
-  p2_cost.AddControlConstraint(1, p2_a_min_constraint);
+  const auto p2_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      P2::kOmegaIdx, kOmegaMax, false, "Omega Barrier (Max)");
+  const auto p2_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      P2::kOmegaIdx, -kOmegaMax, true, "Omega Barrier (Min)");
+  const auto p2_a_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      P2::kAIdx, kAMax, false, "Acceleration Barrier (Max)");
+  const auto p2_a_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      P2::kAIdx, -kAMax, true, "Acceleration Barrier (Min)");
+  p2_cost.AddControlBarrier(1, p2_omega_max_barrier);
+  p2_cost.AddControlBarrier(1, p2_omega_min_barrier);
+  p2_cost.AddControlBarrier(1, p2_a_max_barrier);
+  p2_cost.AddControlBarrier(1, p2_a_min_barrier);
 
-  const auto p3_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P3::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p3_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(
-          P3::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
-  const auto p3_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P3::kAIdx, kAMax, false, "Acceleration Constraint (Max)");
-  const auto p3_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P3::kAIdx, -kAMax, true, "Acceleration Constraint (Min)");
-  p3_cost.AddControlConstraint(2, p3_omega_max_constraint);
-  p3_cost.AddControlConstraint(2, p3_omega_min_constraint);
-  p3_cost.AddControlConstraint(2, p3_a_max_constraint);
-  p3_cost.AddControlConstraint(2, p3_a_min_constraint);
+  const auto p3_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      P3::kOmegaIdx, kOmegaMax, false, "Omega Barrier (Max)");
+  const auto p3_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      P3::kOmegaIdx, -kOmegaMax, true, "Omega Barrier (Min)");
+  const auto p3_a_max_barrier = std::make_shared<SingleDimensionBarrier>(
+      P3::kAIdx, kAMax, false, "Acceleration Barrier (Max)");
+  const auto p3_a_min_barrier = std::make_shared<SingleDimensionBarrier>(
+      P3::kAIdx, -kAMax, true, "Acceleration Barrier (Min)");
+  p3_cost.AddControlBarrier(2, p3_omega_max_barrier);
+  p3_cost.AddControlBarrier(2, p3_omega_min_barrier);
+  p3_cost.AddControlBarrier(2, p3_a_max_barrier);
+  p3_cost.AddControlBarrier(2, p3_a_min_barrier);
 
   // Penalize proximity.
   const std::shared_ptr<SignedDistanceCost> p1_p2_collision_avoidance_cost(
@@ -224,10 +212,6 @@ ThreePlayerCollisionAvoidanceReachabilityExample::
   p1_cost.SetMaxOverTime();
   p2_cost.SetMaxOverTime();
   p3_cost.SetMaxOverTime();
-
-  // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
-                              kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerCollisionAvoidanceReachabilityExample::Xs(

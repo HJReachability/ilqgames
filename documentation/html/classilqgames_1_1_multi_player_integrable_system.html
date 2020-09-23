@@ -103,11 +103,12 @@ Inheritance diagram for ilqgames::MultiPlayerIntegrableSystem:</div>
  <div class="center">
   <img src="classilqgames_1_1_multi_player_integrable_system.png" usemap="#ilqgames::MultiPlayerIntegrableSystem_map" alt=""/>
   <map id="ilqgames::MultiPlayerIntegrableSystem_map" name="ilqgames::MultiPlayerIntegrableSystem_map">
-<area href="classilqgames_1_1_multi_player_dynamical_system.html" alt="ilqgames::MultiPlayerDynamicalSystem" shape="rect" coords="126,56,369,80"/>
-<area href="classilqgames_1_1_multi_player_flat_system.html" alt="ilqgames::MultiPlayerFlatSystem" shape="rect" coords="506,56,749,80"/>
-<area href="classilqgames_1_1_concatenated_dynamical_system.html" alt="ilqgames::ConcatenatedDynamicalSystem" shape="rect" coords="0,112,243,136"/>
-<area href="classilqgames_1_1_two_player_unicycle4_d.html" alt="ilqgames::TwoPlayerUnicycle4D" shape="rect" coords="253,112,496,136"/>
-<area href="classilqgames_1_1_concatenated_flat_system.html" alt="ilqgames::ConcatenatedFlatSystem" shape="rect" coords="506,112,749,136"/>
+<area href="classilqgames_1_1_multi_player_dynamical_system.html" alt="ilqgames::MultiPlayerDynamicalSystem" shape="rect" coords="253,56,496,80"/>
+<area href="classilqgames_1_1_multi_player_flat_system.html" alt="ilqgames::MultiPlayerFlatSystem" shape="rect" coords="759,56,1002,80"/>
+<area href="classilqgames_1_1_air3_d.html" alt="ilqgames::Air3D" shape="rect" coords="0,112,243,136"/>
+<area href="classilqgames_1_1_concatenated_dynamical_system.html" alt="ilqgames::ConcatenatedDynamicalSystem" shape="rect" coords="253,112,496,136"/>
+<area href="classilqgames_1_1_two_player_unicycle4_d.html" alt="ilqgames::TwoPlayerUnicycle4D" shape="rect" coords="506,112,749,136"/>
+<area href="classilqgames_1_1_concatenated_flat_system.html" alt="ilqgames::ConcatenatedFlatSystem" shape="rect" coords="759,112,1002,136"/>
 </map>
  </div></div>
 <table class="memberdecls">
@@ -128,6 +129,9 @@ VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrateToNextTi
 <tr class="memitem:ada6af6c39bac2fda2043302b0e6c965c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada6af6c39bac2fda2043302b0e6c965c"></a>
 VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrateFromPriorTimeStep</b> (Time t, const VectorXf &amp;x0, const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;strategies) const </td></tr>
 <tr class="separator:ada6af6c39bac2fda2043302b0e6c965c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa891d5a1184cefdc316f76528d01a0e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afa891d5a1184cefdc316f76528d01a0e"></a>
+VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>Integrate</b> (Time t0, Time time_interval, const Eigen::Ref&lt; VectorXf &gt; &amp;x0, const std::vector&lt; Eigen::Ref&lt; VectorXf &gt;&gt; &amp;us) const </td></tr>
+<tr class="separator:afa891d5a1184cefdc316f76528d01a0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf8ab89fd04892a1806814ef4ce89188"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf8ab89fd04892a1806814ef4ce89188"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>TreatAsLinear</b> () const </td></tr>
 <tr class="separator:adf8ab89fd04892a1806814ef4ce89188"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -149,6 +153,9 @@ virtual Dimension&#160;</td><td class="memItemRight" valign="bottom"><b>UDim</b>
 <tr class="memitem:a894daac1bf9f941718529e5a31b81a88"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a894daac1bf9f941718529e5a31b81a88"></a>
 virtual PlayerIndex&#160;</td><td class="memItemRight" valign="bottom"><b>NumPlayers</b> () const =0</td></tr>
 <tr class="separator:a894daac1bf9f941718529e5a31b81a88"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa997a26ebcf8aaa4ec80b22fa996d574"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa997a26ebcf8aaa4ec80b22fa996d574"></a>
+virtual std::vector&lt; Dimension &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>PositionDimensions</b> () const =0</td></tr>
+<tr class="separator:aa997a26ebcf8aaa4ec80b22fa996d574"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af25dee45970bc4e53a3844084bc3fad4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af25dee45970bc4e53a3844084bc3fad4"></a>
 virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>DistanceBetween</b> (const VectorXf &amp;x0, const VectorXf &amp;x1) const </td></tr>
 <tr class="separator:af25dee45970bc4e53a3844084bc3fad4"><td class="memSeparator" colspan="2">&#160;</td></tr>

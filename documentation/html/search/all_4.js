@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['gamesolver',['GameSolver',['../classilqgames_1_1_game_solver.html',1,'ilqgames']]]
+  ['empty',['Empty',['../structilqgames_1_1_empty.html',1,'ilqgames']]],
+  ['equalityconstraint',['EqualityConstraint',['../classilqgames_1_1_equality_constraint.html',1,'ilqgames']]],
+  ['extremevaluecost',['ExtremeValueCost',['../classilqgames_1_1_extreme_value_cost.html',1,'ilqgames']]]
 ];

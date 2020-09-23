@@ -73,11 +73,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0;  // m
@@ -187,17 +182,17 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
+
 }  // anonymous namespace
 
-ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
-    const SolverParams& params) {
-  // Create dynamics.
+void ThreePlayerFlatIntersectionExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedFlatSystem(
       {std::make_shared<P1>(kInterAxleLength),
        std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
-      kTimeStep));
+      time_step_));
+}
 
-  // Set up initial state.
+void ThreePlayerFlatIntersectionExample::ConstructInitialState() {
   VectorXf x0 = VectorXf::Zero(dynamics_->XDim());
   x0(kP1XIdx) = kP1InitialX;
   x0(kP1YIdx) = kP1InitialY;
@@ -213,18 +208,16 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
   x0(kP3VIdx) = kP3InitialSpeed;
 
   x0_ = dynamics_->ToLinearSystemState(x0);
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics_->XDim(),
-                              dynamics_->UDim(ii));
-
-  operating_point_.reset(new OperatingPoint(
-      kNumTimeSteps, dynamics_->NumPlayers(), 0.0, dynamics_));
-
+void ThreePlayerFlatIntersectionExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
+  player_costs_.emplace_back("P1");
+  player_costs_.emplace_back("P2");
+  player_costs_.emplace_back("P3");
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
+  auto& p3_cost = player_costs_[2];
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -322,24 +315,6 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
   p3_cost.AddStateCost(p3_max_v_cost);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
-  // Curvature costs for P1 and P2.
-  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
-  // p1_cost.AddStateCost(p1_curvature_cost);
-
-  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
-  // p2_cost.AddStateCost(p2_curvature_cost);
-
-  // // Penalize acceleration for cars.
-  // const std::shared_ptr<QuadraticNormCost> p1_a_cost(new QuadraticNormCost(
-  //     kACostWeight, {kP1AxIdx, kP1AyIdx}, 0.0, "Acceleration"));
-  // p1_cost.AddStateCost(p1_a_cost);
-
-  // const std::shared_ptr<QuadraticNormCost> p2_a_cost(new QuadraticNormCost(
-  //     kACostWeight, {kP2AxIdx, kP2AyIdx}, 0.0, "Acceleration"));
-  // p2_cost.AddStateCost(p2_a_cost);
-
   // Penalize control effort.
   constexpr Dimension kApplyInAllDimensions = -1;
   const auto unicycle_aux_cost = std::make_shared<QuadraticCost>(
@@ -349,60 +324,6 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
   p1_cost.AddControlCost(0, car_aux_cost);
   p2_cost.AddControlCost(1, car_aux_cost);
   p3_cost.AddControlCost(2, unicycle_aux_cost);
-
-  // const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  // const auto p1_jerk_cost =
-  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0,
-  //     "Jerk");
-  // p1_cost.AddControlCost(0, p1_omega_cost);
-  // p1_cost.AddControlCost(0, p1_jerk_cost);
-
-  // const auto p2_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  // const auto p2_jerk_cost =
-  //     std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0,
-  //     "Jerk");
-  // p2_cost.AddControlCost(1, p2_omega_cost);
-  // p2_cost.AddControlCost(1, p2_jerk_cost);
-
-  // const auto p3_omega_cost = std::make_shared<QuadraticCost>(
-  //     kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  // const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP3AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p3_cost.AddControlCost(2, p3_omega_cost);
-  // p3_cost.AddControlCost(2, p3_a_cost);
-
-  // Goal costs.
-  constexpr float kFinalTimeWindow = 0.5;  // s
-  const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
-      kTimeHorizon - kFinalTimeWindow, "GoalX");
-  const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
-      kTimeHorizon - kFinalTimeWindow, "GoalY");
-  p1_cost.AddStateCost(p1_goalx_cost);
-  p1_cost.AddStateCost(p1_goaly_cost);
-
-  const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
-      kTimeHorizon - kFinalTimeWindow, "GoalX");
-  const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
-      kTimeHorizon - kFinalTimeWindow, "GoalY");
-  p2_cost.AddStateCost(p2_goalx_cost);
-  p2_cost.AddStateCost(p2_goaly_cost);
-
-  const auto p3_goalx_cost = std::make_shared<FinalTimeCost>(
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3XIdx, kP3GoalX),
-      kTimeHorizon - kFinalTimeWindow, "GoalX");
-  const auto p3_goaly_cost = std::make_shared<FinalTimeCost>(
-      std::make_shared<QuadraticCost>(kGoalCostWeight, kP3YIdx, kP3GoalY),
-      kTimeHorizon - kFinalTimeWindow, "GoalY");
-  p3_cost.AddStateCost(p3_goalx_cost);
-  p3_cost.AddStateCost(p3_goaly_cost);
 
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
@@ -431,10 +352,6 @@ ThreePlayerFlatIntersectionExample::ThreePlayerFlatIntersectionExample(
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
   p3_cost.AddStateCost(p3p1_proximity_cost);
   p3_cost.AddStateCost(p3p2_proximity_cost);
-
-  // Set up solver.
-  solver_.reset(new ILQFlatSolver(dynamics_, {p1_cost, p2_cost, p3_cost},
-                                  kTimeHorizon, params));
 }
 
 inline std::vector<float> ThreePlayerFlatIntersectionExample::Xs(

@@ -1,0 +1,64 @@
+\hypertarget{classilqgames_1_1_single_player_point_mass2_d}{}\section{ilqgames\+:\+:Single\+Player\+Point\+Mass2D Class Reference}
+\label{classilqgames_1_1_single_player_point_mass2_d}\index{ilqgames\+::\+Single\+Player\+Point\+Mass2D@{ilqgames\+::\+Single\+Player\+Point\+Mass2D}}
+Inheritance diagram for ilqgames\+:\+:Single\+Player\+Point\+Mass2D\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classilqgames_1_1_single_player_point_mass2_d}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+Vector\+Xf {\bfseries Evaluate} (Time t, const Vector\+Xf \&x, const Vector\+Xf \&u) const \hypertarget{classilqgames_1_1_single_player_point_mass2_d_ac0bc5a89ee9b979a3f67d526c076e169}{}\label{classilqgames_1_1_single_player_point_mass2_d_ac0bc5a89ee9b979a3f67d526c076e169}
+
+\item 
+void {\bfseries Linearize} (Time t, Time time\+\_\+step, const Vector\+Xf \&x, const Vector\+Xf \&u, Eigen\+::\+Ref$<$ Matrix\+Xf $>$ A, Eigen\+::\+Ref$<$ Matrix\+Xf $>$ B) const \hypertarget{classilqgames_1_1_single_player_point_mass2_d_ab9f9495da0ac315fd04ddbe40f855269}{}\label{classilqgames_1_1_single_player_point_mass2_d_ab9f9495da0ac315fd04ddbe40f855269}
+
+\item 
+float {\bfseries Distance\+Between} (const Vector\+Xf \&x0, const Vector\+Xf \&x1) const \hypertarget{classilqgames_1_1_single_player_point_mass2_d_ae6bafe2404f528a7490be8a7c567b086}{}\label{classilqgames_1_1_single_player_point_mass2_d_ae6bafe2404f528a7490be8a7c567b086}
+
+\item 
+std\+::vector$<$ Dimension $>$ {\bfseries Position\+Dimensions} () const \hypertarget{classilqgames_1_1_single_player_point_mass2_d_a10dfba099f8cde9f4c0557abead8829d}{}\label{classilqgames_1_1_single_player_point_mass2_d_a10dfba099f8cde9f4c0557abead8829d}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const Dimension {\bfseries k\+Num\+X\+Dims} = 4\hypertarget{classilqgames_1_1_single_player_point_mass2_d_ab6f3d609074967e15de043548bf39023}{}\label{classilqgames_1_1_single_player_point_mass2_d_ab6f3d609074967e15de043548bf39023}
+
+\item 
+static const Dimension {\bfseries k\+Px\+Idx} = 0\hypertarget{classilqgames_1_1_single_player_point_mass2_d_a81cd75e4a680d997d7633e116c2b08a8}{}\label{classilqgames_1_1_single_player_point_mass2_d_a81cd75e4a680d997d7633e116c2b08a8}
+
+\item 
+static const Dimension {\bfseries k\+Py\+Idx} = 1\hypertarget{classilqgames_1_1_single_player_point_mass2_d_a789ad9db94a352fb9512027dc68622df}{}\label{classilqgames_1_1_single_player_point_mass2_d_a789ad9db94a352fb9512027dc68622df}
+
+\item 
+static const Dimension {\bfseries k\+Vx\+Idx} = 2\hypertarget{classilqgames_1_1_single_player_point_mass2_d_a2c99c90c5f5f45f0cd9ad300ba6d68e7}{}\label{classilqgames_1_1_single_player_point_mass2_d_a2c99c90c5f5f45f0cd9ad300ba6d68e7}
+
+\item 
+static const Dimension {\bfseries k\+Vy\+Idx} = 3\hypertarget{classilqgames_1_1_single_player_point_mass2_d_af46ca373af7dc535cfcfdaaf0996c99d}{}\label{classilqgames_1_1_single_player_point_mass2_d_af46ca373af7dc535cfcfdaaf0996c99d}
+
+\item 
+static const Dimension {\bfseries k\+Num\+U\+Dims} = 2\hypertarget{classilqgames_1_1_single_player_point_mass2_d_a01cd687fc568fa72c8acf1e671190581}{}\label{classilqgames_1_1_single_player_point_mass2_d_a01cd687fc568fa72c8acf1e671190581}
+
+\item 
+static const Dimension {\bfseries k\+Ax\+Idx} = 0\hypertarget{classilqgames_1_1_single_player_point_mass2_d_a0f3fcf70c1c75f87e11d71759f4d3aa4}{}\label{classilqgames_1_1_single_player_point_mass2_d_a0f3fcf70c1c75f87e11d71759f4d3aa4}
+
+\item 
+static const Dimension {\bfseries k\+Ay\+Idx} = 1\hypertarget{classilqgames_1_1_single_player_point_mass2_d_a751885894fe46913cc72eae6ed18987a}{}\label{classilqgames_1_1_single_player_point_mass2_d_a751885894fe46913cc72eae6ed18987a}
+
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 56 of file single\+\_\+player\+\_\+point\+\_\+mass\+\_\+2d.\+h.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/dynamics/single\+\_\+player\+\_\+point\+\_\+mass\+\_\+2d.\+h\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/src/single\+\_\+player\+\_\+point\+\_\+mass\+\_\+2d.\+cpp\end{DoxyCompactItemize}

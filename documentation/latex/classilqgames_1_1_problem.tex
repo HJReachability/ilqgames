@@ -3,13 +3,13 @@
 Inheritance diagram for ilqgames\+:\+:Problem\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[height=11.382113cm]{classilqgames_1_1_problem}
+\includegraphics[height=12.000000cm]{classilqgames_1_1_problem}
 \end{center}
 \end{figure}
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Solve} (Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())\hypertarget{classilqgames_1_1_problem_ab12b009e19551f6578af998789497927}{}\label{classilqgames_1_1_problem_ab12b009e19551f6578af998789497927}
+virtual void {\bfseries Initialize} ()\hypertarget{classilqgames_1_1_problem_ab94512f9e9896104bceada1c444a1ad9}{}\label{classilqgames_1_1_problem_ab94512f9e9896104bceada1c444a1ad9}
 
 \item 
 void {\bfseries Reset\+Initial\+Time} (Time t0)\hypertarget{classilqgames_1_1_problem_a559eb8753ba5b82afeb6c69dd722a306}{}\label{classilqgames_1_1_problem_a559eb8753ba5b82afeb6c69dd722a306}
@@ -21,31 +21,85 @@ void {\bfseries Reset\+Initial\+State} (const Vector\+Xf \&x0)\hypertarget{class
 virtual void {\bfseries Set\+Up\+Next\+Receding\+Horizon} (const Vector\+Xf \&x0, Time t0, Time planner\+\_\+runtime=0.\+1)\hypertarget{classilqgames_1_1_problem_adada206413bc775f078653da9c2ed033}{}\label{classilqgames_1_1_problem_adada206413bc775f078653da9c2ed033}
 
 \item 
-void {\bfseries Overwrite\+Solution} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies)\hypertarget{classilqgames_1_1_problem_a14744049661872191758323a4947f072}{}\label{classilqgames_1_1_problem_a14744049661872191758323a4947f072}
+virtual void {\bfseries Overwrite\+Solution} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies)\hypertarget{classilqgames_1_1_problem_a14744049661872191758323a4947f072}{}\label{classilqgames_1_1_problem_a14744049661872191758323a4947f072}
 
 \item 
-const \hyperlink{classilqgames_1_1_game_solver}{Game\+Solver} \& {\bfseries Solver} () const \hypertarget{classilqgames_1_1_problem_a5587e930ff86056f3ec7d2d01b43e4e5}{}\label{classilqgames_1_1_problem_a5587e930ff86056f3ec7d2d01b43e4e5}
+Time {\bfseries Compute\+Relative\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hypertarget{classilqgames_1_1_problem_a424e7aaa780d06a7ab18ea19fb0cda40}{}\label{classilqgames_1_1_problem_a424e7aaa780d06a7ab18ea19fb0cda40}
+
+\item 
+virtual Time {\bfseries Initial\+Time} () const \hypertarget{classilqgames_1_1_problem_ab0eeee481eeb53317658fb9a38648f30}{}\label{classilqgames_1_1_problem_ab0eeee481eeb53317658fb9a38648f30}
 
 \item 
 const Vector\+Xf \& {\bfseries Initial\+State} () const \hypertarget{classilqgames_1_1_problem_a9b4d86b6f76908fdfc5ac82aae9320cb}{}\label{classilqgames_1_1_problem_a9b4d86b6f76908fdfc5ac82aae9320cb}
 
 \item 
-const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \& {\bfseries Current\+Operating\+Point} () const \hypertarget{classilqgames_1_1_problem_a49a937329474c57437592f09246c6517}{}\label{classilqgames_1_1_problem_a49a937329474c57437592f09246c6517}
+size\+\_\+t {\bfseries Num\+Time\+Steps} () const \hypertarget{classilqgames_1_1_problem_afdd2a8fe429014bc5aa5fe9de4cbd0c1}{}\label{classilqgames_1_1_problem_afdd2a8fe429014bc5aa5fe9de4cbd0c1}
 
 \item 
-const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \& {\bfseries Current\+Strategies} () const \hypertarget{classilqgames_1_1_problem_adb664a8d453bd4431789faf66d95a06a}{}\label{classilqgames_1_1_problem_adb664a8d453bd4431789faf66d95a06a}
+Time {\bfseries Time\+Step} () const \hypertarget{classilqgames_1_1_problem_af0a09c4e19ddf5fca85136d4187eb3d8}{}\label{classilqgames_1_1_problem_af0a09c4e19ddf5fca85136d4187eb3d8}
+
+\item 
+Time {\bfseries Time\+Horizon} () const \hypertarget{classilqgames_1_1_problem_acdabeeb3611f8887b0d104ea41d0ab12}{}\label{classilqgames_1_1_problem_acdabeeb3611f8887b0d104ea41d0ab12}
+
+\item 
+std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \& {\bfseries Player\+Costs} ()\hypertarget{classilqgames_1_1_problem_ae59a04bdc7c289ef9272dee1e51df892}{}\label{classilqgames_1_1_problem_ae59a04bdc7c289ef9272dee1e51df892}
+
+\item 
+const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \& {\bfseries Player\+Costs} () const \hypertarget{classilqgames_1_1_problem_aeabbed16991559662d78969f38b2b3cc}{}\label{classilqgames_1_1_problem_aeabbed16991559662d78969f38b2b3cc}
+
+\item 
+const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ \& {\bfseries Dynamics} () const \hypertarget{classilqgames_1_1_problem_a962651aa1abfb09183d510fec93850d7}{}\label{classilqgames_1_1_problem_a962651aa1abfb09183d510fec93850d7}
+
+\item 
+const \hyperlink{classilqgames_1_1_multi_player_dynamical_system}{Multi\+Player\+Dynamical\+System} \& {\bfseries Normal\+Dynamics} () const \hypertarget{classilqgames_1_1_problem_a2c5d9b8b9e0fc7c5b6701b36c56c3de6}{}\label{classilqgames_1_1_problem_a2c5d9b8b9e0fc7c5b6701b36c56c3de6}
+
+\item 
+const \hyperlink{classilqgames_1_1_multi_player_flat_system}{Multi\+Player\+Flat\+System} \& {\bfseries Flat\+Dynamics} () const \hypertarget{classilqgames_1_1_problem_ad8156514824a3851eab54c3b85b062fe}{}\label{classilqgames_1_1_problem_ad8156514824a3851eab54c3b85b062fe}
+
+\item 
+virtual const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \& {\bfseries Current\+Operating\+Point} () const \hypertarget{classilqgames_1_1_problem_a1ed42bdf388f171c0512ccb9c2beefd5}{}\label{classilqgames_1_1_problem_a1ed42bdf388f171c0512ccb9c2beefd5}
+
+\item 
+virtual const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \& {\bfseries Current\+Strategies} () const \hypertarget{classilqgames_1_1_problem_aa0fdfa634828e45493c41d9961879ee2}{}\label{classilqgames_1_1_problem_aa0fdfa634828e45493c41d9961879ee2}
 
 \end{DoxyCompactItemize}
 \subsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Create\+New\+Log} () const \hypertarget{classilqgames_1_1_problem_a13d87495e055335f3da703909c435217}{}\label{classilqgames_1_1_problem_a13d87495e055335f3da703909c435217}
+virtual void {\bfseries Construct\+Dynamics} ()=0\hypertarget{classilqgames_1_1_problem_ab0ca7613920421b268d9ffed3b3d3ab5}{}\label{classilqgames_1_1_problem_ab0ca7613920421b268d9ffed3b3d3ab5}
+
+\item 
+virtual void {\bfseries Construct\+Player\+Costs} ()=0\hypertarget{classilqgames_1_1_problem_a99928ca641fc5da4ec8da3c97e2566b3}{}\label{classilqgames_1_1_problem_a99928ca641fc5da4ec8da3c97e2566b3}
+
+\item 
+virtual void {\bfseries Construct\+Initial\+State} ()=0\hypertarget{classilqgames_1_1_problem_a7033af07315f39ee66ad71a611623b2a}{}\label{classilqgames_1_1_problem_a7033af07315f39ee66ad71a611623b2a}
+
+\item 
+virtual void {\bfseries Construct\+Initial\+Operating\+Point} ()\hypertarget{classilqgames_1_1_problem_aa2a59f31887f04eaa0afa7c0d18d44ef}{}\label{classilqgames_1_1_problem_aa2a59f31887f04eaa0afa7c0d18d44ef}
+
+\item 
+virtual void {\bfseries Construct\+Initial\+Strategies} ()\hypertarget{classilqgames_1_1_problem_a0d78249b23daf89821cf02b18263ff38}{}\label{classilqgames_1_1_problem_a0d78249b23daf89821cf02b18263ff38}
+
+\item 
+size\+\_\+t {\bfseries Sync\+To\+Existing\+Problem} (const Vector\+Xf \&x0, Time t0, Time planner\+\_\+runtime, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op)\hypertarget{classilqgames_1_1_problem_ae7f62429b51816a8221603f314ce46c8}{}\label{classilqgames_1_1_problem_ae7f62429b51816a8221603f314ce46c8}
 
 \end{DoxyCompactItemize}
 \subsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
-std\+::unique\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_game_solver}{Game\+Solver} $>$ {\bfseries solver\+\_\+}\hypertarget{classilqgames_1_1_problem_aa14af0e2e063c99eefefd029d69dbf0d}{}\label{classilqgames_1_1_problem_aa14af0e2e063c99eefefd029d69dbf0d}
+const Time {\bfseries time\+\_\+horizon\+\_\+}\hypertarget{classilqgames_1_1_problem_ab93ced52c3e5aa22bdf45cb94eaaaa2e}{}\label{classilqgames_1_1_problem_ab93ced52c3e5aa22bdf45cb94eaaaa2e}
+
+\item 
+const Time {\bfseries time\+\_\+step\+\_\+}\hypertarget{classilqgames_1_1_problem_af66867cb1c107633fe644d223fd6046b}{}\label{classilqgames_1_1_problem_af66867cb1c107633fe644d223fd6046b}
+
+\item 
+const size\+\_\+t {\bfseries num\+\_\+time\+\_\+steps\+\_\+}\hypertarget{classilqgames_1_1_problem_a7f8a3ec65d0c1ae8008169336a696257}{}\label{classilqgames_1_1_problem_a7f8a3ec65d0c1ae8008169336a696257}
+
+\item 
+std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ {\bfseries dynamics\+\_\+}\hypertarget{classilqgames_1_1_problem_a278a73f88a14262e31a56478301b6bde}{}\label{classilqgames_1_1_problem_a278a73f88a14262e31a56478301b6bde}
+
+\item 
+std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ {\bfseries player\+\_\+costs\+\_\+}\hypertarget{classilqgames_1_1_problem_a890d48d09b1713e9993514d2f0671b14}{}\label{classilqgames_1_1_problem_a890d48d09b1713e9993514d2f0671b14}
 
 \item 
 Vector\+Xf {\bfseries x0\+\_\+}\hypertarget{classilqgames_1_1_problem_a41236f0dfbc5eb6b1ddd08a5cc6555b3}{}\label{classilqgames_1_1_problem_a41236f0dfbc5eb6b1ddd08a5cc6555b3}
@@ -56,13 +110,16 @@ std\+::unique\+\_\+ptr$<$ \hyperlink{structilqgames_1_1_operating_point}{Operati
 \item 
 std\+::unique\+\_\+ptr$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $>$ {\bfseries strategies\+\_\+}\hypertarget{classilqgames_1_1_problem_a305d33a1e20a8ae63c0c581d562c7a64}{}\label{classilqgames_1_1_problem_a305d33a1e20a8ae63c0c581d562c7a64}
 
+\item 
+bool {\bfseries initialized\+\_\+}\hypertarget{classilqgames_1_1_problem_a0a6a0254a1c98f23e1041c2d73fca29f}{}\label{classilqgames_1_1_problem_a0a6a0254a1c98f23e1041c2d73fca29f}
+
 \end{DoxyCompactItemize}
 
 
 \subsection{Detailed Description}
 
 
-Definition at line 58 of file problem.\+h.
+Definition at line 61 of file problem.\+h.
 
 
 

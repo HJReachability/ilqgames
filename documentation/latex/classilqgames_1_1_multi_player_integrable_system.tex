@@ -3,7 +3,7 @@
 Inheritance diagram for ilqgames\+:\+:Multi\+Player\+Integrable\+System\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[height=2.231076cm]{classilqgames_1_1_multi_player_integrable_system}
+\includegraphics[height=1.673307cm]{classilqgames_1_1_multi_player_integrable_system}
 \end{center}
 \end{figure}
 \subsection*{Public Member Functions}
@@ -22,6 +22,9 @@ Vector\+Xf {\bfseries Integrate\+To\+Next\+Time\+Step} (Time t0, const Vector\+X
 
 \item 
 Vector\+Xf {\bfseries Integrate\+From\+Prior\+Time\+Step} (Time t, const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_ada6af6c39bac2fda2043302b0e6c965c}{}\label{classilqgames_1_1_multi_player_integrable_system_ada6af6c39bac2fda2043302b0e6c965c}
+
+\item 
+Vector\+Xf {\bfseries Integrate} (Time t0, Time time\+\_\+interval, const Eigen\+::\+Ref$<$ Vector\+Xf $>$ \&x0, const std\+::vector$<$ Eigen\+::\+Ref$<$ Vector\+Xf $>$$>$ \&us) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_afa891d5a1184cefdc316f76528d01a0e}{}\label{classilqgames_1_1_multi_player_integrable_system_afa891d5a1184cefdc316f76528d01a0e}
 
 \item 
 virtual bool {\bfseries Treat\+As\+Linear} () const \hypertarget{classilqgames_1_1_multi_player_integrable_system_adf8ab89fd04892a1806814ef4ce89188}{}\label{classilqgames_1_1_multi_player_integrable_system_adf8ab89fd04892a1806814ef4ce89188}
@@ -43,6 +46,9 @@ virtual Dimension {\bfseries U\+Dim} (Player\+Index player\+\_\+idx) const =0\hy
 
 \item 
 virtual Player\+Index {\bfseries Num\+Players} () const =0\hypertarget{classilqgames_1_1_multi_player_integrable_system_a894daac1bf9f941718529e5a31b81a88}{}\label{classilqgames_1_1_multi_player_integrable_system_a894daac1bf9f941718529e5a31b81a88}
+
+\item 
+virtual std\+::vector$<$ Dimension $>$ {\bfseries Position\+Dimensions} () const =0\hypertarget{classilqgames_1_1_multi_player_integrable_system_aa997a26ebcf8aaa4ec80b22fa996d574}{}\label{classilqgames_1_1_multi_player_integrable_system_aa997a26ebcf8aaa4ec80b22fa996d574}
 
 \item 
 virtual float {\bfseries Distance\+Between} (const Vector\+Xf \&x0, const Vector\+Xf \&x1) const \hypertarget{classilqgames_1_1_multi_player_integrable_system_af25dee45970bc4e53a3844084bc3fad4}{}\label{classilqgames_1_1_multi_player_integrable_system_af25dee45970bc4e53a3844084bc3fad4}

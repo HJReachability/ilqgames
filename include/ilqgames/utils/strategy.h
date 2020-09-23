@@ -48,6 +48,7 @@
 #ifndef ILQGAMES_UTILS_STRATEGY_H
 #define ILQGAMES_UTILS_STRATEGY_H
 
+#include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -74,7 +75,13 @@ struct Strategy {
     return u_ref - Ps[time_index] * delta_x - alphas[time_index];
   }
 
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  // Number of variables.
+  size_t NumVariables() const {
+    const size_t horizon = Ps.size();
+    CHECK_EQ(horizon, alphas.size());
+
+    return horizon * (Ps.front().size() + alphas.front().size());
+  }
 };  // struct Strategy
 
 }  // namespace ilqgames

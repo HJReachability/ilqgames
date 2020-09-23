@@ -108,13 +108,13 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
       }
     }
 
-    // Handle constraints.
-    for (const auto& constraint : player_cost.StateConstraints()) {
-      auto e = evaluated_costs.emplace(constraint->EquivalentCost().Name(),
+    // Handle barriers.
+    for (const auto& barrier : player_cost.StateBarriers()) {
+      auto e = evaluated_costs.emplace(barrier->EquivalentCost().Name(),
                                        std::vector<std::vector<float>>());
       LOG_IF(WARNING, !e.second)
-          << "Player " << ii << " has duplicate constraint with name: "
-          << constraint->EquivalentCost().Name();
+          << "Player " << ii << " has duplicate barrier with name: "
+          << barrier->EquivalentCost().Name();
 
       auto& entry = e.first->second;
       entry.resize(log->NumIterates());
@@ -124,20 +124,20 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
           const VectorXf x = log->State(jj, kk);
           entry[jj][kk] =
-              constraint->EquivalentCost().Evaluate(log->IndexToTime(kk), x);
+              barrier->EquivalentCost().Evaluate(log->IndexToTime(kk), x);
         }
       }
     }
 
-    // Now handle control constraints.
-    for (const auto& constraint_pair : player_cost.ControlConstraints()) {
-      const auto other_player = constraint_pair.first;
-      const auto& constraint = constraint_pair.second;
-      auto e = evaluated_costs.emplace(constraint->EquivalentCost().Name(),
+    // Now handle control barriers.
+    for (const auto& barrier_pair : player_cost.ControlBarriers()) {
+      const auto other_player = barrier_pair.first;
+      const auto& barrier = barrier_pair.second;
+      auto e = evaluated_costs.emplace(barrier->EquivalentCost().Name(),
                                        std::vector<std::vector<float>>());
       LOG_IF(WARNING, !e.second)
-          << "Player " << ii << " has duplicate constraint with name: "
-          << constraint->EquivalentCost().Name();
+          << "Player " << ii << " has duplicate barrier with name: "
+          << barrier->EquivalentCost().Name();
 
       auto& entry = e.first->second;
       entry.resize(log->NumIterates());
@@ -145,7 +145,7 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
         entry[jj].resize(log->NumTimeSteps());
 
         for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-          entry[jj][kk] = constraint->EquivalentCost().Evaluate(
+          entry[jj][kk] = barrier->EquivalentCost().Evaluate(
               log->IndexToTime(kk), log->Control(jj, kk, other_player));
         }
       }

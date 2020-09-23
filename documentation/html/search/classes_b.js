@@ -1,8 +1,6 @@
 var searchData=
 [
-  ['quadraticcost',['QuadraticCost',['../classilqgames_1_1_quadratic_cost.html',1,'ilqgames']]],
-  ['quadraticcostapproximation',['QuadraticCostApproximation',['../structilqgames_1_1_quadratic_cost_approximation.html',1,'ilqgames']]],
-  ['quadraticdifferencecost',['QuadraticDifferenceCost',['../classilqgames_1_1_quadratic_difference_cost.html',1,'ilqgames']]],
-  ['quadraticnormcost',['QuadraticNormCost',['../classilqgames_1_1_quadratic_norm_cost.html',1,'ilqgames']]],
-  ['quadraticpolyline2cost',['QuadraticPolyline2Cost',['../classilqgames_1_1_quadratic_polyline2_cost.html',1,'ilqgames']]]
+  ['oneplayerreachabilityexample',['OnePlayerReachabilityExample',['../classilqgames_1_1_one_player_reachability_example.html',1,'ilqgames']]],
+  ['operatingpoint',['OperatingPoint',['../structilqgames_1_1_operating_point.html',1,'ilqgames']]],
+  ['orientationcost',['OrientationCost',['../classilqgames_1_1_orientation_cost.html',1,'ilqgames']]]
 ];

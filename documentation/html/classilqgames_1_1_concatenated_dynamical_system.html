@@ -136,6 +136,9 @@ Dimension&#160;</td><td class="memItemRight" valign="bottom"><b>SubsystemXDim</b
 <tr class="memitem:a99e27c1644875b924741e037bcb54460"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a99e27c1644875b924741e037bcb54460"></a>
 Dimension&#160;</td><td class="memItemRight" valign="bottom"><b>UDim</b> (PlayerIndex player_idx) const </td></tr>
 <tr class="separator:a99e27c1644875b924741e037bcb54460"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af87c59c62ce8e7a8d57f9a394f7ca4e0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af87c59c62ce8e7a8d57f9a394f7ca4e0"></a>
+std::vector&lt; Dimension &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>PositionDimensions</b> () const </td></tr>
+<tr class="separator:af87c59c62ce8e7a8d57f9a394f7ca4e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classilqgames_1_1_multi_player_dynamical_system"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classilqgames_1_1_multi_player_dynamical_system')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classilqgames_1_1_multi_player_dynamical_system.html">ilqgames::MultiPlayerDynamicalSystem</a></td></tr>
 <tr class="memitem:afddeafb94e74a19cdba2736f4a7a8050 inherit pub_methods_classilqgames_1_1_multi_player_dynamical_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afddeafb94e74a19cdba2736f4a7a8050"></a>
 VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>Integrate</b> (Time t0, Time time_interval, const VectorXf &amp;x0, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
@@ -153,6 +156,9 @@ VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrateToNextTi
 <tr class="memitem:ada6af6c39bac2fda2043302b0e6c965c inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada6af6c39bac2fda2043302b0e6c965c"></a>
 VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrateFromPriorTimeStep</b> (Time t, const VectorXf &amp;x0, const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;strategies) const </td></tr>
 <tr class="separator:ada6af6c39bac2fda2043302b0e6c965c inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afa891d5a1184cefdc316f76528d01a0e inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afa891d5a1184cefdc316f76528d01a0e"></a>
+VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>Integrate</b> (Time t0, Time time_interval, const Eigen::Ref&lt; VectorXf &gt; &amp;x0, const std::vector&lt; Eigen::Ref&lt; VectorXf &gt;&gt; &amp;us) const </td></tr>
+<tr class="separator:afa891d5a1184cefdc316f76528d01a0e inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adf8ab89fd04892a1806814ef4ce89188 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf8ab89fd04892a1806814ef4ce89188"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>TreatAsLinear</b> () const </td></tr>
 <tr class="separator:adf8ab89fd04892a1806814ef4ce89188 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>

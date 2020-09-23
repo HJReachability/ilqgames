@@ -5,7 +5,7 @@
 %%For: 
 %Magnification: 1.00
 %%Orientation: Portrait
-%%BoundingBox: 0 0 500 79.681275
+%%BoundingBox: 0 0 500 59.760956
 %%Pages: 0
 %%BeginSetup
 %%EndSetup
@@ -19,13 +19,13 @@
 /marginwidth 10 def
 /distx 20 def
 /disty 40 def
-/boundaspect 6.275000 def  % aspect ratio of the BoundingBox (width/height)
+/boundaspect 8.366667 def  % aspect ratio of the BoundingBox (width/height)
 /boundx 500 def
 /boundy boundx boundaspect div def
 /xspacing 0 def
 /yspacing 0 def
 /rows 3 def
-/cols 3 def
+/cols 4 def
 /scalefactor 0 def
 /boxfont /Times-Roman findfont fontheight scalefont def
 
@@ -176,6 +176,7 @@ boxfont setfont
 (ilqgames::MultiPlayerIntegrableSystem) cw
 (ilqgames::MultiPlayerDynamicalSystem) cw
 (ilqgames::MultiPlayerFlatSystem) cw
+(ilqgames::Air3D) cw
 (ilqgames::ConcatenatedDynamicalSystem) cw
 (ilqgames::TwoPlayerUnicycle4D) cw
 (ilqgames::ConcatenatedFlatSystem) cw
@@ -190,32 +191,35 @@ boundx scalefactor div boundy scalefactor div scale
 
 % ----- classes -----
 
- (ilqgames::MultiPlayerIntegrableSystem) 1.250000 2.000000 box
- (ilqgames::MultiPlayerDynamicalSystem) 0.500000 1.000000 box
- (ilqgames::MultiPlayerFlatSystem) 2.000000 1.000000 box
- (ilqgames::ConcatenatedDynamicalSystem) 0.000000 0.000000 box
- (ilqgames::TwoPlayerUnicycle4D) 1.000000 0.000000 box
- (ilqgames::ConcatenatedFlatSystem) 2.000000 0.000000 box
+ (ilqgames::MultiPlayerIntegrableSystem) 2.000000 2.000000 box
+ (ilqgames::MultiPlayerDynamicalSystem) 1.000000 1.000000 box
+ (ilqgames::MultiPlayerFlatSystem) 3.000000 1.000000 box
+ (ilqgames::Air3D) 0.000000 0.000000 box
+ (ilqgames::ConcatenatedDynamicalSystem) 1.000000 0.000000 box
+ (ilqgames::TwoPlayerUnicycle4D) 2.000000 0.000000 box
+ (ilqgames::ConcatenatedFlatSystem) 3.000000 0.000000 box
 
 % ----- relations -----
 
 solid
-1 1.250000 1.250000 out
+1 2.000000 1.250000 out
 solid
-0.500000 2.000000 2.000000 conn
+1.000000 3.000000 2.000000 conn
 solid
-0 0.500000 1.750000 in
+0 1.000000 1.750000 in
 solid
-1 0.500000 0.250000 out
+1 1.000000 0.250000 out
 solid
-0.000000 1.000000 1.000000 conn
+0.000000 2.000000 1.000000 conn
 solid
-0 2.000000 1.750000 in
+0 3.000000 1.750000 in
 solid
-1 2.000000 0.250000 out
+1 3.000000 0.250000 out
 solid
 0 0.000000 0.750000 in
 solid
 0 1.000000 0.750000 in
 solid
 0 2.000000 0.750000 in
+solid
+0 3.000000 0.750000 in

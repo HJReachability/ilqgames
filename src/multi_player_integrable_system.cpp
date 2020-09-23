@@ -158,4 +158,14 @@ VectorXf MultiPlayerIntegrableSystem::IntegrateFromPriorTimeStep(
                    remaining_time_until_t, x0, us);
 }
 
+VectorXf MultiPlayerIntegrableSystem::Integrate(
+    Time t0, Time time_interval, const Eigen::Ref<VectorXf>& x0,
+    const std::vector<Eigen::Ref<VectorXf>>& us) const {
+  std::vector<VectorXf> eval_us(us.size());
+  std::transform(us.begin(), us.end(), eval_us.begin(),
+                 [](const Eigen::Ref<VectorXf>& u) { return u.eval(); });
+
+  return Integrate(t0, time_interval, x0.eval(), eval_us);
+};
+
 }  // namespace ilqgames

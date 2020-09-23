@@ -1,0 +1,85 @@
+\hypertarget{classilqgames_1_1_air3_d}{}\section{ilqgames\+:\+:Air3D Class Reference}
+\label{classilqgames_1_1_air3_d}\index{ilqgames\+::\+Air3D@{ilqgames\+::\+Air3D}}
+Inheritance diagram for ilqgames\+:\+:Air3D\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{classilqgames_1_1_air3_d}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Air3D} (float evader\+\_\+speed, float pursuer\+\_\+speed, Time time\+\_\+step)\hypertarget{classilqgames_1_1_air3_d_a1f8cd7e6aa89f357090b9a8e145400f7}{}\label{classilqgames_1_1_air3_d_a1f8cd7e6aa89f357090b9a8e145400f7}
+
+\item 
+Vector\+Xf {\bfseries Evaluate} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_air3_d_a67aa22b5b20462f3d080fe879ad44758}{}\label{classilqgames_1_1_air3_d_a67aa22b5b20462f3d080fe879ad44758}
+
+\item 
+\hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} {\bfseries Linearize} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_air3_d_a8071e95d88f670e33e2e17a8a6d7e502}{}\label{classilqgames_1_1_air3_d_a8071e95d88f670e33e2e17a8a6d7e502}
+
+\item 
+float {\bfseries Distance\+Between} (const Vector\+Xf \&x0, const Vector\+Xf \&x1) const \hypertarget{classilqgames_1_1_air3_d_ae3831b42e3a97a71abea9d7b8b86b7c7}{}\label{classilqgames_1_1_air3_d_ae3831b42e3a97a71abea9d7b8b86b7c7}
+
+\item 
+Dimension {\bfseries U\+Dim} (Player\+Index player\+\_\+idx) const \hypertarget{classilqgames_1_1_air3_d_a1c339bd8572547a07e7928093fcb477a}{}\label{classilqgames_1_1_air3_d_a1c339bd8572547a07e7928093fcb477a}
+
+\item 
+Player\+Index {\bfseries Num\+Players} () const \hypertarget{classilqgames_1_1_air3_d_aa469f3a9aebb8d3fc48993d36fd168db}{}\label{classilqgames_1_1_air3_d_aa469f3a9aebb8d3fc48993d36fd168db}
+
+\item 
+std\+::vector$<$ Dimension $>$ {\bfseries Position\+Dimensions} () const \hypertarget{classilqgames_1_1_air3_d_a1ae92cabe2edef86bf3e9408716697cf}{}\label{classilqgames_1_1_air3_d_a1ae92cabe2edef86bf3e9408716697cf}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+const float {\bfseries evader\+\_\+speed\+\_\+}\hypertarget{classilqgames_1_1_air3_d_acc8e2c94cf0f7dcc318dd286ededfced}{}\label{classilqgames_1_1_air3_d_acc8e2c94cf0f7dcc318dd286ededfced}
+
+\item 
+const float {\bfseries pursuer\+\_\+speed\+\_\+}\hypertarget{classilqgames_1_1_air3_d_a76b6a7ca43dd4ec8e385acff38cd8c00}{}\label{classilqgames_1_1_air3_d_a76b6a7ca43dd4ec8e385acff38cd8c00}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static const Dimension {\bfseries k\+Num\+X\+Dims} = 3\hypertarget{classilqgames_1_1_air3_d_ace8a3c3f0ec52564f18fcbbf543e9186}{}\label{classilqgames_1_1_air3_d_ace8a3c3f0ec52564f18fcbbf543e9186}
+
+\item 
+static const Dimension {\bfseries k\+Rx\+Idx} = 0\hypertarget{classilqgames_1_1_air3_d_ac678bc9df6e03301d2246b2ac9703b8a}{}\label{classilqgames_1_1_air3_d_ac678bc9df6e03301d2246b2ac9703b8a}
+
+\item 
+static const Dimension {\bfseries k\+Ry\+Idx} = 1\hypertarget{classilqgames_1_1_air3_d_ad315ffe7f7edd1e219f1aa2c1a37eda6}{}\label{classilqgames_1_1_air3_d_ad315ffe7f7edd1e219f1aa2c1a37eda6}
+
+\item 
+static const Dimension {\bfseries k\+R\+Theta\+Idx} = 2\hypertarget{classilqgames_1_1_air3_d_a42cc1c80b1230ace642004b11e43e982}{}\label{classilqgames_1_1_air3_d_a42cc1c80b1230ace642004b11e43e982}
+
+\item 
+static const Player\+Index {\bfseries k\+Num\+Players} = 2\hypertarget{classilqgames_1_1_air3_d_a31257940faeb1f4fc1394a8a1fe2bcc9}{}\label{classilqgames_1_1_air3_d_a31257940faeb1f4fc1394a8a1fe2bcc9}
+
+\item 
+static const Dimension {\bfseries k\+Num\+U1\+Dims} = 1\hypertarget{classilqgames_1_1_air3_d_acde42330125b1a9240c9835a2b671243}{}\label{classilqgames_1_1_air3_d_acde42330125b1a9240c9835a2b671243}
+
+\item 
+static const Dimension {\bfseries k\+Omega1\+Idx} = 0\hypertarget{classilqgames_1_1_air3_d_aa9cbffd46b50700ecca54322ff189883}{}\label{classilqgames_1_1_air3_d_aa9cbffd46b50700ecca54322ff189883}
+
+\item 
+static const Dimension {\bfseries k\+Num\+U2\+Dims} = 1\hypertarget{classilqgames_1_1_air3_d_aecbd7e60b4d74e501918ae8744a82224}{}\label{classilqgames_1_1_air3_d_aecbd7e60b4d74e501918ae8744a82224}
+
+\item 
+static const Dimension {\bfseries k\+Omega2\+Idx} = 0\hypertarget{classilqgames_1_1_air3_d_a5bd65039675cb9fb05b0d30346b0e9a5}{}\label{classilqgames_1_1_air3_d_a5bd65039675cb9fb05b0d30346b0e9a5}
+
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 65 of file air\+\_\+3d.\+h.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/dynamics/air\+\_\+3d.\+h\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/src/air\+\_\+3d.\+cpp\end{DoxyCompactItemize}

@@ -93,8 +93,9 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
   Dimension UDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->UDim();
   }
+  std::vector<Dimension> PositionDimensions() const;
 
- private:
+private:
   // List of subsystems, each of which controls the affects of a single player.
   const SubsystemList subsystems_;
 

@@ -3,76 +3,46 @@
 Inheritance diagram for ilqgames\+:\+:Game\+Solver\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[height=2.000000cm]{classilqgames_1_1_game_solver}
+\includegraphics[height=3.000000cm]{classilqgames_1_1_game_solver}
 \end{center}
 \end{figure}
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-virtual bool {\bfseries Solve} (const Vector\+Xf \&x0, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&initial\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&initial\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$final\+\_\+operating\+\_\+point, std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$final\+\_\+strategies, \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $\ast$log=nullptr, Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())\hypertarget{classilqgames_1_1_game_solver_a24ed8caa4c9217122f7ce86f16d1bd34}{}\label{classilqgames_1_1_game_solver_a24ed8caa4c9217122f7ce86f16d1bd34}
+virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Solve} (bool $\ast$success=nullptr, Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())=0\hypertarget{classilqgames_1_1_game_solver_a33845e75d3148ee43f068bcb85b2d297}{}\label{classilqgames_1_1_game_solver_a33845e75d3148ee43f068bcb85b2d297}
 
 \item 
-Time {\bfseries Time\+Horizon} () const \hypertarget{classilqgames_1_1_game_solver_a9fa5328990bd8139c556c09453020e33}{}\label{classilqgames_1_1_game_solver_a9fa5328990bd8139c556c09453020e33}
-
-\item 
-size\+\_\+t {\bfseries Num\+Time\+Steps} () const \hypertarget{classilqgames_1_1_game_solver_a8234f72d8ee55b7afe4d3557e2c9e117}{}\label{classilqgames_1_1_game_solver_a8234f72d8ee55b7afe4d3557e2c9e117}
-
-\item 
-Time {\bfseries Time\+Step} () const \hypertarget{classilqgames_1_1_game_solver_a113252da6aa43d0beb9966277653af04}{}\label{classilqgames_1_1_game_solver_a113252da6aa43d0beb9966277653af04}
-
-\item 
-const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \& {\bfseries Player\+Costs} () const \hypertarget{classilqgames_1_1_game_solver_afe05eb1238b481b82747f9edf005c301}{}\label{classilqgames_1_1_game_solver_afe05eb1238b481b82747f9edf005c301}
-
-\item 
-const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} \& {\bfseries Dynamics} () const \hypertarget{classilqgames_1_1_game_solver_aa0917153345988be1661fca76a6f8500}{}\label{classilqgames_1_1_game_solver_aa0917153345988be1661fca76a6f8500}
-
-\item 
-Time {\bfseries Compute\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hypertarget{classilqgames_1_1_game_solver_a490b20711d5d698171620f5bce607027}{}\label{classilqgames_1_1_game_solver_a490b20711d5d698171620f5bce607027}
+\hyperlink{classilqgames_1_1_problem}{Problem} \& {\bfseries Get\+Problem} ()\hypertarget{classilqgames_1_1_game_solver_a03e86a0b9070715738e11b9cfbc93321}{}\label{classilqgames_1_1_game_solver_a03e86a0b9070715738e11b9cfbc93321}
 
 \end{DoxyCompactItemize}
 \subsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-{\bfseries Game\+Solver} (const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ \&dynamics, const std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \&player\+\_\+costs, Time time\+\_\+horizon, const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} \&params=\hyperlink{structilqgames_1_1_solver_params}{Solver\+Params}())\hypertarget{classilqgames_1_1_game_solver_a89a591bb5d9fcefc28157a54b016a4d1}{}\label{classilqgames_1_1_game_solver_a89a591bb5d9fcefc28157a54b016a4d1}
+{\bfseries Game\+Solver} (const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_problem}{Problem} $>$ \&problem, const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} \&params)\hypertarget{classilqgames_1_1_game_solver_af7aed039cfd1c7dd88c40ff710caf97a}{}\label{classilqgames_1_1_game_solver_af7aed039cfd1c7dd88c40ff710caf97a}
 
 \item 
-virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)=0\hypertarget{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}{}\label{classilqgames_1_1_game_solver_a4a1772a9bd07347ed28455119b2571fe}
+virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Create\+New\+Log} () const \hypertarget{classilqgames_1_1_game_solver_add427a4fe7b7d3d0e2dbb4a47105c765}{}\label{classilqgames_1_1_game_solver_add427a4fe7b7d3d0e2dbb4a47105c765}
 
 \item 
-virtual bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$is\+\_\+new\+\_\+operating\+\_\+point\+\_\+feasible, bool $\ast$has\+\_\+converged, std\+::vector$<$ float $>$ $\ast$total\+\_\+costs, std\+::vector$<$ size\+\_\+t $>$ $\ast$times\+\_\+of\+\_\+extreme\+\_\+costs) const \hypertarget{classilqgames_1_1_game_solver_adafbb2f48bbd4cfb9f44ac0a3ae6c8f2}{}\label{classilqgames_1_1_game_solver_adafbb2f48bbd4cfb9f44ac0a3ae6c8f2}
+virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)\hypertarget{classilqgames_1_1_game_solver_a02d8f01b0742df2c0f288e8519c58282}{}\label{classilqgames_1_1_game_solver_a02d8f01b0742df2c0f288e8519c58282}
 
 \item 
-virtual float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}{}\label{classilqgames_1_1_game_solver_a413329f89a63805c387e35a99b53ad73}
-
-\item 
-bool {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged, std\+::vector$<$ float $>$ $\ast$total\+\_\+costs, std\+::vector$<$ size\+\_\+t $>$ $\ast$times\+\_\+of\+\_\+extreme\+\_\+costs, bool check\+\_\+trust\+\_\+region=true, bool $\ast$satisfies\+\_\+constraints=nullptr) const \hypertarget{classilqgames_1_1_game_solver_ad68a9cc3fde07cc2e2b87ded2932dd3a}{}\label{classilqgames_1_1_game_solver_ad68a9cc3fde07cc2e2b87ded2932dd3a}
+void {\bfseries Compute\+Cost\+Quadraticization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ $\ast$q)\hypertarget{classilqgames_1_1_game_solver_aba8d0d2965cb5140809327e765b1898d}{}\label{classilqgames_1_1_game_solver_aba8d0d2965cb5140809327e765b1898d}
 
 \end{DoxyCompactItemize}
 \subsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
-const std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ {\bfseries dynamics\+\_\+}\hypertarget{classilqgames_1_1_game_solver_addd321f0c2c7a760bccd2e4f043b3725}{}\label{classilqgames_1_1_game_solver_addd321f0c2c7a760bccd2e4f043b3725}
-
-\item 
-std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ {\bfseries player\+\_\+costs\+\_\+}\hypertarget{classilqgames_1_1_game_solver_aa9271829f762e9ad732921042005f856}{}\label{classilqgames_1_1_game_solver_aa9271829f762e9ad732921042005f856}
-
-\item 
-const Time {\bfseries time\+\_\+horizon\+\_\+}\hypertarget{classilqgames_1_1_game_solver_ae515fafef0ee7df96cfe1447d9f35581}{}\label{classilqgames_1_1_game_solver_ae515fafef0ee7df96cfe1447d9f35581}
-
-\item 
-const Time {\bfseries time\+\_\+step\+\_\+}\hypertarget{classilqgames_1_1_game_solver_ae1e0efeb25072ac9f21699b82071c6ab}{}\label{classilqgames_1_1_game_solver_ae1e0efeb25072ac9f21699b82071c6ab}
-
-\item 
-const size\+\_\+t {\bfseries num\+\_\+time\+\_\+steps\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a8a95abeb47770462608d2f34b97c974e}{}\label{classilqgames_1_1_game_solver_a8a95abeb47770462608d2f34b97c974e}
+const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_problem}{Problem} $>$ {\bfseries problem\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a3c1d8f6d4d9142d6bca23623391ca2c3}{}\label{classilqgames_1_1_game_solver_a3c1d8f6d4d9142d6bca23623391ca2c3}
 
 \item 
 std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ {\bfseries linearization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_ad31cd30bf0b2fd95461672da928e91f2}{}\label{classilqgames_1_1_game_solver_ad31cd30bf0b2fd95461672da928e91f2}
 
 \item 
-std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries quadraticization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a039a0b26778f15ce89509452b11c5fb2}{}\label{classilqgames_1_1_game_solver_a039a0b26778f15ce89509452b11c5fb2}
+std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries cost\+\_\+quadraticization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_aa7a4c4edd7ecee0d856b928c5d27ded6}{}\label{classilqgames_1_1_game_solver_aa7a4c4edd7ecee0d856b928c5d27ded6}
 
 \item 
-std\+::unique\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_l_q_solver}{L\+Q\+Solver} $>$ {\bfseries lq\+\_\+solver\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a1b7e0da6a2566c0a959b7c6c9d7845be}{}\label{classilqgames_1_1_game_solver_a1b7e0da6a2566c0a959b7c6c9d7845be}
+std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries last\+\_\+cost\+\_\+quadraticization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a463e0e69bd055f4fa78841be22782ea8}{}\label{classilqgames_1_1_game_solver_a463e0e69bd055f4fa78841be22782ea8}
 
 \item 
 const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} {\bfseries params\+\_\+}\hypertarget{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}{}\label{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}
@@ -86,7 +56,7 @@ const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} {\bfseries pa
 \subsection{Detailed Description}
 
 
-Definition at line 81 of file game\+\_\+solver.\+h.
+Definition at line 78 of file game\+\_\+solver.\+h.
 
 
 

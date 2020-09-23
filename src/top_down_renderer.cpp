@@ -71,7 +71,7 @@ void TopDownRenderer::Render() {
   std::transform(
       problems_.begin(), problems_.end(), num_agents.begin(),
       [](const std::shared_ptr<const TopDownRenderableProblem>& problem) {
-        return problem->Solver().Dynamics().NumPlayers();
+        return problem->Dynamics()->NumPlayers();
       });
 
   // Set up main top-down viewer window.
