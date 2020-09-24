@@ -375,7 +375,9 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
     if (CheckArmijoCondition(*current_operating_point, current_stepsize,
                              &current_kkt_squared_error)) {
+      // Success! Update cached terms.
       last_kkt_squared_error_ = current_kkt_squared_error;
+      expected_decrease_.release();
       return true;
     }
 
@@ -404,29 +406,32 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
   // empirically it seems to work ok.
   *current_kkt_squared_error = KKTSquaredError(current_op);
 
-  // Compute total expected decrease of KKT squared error.
-  float total_expected_decrease = 0.0;
+  // Compute total expected decrease of KKT squared error if not already
+  // computed.
+  if (!expected_decrease_.get()) {
+    expected_decrease_ = make_unique<float>(0.0);
+    for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+      for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
+        const auto& quad = cost_quadraticization_[kk][ii];
 
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
-      const auto& quad = cost_quadraticization_[kk][ii];
-
-      const Eigen::HouseholderQR<MatrixXf> state_qr(quad.state.hess);
-      const float current_expected_decrease =
-          state_qr.solve(quad.state.grad).squaredNorm();
-      total_expected_decrease += std::accumulate(
-          quad.control.begin(), quad.control.end(), current_expected_decrease,
-          [](float total,
-             const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
-            const Eigen::HouseholderQR<MatrixXf> control_qr(entry.second.hess);
-            return total + control_qr.solve(entry.second.grad).squaredNorm();
-          });
+        const Eigen::HouseholderQR<MatrixXf> state_qr(quad.state.hess);
+        const float current_expected_decrease =
+            state_qr.solve(quad.state.grad).squaredNorm();
+        *expected_decrease_ += std::accumulate(
+            quad.control.begin(), quad.control.end(), current_expected_decrease,
+            [](float total,
+               const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
+              const Eigen::HouseholderQR<MatrixXf> control_qr(
+                  entry.second.hess);
+              return total + control_qr.solve(entry.second.grad).squaredNorm();
+            });
+      }
     }
   }
-
   // Adjust total expected decrease.
-  total_expected_decrease *=
-      2.0 * current_stepsize * params_.expected_decrease_fraction;
+  const float scaled_expected_decrease = *expected_decrease_ * 2.0 *
+                                         current_stepsize *
+                                         params_.expected_decrease_fraction;
 
   // std::cout << "expected: " << total_expected_decrease << "\n"
   //           << "actual: "
@@ -434,7 +439,7 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
   //           << std::endl;
 
   return (last_kkt_squared_error_ - *current_kkt_squared_error >=
-          total_expected_decrease);
+          scaled_expected_decrease);
 }
 
 float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
