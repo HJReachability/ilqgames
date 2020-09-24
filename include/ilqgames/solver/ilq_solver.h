@@ -126,8 +126,11 @@ class ILQSolver : public GameSolver {
   // Core LQ Solver.
   std::unique_ptr<LQSolver> lq_solver_;
 
-  // Last KKT squared error.
+  // Last KKT squared error and expected decrease (unmultiplied by step size),
+  // and whether that expected decrease is up to date for this iteration (i.e.,
+  // ptr will be null).
   float last_kkt_squared_error_;
+  std::unique_ptr<float> expected_decrease_;
 };  // class ILQSolver
 
 }  // namespace ilqgames
