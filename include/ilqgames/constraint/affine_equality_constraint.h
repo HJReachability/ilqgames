@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all time-invariant explicit equality constraints.
+// (Time-invariant) linear equality constraint, i.e., a^T x - b = 0.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_TIME_INVARIANT_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_TIME_INVARIANT_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_AFFINE_EQUALITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_AFFINE_EQUALITY_CONSTRAINT_H
 
-#include <ilqgames/constraint/explicit/equality_constraint.h>
+#include <ilqgames/constraint/time_invariant_equality_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,30 +52,41 @@
 
 namespace ilqgames {
 
-class TimeInvariantEqualityConstraint : public EqualityConstraint {
+class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
  public:
-  virtual ~TimeInvariantEqualityConstraint() {}
+  ~AffineEqualityConstraint() {}
+  AffineEqualityConstraint(const VectorXf& a, float b,
+                           const std::string& name = "")
+      : TimeInvariantEqualityConstraint(name), a_(a), b_(b) {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
-  virtual bool IsSatisfied(const VectorXf& input, float* level) const = 0;
-  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
-    return IsSatisfied(input, level);
+  bool IsSatisfied(const VectorXf& input, float* level) const {
+    CHECK_EQ(input.size(), a_.size());
+    const float value = a_.transpose() * input + b_;
+
+    if (*level) *level = value;
+    return std::abs(value) < constants::kSmallNumber;
   }
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  virtual void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                            Eigen::Ref<VectorXf> grad) const = 0;
-  void Quadraticize(Time t, const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
                     Eigen::Ref<VectorXf> grad) const {
-    return Quadraticize(input, hess, grad);
-  };
+    CHECK_EQ(input.size(), a_.size());
+    CHECK_EQ(hess.rows(), input.size());
+    CHECK_EQ(hess.cols(), input.size());
+    CHECK_EQ(grad.size(), input.size());
 
- protected:
-  explicit TimeInvariantEqualityConstraint(const std::string& name)
-      : EqualityConstraint(name) {}
-};  // namespace ilqgames
+    // Do nothing to the Hessian - assume that it's already zero.
+    grad = a_;
+  }
+
+ private:
+  // Coefficient vector and nominal value.
+  const VectorXf a_;
+  const float b_;
+};  //\class AffineEqualityConstraint
 
 }  // namespace ilqgames
 

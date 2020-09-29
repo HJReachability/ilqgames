@@ -77,6 +77,10 @@ class ILQSolver : public GameSolver {
     else
       lq_solver_.reset(
           new LQFeedbackSolver(problem_->Dynamics(), problem_->NumTimeSteps()));
+
+    // If this system is flat then compute the linearization once, now.
+    if (problem_->Dynamics()->TreatAsLinear())
+      ComputeLinearization(&linearization_);
   }
 
   // Solve this game. Returns true if converged.

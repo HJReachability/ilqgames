@@ -74,6 +74,10 @@ struct SolverParams {
   // State and control regularization.
   float state_regularization = 0.0;
   float control_regularization = 0.0;
+
+  // Augmented Lagrangian parameters.
+  size_t unconstrained_solver_max_iters = 10;
+  float geometric_constraint_penalty_scaling = 5.0;
 };  // struct SolverParams
 
 }  // namespace ilqgames

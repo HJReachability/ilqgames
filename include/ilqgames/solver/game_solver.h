@@ -114,9 +114,12 @@ class GameSolver {
   }
 
   // Populate the given vector with a linearization of the dynamics about
-  // the given operating point.
-  virtual void ComputeLinearization(
+  // the given operating point. Provide version with no operating point for use
+  // with feedback linearizable systems.
+  void ComputeLinearization(
       const OperatingPoint& op,
+      std::vector<LinearDynamicsApproximation>* linearization);
+  void ComputeLinearization(
       std::vector<LinearDynamicsApproximation>* linearization);
 
   // Compute the quadratic cost approximation at the given operating point.

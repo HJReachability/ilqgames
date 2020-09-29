@@ -81,6 +81,19 @@ void GameSolver::ComputeLinearization(
   }
 }
 
+void GameSolver::ComputeLinearization(
+    std::vector<LinearDynamicsApproximation>* linearization) {
+  CHECK_NOTNULL(linearization);
+
+  // Cast dynamics to appropriate type and make sure the system is linearizable.
+  CHECK(problem_->Dynamics()->TreatAsLinear());
+  const auto& dyn = problem_->FlatDynamics();
+
+  // Populate one timestep at a time.
+  for (size_t kk = 0; kk < linearization->size(); kk++)
+    (*linearization)[kk] = dyn.LinearizedSystem();
+}
+
 void GameSolver::ComputeCostQuadraticization(
     const OperatingPoint& op,
     std::vector<std::vector<QuadraticCostApproximation>>* q) {

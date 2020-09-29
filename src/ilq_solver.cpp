@@ -338,12 +338,32 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
 
 float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
                                const std::vector<Dimension>& dims) const {
-  if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
+  auto total_distance = [&dims](const VectorXf& x1, const VectorXf& x2) {
+    if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
 
-  float distance = 0.0;
-  for (const Dimension dim : dims) distance += std::abs(x1(dim) - x2(dim));
+    float distance = 0.0;
+    for (const Dimension dim : dims) distance += std::abs(x1(dim) - x2(dim));
 
-  return distance;
+    return distance;
+  };  // total_distance
+
+  if (problem_->Dynamics()->TreatAsLinear()) {
+    const auto& dyn = problem_->FlatDynamics();
+
+    // If singular return infinite distance and throw a warning. Otherwise, use
+    // base class implementation but for nonlinear system states.
+    if (dyn.IsLinearSystemStateSingular(x1) ||
+        dyn.IsLinearSystemStateSingular(x2)) {
+      LOG(WARNING)
+          << "Singular state encountered when computing state distance.";
+      return std::numeric_limits<float>::infinity();
+    }
+
+    return total_distance(dyn.FromLinearSystemState(x1),
+                          dyn.FromLinearSystemState(x2));
+  }
+
+  return total_distance(x1, x2);
 }
 
 bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,

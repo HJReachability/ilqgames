@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Equality constraint that is only active after the threshold time.
+// (Time-invariant) vector equality constraint, i.e., 0.5*||x - \hat x||^2 = 0.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_FINAL_TIME_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_FINAL_TIME_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_VECTOR_EQUALITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_VECTOR_EQUALITY_CONSTRAINT_H
 
-#include <ilqgames/constraint/explicit/equality_constraint.h>
+#include <ilqgames/constraint/time_invariant_equality_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,43 +52,40 @@
 
 namespace ilqgames {
 
-class FinalTimeEqualityConstraint : public EqualityConstraint {
+class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
  public:
-  ~FinalTimeEqualityConstraint() {}
-  FinalTimeEqualityConstraint(
-      const std::shared_ptr<EqualityConstraint>& constraint,
-      Time threshold_time, const std::string& name = "")
-      : EqualityConstraint(name),
-        constraint_(constraint),
-        threshold_time_(threshold_time) {
-    CHECK_NOTNULL(constraint_);
-  }
+  ~VectorEqualityConstraint() {}
+  VectorEqualityConstraint(const VectorXf& nominal,
+                           const std::string& name = "")
+      : TimeInvariantEqualityConstraint(name), nominal_(nominal) {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
-    if (t < initial_time_ + threshold_time_) {
-      if (*level) *level = 0.0;
-      return true;
-    } else
-      return constraint_->IsSatisfied(t, input, level);
+  bool IsSatisfied(const VectorXf& input, float* level) const {
+    CHECK_EQ(input.size(), nominal_.size());
+    const float value = 0.5 * (input - nominal_).squaredNorm();
+
+    if (*level) *level = value;
+    return std::abs(value) < constants::kSmallNumber;
   }
 
   // Quadraticize the constraint value. Do *not* keep a running sum since we
   // keep separate multipliers for each constraint.
-  void Quadraticize(Time t, const VectorXf& input, Eigen::Ref<MatrixXf> hess,
+  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
                     Eigen::Ref<VectorXf> grad) const {
-    if (t >= initial_time_ + threshold_time_)
-      constraint_->Quadraticize(t, input, hess, grad);
+    CHECK_EQ(input.size(), nominal_.size());
+    CHECK_EQ(hess.rows(), input.size());
+    CHECK_EQ(hess.cols(), input.size());
+    CHECK_EQ(grad.size(), input.size());
+
+    hess.setIdentity();
+    grad = input - nominal_;
   }
 
  private:
-  // Underlying constraint.
-  const std::shared_ptr<EqualityConstraint> constraint_;
-
-  // Time threshold relative to initial time after which to apply constraint.
-  const Time threshold_time_;
-};  //\class EqualityConstraint
+  // Nominal vector.
+  const VectorXf nominal_;
+};  //\class VectorEqualityConstraint
 
 }  // namespace ilqgames
 

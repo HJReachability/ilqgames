@@ -45,7 +45,7 @@
 #define ILQGAMES_COST_PLAYER_COST_H
 
 #include <ilqgames/constraint/barrier/barrier.h>
-#include <ilqgames/constraint/explicit/equality_constraint.h>
+#include <ilqgames/constraint/equality_constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>

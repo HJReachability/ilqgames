@@ -45,8 +45,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_EQUALITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_EQUALITY_CONSTRAINT_H
 
 #include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/types.h>

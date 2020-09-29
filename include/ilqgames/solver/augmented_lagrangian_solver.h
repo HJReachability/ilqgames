@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,23 +36,26 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all iterative LQ game solvers.
-// Structured so that derived classes may only modify the `ModifyLQStrategies`
-// and `HasConverged` virtual functions.
+// Solver that implements an augmented Lagrangian method. For reference on these
+// methods, please refer to Chapter 17 of Nocedal and Wright or the ALTRO paper:
+// https://bjack205.github.io/assets/ALTRO.pdf.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_ILQ_FLAT_SOLVER_H
-#define ILQGAMES_SOLVER_ILQ_FLAT_SOLVER_H
+#ifndef ILQGAMES_SOLVER_AUGMENTED_LAGRANGIAN_SOLVER_H
+#define ILQGAMES_SOLVER_AUGMENTED_LAGRANGIAN_SOLVER_H
 
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_flat_system.h>
+#include <ilqgames/dynamics/multi_player_dynamical_system.h>
+#include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/lq_feedback_solver.h>
+#include <ilqgames/solver/lq_open_loop_solver.h>
 #include <ilqgames/solver/lq_solver.h>
+#include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
+#include <ilqgames/utils/loop_timer.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/solver_log.h>
@@ -60,40 +63,45 @@
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <chrono>
+#include <limits>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace ilqgames {
 
-class ILQFlatSolver : public ILQSolver {
+class AugmentedLagrangianSolver : public GameSolver {
  public:
-  virtual ~ILQFlatSolver() {}
-  ILQFlatSolver(const std::shared_ptr<Problem>& problem,
-                const SolverParams& params = SolverParams())
-      : ILQSolver(problem, params) {
-    // Precompute linearization.
-    CHECK(problem_->Dynamics()->TreatAsLinear());
-    ComputeLinearization(&linearization_);
-  }
+  ~AugmentedLagrangianSolver() {}
+  AugmentedLagrangianSolver(const std::shared_ptr<Problem>& problem,
+                            const SolverParams& params)
+      : GameSolver(problem, params) {}
 
- protected:
-  // Populate the given vector with a linearization of the dynamics about
-  // the given operating point. Provide version with no operating point for use
-  // with feedback linearizable systems.
-  void ComputeLinearization(
+  // Solve this game. Returns true if converged.
+  std::shared_ptr<SolverLog> Solve(
+      bool* success = nullptr,
+      Time max_runtime = std::numeric_limits<Time>::infinity());
+
+  // Accessors.
+  Problem& GetProblem() { return *problem_; }
+
+ private:
+  // Modify the existing cost quadraticization (obtained from
+  // GameSolver::ComputeCostQuadraticization) to account for constraint-related
+  // terms in the augmented Lagrangian.
+  void ComputeConstraintQuadraticization(
       const OperatingPoint& op,
-      std::vector<LinearDynamicsApproximation>* linearization) {
-    ComputeLinearization(linearization);
-  }
-  void ComputeLinearization(
-      std::vector<LinearDynamicsApproximation>* linearization);
+      std::vector<std::vector<QuadraticCostApproximation>>* q);
 
-  // Compute distance (infinity norm) between states in the given dimensions.
-  // If dimensions empty, checks all dimensions. Computes in the nonlinear
-  // system state coordinates.
-  float StateDistance(const VectorXf& x1, const VectorXf& x2,
-                      const std::vector<Dimension>& dims) const;
-};  // class ILQFlatSolver
+  // Current constraint multipliers and quadratic penalty multipliers.
+  // Naming convention follows https://bjack205.github.io/assets/ALTRO.pdf.
+  std::vector<float> lambdas_;
+  std::vector<float> mus_;
+
+  // Lower level (unconstrained) solver.
+  std::unique_ptr<ILQSolver> unconstrained_solver_;
+};  // class AugmentedLagrangianSolver
 
 }  // namespace ilqgames
 

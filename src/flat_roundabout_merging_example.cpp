@@ -59,10 +59,7 @@
 #include <ilqgames/examples/flat_roundabout_merging_example.h>
 #include <ilqgames/examples/roundabout_lane_center.h>
 #include <ilqgames/geometry/polyline2.h>
-#include <ilqgames/solver/ilq_flat_solver.h>
-#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
