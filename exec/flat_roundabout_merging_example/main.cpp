@@ -44,7 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
-#include <ilqgames/solver/ilq_flat_solver.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
 
   // Make a solver.
-  ilqgames::ILQFlatSolver solver(problem, params);
+  ilqgames::ILQSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();

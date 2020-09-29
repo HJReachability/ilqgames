@@ -91,20 +91,10 @@ class GameSolver {
   GameSolver(const std::shared_ptr<Problem>& problem,
              const SolverParams& params)
       : problem_(problem),
-        linearization_(problem->NumTimeSteps()),
-        cost_quadraticization_(problem_->NumTimeSteps()),
         params_(params),
         timer_(kMaxLoopTimesToRecord) {
     CHECK_NOTNULL(problem_.get());
     CHECK_NOTNULL(problem_->Dynamics().get());
-
-    // Prepopulate quadraticization.
-    for (auto& quads : cost_quadraticization_)
-      quads.resize(problem_->Dynamics()->NumPlayers(),
-                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
-
-    // Set last quadraticization to current, to start.
-    last_cost_quadraticization_ = cost_quadraticization_;
   }
 
   // Create a new log. This may be overridden by derived classes (e.g., to
@@ -113,30 +103,8 @@ class GameSolver {
     return std::make_shared<SolverLog>(problem_->TimeStep());
   }
 
-  // Populate the given vector with a linearization of the dynamics about
-  // the given operating point. Provide version with no operating point for use
-  // with feedback linearizable systems.
-  void ComputeLinearization(
-      const OperatingPoint& op,
-      std::vector<LinearDynamicsApproximation>* linearization);
-  void ComputeLinearization(
-      std::vector<LinearDynamicsApproximation>* linearization);
-
-  // Compute the quadratic cost approximation at the given operating point.
-  void ComputeCostQuadraticization(
-      const OperatingPoint& op,
-      std::vector<std::vector<QuadraticCostApproximation>>* q);
-
   // Store the underlying problem.
   const std::shared_ptr<Problem> problem_;
-
-  // Linearization and quadraticization. Both are time-indexed (and
-  // quadraticizations' inner vector is indexed by player). Also keep track of
-  // the quadraticization from last iteration.
-  std::vector<LinearDynamicsApproximation> linearization_;
-  std::vector<std::vector<QuadraticCostApproximation>> cost_quadraticization_;
-  std::vector<std::vector<QuadraticCostApproximation>>
-      last_cost_quadraticization_;
 
   // Solver parameters.
   const SolverParams params_;

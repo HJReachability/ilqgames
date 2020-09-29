@@ -69,6 +69,8 @@ class ILQSolver : public GameSolver {
   ILQSolver(const std::shared_ptr<Problem>& problem,
             const SolverParams& params = SolverParams())
       : GameSolver(problem, params),
+        linearization_(problem->NumTimeSteps()),
+        cost_quadraticization_(problem_->NumTimeSteps()),
         last_kkt_squared_error_(constants::kInfinity) {
     // Set up LQ solver.
     if (params_.open_loop)
@@ -81,6 +83,14 @@ class ILQSolver : public GameSolver {
     // If this system is flat then compute the linearization once, now.
     if (problem_->Dynamics()->TreatAsLinear())
       ComputeLinearization(&linearization_);
+
+    // Prepopulate quadraticization.
+    for (auto& quads : cost_quadraticization_)
+      quads.resize(problem_->Dynamics()->NumPlayers(),
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
+
+    // Set last quadraticization to current, to start.
+    last_cost_quadraticization_ = cost_quadraticization_;
   }
 
   // Solve this game. Returns true if converged.
@@ -126,6 +136,28 @@ class ILQSolver : public GameSolver {
                              const std::vector<Strategy>& current_strategies,
                              OperatingPoint* current_operating_point,
                              bool* satisfies_barriers = nullptr) const;
+
+  // Populate the given vector with a linearization of the dynamics about
+  // the given operating point. Provide version with no operating point for use
+  // with feedback linearizable systems.
+  void ComputeLinearization(
+      const OperatingPoint& op,
+      std::vector<LinearDynamicsApproximation>* linearization);
+  void ComputeLinearization(
+      std::vector<LinearDynamicsApproximation>* linearization);
+
+  // Compute the quadratic cost approximation at the given operating point.
+  void ComputeCostQuadraticization(
+      const OperatingPoint& op,
+      std::vector<std::vector<QuadraticCostApproximation>>* q);
+
+  // Linearization and quadraticization. Both are time-indexed (and
+  // quadraticizations' inner vector is indexed by player). Also keep track of
+  // the quadraticization from last iteration.
+  std::vector<LinearDynamicsApproximation> linearization_;
+  std::vector<std::vector<QuadraticCostApproximation>> cost_quadraticization_;
+  std::vector<std::vector<QuadraticCostApproximation>>
+      last_cost_quadraticization_;
 
   // Core LQ Solver.
   std::unique_ptr<LQSolver> lq_solver_;

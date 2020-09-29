@@ -489,4 +489,60 @@ float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
   return total_squared_error;
 }
 
+void ILQSolver::ComputeLinearization(
+    const OperatingPoint& op,
+    std::vector<LinearDynamicsApproximation>* linearization) {
+  CHECK_NOTNULL(linearization);
+
+  // Check if linearization is the right length.
+  if (linearization->size() != op.xs.size())
+    linearization->resize(op.xs.size());
+
+  // Cast dynamics to appropriate type.
+  const auto dyn = static_cast<const MultiPlayerDynamicalSystem*>(
+      problem_->Dynamics().get());
+
+  // Populate one timestep at a time.
+  for (size_t kk = 0; kk < op.xs.size(); kk++) {
+    const Time t =
+        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+    (*linearization)[kk] = dyn->Linearize(t, op.xs[kk], op.us[kk]);
+  }
+}
+
+void ILQSolver::ComputeLinearization(
+    std::vector<LinearDynamicsApproximation>* linearization) {
+  CHECK_NOTNULL(linearization);
+
+  // Cast dynamics to appropriate type and make sure the system is linearizable.
+  CHECK(problem_->Dynamics()->TreatAsLinear());
+  const auto& dyn = problem_->FlatDynamics();
+
+  // Populate one timestep at a time.
+  for (size_t kk = 0; kk < linearization->size(); kk++)
+    (*linearization)[kk] = dyn.LinearizedSystem();
+}
+
+void ILQSolver::ComputeCostQuadraticization(
+    const OperatingPoint& op,
+    std::vector<std::vector<QuadraticCostApproximation>>* q) {
+  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    const Time t =
+        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+    const auto& x = op.xs[kk];
+    const auto& us = op.us[kk];
+
+    // Quadraticize costs.
+    for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
+      const PlayerCost& cost = problem_->PlayerCosts()[ii];
+
+      if (cost.IsTimeAdditive() ||
+          problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
+        (*q)[kk][ii] = cost.Quadraticize(t, x, us);
+      else
+        (*q)[kk][ii] = cost.QuadraticizeBarriersAndControlCosts(t, x, us);
+    }
+  }
+}
+
 }  // namespace ilqgames
