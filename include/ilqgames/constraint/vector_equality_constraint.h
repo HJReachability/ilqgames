@@ -71,8 +71,8 @@ class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  void Quadraticize(float lambda, float mu, const VectorXf& input,
-                    MatrixXf* hess, VectorXf* grad) const {
+  void Quadraticize(size_t time_step, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
     CHECK_NOTNULL(hess);
     CHECK_NOTNULL(grad);
     CHECK_EQ(input.size(), nominal_.size());
@@ -85,9 +85,11 @@ class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
     const float value = delta.norm();
 
     // Compute gradient and Hessian.
-    (*grad) += (mu + lambda / value) * delta;
-    (*hess) -= (lambda / (value * value * value)) * delta * delta.transpose();
-    hess->diagonal() += VectorXf::Constant(input.size(), mu + lambda / value);
+    (*grad) += (mu_ + lambdas_[time_step] / value) * delta;
+    (*hess) -= (lambdas_[time_step] / (value * value * value)) * delta *
+               delta.transpose();
+    hess->diagonal() +=
+        VectorXf::Constant(input.size(), mu_ + lambdas_[time_step] / value);
   }
 
  private:

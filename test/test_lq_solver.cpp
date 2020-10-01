@@ -256,9 +256,9 @@ class LQSolverTest : public ::testing::Test {
   void QuadraticizeAndSolve() {
     quadraticizations_.clear();
     quadraticizations_.push_back(player_costs_[0].Quadraticize(
-        0.0, operating_point_->xs[0], operating_point_->us[0]));
+        0.0, 0, operating_point_->xs[0], operating_point_->us[0]));
     quadraticizations_.push_back(player_costs_[1].Quadraticize(
-        0.0, operating_point_->xs[0], operating_point_->us[0]));
+        0.0, 0, operating_point_->xs[0], operating_point_->us[0]));
 
     lq_solution_ = lq_solver_.Solve(
         std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),

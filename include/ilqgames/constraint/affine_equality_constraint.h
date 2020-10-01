@@ -55,9 +55,9 @@ namespace ilqgames {
 class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
  public:
   ~AffineEqualityConstraint() {}
-  AffineEqualityConstraint(const VectorXf& a, float b,
+  AffineEqualityConstraint(const VectorXf& a, float b, size_t num_time_steps,
                            const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name),
+      : TimeInvariantEqualityConstraint(num_time_steps, name),
         a_(a),
         b_(b),
         hess_of_sq_(a * a.transpose()) {}
@@ -74,8 +74,8 @@ class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  void Quadraticize(float lambda, float mu, const VectorXf& input,
-                            MatrixXf* hess, VectorXf* grad) const {
+  void Quadraticize(size_t time_step, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
     CHECK_NOTNULL(hess);
     CHECK_NOTNULL(grad);
     CHECK_EQ(input.size(), a_.size());
@@ -83,8 +83,8 @@ class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
 
-    (*grad) += lambda * a_ + mu * (hess_of_sq_ * input + b_ * a_);
-    (*hess) += mu * hess_of_sq_;
+    (*grad) += lambdas_[time_step] * a_ + mu_ * (hess_of_sq_ * input + b_ * a_);
+    (*hess) += mu_ * hess_of_sq_;
   }
 
  private:

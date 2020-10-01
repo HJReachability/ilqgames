@@ -65,11 +65,11 @@ class TimeInvariantEqualityConstraint : public EqualityConstraint {
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+  virtual void Quadraticize(size_t time_step, const VectorXf& input,
+                            MatrixXf* hess, VectorXf* grad) const = 0;
   void Quadraticize(Time t, size_t time_step, const VectorXf& input,
                     MatrixXf* hess, VectorXf* grad) const {
-    Quadraticize(input, hess, grad);
+    Quadraticize(time_step, input, hess, grad);
   }
 
  protected:

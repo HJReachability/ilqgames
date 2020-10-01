@@ -118,31 +118,23 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
         const auto& us = op.us[kk];
 
         // Scale each lambda.
-        for (size_t ii = 0; ii < pc.NumStateConstraints(); ii++) {
-          const auto& constraint = pc.StateConstraints()[ii];
+        for (const auto& constraint : pc.StateConstraints()) {
           constraint->IsSatisfied(t, x, &constraint_error);
           squared_constraint_error += constraint_error * constraint_error;
-
-          auto& lambda = pc.StateLambdas(kk)[ii];
-          lambda += pc.Mu() * constraint_error;
+          constraint->Lambda(kk) += EqualityConstraint::Mu() * constraint_error;
         }
 
-        auto constraint_iter = pc.ControlConstraints().begin();
-        auto lambda_iter = pc.ControlLambdas(kk).begin();
-        while (constraint_iter != pc.ControlConstraints().end()) {
-          CHECK(lambda_iter != pc.ControlLambdas(kk).end());
-          CHECK_EQ(constraint_iter->first, lambda_iter->first);
-          constraint_iter->second->IsSatisfied(t, us[constraint_iter->first],
-                                               &constraint_error);
+        for (const auto& pair : pc.ControlConstraints()) {
+          pair.second->IsSatisfied(t, us[pair.first], &constraint_error);
           squared_constraint_error += constraint_error * constraint_error;
-
-          auto& lambda = lambda_iter->second;
-          lambda += pc.Mu() * constraint_error;
+          pair.second->Lambda(kk) +=
+              EqualityConstraint::Mu() * constraint_error;
         }
       }
 
       // Scale mu.
-      pc.ScaleMu(params_.geometric_quadratic_constraint_penalty_scaling);
+      EqualityConstraint::Mu() *=
+          params_.geometric_quadratic_constraint_penalty_scaling;
 
       // Run unconstrained solver to convergence. Since solvers update problem
       // solutions, the unconstrained solver should automatically start where it

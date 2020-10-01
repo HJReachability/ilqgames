@@ -57,8 +57,8 @@ class FinalTimeEqualityConstraint : public EqualityConstraint {
   ~FinalTimeEqualityConstraint() {}
   FinalTimeEqualityConstraint(
       const std::shared_ptr<EqualityConstraint>& constraint,
-      Time threshold_time, const std::string& name = "")
-      : EqualityConstraint(name),
+      Time threshold_time, size_t num_time_steps, const std::string& name = "")
+      : EqualityConstraint(num_time_steps, name),
         constraint_(constraint),
         threshold_time_(threshold_time) {
     CHECK_NOTNULL(constraint_);
@@ -76,10 +76,10 @@ class FinalTimeEqualityConstraint : public EqualityConstraint {
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  void Quadraticize(float lambda, float mu, Time t, const VectorXf& input,
+  void Quadraticize(Time t, size_t time_step, const VectorXf& input,
                     MatrixXf* hess, VectorXf* grad) const {
     if (t >= initial_time_ + threshold_time_)
-      constraint_->Quadraticize(lambda, mu, t, input, hess, grad);
+      constraint_->Quadraticize(t, time_step, input, hess, grad);
   }
 
  private:
