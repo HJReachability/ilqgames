@@ -98,6 +98,16 @@ class ILQSolver : public GameSolver {
       bool* success = nullptr,
       Time max_runtime = std::numeric_limits<Time>::infinity());
 
+  // Accessors.
+  // NOTE: these should be primarily used by higher-level solvers.
+  std::vector<std::vector<QuadraticCostApproximation>>* Quadraticization() {
+    return &cost_quadraticization_;
+  }
+
+  std::vector<LinearDynamicsApproximation>* Linearization() {
+    return &linearization_;
+  }
+
  protected:
   // Modify LQ strategies to improve convergence properties.
   // This function performs an Armijo linesearch and returns true if successful.
@@ -107,8 +117,8 @@ class ILQSolver : public GameSolver {
 
   // Compute distance (infinity norm) between states in the given dimensions.
   // If dimensions empty, checks all dimensions.
-  virtual float StateDistance(const VectorXf& x1, const VectorXf& x2,
-                              const std::vector<Dimension>& dims) const;
+  float StateDistance(const VectorXf& x1, const VectorXf& x2,
+                      const std::vector<Dimension>& dims) const;
 
   // Check if solver has converged.
   virtual bool HasConverged(const OperatingPoint& last_op,
@@ -128,7 +138,7 @@ class ILQSolver : public GameSolver {
 
   // Compute current KKT squared error. In the process, update the
   // quadraticization.
-  float KKTSquaredError(const OperatingPoint& current_op);
+  virtual float KKTSquaredError(const OperatingPoint& current_op);
 
   // Compute the current operating point based on the current set of
   // strategies and the last operating point.

@@ -148,7 +148,7 @@ bool SolverLog::Save(bool only_last_trajectory,
 
     // Dump cumulative runtimes.
     file.open(sub_dir_name + "/runtimes.txt");
-    file << cumulative_runtimes_[ii] << std::endl;
+    file << runtimes_[ii] << std::endl;
     file.close();
 
     // Dump us.

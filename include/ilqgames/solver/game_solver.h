@@ -80,9 +80,7 @@ class GameSolver {
   virtual ~GameSolver() {}
 
   // Solve this game. Returns true if converged.
-  virtual std::shared_ptr<SolverLog> Solve(
-      bool* success = nullptr,
-      Time max_runtime = std::numeric_limits<Time>::infinity()) = 0;
+  virtual std::shared_ptr<SolverLog> Solve(bool* success, Time max_runtime) = 0;
 
   // Accessors.
   Problem& GetProblem() { return *problem_; }
@@ -90,9 +88,7 @@ class GameSolver {
  protected:
   GameSolver(const std::shared_ptr<Problem>& problem,
              const SolverParams& params)
-      : problem_(problem),
-        params_(params),
-        timer_(kMaxLoopTimesToRecord) {
+      : problem_(problem), params_(params), timer_(kMaxLoopTimesToRecord) {
     CHECK_NOTNULL(problem_.get());
     CHECK_NOTNULL(problem_->Dynamics().get());
   }

@@ -76,29 +76,21 @@ class AugmentedLagrangianSolver : public GameSolver {
   ~AugmentedLagrangianSolver() {}
   AugmentedLagrangianSolver(const std::shared_ptr<Problem>& problem,
                             const SolverParams& params)
-      : GameSolver(problem, params) {}
+      : GameSolver(problem, params) {
+    // Modify parameters for unconstrained solver.
+    SolverParams unconstrained_solver_params(params);
+    unconstrained_solver_params.max_solver_iters =
+        params.unconstrained_solver_max_iters;
+    unconstrained_solver_.reset(
+        new ILQSolver(problem, unconstrained_solver_params));
+  }
 
   // Solve this game. Returns true if converged.
   std::shared_ptr<SolverLog> Solve(
       bool* success = nullptr,
       Time max_runtime = std::numeric_limits<Time>::infinity());
 
-  // Accessors.
-  Problem& GetProblem() { return *problem_; }
-
  private:
-  // Modify the existing cost quadraticization (obtained from
-  // GameSolver::ComputeCostQuadraticization) to account for constraint-related
-  // terms in the augmented Lagrangian.
-  void ComputeConstraintQuadraticization(
-      const OperatingPoint& op,
-      std::vector<std::vector<QuadraticCostApproximation>>* q);
-
-  // Current constraint multipliers and quadratic penalty multipliers.
-  // Naming convention follows https://bjack205.github.io/assets/ALTRO.pdf.
-  std::vector<float> lambdas_;
-  std::vector<float> mus_;
-
   // Lower level (unconstrained) solver.
   std::unique_ptr<ILQSolver> unconstrained_solver_;
 };  // class AugmentedLagrangianSolver

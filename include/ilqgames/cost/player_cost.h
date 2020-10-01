@@ -58,15 +58,24 @@ namespace ilqgames {
 class PlayerCost {
  public:
   ~PlayerCost() {}
+
+  // Provide default values for all constructor values. If num_time_steps is
+  // positive use that to initialize the lambdas.
   explicit PlayerCost(const std::string& name = "",
                       float state_regularization = 0.0,
-                      float control_regularization = 0.0)
+                      float control_regularization = 0.0,
+                      size_t num_time_steps = 0)
       : name_(name),
         state_regularization_(state_regularization),
         control_regularization_(control_regularization),
         are_barriers_on_(true),
         cost_structure_(CostStructure::SUM),
-        time_of_extreme_cost_(0) {}
+        time_of_extreme_cost_(0) {
+    if (num_time_steps > 0) {
+      state_lambdas_.resize(num_time_steps);
+      control_lambdas_.resize(num_time_steps);
+    }
+  }
 
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
@@ -95,10 +104,15 @@ class PlayerCost {
   float EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
                        const std::vector<VectorXf>& us) const;
 
-  // Quadraticize this cost at the given time, state, and controls.
+  // Evaluate squared norm of all constraint violations.
+  float SquaredConstraintViolation(const OperatingPoint& op,
+                                   Time time_step) const;
+
+  // Quadraticize this cost at the given time, time step, state, and controls.
   // *Does* account for cost barriers due to inequality barriers.
   QuadraticCostApproximation Quadraticize(
-      Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
+      Time t, size_t time_step, const VectorXf& x,
+      const std::vector<VectorXf>& us) const;
 
   // Return empty cost quadraticization except for barriers and control costs.
   QuadraticCostApproximation QuadraticizeBarriersAndControlCosts(
@@ -156,6 +170,15 @@ class PlayerCost {
     return control_constraints_;
   }
 
+  // Access multipliers at a given timestep. These are indexed by constraint.
+  std::vector<float>& StateLambdas(size_t kk) { return state_lambdas_[kk]; }
+  PlayerMultiMap<float>& ControlLambdas(size_t kk) {
+    return control_lambdas_[kk];
+  }
+  float Mu() const { return mu_; }
+  void SetMu(float mu) { mu_ = mu; }
+  void ScaleMu(float scale) { mu_ *= scale; }
+
  private:
   // Name to be used with error msgs.
   const std::string name_;
@@ -171,9 +194,16 @@ class PlayerCost {
   PlayerPtrMap<Barrier> control_barriers_;
   bool are_barriers_on_;
 
-  // State and control constraints.
+  // State and control constraints, with multipliers and augmented multipliers
+  // indexed by time, then by constraint. These are inserted so that, at each
+  // timestep, iterators at equivalent positions correspond to equivalent
+  // constraints.
+  // NOTE: Multiplier naming from https://bjack205.github.io/assets/ALTRO.pdf.
   PtrVector<EqualityConstraint> state_constraints_;
   PlayerPtrMultiMap<EqualityConstraint> control_constraints_;
+  std::vector<std::vector<float>> state_lambdas_;
+  std::vector<PlayerMultiMap<float>> control_lambdas_;
+  float mu_;
 
   // Regularization on costs.
   const float state_regularization_;

@@ -65,12 +65,21 @@ class SolverLog : private Uncopyable {
   void AddSolverIterate(const OperatingPoint& operating_point,
                         const std::vector<Strategy>& strategies,
                         const std::vector<float>& total_costs,
-                        Time cumulative_runtime, bool was_converged) {
+                        Time runtime, bool was_converged) {
     operating_points_.push_back(operating_point);
     strategies_.push_back(strategies);
     total_player_costs_.push_back(total_costs);
-    cumulative_runtimes_.push_back(cumulative_runtime);
+    runtimes_.push_back(runtime);
     was_converged_.push_back(was_converged);
+  }
+
+  // Add a whole other log.
+  void AddLog(const SolverLog& log) {
+    for (size_t ii = 0; ii < log.NumIterates(); ii++) {
+      AddSolverIterate(log.operating_points_[ii], log.strategies_[ii],
+                       log.total_player_costs_[ii],
+                       log.runtimes_[ii], log.was_converged_[ii]);
+    }
   }
 
   // Clear all but first entry. Used by the solver to return initial conditions
@@ -82,7 +91,7 @@ class SolverLog : private Uncopyable {
     operating_points_.resize(kOneIterate, operating_points_.front());
     strategies_.resize(kOneIterate);
     total_player_costs_.resize(kOneIterate);
-    cumulative_runtimes_.resize(kOneIterate);
+    runtimes_.resize(kOneIterate);
     was_converged_.resize(kOneIterate);
   }
 
@@ -104,9 +113,7 @@ class SolverLog : private Uncopyable {
                    (constants::kSmallNumber + FinalTime() - InitialTime()) /
                    time_step_);
   }
-  std::vector<float> TotalCosts() const {
-    return total_player_costs_.back();
-  }
+  std::vector<float> TotalCosts() const { return total_player_costs_.back(); }
 
   const std::vector<Strategy>& InitialStrategies() const {
     return strategies_.front();
@@ -184,7 +191,7 @@ class SolverLog : private Uncopyable {
   std::vector<OperatingPoint> operating_points_;
   std::vector<std::vector<Strategy>> strategies_;
   std::vector<std::vector<float>> total_player_costs_;
-  std::vector<Time> cumulative_runtimes_;
+  std::vector<Time> runtimes_;
   std::vector<bool> was_converged_;
 };  // class SolverLog
 

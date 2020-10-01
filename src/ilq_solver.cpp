@@ -79,11 +79,6 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   // Create a new log.
   std::shared_ptr<SolverLog> log = CreateNewLog();
 
-  // Keep iterating until convergence.
-  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
-    return std::chrono::duration<Time>(clock::now() - start).count();
-  };  // elapsed_time
-
   // Last and current operating points. Make sure the last one starts from the
   // current state so that the current one will start there as well.
   // NOTE: setting the current operating point to start at x0 is critical to the
@@ -127,14 +122,13 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   TotalCosts(current_operating_point, &total_costs);
 
   // Log current iterate.
+  Time elapsed = 0.0;
   log->AddSolverIterate(current_operating_point, current_strategies,
-                        total_costs, elapsed_time(solver_call_time),
-                        has_converged);
+                        total_costs, elapsed, has_converged);
 
   // Main loop with timer for anytime execution.
   while (num_iterations < params_.max_solver_iters && !has_converged &&
-         elapsed_time(solver_call_time) <
-             max_runtime - timer_.RuntimeUpperBound()) {
+         elapsed < max_runtime - timer_.RuntimeUpperBound()) {
     // Start loop timer.
     timer_.Tic();
 
@@ -200,13 +194,12 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     TotalCosts(current_operating_point, &total_costs);
     has_converged = HasConverged(last_operating_point, current_operating_point);
 
+    // Record loop runtime.
+    elapsed = timer_.Toc();
+
     // Log current iterate.
     log->AddSolverIterate(current_operating_point, current_strategies,
-                          total_costs, elapsed_time(solver_call_time),
-                          has_converged);
-
-    // Record loop runtime.
-    timer_.Toc();
+                          total_costs, elapsed, has_converged);
   }
 
   CHECK(!problem_->PlayerCosts().front().AreBarriersOn() ||
@@ -230,6 +223,9 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
   // Handle success flag.
   if (success) *success = true;
+
+  // Update problem solution by convention.
+  problem_->OverwriteSolution(current_operating_point, current_strategies);
 
   return log;
 }

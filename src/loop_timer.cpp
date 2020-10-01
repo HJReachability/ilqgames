@@ -54,7 +54,7 @@ namespace ilqgames {
 
 void LoopTimer::Tic() { start_ = std::chrono::high_resolution_clock::now(); }
 
-void LoopTimer::Toc() {
+Time LoopTimer::Toc() {
   // Elapsed time in seconds.
   const Time elapsed = (std::chrono::duration<Time>(
                             std::chrono::high_resolution_clock::now() - start_))
@@ -68,6 +68,8 @@ void LoopTimer::Toc() {
     total_time_ -= loop_times_.front();
     loop_times_.pop_front();
   }
+
+  return elapsed;
 }
 
 Time LoopTimer::RuntimeUpperBound(float num_stddevs, Time initial_guess) const {
