@@ -534,7 +534,7 @@ void ILQSolver::ComputeCostQuadraticization(
 
       if (cost.IsTimeAdditive() ||
           problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
-        (*q)[kk][ii] = cost.Quadraticize(t, x, us);
+        (*q)[kk][ii] = cost.Quadraticize(t, kk, x, us);
       else
         (*q)[kk][ii] = cost.QuadraticizeBarriersAndControlCosts(t, x, us);
     }

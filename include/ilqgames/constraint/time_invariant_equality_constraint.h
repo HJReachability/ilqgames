@@ -63,18 +63,19 @@ class TimeInvariantEqualityConstraint : public EqualityConstraint {
     return IsSatisfied(input, level);
   }
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  virtual void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                            Eigen::Ref<VectorXf> grad) const = 0;
-  void Quadraticize(Time t, const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                    Eigen::Ref<VectorXf> grad) const {
-    return Quadraticize(input, hess, grad);
-  };
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const = 0;
+  void Quadraticize(Time t, size_t time_step, const VectorXf& input,
+                    MatrixXf* hess, VectorXf* grad) const {
+    Quadraticize(input, hess, grad);
+  }
 
  protected:
-  explicit TimeInvariantEqualityConstraint(const std::string& name)
-      : EqualityConstraint(name) {}
+  explicit TimeInvariantEqualityConstraint(size_t num_time_steps,
+                                           const std::string& name)
+      : EqualityConstraint(num_time_steps, name) {}
 };  // namespace ilqgames
 
 }  // namespace ilqgames

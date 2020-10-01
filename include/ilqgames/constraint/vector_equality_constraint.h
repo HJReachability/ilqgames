@@ -36,7 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) vector equality constraint, i.e., 0.5*||x - \hat x||^2 = 0.
+// (Time-invariant) vector equality constraint, i.e., ||x - \hat x|| = 0.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -63,23 +63,31 @@ class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
   // value, which equals zero if the constraint is satisfied.
   bool IsSatisfied(const VectorXf& input, float* level) const {
     CHECK_EQ(input.size(), nominal_.size());
-    const float value = 0.5 * (input - nominal_).squaredNorm();
+    const float value = (input - nominal_).norm();
 
     if (*level) *level = value;
     return std::abs(value) < constants::kSmallNumber;
   }
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                    Eigen::Ref<VectorXf> grad) const {
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(float lambda, float mu, const VectorXf& input,
+                    MatrixXf* hess, VectorXf* grad) const {
+    CHECK_NOTNULL(hess);
+    CHECK_NOTNULL(grad);
     CHECK_EQ(input.size(), nominal_.size());
-    CHECK_EQ(hess.rows(), input.size());
-    CHECK_EQ(hess.cols(), input.size());
-    CHECK_EQ(grad.size(), input.size());
+    CHECK_EQ(hess->rows(), input.size());
+    CHECK_EQ(hess->cols(), input.size());
+    CHECK_EQ(grad->size(), input.size());
 
-    hess.setIdentity();
-    grad = input - nominal_;
+    // Compute value of the constraint.
+    const VectorXf delta = input - nominal_;
+    const float value = delta.norm();
+
+    // Compute gradient and Hessian.
+    (*grad) += (mu + lambda / value) * delta;
+    (*hess) -= (lambda / (value * value * value)) * delta * delta.transpose();
+    hess->diagonal() += VectorXf::Constant(input.size(), mu + lambda / value);
   }
 
  private:

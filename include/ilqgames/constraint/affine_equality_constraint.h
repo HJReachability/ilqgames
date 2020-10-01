@@ -36,7 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) linear equality constraint, i.e., a^T x - b = 0.
+// (Time-invariant) affine equality constraint, i.e., a^T x - b = 0.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +57,10 @@ class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
   ~AffineEqualityConstraint() {}
   AffineEqualityConstraint(const VectorXf& a, float b,
                            const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name), a_(a), b_(b) {}
+      : TimeInvariantEqualityConstraint(name),
+        a_(a),
+        b_(b),
+        hess_of_sq_(a * a.transpose()) {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
@@ -69,23 +72,28 @@ class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
     return std::abs(value) < constants::kSmallNumber;
   }
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                    Eigen::Ref<VectorXf> grad) const {
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(float lambda, float mu, const VectorXf& input,
+                            MatrixXf* hess, VectorXf* grad) const {
+    CHECK_NOTNULL(hess);
+    CHECK_NOTNULL(grad);
     CHECK_EQ(input.size(), a_.size());
-    CHECK_EQ(hess.rows(), input.size());
-    CHECK_EQ(hess.cols(), input.size());
-    CHECK_EQ(grad.size(), input.size());
+    CHECK_EQ(hess->rows(), input.size());
+    CHECK_EQ(hess->cols(), input.size());
+    CHECK_EQ(grad->size(), input.size());
 
-    // Do nothing to the Hessian - assume that it's already zero.
-    grad = a_;
+    (*grad) += lambda * a_ + mu * (hess_of_sq_ * input + b_ * a_);
+    (*hess) += mu * hess_of_sq_;
   }
 
  private:
   // Coefficient vector and nominal value.
   const VectorXf a_;
   const float b_;
+
+  // Precompute Hessian of constraint squared (for speed).
+  const MatrixXf hess_of_sq_;
 };  //\class AffineEqualityConstraint
 
 }  // namespace ilqgames

@@ -80,7 +80,8 @@ class GameSolver {
   virtual ~GameSolver() {}
 
   // Solve this game. Returns true if converged.
-  virtual std::shared_ptr<SolverLog> Solve(bool* success, Time max_runtime) = 0;
+  virtual std::shared_ptr<SolverLog> Solve(
+      bool* success = nullptr, Time max_runtime = constants::kInfinity) = 0;
 
   // Accessors.
   Problem& GetProblem() { return *problem_; }

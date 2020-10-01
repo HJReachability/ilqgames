@@ -61,7 +61,7 @@ static constexpr float kInitialLambda = 1.0;
 // Accumulate control costs and constraints into the given quadratic
 // approximation.
 template <typename T, typename F>
-void AccumulateControlCostsBase(const PlayerPtrMap<T>& costs, Time t,
+void AccumulateControlCostsBase(const PlayerPtrMultiMap<T>& costs, Time t,
                                 const std::vector<VectorXf>& us,
                                 float regularization,
                                 QuadraticCostApproximation* q, F f) {
@@ -90,7 +90,7 @@ void AccumulateControlCostsBase(const PlayerPtrMap<T>& costs, Time t,
   }
 }
 
-void AccumulateControlCosts(const PlayerPtrMap<Cost>& costs, Time t,
+void AccumulateControlCosts(const PlayerPtrMultiMap<Cost>& costs, Time t,
                             const std::vector<VectorXf>& us,
                             float regularization,
                             QuadraticCostApproximation* q) {
@@ -100,8 +100,8 @@ void AccumulateControlCosts(const PlayerPtrMap<Cost>& costs, Time t,
   AccumulateControlCostsBase(costs, t, us, regularization, q, f);
 }
 
-void AccumulateControlBarriers(const PlayerPtrMap<Barrier>& barriers, Time t,
-                               const std::vector<VectorXf>& us,
+void AccumulateControlBarriers(const PlayerPtrMultiMap<Barrier>& barriers,
+                               Time t, const std::vector<VectorXf>& us,
                                float regularization,
                                QuadraticCostApproximation* q,
                                bool are_barriers_on) {
@@ -116,8 +116,8 @@ void AccumulateControlBarriers(const PlayerPtrMap<Barrier>& barriers, Time t,
 }
 
 void AccumulateControlConstraints(
-    const PlayerPtrMap<EqualityConstraint>& constraints,
-    const std::vector<float>& lambdas, float mu, Time t,
+    const PlayerPtrMultiMap<EqualityConstraint>& constraints,
+    const PlayerMultiMap<float>& lambdas, float mu, Time t,
     const std::vector<VectorXf>& us, float regularization,
     QuadraticCostApproximation* q) {
   auto f = [&lambdas, &mu](const EqualityConstraint& constraint,
@@ -224,32 +224,32 @@ float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
   return total_cost;
 }
 
-float PlayerCost::SquaredConstraintViolation(const OperatingPoint& op,
-                                             Time time_step) const {
-  float total = 0.0;
+// float PlayerCost::SquaredConstraintViolation(const OperatingPoint& op,
+//                                              Time time_step) const {
+//   float total = 0.0;
 
-  // Pre-declare a scalar for the amount which a single constraint is violated.
-  float single_constraint_violation;
+//   // Pre-declare a scalar for the amount which a single constraint is
+//   violated. float single_constraint_violation;
 
-  for (size_t kk = 0; kk < op.xs.size(); kk++) {
-    const Time t = op.t0 + time_step * static_cast<float>(kk);
+//   for (size_t kk = 0; kk < op.xs.size(); kk++) {
+//     const Time t = op.t0 + time_step * static_cast<float>(kk);
 
-    // State constraints.
-    for (const auto& constraint : state_constraints_) {
-      constraint->IsSatisfied(t, op.xs[kk], &single_constraint_violation);
-      total += single_constraint_violation * single_constraint_violation;
-    }
+//     // State constraints.
+//     for (const auto& constraint : state_constraints_) {
+//       constraint->IsSatisfied(t, op.xs[kk], &single_constraint_violation);
+//       total += single_constraint_violation * single_constraint_violation;
+//     }
 
-    // Control constraints.
-    for (const auto& pair : control_constraints_) {
-      pair.second->IsSatisfied(t, op.us[pair.first],
-                               &single_constraint_violation);
-      total += single_constraint_violation * single_constraint_violation;
-    }
-  }
+//     // Control constraints.
+//     for (const auto& pair : control_constraints_) {
+//       pair.second->IsSatisfied(t, op.us[pair.first],
+//                                &single_constraint_violation);
+//       total += single_constraint_violation * single_constraint_violation;
+//     }
+//   }
 
-  return total;
-}
+//   return total;
+// }
 
 QuadraticCostApproximation PlayerCost::Quadraticize(
     Time t, size_t time_step, const VectorXf& x,

@@ -158,9 +158,9 @@ class PlayerCost {
 
   // Accessors.
   const PtrVector<Cost>& StateCosts() const { return state_costs_; }
-  const PlayerPtrMap<Cost>& ControlCosts() const { return control_costs_; }
+  const PlayerPtrMultiMap<Cost>& ControlCosts() const { return control_costs_; }
   const PtrVector<Barrier>& StateBarriers() const { return state_barriers_; }
-  const PlayerPtrMap<Barrier>& ControlBarriers() const {
+  const PlayerPtrMultiMap<Barrier>& ControlBarriers() const {
     return control_barriers_;
   }
   const PtrVector<EqualityConstraint>& StateConstraints() const {
@@ -185,13 +185,13 @@ class PlayerCost {
 
   // State costs and control costs.
   PtrVector<Cost> state_costs_;
-  PlayerPtrMap<Cost> control_costs_;
+  PlayerPtrMultiMap<Cost> control_costs_;
 
   // State and control barriers. Control barriers can apply to any
   // player's control input, though it likely only makes sense to apply them to
   // this player's input.
   PtrVector<Barrier> state_barriers_;
-  PlayerPtrMap<Barrier> control_barriers_;
+  PlayerPtrMultiMap<Barrier> control_barriers_;
   bool are_barriers_on_;
 
   // State and control constraints, with multipliers and augmented multipliers

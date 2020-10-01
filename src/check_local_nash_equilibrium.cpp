@@ -173,8 +173,8 @@ bool CheckSufficientLocalNashEquilibrium(
 
     std::transform(player_costs.begin(), player_costs.end(),
                    quadraticization.begin(),
-                   [&t, &x, &us](const PlayerCost& cost) {
-                     return cost.Quadraticize(t, x, us);
+                   [&t, &kk, &x, &us](const PlayerCost& cost) {
+                     return cost.Quadraticize(t, kk, x, us);
                    });
 
     // Check if Q, Rs PSD.

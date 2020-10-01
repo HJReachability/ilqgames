@@ -36,12 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all explicit equality constraints. These constraints are of
-// the form: g(x) = 0 for some vector x.
+// Base class for all explicit (scalar-valued) equality constraints. These
+// constraints are of the form: g(x) = 0 for some vector x.
 //
 // In addition to checking for satisfaction (and returning the squared norm of
-// the constraint value g(x)), they also support computing a Jacobian of the
-// constraint value.
+// the constraint value g(x)), they also support computing first and second
+// derivatives of the constraint value itself and the square of the constraint
+// value, each scaled by lambda or mu respectively (from the augmented
+// Lagrangian).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -66,18 +68,26 @@ class EqualityConstraint : public RelativeTimeTracker {
   virtual bool IsSatisfied(Time t, const VectorXf& input,
                            float* level) const = 0;
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  virtual void Quadraticize(Time t, const VectorXf& input,
-                            Eigen::Ref<MatrixXf> hess,
-                            Eigen::Ref<VectorXf> grad) const = 0;
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  virtual void Quadraticize(Time t, size_t time_step, const VectorXf& input,
+                            MatrixXf* hess, VectorXf* grad) const = 0;
+
+  // Accessors and setters.
+  float& Lambda(size_t time_step) { return lambdas_[time_step]; }
+  static float& Mu() { return mu_; }
 
  protected:
-  explicit EqualityConstraint(const std::string& name)
-      : RelativeTimeTracker(name) {}
+  explicit EqualityConstraint(size_t num_time_steps, const std::string& name)
+      : RelativeTimeTracker(name), lambdas_(num_time_steps, 0.0) {}
 
   // Name of this constraint.
   const std::string name_;
+
+  // Multipliers, one per time step. Also a static augmented multiplier for an
+  // augmented Lagrangian.
+  std::vector<float> lambdas_;
+  static float mu_;
 };  //\class EqualityConstraint
 
 }  // namespace ilqgames
