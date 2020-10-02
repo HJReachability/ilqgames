@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) affine equality constraint, i.e., a^T x - b = 0.
+// (Time-invariant) affine vector constraint, i.e., g(x) = ||A x - b||.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_AFFINE_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_AFFINE_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
 
-#include <ilqgames/constraint/time_invariant_equality_constraint.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,21 +52,23 @@
 
 namespace ilqgames {
 
-class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
+class AffineVectorConstraint : public TimeInvariantConstraint {
  public:
-  ~AffineEqualityConstraint() {}
-  AffineEqualityConstraint(const VectorXf& a, float b, size_t num_time_steps,
-                           const std::string& name = "")
-      : TimeInvariantEqualityConstraint(num_time_steps, name),
-        a_(a),
+  ~AffineVectorConstraint() {}
+  AffineVectorConstraint(const MatrixXf& A, const VectorXf& b, bool is_equality,
+                         size_t num_time_steps, const std::string& name = "")
+      : TimeInvariantConstraint(is_equality, num_time_steps, name),
+        A_(A),
         b_(b),
-        hess_of_sq_(a * a.transpose()) {}
+        ATA_(A.transpose() * A) {
+    CHECK_EQ(A_.rows(), b_.size());
+  }
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
   bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), a_.size());
-    const float value = a_.transpose() * input + b_;
+    CHECK_EQ(input.size(), b_.size());
+    const float value = (A_ * input - b_).norm();
 
     if (*level) *level = value;
     return std::abs(value) < constants::kSmallNumber;
@@ -78,23 +80,31 @@ class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
                     VectorXf* grad) const {
     CHECK_NOTNULL(hess);
     CHECK_NOTNULL(grad);
-    CHECK_EQ(input.size(), a_.size());
+    CHECK_EQ(input.size(), b_.cols());
     CHECK_EQ(hess->rows(), input.size());
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
 
-    (*grad) += lambdas_[time_step] * a_ + mu_ * (hess_of_sq_ * input + b_ * a_);
-    (*hess) += mu_ * hess_of_sq_;
+    // Compute value of the constraint.
+    const VectorXf delta = A_ * input - b_;
+    const float value = delta.norm();
+
+    // Compute gradient and Hessian.
+    const VectorXf AT_delta = A_.transpose() * delta;
+    (*grad) += (mu_ + lambdas_[time_step] / value) * AT_delta;
+    (*hess) += (lambdas_[time_step] / value) *
+                   (ATA_ - AT_delta * AT_delta.transpose() / value) +
+               mu_ * ATA_;
   }
 
  private:
-  // Coefficient vector and nominal value.
-  const VectorXf a_;
-  const float b_;
+  // A and b.
+  const MatrixXf A_;
+  const VectorXf b_;
 
-  // Precompute Hessian of constraint squared (for speed).
-  const MatrixXf hess_of_sq_;
-};  //\class AffineEqualityConstraint
+  // Precompute ATA.
+  const MatrixXf ATA_;
+};  //\class AffineVectorConstraint
 
 }  // namespace ilqgames
 

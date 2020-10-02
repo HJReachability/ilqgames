@@ -45,7 +45,7 @@
 #define ILQGAMES_COST_PLAYER_COST_H
 
 #include <ilqgames/constraint/barrier/barrier.h>
-#include <ilqgames/constraint/equality_constraint.h>
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
@@ -84,9 +84,9 @@ class PlayerCost {
   // constraints but later they should really be inequality constraints and
   // there should be some logic for maintaining sets of active constraints.
   void AddStateConstraint(
-      const std::shared_ptr<EqualityConstraint>& constraint);
+      const std::shared_ptr<Constraint>& constraint);
   void AddControlConstraint(
-      PlayerIndex idx, const std::shared_ptr<EqualityConstraint>& constraint);
+      PlayerIndex idx, const std::shared_ptr<Constraint>& constraint);
 
   // Evaluate this cost at the current time, state, and controls, or
   // integrate over an entire trajectory. Does *not* incorporate cost
@@ -153,10 +153,10 @@ class PlayerCost {
   const PlayerPtrMultiMap<Barrier>& ControlBarriers() const {
     return control_barriers_;
   }
-  const PtrVector<EqualityConstraint>& StateConstraints() const {
+  const PtrVector<Constraint>& StateConstraints() const {
     return state_constraints_;
   }
-  const PlayerPtrMultiMap<EqualityConstraint>& ControlConstraints() const {
+  const PlayerPtrMultiMap<Constraint>& ControlConstraints() const {
     return control_constraints_;
   }
 
@@ -176,8 +176,8 @@ class PlayerCost {
   bool are_barriers_on_;
 
   // State and control constraints
-  PtrVector<EqualityConstraint> state_constraints_;
-  PlayerPtrMultiMap<EqualityConstraint> control_constraints_;
+  PtrVector<Constraint> state_constraints_;
+  PlayerPtrMultiMap<Constraint> control_constraints_;
 
   // Regularization on costs.
   const float state_regularization_;

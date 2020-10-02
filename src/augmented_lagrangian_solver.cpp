@@ -121,19 +121,18 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
         for (const auto& constraint : pc.StateConstraints()) {
           constraint->IsSatisfied(t, x, &constraint_error);
           squared_constraint_error += constraint_error * constraint_error;
-          constraint->Lambda(kk) += EqualityConstraint::Mu() * constraint_error;
+          constraint->Lambda(kk) += Constraint::Mu() * constraint_error;
         }
 
         for (const auto& pair : pc.ControlConstraints()) {
           pair.second->IsSatisfied(t, us[pair.first], &constraint_error);
           squared_constraint_error += constraint_error * constraint_error;
-          pair.second->Lambda(kk) +=
-              EqualityConstraint::Mu() * constraint_error;
+          pair.second->Lambda(kk) += Constraint::Mu() * constraint_error;
         }
       }
 
       // Scale mu.
-      EqualityConstraint::Mu() *=
+      Constraint::Mu() *=
           params_.geometric_quadratic_constraint_penalty_scaling;
 
       // Run unconstrained solver to convergence. Since solvers update problem

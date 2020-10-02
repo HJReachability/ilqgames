@@ -36,14 +36,20 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) vector equality constraint, i.e., ||x - \hat x|| = 0.
+// Base class for all explicit (scalar-valued) equality constraints. These
+// constraints are of the form: g(x) = 0 for some vector x.
+//
+// In addition to checking for satisfaction (and returning the constraint value
+// g(x)), they also support computing first and second derivatives of the
+// constraint value itself and the square of the constraint value, each scaled
+// by lambda or mu respectively (from the augmented Lagrangian). That is, they
+// compute gradients and Hessians of
+//         L(x, lambda, mu) = lambda * g(x) + mu * g(x) * g(x) / 2
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_VECTOR_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_VECTOR_EQUALITY_CONSTRAINT_H
-
-#include <ilqgames/constraint/time_invariant_equality_constraint.h>
+#include <ilqgames/constraint/constraint.h>
+#include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,51 +58,6 @@
 
 namespace ilqgames {
 
-class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
- public:
-  ~VectorEqualityConstraint() {}
-  VectorEqualityConstraint(const VectorXf& nominal,
-                           const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name), nominal_(nominal) {}
-
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), nominal_.size());
-    const float value = (input - nominal_).norm();
-
-    if (*level) *level = value;
-    return std::abs(value) < constants::kSmallNumber;
-  }
-
-  // Quadraticize the constraint value and its square, each scaled by lambda or
-  // mu, respectively (terms in the augmented Lagrangian).
-  void Quadraticize(size_t time_step, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
-    CHECK_NOTNULL(hess);
-    CHECK_NOTNULL(grad);
-    CHECK_EQ(input.size(), nominal_.size());
-    CHECK_EQ(hess->rows(), input.size());
-    CHECK_EQ(hess->cols(), input.size());
-    CHECK_EQ(grad->size(), input.size());
-
-    // Compute value of the constraint.
-    const VectorXf delta = input - nominal_;
-    const float value = delta.norm();
-
-    // Compute gradient and Hessian.
-    (*grad) += (mu_ + lambdas_[time_step] / value) * delta;
-    (*hess) -= (lambdas_[time_step] / (value * value * value)) * delta *
-               delta.transpose();
-    hess->diagonal() +=
-        VectorXf::Constant(input.size(), mu_ + lambdas_[time_step] / value);
-  }
-
- private:
-  // Nominal vector.
-  const VectorXf nominal_;
-};  //\class VectorEqualityConstraint
+float Constraint::mu_ = 1.0;
 
 }  // namespace ilqgames
-
-#endif

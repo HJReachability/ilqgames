@@ -36,19 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all explicit (scalar-valued) equality constraints. These
-// constraints are of the form: g(x) = 0 for some vector x.
-//
-// In addition to checking for satisfaction (and returning the squared norm of
-// the constraint value g(x)), they also support computing first and second
-// derivatives of the constraint value itself and the square of the constraint
-// value, each scaled by lambda or mu respectively (from the augmented
-// Lagrangian).
+// Base class for all time-invariant explicit constraints.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/equality_constraint.h>
-#include <ilqgames/utils/relative_time_tracker.h>
+#ifndef ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
+
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -57,6 +52,32 @@
 
 namespace ilqgames {
 
-float EqualityConstraint::mu_ = 1.0;
+class TimeInvariantConstraint : public Constraint {
+ public:
+  virtual ~TimeInvariantConstraint() {}
+
+  // Check if this constraint is satisfied, and optionally return the constraint
+  // value, which equals zero if the constraint is satisfied.
+  virtual bool IsSatisfied(const VectorXf& input, float* level) const = 0;
+  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
+    return IsSatisfied(input, level);
+  }
+
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  virtual void Quadraticize(size_t time_step, const VectorXf& input,
+                            MatrixXf* hess, VectorXf* grad) const = 0;
+  void Quadraticize(Time t, size_t time_step, const VectorXf& input,
+                    MatrixXf* hess, VectorXf* grad) const {
+    Quadraticize(time_step, input, hess, grad);
+  }
+
+ protected:
+  explicit TimeInvariantConstraint(bool is_equality, size_t num_time_steps,
+                                   const std::string& name)
+    : Constraint(is_equality, num_time_steps, name) {}
+};  // namespace TimeInvariantConstraint
 
 }  // namespace ilqgames
+
+#endif

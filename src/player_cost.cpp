@@ -113,11 +113,11 @@ void AccumulateControlBarriers(const PlayerPtrMultiMap<Barrier>& barriers,
 }
 
 void AccumulateControlConstraints(
-    const PlayerPtrMultiMap<EqualityConstraint>& constraints, Time t,
-    size_t time_step, const std::vector<VectorXf>& us, float regularization,
+    const PlayerPtrMultiMap<Constraint>& constraints, Time t, size_t time_step,
+    const std::vector<VectorXf>& us, float regularization,
     QuadraticCostApproximation* q) {
-  auto f = [&time_step](const EqualityConstraint& constraint, Time t,
-                        const VectorXf& u, MatrixXf* hess, VectorXf* grad) {
+  auto f = [&time_step](const Constraint& constraint, Time t, const VectorXf& u,
+                        MatrixXf* hess, VectorXf* grad) {
     constraint.Quadraticize(t, time_step, u, hess, grad);
   };
 
@@ -136,12 +136,12 @@ void PlayerCost::AddControlCost(PlayerIndex idx,
 }
 
 void PlayerCost::AddStateConstraint(
-    const std::shared_ptr<EqualityConstraint>& constraint) {
+    const std::shared_ptr<Constraint>& constraint) {
   state_constraints_.emplace_back(constraint);
 }
 
 void PlayerCost::AddControlConstraint(
-    PlayerIndex idx, const std::shared_ptr<EqualityConstraint>& constraint) {
+    PlayerIndex idx, const std::shared_ptr<Constraint>& constraint) {
   control_constraints_.emplace(idx, constraint);
 }
 

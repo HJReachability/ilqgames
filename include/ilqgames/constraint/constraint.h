@@ -36,19 +36,20 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all explicit (scalar-valued) equality constraints. These
-// constraints are of the form: g(x) = 0 for some vector x.
+// Base class for all explicit (scalar-valued) constraints. These
+// constraints are of the form: g(x) = 0 or g(x) <= 0 for some vector x.
 //
-// In addition to checking for satisfaction (and returning the squared norm of
-// the constraint value g(x)), they also support computing first and second
-// derivatives of the constraint value itself and the square of the constraint
-// value, each scaled by lambda or mu respectively (from the augmented
-// Lagrangian).
+// In addition to checking for satisfaction (and returning the constraint value
+// g(x)), they also support computing first and second derivatives of the
+// constraint value itself and the square of the constraint value, each scaled
+// by lambda or mu respectively (from the augmented Lagrangian). That is, they
+// compute gradients and Hessians of
+//         L(x, lambda, mu) = lambda * g(x) + mu * g(x) * g(x) / 2
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_CONSTRAINT_H
 
 #include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/types.h>
@@ -59,9 +60,9 @@
 
 namespace ilqgames {
 
-class EqualityConstraint : public RelativeTimeTracker {
+class Constraint : public RelativeTimeTracker {
  public:
-  virtual ~EqualityConstraint() {}
+  virtual ~Constraint() {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
@@ -74,21 +75,28 @@ class EqualityConstraint : public RelativeTimeTracker {
                             MatrixXf* hess, VectorXf* grad) const = 0;
 
   // Accessors and setters.
+  bool IsEquality() const { return is_equality_; }
   float& Lambda(size_t time_step) { return lambdas_[time_step]; }
   static float& Mu() { return mu_; }
 
  protected:
-  explicit EqualityConstraint(size_t num_time_steps, const std::string& name)
-      : RelativeTimeTracker(name), lambdas_(num_time_steps, 0.0) {}
+  explicit Constraint(bool is_equality, size_t num_time_steps,
+                      const std::string& name)
+      : RelativeTimeTracker(name),
+        is_equality_(is_equality),
+        lambdas_(num_time_steps, 0.0) {}
 
   // Name of this constraint.
   const std::string name_;
+
+  // Is this an equality constraint? If not, it is an inequality constraint.
+  bool is_equality_;
 
   // Multipliers, one per time step. Also a static augmented multiplier for an
   // augmented Lagrangian.
   std::vector<float> lambdas_;
   static float mu_;
-};  //\class EqualityConstraint
+};  //\class Constraint
 
 }  // namespace ilqgames
 

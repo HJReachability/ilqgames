@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all time-invariant explicit equality constraints.
+// (Time-invariant) affine scalar constraint, i.e., g(x) = a^T x - b.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_TIME_INVARIANT_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_TIME_INVARIANT_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_AFFINE_SCALAR_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_AFFINE_SCALAR_CONSTRAINT_H
 
-#include <ilqgames/constraint/equality_constraint.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,31 +52,49 @@
 
 namespace ilqgames {
 
-class TimeInvariantEqualityConstraint : public EqualityConstraint {
+class AffineScalarConstraint : public TimeInvariantConstraint {
  public:
-  virtual ~TimeInvariantEqualityConstraint() {}
+  ~AffineScalarConstraint() {}
+  AffineScalarConstraint(const VectorXf& a, float b, bool is_equality,
+                         size_t num_time_steps, const std::string& name = "")
+      : TimeInvariantConstraint(is_equality, num_time_steps, name),
+        a_(a),
+        b_(b),
+        hess_of_sq_(a * a.transpose()) {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
-  virtual bool IsSatisfied(const VectorXf& input, float* level) const = 0;
-  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
-    return IsSatisfied(input, level);
+  bool IsSatisfied(const VectorXf& input, float* level) const {
+    CHECK_EQ(input.size(), a_.size());
+    const float value = a_.transpose() * input + b_;
+
+    if (*level) *level = value;
+    return std::abs(value) < constants::kSmallNumber;
   }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  virtual void Quadraticize(size_t time_step, const VectorXf& input,
-                            MatrixXf* hess, VectorXf* grad) const = 0;
-  void Quadraticize(Time t, size_t time_step, const VectorXf& input,
-                    MatrixXf* hess, VectorXf* grad) const {
-    Quadraticize(time_step, input, hess, grad);
+  void Quadraticize(size_t time_step, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    CHECK_NOTNULL(hess);
+    CHECK_NOTNULL(grad);
+    CHECK_EQ(input.size(), a_.size());
+    CHECK_EQ(hess->rows(), input.size());
+    CHECK_EQ(hess->cols(), input.size());
+    CHECK_EQ(grad->size(), input.size());
+
+    (*grad) += lambdas_[time_step] * a_ + mu_ * (hess_of_sq_ * input + b_ * a_);
+    (*hess) += mu_ * hess_of_sq_;
   }
 
- protected:
-  explicit TimeInvariantEqualityConstraint(size_t num_time_steps,
-                                           const std::string& name)
-      : EqualityConstraint(num_time_steps, name) {}
-};  // namespace ilqgames
+ private:
+  // Coefficient vector and nominal value.
+  const VectorXf a_;
+  const float b_;
+
+  // Precompute Hessian of constraint squared (for speed).
+  const MatrixXf hess_of_sq_;
+};  //\class AffineScalarConstraint
 
 }  // namespace ilqgames
 
