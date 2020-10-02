@@ -73,7 +73,7 @@ DEFINE_double(regularization, 1.0, "Regularization.");
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
+DEFINE_double(trust_region_size, 5.0, "L_infradius for trust region.");
 DEFINE_double(convergence_tolerance, 0.25, "L_inf tolerance for convergence.");
 
 // Adversarial Time.
