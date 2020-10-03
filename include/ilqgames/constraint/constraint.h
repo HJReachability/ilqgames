@@ -73,8 +73,14 @@ class Constraint : public Cost {
     return (is_equality_) ? std::abs(value) <= 0.0 : value <= 0.0;
   }
 
-  // Evaluate this constraint value, i.e., g(x).
+  // Evaluate this constraint value, i.e., g(x), and the augmented Lagrangian,
+  // i.e., lambda g(x) + mu g(x) g(x) / 2.
   virtual float Evaluate(Time t, const VectorXf& input) const = 0;
+  float EvaluateAugmentedLagrangian(Time t, const VectorXf& input) const {
+    const float g = Evaluate(t, input);
+    const float lambda = lambdas_[TimeStep(t)];
+    return lambda * g + 0.5 * mu_ * g * g;
+  }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
@@ -94,6 +100,14 @@ class Constraint : public Cost {
       : Cost(1.0, name),
         is_equality_(is_equality),
         lambdas_(num_time_steps, 0.0) {}
+
+  // Modify derivatives to account for the multipliers and the quadratic term in
+  // the augmented Lagrangian. The inputs are the derivatives of g in the
+  // appropriate variables (assumed to be arbitrary coordinates of the input,
+  // here called x and y).
+  void ModifyDerivatives(Time t, float g, float* dx, float* ddx,
+                         float* dy = nullptr, float* ddy = nullptr,
+                         float* dxdy = nullptr) const;
 
   // Is this an equality constraint? If not, it is an inequality constraint.
   bool is_equality_;

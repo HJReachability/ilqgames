@@ -82,27 +82,110 @@ void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
 
   // Find closest point/segment and whether closest point is an interior point
   // or a vertex.
-  bool is_vertex = false;
+  bool is_vertex;
   LineSegment2 closest_segment(Point2::Zero(), Point2::Zero());
-  const Point2 closest_point = polyline_.ClosestPoint(
-      Point2(input(xidx_), input(yidx_)), &is_vertex, &closest_segment);
+  float signed_distance_sq;
+  const Point2 closest_point =
+      polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex,
+                             &closest_segment, &signed_distance_sq);
+
+  // Compute value of g.
+  const float g = (keep_left_) ? signed_sqrt(signed_distance_sq) - threshold_
+                               : threshold_ - signed_sqrt(signed_distance_sq);
 
   if (is_vertex)
-    QuadraticizeVertex(t, input, hess, grad, closest_point);
+    QuadraticizeVertex(t, input, hess, grad, g, closest_point);
   else
-    QuadraticizeInterior(t, input, hess, grad, closest_point, closest_segment);
+    QuadraticizeInterior(t, input, hess, grad, g, closest_segment);
 }
 
 void Polyline2SignedDistanceConstraint::QuadraticizeVertex(
-    Time t, const VectorXf& input, MatrixXf* hess, VectorXf* grad,
+    Time t, const VectorXf& input, MatrixXf* hess, VectorXf* grad, float g,
     const Point2& closest_point) const {
-  // TODO!
+  // Unpack geometry.
+  const float x = input(xidx_);
+  const float y = input(yidx_);
+  const float px = closest_point.x();
+  const float py = closest_point.y();
+  const float rx = x - px;
+  const float ry = y - py;
+  const float d_sq = rx * rx + ry * ry;
+  const float d = std::sqrt(d_sq);
+  const float sign = (keep_left_) ? 1.0 : -1.0;
+
+  /// Compute derivatives of g using symbolic differentiation.
+  float dx = sign * rx / d;
+  float ddx = sign * ry * ry / (d_sq * d);
+  float dxdy = -sign * rx * ry / (d_sq * d);
+  float dy = sign * ry * ry / (d_sq * d);
+  float ddy = sign * rx * rx / (d_sq * d);
+  ;
+
+  // Modify derivatives according to augmented Lagrangian.
+  ModifyDerivatives(t, g, &dx, &ddx, &dy, &ddy, &dxdy);
+
+  // Populate grad and hess.
+  (*grad)(xidx_) += dx;
+  (*grad)(yidx_) += dy;
+
+  (*hess)(xidx_, xidx_) += ddx;
+  (*hess)(xidx_, yidx_) += dxdy;
+  (*hess)(yidx_, xidx_) += dxdy;
+  (*hess)(yidx_, yidx_) += ddy;
 }
 
 void Polyline2SignedDistanceConstraint::QuadraticizeInterior(
-    Time t, const VectorXf& input, MatrixXf* hess, VectorXf* grad,
-    const Point2& closest_point, const LineSegment2& closest_segment) const {
-  // TODO!
+    Time t, const VectorXf& input, MatrixXf* hess, VectorXf* grad, float g,
+    const LineSegment2& closest_segment) const {
+  // Unpack geometry.
+  const float x = input(xidx_);
+  const float y = input(yidx_);
+  const float px = closest_segment.FirstPoint().x();
+  const float py = closest_segment.FirstPoint().y();
+  const float rx = x - px;
+  const float ry = y - py;
+  const float d_sq = rx * rx + ry * ry;
+  const float d = std::sqrt(d_sq);
+  const float ux = closest_segment.UnitDirection().x();
+  const float uy = closest_segment.UnitDirection().y();
+  const float sign = (keep_left_) ? 1.0 : -1.0;
+
+  // Compute derivatives of g using symbolic differentiation.
+  float dx = sign *
+             (uy * d_sq - px * px * uy - uy * x * x + px * py * ux +
+              2 * px * uy * x - py * ux * x - px * ux * y + ux * x * y) /
+             (d_sq * d);
+  float ddx =
+      sign *
+      (-ry * (2 * ux * px * px + 3 * uy * px * py - 4 * ux * px * x -
+              3 * uy * px * y - ux * py * py - 3 * uy * py * x +
+              2 * ux * py * y + 2 * ux * x * x + 3 * uy * x * y - ux * y * y)) /
+      (d_sq * d_sq * d);
+  float dy = -sign *
+             (ux * d_sq - py * py * ux - ux * y * y + px * py * uy -
+              py * uy * x - px * uy * y + 2 * py * ux * y + uy * x * y) /
+             (d_sq * d);
+  float ddy =
+      sign *
+      (-rx * (uy * px * px - 3 * ux * px * py - 2 * uy * px * x +
+              3 * ux * px * y - 2 * uy * py * py + 3 * ux * py * x +
+              4 * uy * py * y + uy * x * x - 3 * ux * x * y - 2 * uy * y * y)) /
+      (d_sq * d_sq * d);
+  float dxdy =
+      sign * (-uy * ry + ux * rx -
+              (3 * rx * ry * (-uy * rx + ux * ry) / d_sq) / (d_sq * d));
+
+  // Modify derivatives according to augmented Lagrangian.
+  ModifyDerivatives(t, g, &dx, &ddx, &dy, &ddy, &dxdy);
+
+  // Populate grad and hess.
+  (*grad)(xidx_) += dx;
+  (*grad)(yidx_) += dy;
+
+  (*hess)(xidx_, xidx_) += ddx;
+  (*hess)(xidx_, yidx_) += dxdy;
+  (*hess)(yidx_, xidx_) += dxdy;
+  (*hess)(yidx_, yidx_) += ddy;
 }
 
 }  // namespace ilqgames

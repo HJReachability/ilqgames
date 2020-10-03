@@ -74,32 +74,37 @@ void ProximityConstraint::Quadraticize(Time t, const VectorXf& input,
   const float dy = input(yidx1_) - input(yidx2_);
   const float prox = std::hypot(dx, dy);
   const float sign = (keep_within_) ? 1.0 : -1.0;
-
-  // Get current lambda.
-  const float lambda = lambdas_[TimeStep(t)];
+  const float g = sign * (prox - threshold_);
 
   // Compute gradient and Hessian.
   const float rel_dx = dx / prox;
   const float rel_dy = dy / prox;
 
-  const float grad_x1 =
-      sign * (lambda * rel_dx + mu_ * dx * (1.0 - threshold_ / prox));
+  float grad_x1 = sign * rel_dx;
+  float grad_y1 = sign * rel_dy;
+  float hess_x1x1 = sign * (1.0 - rel_dx * rel_dx) / prox;
+  float hess_y1y1 = sign * (1.0 - rel_dy * rel_dy) / prox;
+  float hess_x1y1 = -sign * rel_dx * rel_dy / prox;
+
+  ModifyDerivatives(t, g, &grad_x1, &hess_x1x1, &grad_y1, &hess_y1y1,
+                    &hess_x1y1);
+
   (*grad)(xidx1_) += grad_x1;
   (*grad)(xidx2_) -= grad_x1;
 
-  const float grad_y1 =
-      sign * (lambda * rel_dy + mu_ * dy * (1.0 - threshold_ / prox));
   (*grad)(yidx1_) += grad_y1;
   (*grad)(yidx2_) -= grad_y1;
 
-  const float hess_x1x1 = sign * (-mu_ + (lambda - mu_ * threshold_) *
-                                             (1.0 - rel_dx * rel_dx) / prox);
   (*hess)(xidx1_, xidx1_) += hess_x1x1;
   (*hess)(xidx1_, xidx2_) -= hess_x1x1;
   (*hess)(xidx2_, xidx1_) -= hess_x1x1;
   (*hess)(xidx2_, xidx2_) += hess_x1x1;
 
-  const float hess_x1y1 = sign * (mu_ - lambda) * rel_dx * rel_dy / prox;
+  (*hess)(yidx1_, yidx1_) += hess_y1y1;
+  (*hess)(yidx1_, yidx2_) -= hess_y1y1;
+  (*hess)(yidx2_, yidx1_) -= hess_y1y1;
+  (*hess)(yidx2_, yidx2_) += hess_y1y1;
+
   (*hess)(xidx1_, yidx1_) += hess_x1y1;
   (*hess)(xidx1_, yidx2_) -= hess_x1y1;
   (*hess)(xidx2_, yidx1_) -= hess_x1y1;
@@ -108,13 +113,6 @@ void ProximityConstraint::Quadraticize(Time t, const VectorXf& input,
   (*hess)(yidx1_, xidx2_) -= hess_x1y1;
   (*hess)(yidx2_, xidx1_) -= hess_x1y1;
   (*hess)(yidx2_, xidx2_) += hess_x1y1;
-
-  const float hess_y1y1 = sign * (-mu_ + (lambda - mu_ * threshold_) *
-                                             (1.0 - rel_dy * rel_dy) / prox);
-  (*hess)(yidx1_, yidx1_) += hess_y1y1;
-  (*hess)(yidx1_, yidx2_) -= hess_y1y1;
-  (*hess)(yidx2_, yidx1_) -= hess_y1y1;
-  (*hess)(yidx2_, yidx2_) += hess_y1y1;
 }
 
 }  // namespace ilqgames

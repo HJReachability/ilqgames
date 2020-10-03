@@ -85,17 +85,18 @@ static constexpr float kNumericalPrecision = 0.15;
 static constexpr float kNumericalPrecisionFraction = 0.1;
 
 // Function to compute numerical gradient of a cost.
-VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
+template <typename E>
+VectorXf NumericalGradient(const E& eval, Time t, const VectorXf& input) {
   VectorXf grad(input.size());
 
   // Central differences.
   VectorXf query(input);
   for (size_t ii = 0; ii < input.size(); ii++) {
     query(ii) += kGradForwardStep;
-    const float hi = cost.Evaluate(t, query);
+    const float hi = eval(t, query);
 
     query(ii) = input(ii) - kGradForwardStep;
-    const float lo = cost.Evaluate(t, query);
+    const float lo = eval(t, query);
 
     grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
     query(ii) = input(ii);
@@ -200,7 +201,11 @@ void CheckQuadraticization(const Cost& cost) {
     cost.Quadraticize(t, input, &hess_analytic, &grad_analytic);
 
     MatrixXf hess_numerical = NumericalHessian(cost, t, input);
-    VectorXf grad_numerical = NumericalGradient(cost, t, input);
+
+    auto eval = [&cost](Time t, const VectorXf& input) {
+      return cost.Evaluate(t, input);
+    };
+    VectorXf grad_numerical = NumericalGradient(eval, t, input);
 
 #if 1
     if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
