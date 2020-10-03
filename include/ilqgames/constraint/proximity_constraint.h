@@ -64,10 +64,10 @@ class ProximityConstraint : public TimeInvariantConstraint {
                       float threshold, bool keep_within, size_t num_time_steps,
                       const std::string& name = "")
       : TimeInvariantConstraint(false, num_time_steps, name),
-        px1_idx(dims1.first),
-        py1_idx(dims1.second),
-        px2_idx(dims2.first),
-        py2_idx(dims2.second),
+        xidx1_(dims1.first),
+        yidx1_(dims1.second),
+        xidx2_(dims2.first),
+        yidx2_(dims2.second),
         threshold_(threshold),
         keep_within_(keep_within) {
     CHECK_GT(threshold_, 0.0);
@@ -83,10 +83,10 @@ class ProximityConstraint : public TimeInvariantConstraint {
 
  private:
   // Position dimension indices for both players.
-  const Dimension px1_idx;
-  const Dimension py1_idx;
-  const Dimension px2_idx;
-  const Dimension py2_idx;
+  const Dimension xidx1_;
+  const Dimension yidx1_;
+  const Dimension xidx2_;
+  const Dimension yidx2_;
 
   // Nominal distance threshold.
   const float threshold_;
