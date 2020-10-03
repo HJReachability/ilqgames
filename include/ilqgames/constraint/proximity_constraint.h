@@ -44,8 +44,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
@@ -74,29 +74,12 @@ class ProximityConstraint : public TimeInvariantConstraint {
   }
 
   // Evaluate this constraint value, i.e., g(x).
-  float Evaluate(const VectorXf& input) const {
-    const float dx = input(px1_idx) - input(px2_idx);
-    const float dy = input(py1_idx) - input(py2_idx);
-    const float value = std::hypot(dx, dy) - threshold_;
-
-    return (keep_within_) ? value : -value;
-  }
+  float Evaluate(const VectorXf& input) const;
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
-    CHECK_NOTNULL(hess);
-    CHECK_NOTNULL(grad);
-    CHECK_EQ(hess->rows(), input.size());
-    CHECK_EQ(hess->cols(), input.size());
-    CHECK_EQ(grad->size(), input.size());
-
-    // Get current lambda.
-    const float lambda = lambdas_[TimeStep(t)];
-
-
-  }
+                    VectorXf* grad) const;
 
  private:
   // Position dimension indices for both players.
