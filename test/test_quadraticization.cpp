@@ -40,10 +40,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/affine_scalar_constraint.h>
+#include <ilqgames/constraint/affine_vector_constraint.h>
 #include <ilqgames/constraint/barrier/polyline2_signed_distance_barrier.h>
 #include <ilqgames/constraint/barrier/proximity_barrier.h>
 #include <ilqgames/constraint/barrier/single_dimension_barrier.h>
 #include <ilqgames/constraint/constraint.h>
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
+#include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -78,6 +82,9 @@ namespace {
 // Cost weight and dimension.
 static constexpr float kCostWeight = 1.0;
 static constexpr Dimension kInputDimension = 10;
+
+// Time horizon.
+static constexpr Time kTimeHorizon = 10.0;  // s
 
 // Step size for forward differences.
 static constexpr float kGradForwardStep = 1e-3;
@@ -136,7 +143,7 @@ MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
 void CheckQuadraticization(const Cost& cost, bool is_constraint) {
   // Random number generator to make random timestamps.
   std::default_random_engine rng(0);
-  std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
+  std::uniform_real_distribution<Time> time_distribution(0.0, kTimeHorizon);
   std::bernoulli_distribution sign_distribution;
   std::uniform_real_distribution<float> entry_distribution(0.5, 5.0);
 
@@ -320,4 +327,13 @@ TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
       new QuadraticCost(kCostWeight, -1, 1.0));
   ExtremeValueCost cost({cost1, cost2}, true);
   CheckQuadraticization(cost, false);
+}
+
+TEST(AffineScalarConstraintTest, QuadraticizesCorrectly) {
+  const size_t num_time_steps =
+      static_cast<size_t>(kTimeHorizon / RelativeTimeTracker::TimeStep());
+  AffineScalarConstraint constraint(
+      VectorXf::LinSpaced(kInputDimension, -1.0, 1.0), 0.5, false,
+      num_time_steps);
+  CheckQuadraticization(constraint, true);
 }

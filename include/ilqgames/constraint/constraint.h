@@ -99,7 +99,7 @@ class Constraint : public Cost {
                       const std::string& name)
       : Cost(1.0, name),
         is_equality_(is_equality),
-        lambdas_(num_time_steps, 0.0) {}
+        lambdas_(num_time_steps, 1.0) {}
 
   // Modify derivatives to account for the multipliers and the quadratic term in
   // the augmented Lagrangian. The inputs are the derivatives of g in the

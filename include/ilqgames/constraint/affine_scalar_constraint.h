@@ -83,7 +83,7 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
     const float lambda = lambdas_[TimeStep(t)];
 
     // Compute gradient and Hessian.
-    (*grad) += lambda * a_ + mu_ * (hess_of_sq_ * input + b_ * a_);
+    (*grad) += lambda * a_ + mu_ * (hess_of_sq_ * input - b_ * a_);
     (*hess) += mu_ * hess_of_sq_;
   }
 
