@@ -166,6 +166,11 @@ inline constexpr T sgn(T x) {
   return sgn(x, std::is_signed<T>());
 }
 
+template <typename T>
+inline constexpr T signed_sqrt(T x) {
+  return sgn(x) * std::sqrt(std::abs(x));
+}
+
 }  // namespace ilqgames
 
 #endif

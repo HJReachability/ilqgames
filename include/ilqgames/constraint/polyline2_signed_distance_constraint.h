@@ -36,18 +36,20 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) proximity (inequality) constraint between two vehicles, i.e.
-//           g(x) = (+/-) (||(px1, py1) - (px2, py2)|| - d) <= 0
+// (Time-invariant) inequality constraint encoding
+//           g(x) = signed_distance(x, polyline) - d <= (or >=) 0
 //
-// NOTE: The `keep_within` argument specifies the sign of g (true corresponds to
-// positive).
-//
+// NOTE: The `keep_left` argument specifies the sign of the inequality (true
+// corresponds to <=).
+
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/geometry/line_segment2.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -56,20 +58,20 @@
 
 namespace ilqgames {
 
-class ProximityConstraint : public TimeInvariantConstraint {
+class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
  public:
-  ~ProximityConstraint() {}
-  ProximityConstraint(const std::pair<Dimension, Dimension>& dims1,
-                      const std::pair<Dimension, Dimension>& dims2,
-                      float threshold, bool keep_within, size_t num_time_steps,
-                      const std::string& name = "")
+  ~Polyline2SignedDistanceConstraint() {}
+  Polyline2SignedDistanceConstraint(const Polyline2& polyline,
+                                    const std::pair<Dimension, Dimension>& dims,
+                                    float threshold, bool keep_left,
+                                    size_t num_time_steps,
+                                    const std::string& name = "")
       : TimeInvariantConstraint(false, num_time_steps, name),
-        xidx1_(dims1.first),
-        yidx1_(dims1.second),
-        xidx2_(dims2.first),
-        yidx2_(dims2.second),
+        polyline_(polyline),
+        xidx_(dims.first),
+        yidx_(dims.second),
         threshold_(threshold),
-        keep_within_(keep_within) {
+        keep_left_(keep_left) {
     CHECK_GT(threshold_, 0.0);
   }
 
@@ -82,18 +84,27 @@ class ProximityConstraint : public TimeInvariantConstraint {
                     VectorXf* grad) const;
 
  private:
-  // Position dimension indices for both players.
-  const Dimension xidx1_;
-  const Dimension yidx1_;
-  const Dimension xidx2_;
-  const Dimension yidx2_;
+  // Quadraticize given that the closest point is a {vertex, interior point} on
+  // the polyline.
+  void QuadraticizeVertex(Time t, const VectorXf& input, MatrixXf* hess,
+                          VectorXf* grad, const Point2& closest_point) const;
+  void QuadraticizeInterior(Time t, const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad, const Point2& closest_point,
+                            const LineSegment2& closest_segment) const;
+
+  // Polyline.
+  const Polyline2 polyline_;
+
+  // Position dimension indices.
+  const Dimension xidx_;
+  const Dimension yidx_;
 
   // Nominal distance threshold.
   const float threshold_;
 
-  // Keep within (or without), i.e., orientation of the inequality.
-  const bool keep_within_;
-};  // namespace ProximityConstraint
+  // Keep left (or right), i.e., orientation of the inequality.
+  const bool keep_left_;
+};  // namespace Polyline2SignedDistanceConstraint
 
 }  // namespace ilqgames
 
