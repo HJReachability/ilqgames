@@ -95,7 +95,7 @@ TEST_F(PlayerCostTest, EvaluateWorks) {
 // Check that we quadraticize correctly when dimension >= 0.
 TEST_F(PlayerCostTest, QuadraticizeWorks) {
   const QuadraticCostApproximation quad =
-    player_cost_.Quadraticize(0.0, 0, x_, us_);
+      player_cost_.Quadraticize(0.0, x_, us_);
 
   // Check state Hessian is just kCostzaWeight on the diagonal.
   EXPECT_TRUE(quad.state.hess.diagonal().isApprox(

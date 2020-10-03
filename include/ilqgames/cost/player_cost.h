@@ -83,10 +83,9 @@ class PlayerCost {
   // Add new state and control constraints. For now, they are only equality
   // constraints but later they should really be inequality constraints and
   // there should be some logic for maintaining sets of active constraints.
-  void AddStateConstraint(
-      const std::shared_ptr<Constraint>& constraint);
-  void AddControlConstraint(
-      PlayerIndex idx, const std::shared_ptr<Constraint>& constraint);
+  void AddStateConstraint(const std::shared_ptr<Constraint>& constraint);
+  void AddControlConstraint(PlayerIndex idx,
+                            const std::shared_ptr<Constraint>& constraint);
 
   // Evaluate this cost at the current time, state, and controls, or
   // integrate over an entire trajectory. Does *not* incorporate cost
@@ -101,8 +100,7 @@ class PlayerCost {
   // Quadraticize this cost at the given time, time step, state, and controls.
   // *Does* account for cost barriers due to inequality barriers.
   QuadraticCostApproximation Quadraticize(
-      Time t, size_t time_step, const VectorXf& x,
-      const std::vector<VectorXf>& us) const;
+      Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
   // Return empty cost quadraticization except for barriers and control costs.
   QuadraticCostApproximation QuadraticizeBarriersAndControlCosts(

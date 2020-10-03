@@ -113,14 +113,12 @@ void AccumulateControlBarriers(const PlayerPtrMultiMap<Barrier>& barriers,
 }
 
 void AccumulateControlConstraints(
-    const PlayerPtrMultiMap<Constraint>& constraints, Time t, size_t time_step,
+    const PlayerPtrMultiMap<Constraint>& constraints, Time t,
     const std::vector<VectorXf>& us, float regularization,
     QuadraticCostApproximation* q) {
-  auto f = [&time_step](const Constraint& constraint, Time t, const VectorXf& u,
-                        MatrixXf* hess, VectorXf* grad) {
-    constraint.Quadraticize(t, time_step, u, hess, grad);
-  };
-
+  auto f = [](const Constraint& constraint, Time t, const VectorXf& u,
+              MatrixXf* hess,
+              VectorXf* grad) { constraint.Quadraticize(t, u, hess, grad); };
   AccumulateControlCostsBase(constraints, t, us, regularization, q, f);
 }
 
@@ -214,8 +212,7 @@ float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
 }
 
 QuadraticCostApproximation PlayerCost::Quadraticize(
-    Time t, size_t time_step, const VectorXf& x,
-    const std::vector<VectorXf>& us) const {
+    Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   QuadraticCostApproximation q(x.size(), state_regularization_);
 
   // Accumulate state costs.
@@ -243,10 +240,10 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
   // Accumulate state constraints (including augmented Lagrangian terms scaled
   // by appropriate multipliers).
   for (const auto& constraint : state_constraints_)
-    constraint->Quadraticize(t, time_step, x, &q.state.hess, &q.state.grad);
+    constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
 
   // Accumulate control barriers (as above).
-  AccumulateControlConstraints(control_constraints_, t, time_step, us,
+  AccumulateControlConstraints(control_constraints_, t, us,
                                control_regularization_, &q);
 
   return q;
