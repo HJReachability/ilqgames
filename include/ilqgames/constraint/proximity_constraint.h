@@ -36,14 +36,18 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all time-invariant explicit constraints.
+// (Time-invariant) proximity (inequality) constraint between two vehicles, i.e.
+//           g(x) = ||(px1, py1) - (px2, py2)|| - d <= (or >=) 0
 //
+// NOTE: The `keep_within` argument specifies the sign of the inequality (true
+// corresponds to <=).
+
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
 
-#include <ilqgames/constraint/constraint.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,27 +56,61 @@
 
 namespace ilqgames {
 
-class TimeInvariantConstraint : public Constraint {
+class ProximityConstraint : public TimeInvariantConstraint {
  public:
-  virtual ~TimeInvariantConstraint() {}
+  ~ProximityConstraint() {}
+  ProximityConstraint(const std::pair<Dimension, Dimension>& dims1,
+                      const std::pair<Dimension, Dimension>& dims2,
+                      float threshold, bool keep_within, size_t num_time_steps,
+                      const std::string& name = "")
+      : TimeInvariantConstraint(false, num_time_steps, name),
+        px1_idx(dims1.first),
+        py1_idx(dims1.second),
+        px2_idx(dims2.first),
+        py2_idx(dims2.second),
+        threshold_(threshold),
+        keep_within_(keep_within) {
+    CHECK_GT(threshold_, 0.0);
+  }
 
   // Evaluate this constraint value, i.e., g(x).
-  virtual float Evaluate(const VectorXf& input) const = 0;
-  float Evaluate(Time t, const VectorXf& input) const {
-    return Evaluate(input);
-  };
+  float Evaluate(const VectorXf& input) const {
+    const float dx = input(px1_idx) - input(px2_idx);
+    const float dy = input(py1_idx) - input(py2_idx);
+    const float value = std::hypot(dx, dy) - threshold_;
+
+    return (keep_within_) ? value : -value;
+  }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  // NOTE: this is time-varying because time is used to select lambda.
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    CHECK_NOTNULL(hess);
+    CHECK_NOTNULL(grad);
+    CHECK_EQ(hess->rows(), input.size());
+    CHECK_EQ(hess->cols(), input.size());
+    CHECK_EQ(grad->size(), input.size());
 
- protected:
-  explicit TimeInvariantConstraint(bool is_equality, size_t num_time_steps,
-                                   const std::string& name)
-      : Constraint(is_equality, num_time_steps, name) {}
-};  // namespace TimeInvariantConstraint
+    // Get current lambda.
+    const float lambda = lambdas_[TimeStep(t)];
+
+
+  }
+
+ private:
+  // Position dimension indices for both players.
+  const Dimension px1_idx;
+  const Dimension py1_idx;
+  const Dimension px2_idx;
+  const Dimension py2_idx;
+
+  // Nominal distance threshold.
+  const float threshold_;
+
+  // Keep within (or without), i.e., orientation of the inequality.
+  const bool keep_within_;
+};  // namespace ilqgames
 
 }  // namespace ilqgames
 

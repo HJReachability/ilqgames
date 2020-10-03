@@ -40,10 +40,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_FINAL_TIME_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_FINAL_TIME_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_FINAL_TIME_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_FINAL_TIME_CONSTRAINT_H
 
-#include <ilqgames/constraint/equality_constraint.h>
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,43 +52,39 @@
 
 namespace ilqgames {
 
-class FinalTimeEqualityConstraint : public EqualityConstraint {
+class FinalTimeConstraint : public Constraint {
  public:
-  ~FinalTimeEqualityConstraint() {}
-  FinalTimeEqualityConstraint(
-      const std::shared_ptr<EqualityConstraint>& constraint,
-      Time threshold_time, size_t num_time_steps, const std::string& name = "")
-      : EqualityConstraint(num_time_steps, name),
+  ~FinalTimeConstraint() {}
+  FinalTimeConstraint(const std::shared_ptr<Constraint>& constraint,
+                      Time threshold_time)
+      : Constraint(*constraint),
         constraint_(constraint),
         threshold_time_(threshold_time) {
     CHECK_NOTNULL(constraint_);
   }
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
-    if (t < initial_time_ + threshold_time_) {
-      if (*level) *level = 0.0;
-      return true;
-    } else
-      return constraint_->IsSatisfied(t, input, level);
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(Time t, const VectorXf& input) const {
+    return (t < initial_time_ + threshold_time_)
+               ? 0.0
+               : constraint_->Evaluate(t, input);
   }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  void Quadraticize(Time t, size_t time_step, const VectorXf& input,
-                    MatrixXf* hess, VectorXf* grad) const {
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
     if (t >= initial_time_ + threshold_time_)
-      constraint_->Quadraticize(t, time_step, input, hess, grad);
+      constraint_->Quadraticize(t, input, hess, grad);
   }
 
  private:
   // Underlying constraint.
-  const std::shared_ptr<EqualityConstraint> constraint_;
+  const std::shared_ptr<Constraint> constraint_;
 
   // Time threshold relative to initial time after which to apply constraint.
   const Time threshold_time_;
-};  //\class EqualityConstraint
+};  //\class FinalTimeConstraint
 
 }  // namespace ilqgames
 

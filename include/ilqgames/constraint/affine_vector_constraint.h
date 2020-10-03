@@ -64,19 +64,15 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
     CHECK_EQ(A_.rows(), b_.size());
   }
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), b_.size());
-    const float value = (A_ * input - b_).norm();
-
-    if (*level) *level = value;
-    return std::abs(value) < constants::kSmallNumber;
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const {
+    CHECK_EQ(A_.rows(), input.size());
+    return (A_ * input - b_).norm();
   }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  void Quadraticize(size_t time_step, const VectorXf& input, MatrixXf* hess,
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad) const {
     CHECK_NOTNULL(hess);
     CHECK_NOTNULL(grad);
@@ -85,16 +81,19 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
 
+    // Get current lambda.
+    const float lambda = lambdas_[TimeStep(t)];
+
     // Compute value of the constraint.
     const VectorXf delta = A_ * input - b_;
     const float value = delta.norm();
 
     // Compute gradient and Hessian.
     const VectorXf AT_delta = A_.transpose() * delta;
-    (*grad) += (mu_ + lambdas_[time_step] / value) * AT_delta;
-    (*hess) += (lambdas_[time_step] / value) *
-                   (ATA_ - AT_delta * AT_delta.transpose() / value) +
-               mu_ * ATA_;
+    (*grad) += (mu_ + lambda / value) * AT_delta;
+    (*hess) +=
+        (lambda / value) * (ATA_ - AT_delta * AT_delta.transpose() / value) +
+        mu_ * ATA_;
   }
 
  private:

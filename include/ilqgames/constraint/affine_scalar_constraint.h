@@ -62,19 +62,15 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
         b_(b),
         hess_of_sq_(a * a.transpose()) {}
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), a_.size());
-    const float value = a_.transpose() * input + b_;
-
-    if (*level) *level = value;
-    return std::abs(value) < constants::kSmallNumber;
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const {
+    CHECK_EQ(a_.size(), input.size());
+    return a_.transpose() * input - b_;
   }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  void Quadraticize(size_t time_step, const VectorXf& input, MatrixXf* hess,
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad) const {
     CHECK_NOTNULL(hess);
     CHECK_NOTNULL(grad);
@@ -83,7 +79,11 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
 
-    (*grad) += lambdas_[time_step] * a_ + mu_ * (hess_of_sq_ * input + b_ * a_);
+    // Get current lambda.
+    const float lambda = lambdas_[TimeStep(t)];
+
+    // Compute gradient and Hessian.
+    (*grad) += lambda * a_ + mu_ * (hess_of_sq_ * input + b_ * a_);
     (*hess) += mu_ * hess_of_sq_;
   }
 
@@ -94,7 +94,7 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
 
   // Precompute Hessian of constraint squared (for speed).
   const MatrixXf hess_of_sq_;
-};  //\class AffineScalarConstraint
+};  // namespace ilqgames
 
 }  // namespace ilqgames
 

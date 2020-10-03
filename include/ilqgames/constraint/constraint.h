@@ -51,7 +51,7 @@
 #ifndef ILQGAMES_CONSTRAINT_CONSTRAINT_H
 #define ILQGAMES_CONSTRAINT_CONSTRAINT_H
 
-#include <ilqgames/utils/relative_time_tracker.h>
+#include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -60,19 +60,28 @@
 
 namespace ilqgames {
 
-class Constraint : public RelativeTimeTracker {
+class Constraint : public Cost {
  public:
   virtual ~Constraint() {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
-  virtual bool IsSatisfied(Time t, const VectorXf& input,
-                           float* level) const = 0;
+  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
+    const float value = Evaluate(t, input);
+    if (level) *level = value;
+
+    return (is_equality_) ? std::abs(value) <= 0.0 : value <= 0.0;
+  }
+
+  // Evaluate this constraint value, i.e., g(x).
+  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  virtual void Quadraticize(Time t, size_t time_step, const VectorXf& input,
-                            MatrixXf* hess, VectorXf* grad) const = 0;
+  // NOTE: This is not broken out into two separate functions in order to allow
+  // for memory access and sparsity optimizations.
+  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const = 0;
 
   // Accessors and setters.
   bool IsEquality() const { return is_equality_; }
@@ -82,12 +91,9 @@ class Constraint : public RelativeTimeTracker {
  protected:
   explicit Constraint(bool is_equality, size_t num_time_steps,
                       const std::string& name)
-      : RelativeTimeTracker(name),
+      : Cost(1.0, name),
         is_equality_(is_equality),
         lambdas_(num_time_steps, 0.0) {}
-
-  // Name of this constraint.
-  const std::string name_;
 
   // Is this an equality constraint? If not, it is an inequality constraint.
   bool is_equality_;
