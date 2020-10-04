@@ -36,12 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) affine scalar constraint, i.e., g(x) = a^T x - b.
+// (Time-invariant) single dimension constraint, i.e., g(x) = (+/-) (x_i - d),
+// where d is a threshold and sign is determined by the `keep_below` argument
+// (positive is true).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_AFFINE_SCALAR_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_AFFINE_SCALAR_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
@@ -52,20 +54,20 @@
 
 namespace ilqgames {
 
-class AffineScalarConstraint : public TimeInvariantConstraint {
+class SingleDimensionConstraint : public TimeInvariantConstraint {
  public:
-  ~AffineScalarConstraint() {}
-  AffineScalarConstraint(const VectorXf& a, float b, bool is_equality,
-                         size_t num_time_steps, const std::string& name = "")
+  ~SingleDimensionConstraint() {}
+  SingleDimensionConstraint(Dimension dim, float threshold, bool keep_below,
+                            bool is_equality, size_t num_time_steps,
+                            const std::string& name = "")
       : TimeInvariantConstraint(is_equality, num_time_steps, name),
-        a_(a),
-        b_(b),
-        hess_of_sq_(a * a.transpose()) {}
+        dim_(dim),
+        threshold_(threshold),
+        keep_below_(keep_below) {}
 
   // Evaluate this constraint value, i.e., g(x).
   float Evaluate(const VectorXf& input) const {
-    CHECK_EQ(a_.size(), input.size());
-    return a_.transpose() * input - b_;
+    return (keep_below_) ? input(dim_) - threshold_ : threshold_ - input(dim_);
   }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
@@ -74,7 +76,6 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
                     VectorXf* grad) const {
     CHECK_NOTNULL(hess);
     CHECK_NOTNULL(grad);
-    CHECK_EQ(input.size(), a_.size());
     CHECK_EQ(hess->rows(), input.size());
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
@@ -83,18 +84,24 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
     const float lambda = lambdas_[TimeStep(t)];
 
     // Compute gradient and Hessian.
-    (*grad) += lambda * a_ + mu_ * (hess_of_sq_ * input - b_ * a_);
-    (*hess) += mu_ * hess_of_sq_;
+    const float sign = (keep_below_) ? 1.0 : -1.0;
+    const float x = input(dim_);
+    const float g = sign * (x - threshold_);
+
+    float dx = sign * lambda;
+    float ddx = 0.0;
+    ModifyDerivatives(t, g, &dx, &ddx);
+
+    (*grad)(dim_) += dx;
+    (*hess)(dim_, dim_) += ddx;
   }
 
  private:
-  // Coefficient vector and nominal value.
-  const VectorXf a_;
-  const float b_;
-
-  // Precompute Hessian of constraint squared (for speed).
-  const MatrixXf hess_of_sq_;
-};  //\class AffineScalarConstraint
+  // Dimension to constrain, threshold value, and sign of constraint.
+  const Dimension dim_;
+  const float threshold_;
+  const bool keep_below_;
+};  //\class SingleDimensionConstraint
 
 }  // namespace ilqgames
 
