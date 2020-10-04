@@ -83,21 +83,22 @@ void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
   // Find closest point/segment and whether closest point is an interior point
   // or a vertex.
   bool is_vertex;
-  LineSegment2 closest_segment(Point2::Zero(), Point2::Zero());
+  LineSegment2 closest_segment(Point2::Zero(), Point2::Ones());
   float signed_distance_sq;
   const Point2 closest_point =
       polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex,
                              &closest_segment, &signed_distance_sq);
+  const float s = sgn(signed_distance_sq);
 
   // Unpack geometry.
   const float x = input(xidx_);
   const float y = input(yidx_);
-  const float px = closest_segment.FirstPoint().x();
-  const float py = closest_segment.FirstPoint().y();
-  const float rx = x - px;
-  const float ry = y - py;
-  const float d_sq = rx * rx + ry * ry;
-  const float d = std::sqrt(d_sq);
+  float px = closest_segment.FirstPoint().x();
+  float py = closest_segment.FirstPoint().y();
+  float rx = x - px;
+  float ry = y - py;
+  float d_sq = rx * rx + ry * ry;
+  float d = std::sqrt(d_sq);
   const float ux = closest_segment.UnitDirection().x();
   const float uy = closest_segment.UnitDirection().y();
   const float sign = (keep_left_) ? 1.0 : -1.0;
@@ -107,37 +108,45 @@ void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
                                : threshold_ - signed_sqrt(signed_distance_sq);
 
   // Compute derivatives of g using symbolic differentiation.
-  float dx = sign *
-             (uy * d_sq - px * px * uy - uy * x * x + px * py * ux +
-              2 * px * uy * x - py * ux * x - px * ux * y + ux * x * y) /
-             (d_sq * d);
-  float ddx =
-      sign *
-      (-ry * (2 * ux * px * px + 3 * uy * px * py - 4 * ux * px * x -
-              3 * uy * px * y - ux * py * py - 3 * uy * py * x +
-              2 * ux * py * y + 2 * ux * x * x + 3 * uy * x * y - ux * y * y)) /
-      (d_sq * d_sq * d);
-  float dy = -sign *
-             (ux * d_sq - py * py * ux - ux * y * y + px * py * uy -
-              py * uy * x - px * uy * y + 2 * py * ux * y + uy * x * y) /
-             (d_sq * d);
-  float ddy =
-      sign *
-      (-rx * (uy * px * px - 3 * ux * px * py - 2 * uy * px * x +
-              3 * ux * px * y - 2 * uy * py * py + 3 * ux * py * x +
-              4 * uy * py * y + uy * x * x - 3 * ux * x * y - 2 * uy * y * y)) /
-      (d_sq * d_sq * d);
-  float dxdy =
-      sign * (-uy * ry + ux * rx -
-              (3 * rx * ry * (-uy * rx + ux * ry) / d_sq) / (d_sq * d));
+  float dx = sign * ry * (ux * rx + uy * ry) / (d_sq * d);
+  // float dx =
+  //     sign * ((py - y) * (px * ux + py * uy - ux * x - uy * y)) / (d_sq * d);
+  float ddx = sign *
+              ((py - y) * (2 * ux * px * px + 3 * uy * px * py -
+                           4 * ux * px * x - 3 * uy * px * y - ux * py * py -
+                           3 * uy * py * x + 2 * ux * py * y + 2 * ux * x * x +
+                           3 * uy * x * y - ux * y * y)) /
+              (d_sq * d_sq * d);
+  float dy = sign * rx * (ux * rx + uy * ry) / (d_sq * d);
+  //      -sign * -((px - x) * (px * ux + py * uy - ux * x - uy * y)) / (d_sq *
+  //      d);
+  float ddy = sign *
+              ((px - x) * (uy * px * px - 3 * ux * px * py - 2 * uy * px * x +
+                           3 * ux * px * y - 2 * uy * py * py +
+                           3 * ux * py * x + 4 * uy * py * y + uy * x * x -
+                           3 * ux * x * y - 2 * uy * y * y)) /
+              (d_sq * d_sq * d);
+  float dxdy = sign * (uy * (2 * py - 2 * y)) / (2 * d_sq * d) -
+               (ux * (2 * px - 2 * x)) / (2 * d_sq * d) -
+               (3 * (2 * px - 2 * x) * (2 * py - 2 * y) *
+                (uy * (px - x) - ux * (py - y))) /
+                   (4 * d_sq * d_sq * d);
 
   // Recompute if the nearest point is a vertex of the polyline.
   if (is_vertex) {
-    dx = sign * rx / d;
-    ddx = sign * ry * ry / (d_sq * d);
-    dxdy = -sign * rx * ry / (d_sq * d);
-    dy = sign * ry * ry / (d_sq * d);
-    ddy = sign * rx * rx / (d_sq * d);
+    std::cout << "vertex" << std::endl;
+    px = closest_point.x();
+    py = closest_point.y();
+    rx = x - px;
+    ry = y - py;
+    d_sq = (rx * rx + ry * ry);
+    d = std::sqrt(d_sq);
+
+    dx = sign * s * rx / d;
+    ddx = sign * s * (d_sq - px * px - x * x + 2 * px * x) / (d_sq * d);
+    dxdy = -sign * s * rx * ry / (d_sq * d);
+    dy = sign * s * ry / d;
+    ddy = sign * s * (d_sq - py * py - y * y + 2 * py * y) / (d_sq * d);
   }
 
   // Modify derivatives according to augmented Lagrangian.

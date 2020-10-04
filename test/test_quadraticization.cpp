@@ -349,3 +349,12 @@ TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
   ProximityConstraint constraint({0, 1}, {2, 3}, 0.7, false, kNumTimeSteps);
   CheckQuadraticization(constraint, true);
 }
+
+TEST(Polyline2SignedDistanceConstraintTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  Polyline2SignedDistanceConstraint constraint(polyline, {0, 1}, 10.0, true,
+                                               kNumTimeSteps);
+
+  Constraint::Mu() = 0.0;
+  CheckQuadraticization(constraint, true);
+}

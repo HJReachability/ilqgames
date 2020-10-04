@@ -84,8 +84,6 @@ class Constraint : public Cost {
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  // NOTE: This is not broken out into two separate functions in order to allow
-  // for memory access and sparsity optimizations.
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad) const = 0;
 
