@@ -92,20 +92,25 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
   if (success) *success &= unconstrained_success;
 
   // Run until convergence or until the time runs out.
-  Time elapsed = 0.0;
+  Time elapsed = max_runtime_unconstrained_problem;
   float squared_constraint_error = constants::kInfinity;
-  size_t num_iterations = 1;
-  while (num_iterations < params_.max_solver_iters &&
-         squared_constraint_error <
-             params_.squared_constraint_error_tolerance &&
-         elapsed < max_runtime - timer_.RuntimeUpperBound()) {
+  while (true) {
+    std::cout << "top" << std::endl << std::flush;
+    std::cout << squared_constraint_error << std::endl;
+
+    const bool c1 = log->NumIterates() < params_.max_solver_iters;
+    VLOG(2) << c1;
+    const bool c2 =
+        squared_constraint_error > params_.squared_constraint_error_tolerance;
+    VLOG(2) << c2;
+    const bool c3 = elapsed < max_runtime - timer_.RuntimeUpperBound();
+    VLOG(2) << c3;
+    if (!(c1 && c2 && c3)) break;
+
     // Start loop timer.
     timer_.Tic();
 
-    // New iteration.
-    VLOG(2) << "Squared constraint violation at iteration " << num_iterations
-            << " is " << squared_constraint_error;
-    num_iterations++;
+    std::cout << "yo";
 
     // Increment multiplers in player costs, and in parallel compute the total
     // squared constraint error.
@@ -122,6 +127,7 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
           const float constraint_error = constraint->Evaluate(t, x);
           squared_constraint_error += constraint_error * constraint_error;
           constraint->IncrementLambda(t, constraint_error);
+          //          std::cout << squared_constraint_error << std::endl;
         }
 
         for (const auto& pair : pc.ControlConstraints()) {
@@ -132,22 +138,49 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
         }
       }
 
+      std::cout << "yo";
+
       // Scale mu.
       Constraint::ScaleMu(
           params_.geometric_quadratic_constraint_penalty_scaling);
 
-      // Run unconstrained solver to convergence. Since solvers update problem
-      // solutions, the unconstrained solver should automatically start where it
-      // left off.
+      // Log squared constraint violation.
+      VLOG(2) << "Squared constraint violation at iteration "
+              << log->NumIterates() << " is " << squared_constraint_error;
+
+      // Update problem solution to make sure we pick up where we left off.
+      problem_->OverwriteSolution(log->FinalOperatingPoint(),
+                                  log->FinalStrategies());
+
+      // Run unconstrained solver to convergence. Since we will update problem
+      // solutions at each outer iteration, the unconstrained solver should
+      // automatically start where it left off.
       const auto unconstrained_log = unconstrained_solver_->Solve(
           &unconstrained_success, max_runtime_unconstrained_problem);
-      log->AddLog(*unconstrained_log);
+
+      std::cout << "yo";
 
       LOG_IF(WARNING, !unconstrained_success)
-          << "Unconstrained solver failed at iteration " << num_iterations;
+          << "Unconstrained solver failed at iteration " << log->NumIterates();
       if (success) *success &= unconstrained_success;
+      log->AddLog(*unconstrained_log);
+
+      std::cout << "yo";
+
+      // Record loop time.
+      elapsed += timer_.Toc();
+
+      std::cout << "bound: " << timer_.RuntimeUpperBound() << std::endl;
+      std::cout << "iters: " << log->NumIterates() << std::endl;
+      std::cout << "err: " << squared_constraint_error << std::endl;
     }
   }
+
+  // Update problem solution to make sure we get the final log output.
+  problem_->OverwriteSolution(log->FinalOperatingPoint(),
+                              log->FinalStrategies());
+
+
 
   return log;
 }

@@ -77,8 +77,7 @@ struct SolverParams {
 
   // Augmented Lagrangian parameters.
   size_t unconstrained_solver_max_iters = 10;
-  float initial_quadratic_constraint_penalty = 1.0;
-  float geometric_quadratic_constraint_penalty_scaling = 5.0;
+  float geometric_quadratic_constraint_penalty_scaling = 2.0;
   float squared_constraint_error_tolerance = 1e-1;
 };  // struct SolverParams
 

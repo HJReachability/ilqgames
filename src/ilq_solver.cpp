@@ -195,7 +195,7 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     has_converged = HasConverged(last_operating_point, current_operating_point);
 
     // Record loop runtime.
-    elapsed = timer_.Toc();
+    elapsed += timer_.Toc();
 
     // Log current iterate.
     log->AddSolverIterate(current_operating_point, current_strategies,
@@ -223,9 +223,6 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
   // Handle success flag.
   if (success) *success = true;
-
-  // Update problem solution by convention.
-  problem_->OverwriteSolution(current_operating_point, current_strategies);
 
   return log;
 }

@@ -44,6 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
@@ -108,7 +109,8 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.open_loop = FLAGS_open_loop;
   params.max_backtracking_steps = 100;
-  //  params.max_solver_iters = 10000;
+  params.max_solver_iters = 55;
+  params.unconstrained_solver_max_iters = 50;
   params.linesearch = FLAGS_linesearch;
   params.enforce_barriers_in_linesearch = true;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
@@ -118,7 +120,7 @@ int main(int argc, char** argv) {
 
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
   problem->Initialize();
-  ilqgames::ILQSolver solver(problem, params);
+  ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();

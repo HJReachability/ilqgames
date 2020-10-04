@@ -85,10 +85,9 @@ class AugmentedLagrangianSolver : public GameSolver {
         new ILQSolver(problem, unconstrained_solver_params));
   }
 
-  // Solve this game. Returns true if converged.
-  std::shared_ptr<SolverLog> Solve(
-      bool* success = nullptr,
-      Time max_runtime = std::numeric_limits<Time>::infinity());
+  // Solve this game. Returns true if converged. Defaults to 5 s runtime.
+  std::shared_ptr<SolverLog> Solve(bool* success = nullptr,
+                                   Time max_runtime = 5.0);
 
  private:
   // Lower level (unconstrained) solver.

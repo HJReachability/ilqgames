@@ -58,7 +58,7 @@
 
 namespace ilqgames {
 
-float Constraint::mu_ = 1.0;
+float Constraint::mu_ = 0.1;
 
 void Constraint::ModifyDerivatives(Time t, float g, float* dx, float* ddx,
                                    float* dy, float* ddy, float* dxdy) const {
