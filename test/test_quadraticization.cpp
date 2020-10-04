@@ -81,10 +81,12 @@ using namespace ilqgames;
 namespace {
 // Cost weight and dimension.
 static constexpr float kCostWeight = 1.0;
-static constexpr Dimension kInputDimension = 10;
+static constexpr Dimension kInputDimension = 3;
 
 // Time horizon.
 static constexpr Time kTimeHorizon = 10.0;  // s
+static const size_t kNumTimeSteps =
+    static_cast<size_t>(kTimeHorizon / RelativeTimeTracker::TimeStep());
 
 // Step size for forward differences.
 static constexpr float kGradForwardStep = 1e-3;
@@ -330,10 +332,15 @@ TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
 }
 
 TEST(AffineScalarConstraintTest, QuadraticizesCorrectly) {
-  const size_t num_time_steps =
-      static_cast<size_t>(kTimeHorizon / RelativeTimeTracker::TimeStep());
   AffineScalarConstraint constraint(
       VectorXf::LinSpaced(kInputDimension, -1.0, 1.0), 0.5, false,
-      num_time_steps);
+      kNumTimeSteps);
+  CheckQuadraticization(constraint, true);
+}
+
+TEST(AffineVectorConstraintTest, QuadraticizesCorrectly) {
+  AffineVectorConstraint constraint(
+      10.0 * MatrixXf::Random(kInputDimension, kInputDimension),
+      VectorXf::Random(kInputDimension), false, kNumTimeSteps);
   CheckQuadraticization(constraint, true);
 }

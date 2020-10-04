@@ -60,7 +60,8 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
       : TimeInvariantConstraint(is_equality, num_time_steps, name),
         A_(A),
         b_(b),
-        ATA_(A.transpose() * A) {
+        ATA_(A.transpose() * A),
+        AAT_(A * A.transpose()) {
     CHECK_EQ(A_.rows(), b_.size());
   }
 
@@ -76,7 +77,7 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
                     VectorXf* grad) const {
     CHECK_NOTNULL(hess);
     CHECK_NOTNULL(grad);
-    CHECK_EQ(input.size(), b_.cols());
+    CHECK_EQ(input.size(), b_.size());
     CHECK_EQ(hess->rows(), input.size());
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
@@ -91,9 +92,9 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
     // Compute gradient and Hessian.
     const VectorXf AT_delta = A_.transpose() * delta;
     (*grad) += (mu_ + lambda / value) * AT_delta;
-    (*hess) +=
-        (lambda / value) * (ATA_ - AT_delta * AT_delta.transpose() / value) +
-        mu_ * ATA_;
+    (*hess) += (lambda / value) *
+                   (AAT_ - AT_delta * AT_delta.transpose() / (value * value)) +
+               mu_ * ATA_;
   }
 
  private:
@@ -101,8 +102,9 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
   const MatrixXf A_;
   const VectorXf b_;
 
-  // Precompute ATA.
+  // Precompute ATA and AAT.
   const MatrixXf ATA_;
+  const MatrixXf AAT_;
 };  //\class AffineVectorConstraint
 
 }  // namespace ilqgames
