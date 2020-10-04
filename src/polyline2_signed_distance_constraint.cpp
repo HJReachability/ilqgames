@@ -108,33 +108,14 @@ void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
                                : threshold_ - signed_sqrt(signed_distance_sq);
 
   // Compute derivatives of g using symbolic differentiation.
-  float dx = sign * ry * (ux * rx + uy * ry) / (d_sq * d);
-  // float dx =
-  //     sign * ((py - y) * (px * ux + py * uy - ux * x - uy * y)) / (d_sq * d);
-  float ddx = sign *
-              ((py - y) * (2 * ux * px * px + 3 * uy * px * py -
-                           4 * ux * px * x - 3 * uy * px * y - ux * py * py -
-                           3 * uy * py * x + 2 * ux * py * y + 2 * ux * x * x +
-                           3 * uy * x * y - ux * y * y)) /
-              (d_sq * d_sq * d);
-  float dy = sign * rx * (ux * rx + uy * ry) / (d_sq * d);
-  //      -sign * -((px - x) * (px * ux + py * uy - ux * x - uy * y)) / (d_sq *
-  //      d);
-  float ddy = sign *
-              ((px - x) * (uy * px * px - 3 * ux * px * py - 2 * uy * px * x +
-                           3 * ux * px * y - 2 * uy * py * py +
-                           3 * ux * py * x + 4 * uy * py * y + uy * x * x -
-                           3 * ux * x * y - 2 * uy * y * y)) /
-              (d_sq * d_sq * d);
-  float dxdy = sign * (uy * (2 * py - 2 * y)) / (2 * d_sq * d) -
-               (ux * (2 * px - 2 * x)) / (2 * d_sq * d) -
-               (3 * (2 * px - 2 * x) * (2 * py - 2 * y) *
-                (uy * (px - x) - ux * (py - y))) /
-                   (4 * d_sq * d_sq * d);
+  float dx = sign * uy;
+  float ddx = 0.0;
+  float dy = -sign * ux;
+  float ddy = 0.0;
+  float dxdy = 0.0;
 
   // Recompute if the nearest point is a vertex of the polyline.
   if (is_vertex) {
-    std::cout << "vertex" << std::endl;
     px = closest_point.x();
     py = closest_point.y();
     rx = x - px;
