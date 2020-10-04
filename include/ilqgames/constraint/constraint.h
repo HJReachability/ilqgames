@@ -89,8 +89,21 @@ class Constraint : public Cost {
 
   // Accessors and setters.
   bool IsEquality() const { return is_equality_; }
-  float& Lambda(size_t time_step) { return lambdas_[time_step]; }
-  static float& Mu() { return mu_; }
+  float& Lambda(Time t) { return lambdas_[TimeStep(t)]; }
+  float Lambda(Time t) const { return lambdas_[TimeStep(t)]; }
+  void IncrementLambda(Time t, float value) {
+    const size_t kk = TimeStep(t);
+    const float new_lambda = lambdas_[kk] + mu_ * value;
+    lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
+  }
+  static float& GlobalMu() { return mu_; }
+  static void ScaleMu(float scale) { mu_ *= scale; }
+  float Mu(Time t, const VectorXf& input) const {
+    if (!is_equality_ && Evaluate(t, input) < 0.0 &&
+        std::abs(Lambda(t)) < constants::kSmallNumber)
+      return 0.0;
+    return mu_;
+  }
 
  protected:
   explicit Constraint(bool is_equality, size_t num_time_steps,

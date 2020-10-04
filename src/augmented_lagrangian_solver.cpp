@@ -71,6 +71,8 @@ namespace ilqgames {
 
 std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
                                                             Time max_runtime) {
+  if (success) *success = true;
+
   // Create new log.
   std::shared_ptr<SolverLog> log = CreateNewLog();
 
@@ -87,6 +89,7 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 
   LOG_IF(WARNING, !unconstrained_success)
       << "Unconstrained solver failed on first call.";
+  if (success) *success &= unconstrained_success;
 
   // Run until convergence or until the time runs out.
   Time elapsed = 0.0;
@@ -104,9 +107,6 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
             << " is " << squared_constraint_error;
     num_iterations++;
 
-    // Predeclare constraint violation.
-    float constraint_error;
-
     // Increment multiplers in player costs, and in parallel compute the total
     // squared constraint error.
     squared_constraint_error = 0.0;
@@ -119,21 +119,22 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 
         // Scale each lambda.
         for (const auto& constraint : pc.StateConstraints()) {
-          constraint->IsSatisfied(t, x, &constraint_error);
+          const float constraint_error = constraint->Evaluate(t, x);
           squared_constraint_error += constraint_error * constraint_error;
-          constraint->Lambda(kk) += Constraint::Mu() * constraint_error;
+          constraint->IncrementLambda(t, constraint_error);
         }
 
         for (const auto& pair : pc.ControlConstraints()) {
-          pair.second->IsSatisfied(t, us[pair.first], &constraint_error);
+          const float constraint_error =
+              pair.second->Evaluate(t, us[pair.first]);
           squared_constraint_error += constraint_error * constraint_error;
-          pair.second->Lambda(kk) += Constraint::Mu() * constraint_error;
+          pair.second->IncrementLambda(t, constraint_error);
         }
       }
 
       // Scale mu.
-      Constraint::Mu() *=
-          params_.geometric_quadratic_constraint_penalty_scaling;
+      Constraint::ScaleMu(
+          params_.geometric_quadratic_constraint_penalty_scaling);
 
       // Run unconstrained solver to convergence. Since solvers update problem
       // solutions, the unconstrained solver should automatically start where it
@@ -144,6 +145,7 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 
       LOG_IF(WARNING, !unconstrained_success)
           << "Unconstrained solver failed at iteration " << num_iterations;
+      if (success) *success &= unconstrained_success;
     }
   }
 
