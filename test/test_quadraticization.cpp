@@ -81,7 +81,7 @@ using namespace ilqgames;
 namespace {
 // Cost weight and dimension.
 static constexpr float kCostWeight = 1.0;
-static constexpr Dimension kInputDimension = 3;
+static constexpr Dimension kInputDimension = 10;
 
 // Time horizon.
 static constexpr Time kTimeHorizon = 10.0;  // s
@@ -342,5 +342,10 @@ TEST(AffineVectorConstraintTest, QuadraticizesCorrectly) {
   AffineVectorConstraint constraint(
       10.0 * MatrixXf::Random(kInputDimension, kInputDimension),
       VectorXf::Random(kInputDimension), false, kNumTimeSteps);
+  CheckQuadraticization(constraint, true);
+}
+
+TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
+  ProximityConstraint constraint({0, 1}, {2, 3}, 0.7, false, kNumTimeSteps);
   CheckQuadraticization(constraint, true);
 }

@@ -84,15 +84,6 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
                     VectorXf* grad) const;
 
  private:
-  // Quadraticize given that the closest point is a {vertex, interior point} on
-  // the polyline.
-  void QuadraticizeVertex(Time t, const VectorXf& input, MatrixXf* hess,
-                          VectorXf* grad, float g,
-                          const Point2& closest_point) const;
-  void QuadraticizeInterior(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad, float g,
-                            const LineSegment2& closest_segment) const;
-
   // Polyline.
   const Polyline2 polyline_;
 

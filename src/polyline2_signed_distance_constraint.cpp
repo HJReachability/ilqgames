@@ -89,54 +89,6 @@ void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
       polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex,
                              &closest_segment, &signed_distance_sq);
 
-  // Compute value of g.
-  const float g = (keep_left_) ? signed_sqrt(signed_distance_sq) - threshold_
-                               : threshold_ - signed_sqrt(signed_distance_sq);
-
-  if (is_vertex)
-    QuadraticizeVertex(t, input, hess, grad, g, closest_point);
-  else
-    QuadraticizeInterior(t, input, hess, grad, g, closest_segment);
-}
-
-void Polyline2SignedDistanceConstraint::QuadraticizeVertex(
-    Time t, const VectorXf& input, MatrixXf* hess, VectorXf* grad, float g,
-    const Point2& closest_point) const {
-  // Unpack geometry.
-  const float x = input(xidx_);
-  const float y = input(yidx_);
-  const float px = closest_point.x();
-  const float py = closest_point.y();
-  const float rx = x - px;
-  const float ry = y - py;
-  const float d_sq = rx * rx + ry * ry;
-  const float d = std::sqrt(d_sq);
-  const float sign = (keep_left_) ? 1.0 : -1.0;
-
-  /// Compute derivatives of g using symbolic differentiation.
-  float dx = sign * rx / d;
-  float ddx = sign * ry * ry / (d_sq * d);
-  float dxdy = -sign * rx * ry / (d_sq * d);
-  float dy = sign * ry * ry / (d_sq * d);
-  float ddy = sign * rx * rx / (d_sq * d);
-  ;
-
-  // Modify derivatives according to augmented Lagrangian.
-  ModifyDerivatives(t, g, &dx, &ddx, &dy, &ddy, &dxdy);
-
-  // Populate grad and hess.
-  (*grad)(xidx_) += dx;
-  (*grad)(yidx_) += dy;
-
-  (*hess)(xidx_, xidx_) += ddx;
-  (*hess)(xidx_, yidx_) += dxdy;
-  (*hess)(yidx_, xidx_) += dxdy;
-  (*hess)(yidx_, yidx_) += ddy;
-}
-
-void Polyline2SignedDistanceConstraint::QuadraticizeInterior(
-    Time t, const VectorXf& input, MatrixXf* hess, VectorXf* grad, float g,
-    const LineSegment2& closest_segment) const {
   // Unpack geometry.
   const float x = input(xidx_);
   const float y = input(yidx_);
@@ -149,6 +101,10 @@ void Polyline2SignedDistanceConstraint::QuadraticizeInterior(
   const float ux = closest_segment.UnitDirection().x();
   const float uy = closest_segment.UnitDirection().y();
   const float sign = (keep_left_) ? 1.0 : -1.0;
+
+  // Compute value of g.
+  const float g = (keep_left_) ? signed_sqrt(signed_distance_sq) - threshold_
+                               : threshold_ - signed_sqrt(signed_distance_sq);
 
   // Compute derivatives of g using symbolic differentiation.
   float dx = sign *
@@ -174,6 +130,15 @@ void Polyline2SignedDistanceConstraint::QuadraticizeInterior(
   float dxdy =
       sign * (-uy * ry + ux * rx -
               (3 * rx * ry * (-uy * rx + ux * ry) / d_sq) / (d_sq * d));
+
+  // Recompute if the nearest point is a vertex of the polyline.
+  if (is_vertex) {
+    dx = sign * rx / d;
+    ddx = sign * ry * ry / (d_sq * d);
+    dxdy = -sign * rx * ry / (d_sq * d);
+    dy = sign * ry * ry / (d_sq * d);
+    ddy = sign * rx * rx / (d_sq * d);
+  }
 
   // Modify derivatives according to augmented Lagrangian.
   ModifyDerivatives(t, g, &dx, &ddx, &dy, &ddy, &dxdy);
