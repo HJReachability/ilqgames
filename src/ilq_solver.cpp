@@ -173,9 +173,8 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
                             &was_operating_point_feasible)) {
       // Maybe emit warning if exiting early.
       if (num_iterations == 1) {
-        VLOG(1)
-            << "Solver exited after during first iteration, which may indicate "
-               "an infeasible initial operating point.";
+        VLOG(1) << "Solver exited during first iteration, which may indicate "
+                   "an infeasible initial operating point.";
 
         if (was_operating_point_feasible)
           VLOG(1) << "Previous operating point was feasible.";

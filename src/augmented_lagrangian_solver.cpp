@@ -89,6 +89,8 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 
   LOG_IF(WARNING, !unconstrained_success)
       << "Unconstrained solver failed on first call.";
+  LOG_IF(INFO, unconstrained_success)
+      << "Unconstrained solver succeeded on first call.";
   if (success) *success &= unconstrained_success;
 
   // Run until convergence or until the time runs out.
@@ -129,7 +131,7 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     }
 
     // Scale mu.
-    Constraint::ScaleMu(params_.geometric_quadratic_constraint_penalty_scaling);
+    Constraint::ScaleMu(params_.geometric_mu_scaling);
 
     // Log squared constraint violation.
     VLOG(2) << "Max constraint violation at iteration " << log->NumIterates()
@@ -147,6 +149,8 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 
     LOG_IF(WARNING, !unconstrained_success)
         << "Unconstrained solver failed at iteration " << log->NumIterates();
+    LOG_IF(INFO, unconstrained_success)
+        << "Unconstrained solver succeeded on iteration " << log->NumIterates();
     if (success) *success &= unconstrained_success;
     log->AddLog(*unconstrained_log);
 

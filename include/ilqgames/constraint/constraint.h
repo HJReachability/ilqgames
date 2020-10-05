@@ -97,7 +97,7 @@ class Constraint : public Cost {
   float Lambda(Time t) const { return lambdas_[TimeStep(t)]; }
   void IncrementLambda(Time t, float value) {
     const size_t kk = TimeStep(t);
-    const float new_lambda = lambdas_[kk] + mu_ * value;
+    const float new_lambda = lambdas_[kk] + 0.1 * mu_ * value;
     lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
   }
   static float& GlobalMu() { return mu_; }

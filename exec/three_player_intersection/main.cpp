@@ -109,13 +109,14 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.open_loop = FLAGS_open_loop;
   params.max_backtracking_steps = 100;
-  params.max_solver_iters = 55;
-  params.unconstrained_solver_max_iters = 50;
+  params.max_solver_iters = 100;
+  params.unconstrained_solver_max_iters = 10;
   params.linesearch = FLAGS_linesearch;
   params.enforce_barriers_in_linesearch = true;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
+  params.geometric_mu_scaling = 1.1;
   //  params.open_loop = true;
 
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
