@@ -73,8 +73,6 @@ Time LoopTimer::Toc() {
 }
 
 Time LoopTimer::RuntimeUpperBound(float num_stddevs, Time initial_guess) const {
-  std::cout << "entering timer" << std::endl << std::flush;
-
   // Handle not enough data.
   if (loop_times_.size() < 2) return initial_guess;
 
