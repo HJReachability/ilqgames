@@ -77,7 +77,9 @@ struct SolverParams {
 
   // Augmented Lagrangian parameters.
   size_t unconstrained_solver_max_iters = 10;
-  float geometric_mu_scaling = 2.0;
+  float geometric_mu_scaling = 1.1;
+  float geometric_mu_downscaling = 0.5;
+  float geometric_lambda_downscaling = 0.5;
   float constraint_error_tolerance = 1e-1;
 };  // struct SolverParams
 

@@ -87,9 +87,9 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
       &unconstrained_success, max_runtime_unconstrained_problem);
   log->AddLog(*unconstrained_log);
 
-  LOG_IF(WARNING, !unconstrained_success)
+  VLOG_IF(2, !unconstrained_success)
       << "Unconstrained solver failed on first call.";
-  LOG_IF(INFO, unconstrained_success)
+  VLOG_IF(2, unconstrained_success)
       << "Unconstrained solver succeeded on first call.";
   if (success) *success &= unconstrained_success;
 
@@ -137,9 +137,12 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     VLOG(2) << "Max constraint violation at iteration " << log->NumIterates()
             << " is " << max_constraint_error;
 
-    // Update problem solution to make sure we pick up where we left off.
-    problem_->OverwriteSolution(log->FinalOperatingPoint(),
-                                log->FinalStrategies());
+    // Update problem solution to make sure we pick up where we left off if the
+    // previous unconstrained solver succeeded.
+    if (unconstrained_success) {
+      problem_->OverwriteSolution(log->FinalOperatingPoint(),
+                                  log->FinalStrategies());
+    }
 
     // Run unconstrained solver to convergence. Since we will update problem
     // solutions at each outer iteration, the unconstrained solver should
@@ -147,10 +150,24 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     const auto unconstrained_log = unconstrained_solver_->Solve(
         &unconstrained_success, max_runtime_unconstrained_problem);
 
-    LOG_IF(WARNING, !unconstrained_success)
-        << "Unconstrained solver failed at iteration " << log->NumIterates();
-    LOG_IF(INFO, unconstrained_success)
+    VLOG_IF(2, unconstrained_success)
         << "Unconstrained solver succeeded on iteration " << log->NumIterates();
+
+    // If we failed then downscale all lambdas and mus for next iteration.
+    if (!unconstrained_success) {
+      VLOG(2) << "Unconstrained solver failed at iteration "
+              << log->NumIterates();
+      VLOG(2) << "Downscaling all multipliers.";
+      for (auto& pc : problem_->PlayerCosts()) {
+        for (const auto& constraint : pc.StateConstraints())
+          constraint->ScaleLambdas(params_.geometric_lambda_downscaling);
+        for (const auto& pair : pc.ControlConstraints())
+          pair.second->ScaleLambdas(params_.geometric_lambda_downscaling);
+      }
+
+      Constraint::ScaleMu(params_.geometric_mu_downscaling);
+    }
+
     if (success) *success &= unconstrained_success;
     log->AddLog(*unconstrained_log);
 
