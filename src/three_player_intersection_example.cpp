@@ -44,6 +44,7 @@
 #include <ilqgames/constraint/barrier/polyline2_signed_distance_barrier.h>
 #include <ilqgames/constraint/barrier/proximity_barrier.h>
 #include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -226,8 +227,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                                          -kLaneHalfWidth, kOrientedRight,
                                          "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  p1_cost.AddStateBarrier(p1_lane_r_barrier);
-  p1_cost.AddStateBarrier(p1_lane_l_barrier);
+  // p1_cost.AddStateBarrier(p1_lane_r_barrier);
+  // p1_cost.AddStateBarrier(p1_lane_l_barrier);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
@@ -241,8 +242,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                                          -kLaneHalfWidth, kOrientedRight,
                                          "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  p2_cost.AddStateBarrier(p2_lane_r_barrier);
-  p2_cost.AddStateBarrier(p2_lane_l_barrier);
+  // p2_cost.AddStateBarrier(p2_lane_r_barrier);
+  // p2_cost.AddStateBarrier(p2_lane_l_barrier);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
@@ -256,8 +257,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                                          -kLaneHalfWidth, kOrientedRight,
                                          "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  p3_cost.AddStateBarrier(p3_lane_r_barrier);
-  p3_cost.AddStateBarrier(p3_lane_l_barrier);
+  // p3_cost.AddStateBarrier(p3_lane_r_barrier);
+  // p3_cost.AddStateBarrier(p3_lane_l_barrier);
 
   // Max/min/nominal speed costs.
   const auto p1_min_v_barrier = std::make_shared<SingleDimensionBarrier>(
@@ -266,8 +267,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  p1_cost.AddStateBarrier(p1_min_v_barrier);
-  p1_cost.AddStateBarrier(p1_max_v_barrier);
+  // p1_cost.AddStateBarrier(p1_min_v_barrier);
+  // p1_cost.AddStateBarrier(p1_max_v_barrier);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
   const auto p2_min_v_barrier = std::make_shared<SingleDimensionBarrier>(
@@ -276,8 +277,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kP2VIdx, kP2MaxV, !kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  p2_cost.AddStateBarrier(p2_min_v_barrier);
-  p2_cost.AddStateBarrier(p2_max_v_barrier);
+  // p2_cost.AddStateBarrier(p2_min_v_barrier);
+  // p2_cost.AddStateBarrier(p2_max_v_barrier);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
   const auto p3_min_v_barrier = std::make_shared<SingleDimensionBarrier>(
@@ -286,8 +287,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kP3VIdx, kP3MaxV, !kOrientedRight, "MaxV");
   const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  p3_cost.AddStateBarrier(p3_min_v_barrier);
-  p3_cost.AddStateBarrier(p3_max_v_barrier);
+  // p3_cost.AddStateBarrier(p3_min_v_barrier);
+  // p3_cost.AddStateBarrier(p3_max_v_barrier);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // Penalize control effort.
@@ -299,8 +300,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   const auto p1_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
-  p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
-  p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
+  // p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
+  // p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
@@ -312,8 +313,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
   const auto p2_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
-  p2_cost.AddControlBarrier(1, p2_omega_max_barrier);
-  p2_cost.AddControlBarrier(1, p2_omega_min_barrier);
+  // p2_cost.AddControlBarrier(1, p2_omega_max_barrier);
+  // p2_cost.AddControlBarrier(1, p2_omega_min_barrier);
   p2_cost.AddControlCost(1, p2_omega_cost);
   p2_cost.AddControlCost(1, p2_jerk_cost);
 
@@ -325,38 +326,73 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
   const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP3AIdx,
                                                          0.0, "Acceleration");
-  p3_cost.AddControlBarrier(2, p3_omega_max_barrier);
-  p3_cost.AddControlBarrier(2, p3_omega_min_barrier);
+  // p3_cost.AddControlBarrier(2, p3_omega_max_barrier);
+  // p3_cost.AddControlBarrier(2, p3_omega_min_barrier);
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
   // Pairwise proximity costs.
-  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p1_cost.AddStateCost(p1p2_proximity_cost);
-  p1_cost.AddStateCost(p1p3_proximity_cost);
+  // const std::shared_ptr<ProxCost> p1p2_proximity_cost(
+  //     new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+  //                  {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  // const std::shared_ptr<ProxCost> p1p3_proximity_cost(
+  //     new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+  //                  {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  // p1_cost.AddStateCost(p1p2_proximity_cost);
+  // p1_cost.AddStateCost(p1p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p2p3_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p2_cost.AddStateCost(p2p1_proximity_cost);
-  p2_cost.AddStateCost(p2p3_proximity_cost);
+  // const std::shared_ptr<ProxCost> p2p1_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // const std::shared_ptr<ProxCost> p2p3_proximity_cost(
+  //     new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+  //                  {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  // p2_cost.AddStateCost(p2p1_proximity_cost);
+  // p2_cost.AddStateCost(p2p3_proximity_cost);
 
-  const std::shared_ptr<ProxCost> p3p1_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p3p2_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  p3_cost.AddStateCost(p3p1_proximity_cost);
-  p3_cost.AddStateCost(p3p2_proximity_cost);
+  // const std::shared_ptr<ProxCost> p3p1_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+  //                  {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
+  // const std::shared_ptr<ProxCost> p3p2_proximity_cost(
+  //     new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+  //                  {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  // p3_cost.AddStateCost(p3p1_proximity_cost);
+  // p3_cost.AddStateCost(p3p2_proximity_cost);
+
+  // Collision-avoidance constraints.
+  constexpr bool kKeepClose = true;
+  const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              "ProximityConstraintP2"));
+  const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
+                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              "ProximityConstraintP3"));
+  p1_cost.AddStateConstraint(p1p2_proximity_constraint);
+  p1_cost.AddStateConstraint(p1p3_proximity_constraint);
+
+  const std::shared_ptr<ProximityConstraint> p2p1_proximity_constraint(
+      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
+                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              "ProximityConstraintP1"));
+  const std::shared_ptr<ProximityConstraint> p2p3_proximity_constraint(
+      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
+                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              "ProximityConstraintP3"));
+  p2_cost.AddStateConstraint(p2p1_proximity_constraint);
+  p2_cost.AddStateConstraint(p2p3_proximity_constraint);
+
+  const std::shared_ptr<ProximityConstraint> p3p1_proximity_constraint(
+      new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx},
+                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              "ProximityConstraintP1"));
+  const std::shared_ptr<ProximityConstraint> p3p2_proximity_constraint(
+      new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              "ProximityConstraintP2"));
+  p3_cost.AddStateConstraint(p3p1_proximity_constraint);
+  p3_cost.AddStateConstraint(p3p2_proximity_constraint);
 
   // Collision-avoidance barriers.
   // const std::shared_ptr<ProximityBarrier> p1p2_proximity_barrier(

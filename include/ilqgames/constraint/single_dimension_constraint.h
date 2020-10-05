@@ -88,7 +88,7 @@ class SingleDimensionConstraint : public TimeInvariantConstraint {
     const float x = input(dim_);
     const float g = sign * (x - threshold_);
 
-    float dx = sign * lambda;
+    float dx = sign;
     float ddx = 0.0;
     ModifyDerivatives(t, g, &dx, &ddx);
 
