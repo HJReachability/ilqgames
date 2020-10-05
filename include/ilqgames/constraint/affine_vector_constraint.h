@@ -82,8 +82,9 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
 
-    // Get current lambda.
+    // Get current lambda and mu.
     const float lambda = lambdas_[TimeStep(t)];
+    const float mu = Mu(t, input);
 
     // Compute value of the constraint.
     const VectorXf delta = A_ * input - b_;
@@ -91,10 +92,10 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
 
     // Compute gradient and Hessian.
     const VectorXf AT_delta = A_.transpose() * delta;
-    (*grad) += (mu_ + lambda / value) * AT_delta;
+    (*grad) += (mu + lambda / value) * AT_delta;
     (*hess) += (lambda / value) *
                    (AAT_ - AT_delta * AT_delta.transpose() / (value * value)) +
-               mu_ * ATA_;
+               mu * ATA_;
   }
 
  private:

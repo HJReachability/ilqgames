@@ -64,19 +64,20 @@ void Constraint::ModifyDerivatives(Time t, float g, float* dx, float* ddx,
                                    float* dy, float* ddy, float* dxdy) const {
   // Unpack lambda.
   const float lambda = lambdas_[TimeStep(t)];
+  const float mu = Mu(lambda, g);
 
   // Assumes that these are just the derivatives of g(x, y), and modifies them
   // to be derivatives of lambda g(x) + mu g(x) g(x) / 2.
-  const float new_dx = lambda * *dx + mu_ * g * *dx;
-  const float new_ddx = lambda * *ddx + mu_ * (*dx * *dx + g * *ddx);
+  const float new_dx = lambda * *dx + mu * g * *dx;
+  const float new_ddx = lambda * *ddx + mu * (*dx * *dx + g * *ddx);
 
   if (dy) {
     CHECK_NOTNULL(ddy);
     CHECK_NOTNULL(dxdy);
 
-    const float new_dy = lambda * *dy + mu_ * g * *dy;
-    const float new_ddy = lambda * *ddy + mu_ * (*dy * *dy + g * *ddy);
-    const float new_dxdy = lambda * *dxdy + mu_ * (*dy * *dx + g * *dxdy);
+    const float new_dy = lambda * *dy + mu * g * *dy;
+    const float new_ddy = lambda * *ddy + mu * (*dy * *dy + g * *ddy);
+    const float new_dxdy = lambda * *dxdy + mu * (*dy * *dx + g * *dxdy);
 
     *dy = new_dy;
     *ddy = new_ddy;

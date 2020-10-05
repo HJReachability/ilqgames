@@ -70,7 +70,11 @@ class Constraint : public Cost {
     const float value = Evaluate(t, input);
     if (level) *level = value;
 
-    return (is_equality_) ? std::abs(value) <= 0.0 : value <= 0.0;
+    return IsSatisfied(value);
+  }
+  bool IsSatisfied(float level) const {
+    return (is_equality_) ? std::abs(level) <= constants::kSmallNumber
+                          : level <= constants::kSmallNumber;
   }
 
   // Evaluate this constraint value, i.e., g(x), and the augmented Lagrangian,
@@ -79,7 +83,7 @@ class Constraint : public Cost {
   float EvaluateAugmentedLagrangian(Time t, const VectorXf& input) const {
     const float g = Evaluate(t, input);
     const float lambda = lambdas_[TimeStep(t)];
-    return lambda * g + 0.5 * mu_ * g * g;
+    return lambda * g + 0.5 * Mu(lambda, g) * g * g;
   }
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
@@ -99,8 +103,12 @@ class Constraint : public Cost {
   static float& GlobalMu() { return mu_; }
   static void ScaleMu(float scale) { mu_ *= scale; }
   float Mu(Time t, const VectorXf& input) const {
-    if (!is_equality_ && Evaluate(t, input) < 0.0 &&
-        std::abs(Lambda(t)) < constants::kSmallNumber)
+    const float g = Evaluate(t, input);
+    return Mu(Lambda(t), g);
+  }
+  float Mu(float lambda, float g) const {
+    if (!is_equality_ && g <= constants::kSmallNumber &&
+        std::abs(lambda) <= constants::kSmallNumber)
       return 0.0;
     return mu_;
   }

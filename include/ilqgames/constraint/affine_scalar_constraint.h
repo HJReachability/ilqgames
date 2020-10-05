@@ -79,12 +79,13 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
     CHECK_EQ(hess->cols(), input.size());
     CHECK_EQ(grad->size(), input.size());
 
-    // Get current lambda.
+    // Get current lambda and mu.
     const float lambda = lambdas_[TimeStep(t)];
+    const float mu = Mu(t, input);
 
     // Compute gradient and Hessian.
-    (*grad) += lambda * a_ + mu_ * (hess_of_sq_ * input - b_ * a_);
-    (*hess) += mu_ * hess_of_sq_;
+    (*grad) += lambda * a_ + mu * (hess_of_sq_ * input - b_ * a_);
+    (*hess) += mu * hess_of_sq_;
   }
 
  private:

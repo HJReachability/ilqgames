@@ -93,17 +93,16 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 
   // Run until convergence or until the time runs out.
   Time elapsed = max_runtime_unconstrained_problem;
-  float squared_constraint_error = constants::kInfinity;
+  float max_constraint_error = constants::kInfinity;
   while (log->NumIterates() < params_.max_solver_iters &&
-         squared_constraint_error >
-             params_.squared_constraint_error_tolerance &&
+         max_constraint_error > params_.constraint_error_tolerance &&
          elapsed < max_runtime - timer_.RuntimeUpperBound()) {
     // Start loop timer.
     timer_.Tic();
 
     // Increment multiplers in player costs, and in parallel compute the total
     // squared constraint error.
-    squared_constraint_error = 0.0;
+    max_constraint_error = -constants::kInfinity;
     const OperatingPoint& op = log->FinalOperatingPoint();
     for (auto& pc : problem_->PlayerCosts()) {
       for (size_t kk = 0; kk < op.xs.size(); kk++) {
@@ -114,15 +113,16 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
         // Scale each lambda.
         for (const auto& constraint : pc.StateConstraints()) {
           const float constraint_error = constraint->Evaluate(t, x);
-          squared_constraint_error += constraint_error * constraint_error;
+          max_constraint_error =
+              std::max(max_constraint_error, constraint_error);
           constraint->IncrementLambda(t, constraint_error);
-          //          std::cout << squared_constraint_error << std::endl;
         }
 
         for (const auto& pair : pc.ControlConstraints()) {
           const float constraint_error =
               pair.second->Evaluate(t, us[pair.first]);
-          squared_constraint_error += constraint_error * constraint_error;
+          max_constraint_error =
+              std::max(max_constraint_error, constraint_error);
           pair.second->IncrementLambda(t, constraint_error);
         }
       }
@@ -132,8 +132,8 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     Constraint::ScaleMu(params_.geometric_quadratic_constraint_penalty_scaling);
 
     // Log squared constraint violation.
-    VLOG(2) << "Squared constraint violation at iteration "
-            << log->NumIterates() << " is " << squared_constraint_error;
+    VLOG(2) << "Max constraint violation at iteration " << log->NumIterates()
+            << " is " << max_constraint_error;
 
     // Update problem solution to make sure we pick up where we left off.
     problem_->OverwriteSolution(log->FinalOperatingPoint(),
@@ -152,6 +152,12 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 
     // Record loop time.
     elapsed += timer_.Toc();
+  }
+
+  // If we're still failing constraint satisfaction check mark as failure.
+  if (max_constraint_error > params_.constraint_error_tolerance) {
+    LOG(WARNING) << "Solver could not satisfy all constraints.";
+    if (success) *success = false;
   }
 
   // Update problem solution to make sure we get the final log output.
