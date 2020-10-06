@@ -64,9 +64,8 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
   Polyline2SignedDistanceConstraint(const Polyline2& polyline,
                                     const std::pair<Dimension, Dimension>& dims,
                                     float threshold, bool keep_left,
-                                    size_t num_time_steps,
                                     const std::string& name = "")
-      : TimeInvariantConstraint(false, num_time_steps, name),
+      : TimeInvariantConstraint(false, name),
         polyline_(polyline),
         xidx_(dims.first),
         yidx_(dims.second),

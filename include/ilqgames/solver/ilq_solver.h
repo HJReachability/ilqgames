@@ -69,16 +69,16 @@ class ILQSolver : public GameSolver {
   ILQSolver(const std::shared_ptr<Problem>& problem,
             const SolverParams& params = SolverParams())
       : GameSolver(problem, params),
-        linearization_(problem->NumTimeSteps()),
-        cost_quadraticization_(problem_->NumTimeSteps()),
+        linearization_(time::kNumTimeSteps),
+        cost_quadraticization_(time::kNumTimeSteps),
         last_kkt_squared_error_(constants::kInfinity) {
     // Set up LQ solver.
     if (params_.open_loop)
       lq_solver_.reset(
-          new LQOpenLoopSolver(problem_->Dynamics(), problem_->NumTimeSteps()));
+          new LQOpenLoopSolver(problem_->Dynamics(), time::kNumTimeSteps));
     else
       lq_solver_.reset(
-          new LQFeedbackSolver(problem_->Dynamics(), problem_->NumTimeSteps()));
+          new LQFeedbackSolver(problem_->Dynamics(), time::kNumTimeSteps));
 
     // If this system is flat then compute the linearization once, now.
     if (problem_->Dynamics()->TreatAsLinear())

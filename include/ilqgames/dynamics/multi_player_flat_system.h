@@ -107,8 +107,7 @@ class MultiPlayerFlatSystem : public MultiPlayerIntegrableSystem {
   virtual PlayerIndex NumPlayers() const = 0;
 
  protected:
-  MultiPlayerFlatSystem(Dimension xdim, Time time_step)
-      : MultiPlayerIntegrableSystem(xdim, time_step) {}
+  MultiPlayerFlatSystem(Dimension xdim) : MultiPlayerIntegrableSystem(xdim) {}
 
   // Discrete time approximation of the underlying linearized system.
   virtual void ComputeLinearizedSystem() const = 0;

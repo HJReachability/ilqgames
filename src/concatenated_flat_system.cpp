@@ -49,16 +49,14 @@
 namespace ilqgames {
 
 ConcatenatedFlatSystem::ConcatenatedFlatSystem(
-    const FlatSubsystemList& subsystems, Time time_step)
-    : MultiPlayerFlatSystem(
-          std::accumulate(
-              subsystems.begin(), subsystems.end(), 0,
-              [](Dimension total,
-                 const std::shared_ptr<SinglePlayerFlatSystem>& subsystem) {
-                CHECK_NOTNULL(subsystem.get());
-                return total + subsystem->XDim();
-              }),
-          time_step),
+    const FlatSubsystemList& subsystems)
+    : MultiPlayerFlatSystem(std::accumulate(
+          subsystems.begin(), subsystems.end(), 0,
+          [](Dimension total,
+             const std::shared_ptr<SinglePlayerFlatSystem>& subsystem) {
+            CHECK_NOTNULL(subsystem.get());
+            return total + subsystem->XDim();
+          })),
       subsystems_(subsystems) {
   // Populate subsystem start dimensions.
   subsystem_start_dims_.push_back(0);

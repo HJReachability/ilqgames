@@ -61,38 +61,6 @@
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 
-// ------------------------------- CONSTANTS -------------------------------- //
-
-namespace ilqgames {
-namespace constants {
-#ifdef __APPLE__
-// Acceleration due to gravity (m/s/s).
-static constexpr float kGravity = 9.81;
-
-// Small number for use in approximate equality checking.
-static constexpr float kSmallNumber = 1e-4;
-
-// Float precision infinity.
-static constexpr float kInfinity = std::numeric_limits<float>::infinity();
-
-// Constant for invalid values.
-static constexpr float kInvalidValue = std::numeric_limits<float>::quiet_NaN();
-
-#else
-// Acceleration due to gravity (m/s/s).
-static constexpr double kGravity = 9.81;
-
-// Small number for use in approximate equality checking.
-static constexpr double kSmallNumber = 1e-4;
-
-// Float precision infinity.
-static constexpr double kInfinity = std::numeric_limits<float>::infinity();
-
-// Constant for invalid values.
-static constexpr double kInvalidValue = std::numeric_limits<float>::quiet_NaN();
-#endif
-}  // namespace constants
-
 // ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
 
 using Eigen::MatrixXf;
@@ -105,7 +73,7 @@ using Dimension = int;
 using Point2 = Eigen::Vector2f;
 
 // Rename the system clock for easier usage.
-using clock = std::chrono::system_clock;
+using Clock = std::chrono::system_clock;
 
 #ifdef __APPLE__
 using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
@@ -143,6 +111,50 @@ using RefVector = std::vector<Eigen::Ref<VectorXf>>;
 
 // Empty struct for setting unused/unimplemented template args.
 struct Empty {};
+
+// ------------------------------- CONSTANTS -------------------------------- //
+
+namespace ilqgames {
+namespace constants {
+#ifdef __APPLE__
+// Acceleration due to gravity (m/s/s).
+static constexpr float kGravity = 9.81;
+
+// Small number for use in approximate equality checking.
+static constexpr float kSmallNumber = 1e-4;
+
+// Float precision infinity.
+static constexpr float kInfinity = std::numeric_limits<float>::infinity();
+
+// Constant for invalid values.
+static constexpr float kInvalidValue = std::numeric_limits<float>::quiet_NaN();
+
+#else
+// Acceleration due to gravity (m/s/s).
+static constexpr double kGravity = 9.81;
+
+// Small number for use in approximate equality checking.
+static constexpr double kSmallNumber = 1e-4;
+
+// Float precision infinity.
+static constexpr double kInfinity = std::numeric_limits<float>::infinity();
+
+// Constant for invalid values.
+static constexpr double kInvalidValue = std::numeric_limits<float>::quiet_NaN();
+#endif
+}  // namespace constants
+
+namespace time {
+// Time discretization (s).
+static constexpr Time kTimeStep = 0.1;
+
+// Time horizon (s).
+static constexpr Time kTimeHorizon = 10.0;
+
+// Number of time steps.
+static constexpr size_t kNumTimeSteps =
+    static_cast<size_t>((kTimeHorizon + constants::kSmallNumber) / kTimeStep);
+}  // namespace time
 
 // ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
 

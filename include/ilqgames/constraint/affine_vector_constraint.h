@@ -56,8 +56,8 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
  public:
   ~AffineVectorConstraint() {}
   AffineVectorConstraint(const MatrixXf& A, const VectorXf& b, bool is_equality,
-                         size_t num_time_steps, const std::string& name = "")
-      : TimeInvariantConstraint(is_equality, num_time_steps, name),
+                         const std::string& name = "")
+      : TimeInvariantConstraint(is_equality, name),
         A_(A),
         b_(b),
         ATA_(A.transpose() * A),
@@ -83,7 +83,7 @@ class AffineVectorConstraint : public TimeInvariantConstraint {
     CHECK_EQ(grad->size(), input.size());
 
     // Get current lambda and mu.
-    const float lambda = lambdas_[TimeStep(t)];
+    const float lambda = Lambda(t);
     const float mu = Mu(t, input);
 
     // Compute value of the constraint.

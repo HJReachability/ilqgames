@@ -61,9 +61,9 @@ class ProximityConstraint : public TimeInvariantConstraint {
   ~ProximityConstraint() {}
   ProximityConstraint(const std::pair<Dimension, Dimension>& dims1,
                       const std::pair<Dimension, Dimension>& dims2,
-                      float threshold, bool keep_within, size_t num_time_steps,
+                      float threshold, bool keep_within,
                       const std::string& name = "")
-      : TimeInvariantConstraint(false, num_time_steps, name),
+      : TimeInvariantConstraint(false, name),
         xidx1_(dims1.first),
         yidx1_(dims1.second),
         xidx2_(dims2.first),

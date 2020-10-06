@@ -127,11 +127,11 @@ void ModifiedAir3DExample::ConstructPlayerCosts() {
   // Constrain control effort.
   // const auto omega_max_constraint =
   // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kOmegaIdx, kOmegaMax, true, kNumTimeSteps,"Omega Constraint
+  //     Dyn::kOmegaIdx, kOmegaMax, true, "Omega Constraint
   //     (Max)");
   // const auto omega_min_constraint =
   // std::make_shared<SingleDimensionConstraint>(
-  //     Dyn::kOmegaIdx, -kOmegaMax, false,kNumTimeSteps, "Omega Constraint
+  //     Dyn::kOmegaIdx, -kOmegaMax, false, "Omega Constraint
   //     (Min)");
   // p1_cost.AddControlConstraint(0, omega_max_constraint);
   // p1_cost.AddControlConstraint(0, omega_min_constraint);

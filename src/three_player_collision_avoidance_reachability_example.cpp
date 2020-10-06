@@ -142,51 +142,45 @@ void ThreePlayerCollisionAvoidanceReachabilityExample::ConstructPlayerCosts() {
 
   // Constrain control input.
   const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(P1::kOmegaIdx, kOmegaMax,
-                                                  true, kNumTimeSteps,
-                                                  "Omega Constraint (Max)");
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, kOmegaMax, true, "Omega Constraint (Max)");
   const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(P1::kOmegaIdx, -kOmegaMax,
-                                                  false, kNumTimeSteps,
-                                                  "Omega Constraint (Min)");
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, -kOmegaMax, false, "Omega Constraint (Min)");
   const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, kAMax, true, kNumTimeSteps, "Acceleration Constraint (Max)");
+      P1::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
   const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P1::kAIdx, -kAMax, false, kNumTimeSteps, "Acceleration Constraint (Min)");
+      P1::kAIdx, -kAMax, false, "Acceleration Constraint (Min)");
   p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
   p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
   p1_cost.AddControlConstraint(0, p1_a_max_constraint);
   p1_cost.AddControlConstraint(0, p1_a_min_constraint);
 
   const auto p2_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(P2::kOmegaIdx, kOmegaMax,
-                                                  true, kNumTimeSteps,
-                                                  "Omega Constraint (Max)");
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, kOmegaMax, true, "Omega Constraint (Max)");
   const auto p2_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(P2::kOmegaIdx, -kOmegaMax,
-                                                  false, kNumTimeSteps,
-                                                  "Omega Constraint (Min)");
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, -kOmegaMax, false, "Omega Constraint (Min)");
   const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, kAMax, true, kNumTimeSteps, "Acceleration Constraint (Max)");
+      P2::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
   const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P2::kAIdx, -kAMax, false, kNumTimeSteps, "Acceleration Constraint (Min)");
+      P2::kAIdx, -kAMax, false, "Acceleration Constraint (Min)");
   p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
   p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
   p2_cost.AddControlConstraint(1, p2_a_max_constraint);
   p2_cost.AddControlConstraint(1, p2_a_min_constraint);
 
   const auto p3_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(P3::kOmegaIdx, kOmegaMax,
-                                                  true, kNumTimeSteps,
-                                                  "Omega Constraint (Max)");
+      std::make_shared<SingleDimensionConstraint>(
+          P3::kOmegaIdx, kOmegaMax, true, "Omega Constraint (Max)");
   const auto p3_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(P3::kOmegaIdx, -kOmegaMax,
-                                                  false, kNumTimeSteps,
-                                                  "Omega Constraint (Min)");
+      std::make_shared<SingleDimensionConstraint>(
+          P3::kOmegaIdx, -kOmegaMax, false, "Omega Constraint (Min)");
   const auto p3_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
-      P3::kAIdx, kAMax, true, kNumTimeSteps, "Acceleration Constraint (Max)");
+      P3::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
   const auto p3_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
-      P3::kAIdx, -kAMax, false, kNumTimeSteps, "Acceleration Constraint (Min)");
+      P3::kAIdx, -kAMax, false, "Acceleration Constraint (Min)");
   p3_cost.AddControlConstraint(2, p3_omega_max_constraint);
   p3_cost.AddControlConstraint(2, p3_omega_min_constraint);
   p3_cost.AddControlConstraint(2, p3_a_max_constraint);

@@ -53,18 +53,13 @@
 #include <memory>
 #include <vector>
 
-// Time horizon and step.
-DEFINE_double(time_horizon, 10.0, "Total time horizon (s).");
-DEFINE_double(time_step, 0.1, "Length of discrete time step (s).");
+// // Time horizon and step.
+// DEFINE_double(time_horizon, 10.0, "Total time horizon (s).");
+// DEFINE_double(time_step, 0.1, "Length of discrete time step (s).");
 
 namespace ilqgames {
 
-Problem::Problem()
-    : time_horizon_(FLAGS_time_horizon),
-      time_step_(FLAGS_time_step),
-      num_time_steps_(static_cast<size_t>(
-          (constants::kSmallNumber + FLAGS_time_horizon) / FLAGS_time_step)),
-      initialized_(false) {}
+Problem::Problem() : initialized_(false) {}
 
 size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
                                       Time planner_runtime,

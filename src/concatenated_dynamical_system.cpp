@@ -50,15 +50,13 @@ namespace ilqgames {
 
 ConcatenatedDynamicalSystem::ConcatenatedDynamicalSystem(
     const SubsystemList& subsystems, Time time_step)
-    : MultiPlayerDynamicalSystem(
-          std::accumulate(subsystems.begin(), subsystems.end(), 0,
-                          [](Dimension total,
-                             const std::shared_ptr<SinglePlayerDynamicalSystem>&
-                                 subsystem) {
-                            CHECK_NOTNULL(subsystem.get());
-                            return total + subsystem->XDim();
-                          }),
-          time_step),
+    : MultiPlayerDynamicalSystem(std::accumulate(
+          subsystems.begin(), subsystems.end(), 0,
+          [](Dimension total,
+             const std::shared_ptr<SinglePlayerDynamicalSystem>& subsystem) {
+            CHECK_NOTNULL(subsystem.get());
+            return total + subsystem->XDim();
+          })),
       subsystems_(subsystems) {
   // Populate subsystem start dimensions.
   subsystem_start_dims_.push_back(0);

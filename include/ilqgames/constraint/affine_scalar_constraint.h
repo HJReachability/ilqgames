@@ -56,8 +56,8 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
  public:
   ~AffineScalarConstraint() {}
   AffineScalarConstraint(const VectorXf& a, float b, bool is_equality,
-                         size_t num_time_steps, const std::string& name = "")
-      : TimeInvariantConstraint(is_equality, num_time_steps, name),
+                         const std::string& name = "")
+      : TimeInvariantConstraint(is_equality, name),
         a_(a),
         b_(b),
         hess_of_sq_(a * a.transpose()) {}
@@ -80,7 +80,7 @@ class AffineScalarConstraint : public TimeInvariantConstraint {
     CHECK_EQ(grad->size(), input.size());
 
     // Get current lambda and mu.
-    const float lambda = lambdas_[TimeStep(t)];
+    const float lambda = Lambda(t);
     const float mu = Mu(t, input);
 
     // Compute gradient and Hessian.

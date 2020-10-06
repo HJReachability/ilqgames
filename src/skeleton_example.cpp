@@ -184,18 +184,18 @@ void SkeletonExample::ConstructPlayerCosts() {
   // Step 3. Try uncommenting these blocks.
   // const auto p1_omega_max_constraint =
   //     std::make_shared<SingleDimensionConstraint>(
-  //         P1::kOmegaIdx, kOmegaMax, true,  kNumTimeSteps,"Omega Constraint
+  //         P1::kOmegaIdx, kOmegaMax, true,  "Omega Constraint
   //         (Max)");
   // const auto p1_omega_min_constraint =
   //     std::make_shared<SingleDimensionConstraint>(
-  //         P1::kOmegaIdx, -kOmegaMax, false, kNumTimeSteps,"Omega Constraint
+  //         P1::kOmegaIdx, -kOmegaMax, false, "Omega Constraint
   //         (Min)");
   // const auto p1_a_max_constraint =
   // std::make_shared<SingleDimensionConstraint>(
-  //     P1::kAIdx, kAMax, true, kNumTimeSteps,"Acceleration Constraint (Max)");
+  //     P1::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
   // const auto p1_a_min_constraint =
   // std::make_shared<SingleDimensionConstraint>(
-  //     P1::kAIdx, -kAMax, false,kNumTimeSteps, "Acceleration Constraint
+  //     P1::kAIdx, -kAMax, false, "Acceleration Constraint
   //     (Min)");
   // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
   // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
@@ -204,18 +204,18 @@ void SkeletonExample::ConstructPlayerCosts() {
 
   // const auto p2_omega_max_constraint =
   //     std::make_shared<SingleDimensionConstraint>(
-  //         P2::kOmegaIdx, kOmegaMax, true, kNumTimeSteps,"Omega Constraint
+  //         P2::kOmegaIdx, kOmegaMax, true, "Omega Constraint
   //         (Max)");
   // const auto p2_omega_min_constraint =
   //     std::make_shared<SingleDimensionConstraint>(
-  //         P2::kOmegaIdx, -kOmegaMax, false, kNumTimeSteps,"Omega Constraint
+  //         P2::kOmegaIdx, -kOmegaMax, false, "Omega Constraint
   //         (Min)");
   // const auto p2_a_max_constraint =
   // std::make_shared<SingleDimensionConstraint>(
-  //     P2::kAIdx, kAMax, true, kNumTimeSteps,"Acceleration Constraint (Max)");
+  //     P2::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
   // const auto p2_a_min_constraint =
   // std::make_shared<SingleDimensionConstraint>(
-  //     P2::kAIdx, -kAMax, false, kNumTimeSteps,"Acceleration Constraint
+  //     P2::kAIdx, -kAMax, false, "Acceleration Constraint
   //     (Min)");
   // p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
   // p2_cost.AddControlConstraint(1, p2_omega_min_constraint);

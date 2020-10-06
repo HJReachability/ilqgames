@@ -82,7 +82,7 @@ class Constraint : public Cost {
   virtual float Evaluate(Time t, const VectorXf& input) const = 0;
   float EvaluateAugmentedLagrangian(Time t, const VectorXf& input) const {
     const float g = Evaluate(t, input);
-    const float lambda = lambdas_[TimeStep(t)];
+    const float lambda = lambdas_[TimeIndex(t)];
     return lambda * g + 0.5 * Mu(lambda, g) * g * g;
   }
 
@@ -93,10 +93,10 @@ class Constraint : public Cost {
 
   // Accessors and setters.
   bool IsEquality() const { return is_equality_; }
-  float& Lambda(Time t) { return lambdas_[TimeStep(t)]; }
-  float Lambda(Time t) const { return lambdas_[TimeStep(t)]; }
+  float& Lambda(Time t) { return lambdas_[TimeIndex(t)]; }
+  float Lambda(Time t) const { return lambdas_[TimeIndex(t)]; }
   void IncrementLambda(Time t, float value) {
-    const size_t kk = TimeStep(t);
+    const size_t kk = TimeIndex(t);
     const float new_lambda = lambdas_[kk] + mu_ * value;
     lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
   }
@@ -117,11 +117,10 @@ class Constraint : public Cost {
   }
 
  protected:
-  explicit Constraint(bool is_equality, size_t num_time_steps,
-                      const std::string& name)
+  explicit Constraint(bool is_equality, const std::string& name)
       : Cost(1.0, name),
         is_equality_(is_equality),
-        lambdas_(num_time_steps, 0.0) {}
+        lambdas_(time::kNumTimeSteps, 0.0) {}
 
   // Modify derivatives to account for the multipliers and the quadratic term in
   // the augmented Lagrangian. The inputs are the derivatives of g in the

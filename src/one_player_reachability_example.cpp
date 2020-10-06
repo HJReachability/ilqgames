@@ -122,12 +122,10 @@ void OnePlayerReachabilityExample::ConstructPlayerCosts() {
   // Constrain control effort.
   const auto p1_omega_max_constraint =
       std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, true,
-                                                  kNumTimeSteps,
                                                   "Input Constraint (Max)");
   const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kOmegaMax,
-                                                  false, kNumTimeSteps,
-                                                  "Input Constraint (Min)");
+      std::make_shared<SingleDimensionConstraint>(
+          kP1OmegaIdx, -kOmegaMax, false, "Input Constraint (Min)");
   p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
   p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 

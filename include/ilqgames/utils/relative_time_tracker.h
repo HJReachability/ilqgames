@@ -55,19 +55,20 @@ class RelativeTimeTracker {
  public:
   virtual ~RelativeTimeTracker() {}
 
-  // Access and reset the initial time and time step.
+  // Access and reset initial time.
   static void ResetInitialTime(Time t0) { initial_time_ = t0; };
-  static void ResetTimeStep(Time dt) { time_step_ = dt; }
   static Time InitialTime() { return initial_time_; }
-  static Time TimeStep() { return time_step_; }
 
   // Convert between time step and initial time.
-  static Time AbsoluteTime(size_t kk) {
-    return initial_time_ + static_cast<Time>(kk) * time_step_;
+  static Time RelativeTime(size_t kk) {
+    return static_cast<Time>(kk) * time::kTimeStep;
   }
-  static size_t TimeStep(Time t) {
+  static Time AbsoluteTime(size_t kk) {
+    return initial_time_ + static_cast<Time>(kk) * time::kTimeStep;
+  }
+  static size_t TimeIndex(Time t) {
     CHECK_GE(t, initial_time_);
-    return static_cast<size_t>((t - initial_time_) / time_step_);
+    return static_cast<size_t>((t - initial_time_) / time::kTimeStep);
   }
 
   // Access the name of this object.
@@ -81,12 +82,6 @@ class RelativeTimeTracker {
 
   // Initial time.
   static Time initial_time_;
-
-  // Time step.
-  static Time time_step_;
-
-  // Time horizon.
-
 };  //\class Cost
 
 }  // namespace ilqgames

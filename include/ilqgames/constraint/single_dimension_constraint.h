@@ -58,8 +58,8 @@ class SingleDimensionConstraint : public TimeInvariantConstraint {
  public:
   ~SingleDimensionConstraint() {}
   SingleDimensionConstraint(Dimension dim, float threshold, bool keep_below,
-                            size_t num_time_steps, const std::string& name = "")
-      : TimeInvariantConstraint(false, num_time_steps, name),
+                            const std::string& name = "")
+      : TimeInvariantConstraint(false, name),
         dim_(dim),
         threshold_(threshold),
         keep_below_(keep_below) {}
@@ -80,7 +80,7 @@ class SingleDimensionConstraint : public TimeInvariantConstraint {
     CHECK_EQ(grad->size(), input.size());
 
     // Get current lambda.
-    const float lambda = lambdas_[TimeStep(t)];
+    const float lambda = Lambda(t);
 
     // Compute gradient and Hessian.
     const float sign = (keep_below_) ? 1.0 : -1.0;

@@ -69,9 +69,8 @@ class TimeInvariantConstraint : public Constraint {
                             VectorXf* grad) const = 0;
 
  protected:
-  explicit TimeInvariantConstraint(bool is_equality, size_t num_time_steps,
-                                   const std::string& name)
-      : Constraint(is_equality, num_time_steps, name) {}
+  explicit TimeInvariantConstraint(bool is_equality, const std::string& name)
+      : Constraint(is_equality, name) {}
 };  // namespace TimeInvariantConstraint
 
 }  // namespace ilqgames

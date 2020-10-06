@@ -79,7 +79,7 @@ using Dyn = Air3D;
 }  // anonymous namespace
 
 void Air3DExample::ConstructDynamics() {
-  dynamics_.reset(new Dyn(FLAGS_ve, FLAGS_vp, time_step_));
+  dynamics_.reset(new Dyn(FLAGS_ve, FLAGS_vp));
 }
 
 void Air3DExample::ConstructInitialState() {
@@ -103,24 +103,20 @@ void Air3DExample::ConstructPlayerCosts() {
 
   // Constrain control effort.
   const auto p1_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega1Idx, kOmegaMax,
-                                                  true, kNumTimeSteps,
-                                                  "Omega Constraint (Max)");
+      std::make_shared<SingleDimensionConstraint>(
+          Dyn::kOmega1Idx, kOmegaMax, true, "Omega Constraint (Max)");
   const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega1Idx, -kOmegaMax,
-                                                  false, kNumTimeSteps,
-                                                  "Omega Constraint (Min)");
+      std::make_shared<SingleDimensionConstraint>(
+          Dyn::kOmega1Idx, -kOmegaMax, false, "Omega Constraint (Min)");
   p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
   p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
   const auto p2_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega1Idx, kOmegaMax,
-                                                  true, kNumTimeSteps,
-                                                  "Omega Constraint (Max)");
+      std::make_shared<SingleDimensionConstraint>(
+          Dyn::kOmega1Idx, kOmegaMax, true, "Omega Constraint (Max)");
   const auto p2_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega2Idx, -kOmegaMax,
-                                                  false, kNumTimeSteps,
-                                                  "Omega Constraint (Min)");
+      std::make_shared<SingleDimensionConstraint>(
+          Dyn::kOmega2Idx, -kOmegaMax, false, "Omega Constraint (Min)");
   p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
   p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
 

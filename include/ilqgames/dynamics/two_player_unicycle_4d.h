@@ -58,8 +58,7 @@ namespace ilqgames {
 class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
  public:
   ~TwoPlayerUnicycle4D() {}
-  TwoPlayerUnicycle4D(Time time_step)
-      : MultiPlayerDynamicalSystem(kNumXDims, time_step) {}
+  TwoPlayerUnicycle4D() : MultiPlayerDynamicalSystem(kNumXDims) {}
 
   // Compute time derivative of state.
   VectorXf Evaluate(Time t, const VectorXf& x,

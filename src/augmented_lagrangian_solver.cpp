@@ -108,7 +108,7 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     const OperatingPoint& op = log->FinalOperatingPoint();
     for (auto& pc : problem_->PlayerCosts()) {
       for (size_t kk = 0; kk < op.xs.size(); kk++) {
-        const Time t = op.t0 + problem_->TimeStep() * static_cast<float>(kk);
+        const Time t = op.t0 + time::kTimeStep * static_cast<float>(kk);
         const auto& x = op.xs[kk];
         const auto& us = op.us[kk];
 

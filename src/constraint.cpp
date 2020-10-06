@@ -63,7 +63,7 @@ float Constraint::mu_ = 10.0;
 void Constraint::ModifyDerivatives(Time t, float g, float* dx, float* ddx,
                                    float* dy, float* ddy, float* dxdy) const {
   // Unpack lambda.
-  const float lambda = lambdas_[TimeStep(t)];
+  const float lambda = lambdas_[TimeIndex(t)];
   const float mu = Mu(lambda, g);
 
   // Assumes that these are just the derivatives of g(x, y), and modifies them

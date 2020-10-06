@@ -97,7 +97,7 @@ class GameSolver {
   // Create a new log. This may be overridden by derived classes (e.g., to
   // change the name of the log).
   virtual std::shared_ptr<SolverLog> CreateNewLog() const {
-    return std::make_shared<SolverLog>(problem_->TimeStep());
+    return std::make_shared<SolverLog>();
   }
 
   // Store the underlying problem.

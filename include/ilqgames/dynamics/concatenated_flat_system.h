@@ -53,7 +53,7 @@ namespace ilqgames {
 class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
  public:
   ~ConcatenatedFlatSystem() {}
-  ConcatenatedFlatSystem(const FlatSubsystemList& subsystems, Time time_step);
+  ConcatenatedFlatSystem(const FlatSubsystemList& subsystems);
 
   // Compute time derivative of state.
   VectorXf Evaluate(const VectorXf& x, const std::vector<VectorXf>& us) const;

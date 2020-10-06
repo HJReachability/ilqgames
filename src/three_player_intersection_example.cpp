@@ -218,13 +218,13 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_r_constraint(
-      new Polyline2SignedDistanceConstraint(
-          lane1, {kP1XIdx, kP1YIdx}, kLaneHalfWidth, !kOrientedRight,
-          kNumTimeSteps, "LaneRightBoundary"));
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_l_constraint(
       new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
                                             -kLaneHalfWidth, kOrientedRight,
-                                            kNumTimeSteps, "LaneLeftBoundary"));
+                                            "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
   // p1_cost.AddStateConstraint(p1_lane_r_constraint);
   // p1_cost.AddStateConstraint(p1_lane_l_constraint);
@@ -233,13 +233,13 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
-      new Polyline2SignedDistanceConstraint(
-          lane2, {kP2XIdx, kP2YIdx}, kLaneHalfWidth, !kOrientedRight,
-          kNumTimeSteps, "LaneRightBoundary"));
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_l_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
                                             -kLaneHalfWidth, kOrientedRight,
-                                            kNumTimeSteps, "LaneLeftBoundary"));
+                                            "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
   // p2_cost.AddStateConstraint(p2_lane_r_constraint);
   // p2_cost.AddStateConstraint(p2_lane_l_constraint);
@@ -248,22 +248,22 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_r_constraint(
-      new Polyline2SignedDistanceConstraint(
-          lane3, {kP3XIdx, kP3YIdx}, kLaneHalfWidth, !kOrientedRight,
-          kNumTimeSteps, "LaneRightBoundary"));
+      new Polyline2SignedDistanceConstraint(lane3, {kP3XIdx, kP3YIdx},
+                                            kLaneHalfWidth, !kOrientedRight,
+                                            "LaneRightBoundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_l_constraint(
       new Polyline2SignedDistanceConstraint(lane3, {kP3XIdx, kP3YIdx},
                                             -kLaneHalfWidth, kOrientedRight,
-                                            kNumTimeSteps, "LaneLeftBoundary"));
+                                            "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
   // p3_cost.AddStateConstraint(p3_lane_r_constraint);
   // p3_cost.AddStateConstraint(p3_lane_l_constraint);
 
   // Max/min/nominal speed costs.
   const auto p1_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
-      kP1VIdx, kMinV, !kOrientedRight, kNumTimeSteps, "MinV");
+      kP1VIdx, kMinV, !kOrientedRight, "MinV");
   const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
-      kP1VIdx, kP1MaxV, kOrientedRight, kNumTimeSteps, "MaxV");
+      kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
   // p1_cost.AddStateConstraint(p1_min_v_constraint);
@@ -271,9 +271,9 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
   const auto p2_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
-      kP2VIdx, kMinV, !kOrientedRight, kNumTimeSteps, "MinV");
+      kP2VIdx, kMinV, !kOrientedRight, "MinV");
   const auto p2_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
-      kP2VIdx, kP2MaxV, kOrientedRight, kNumTimeSteps, "MaxV");
+      kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
   // p2_cost.AddStateConstraint(p2_min_v_constraint);
@@ -281,9 +281,9 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
   const auto p3_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
-      kP3VIdx, kMinV, !kOrientedRight, kNumTimeSteps, "MinV");
+      kP3VIdx, kMinV, !kOrientedRight, "MinV");
   const auto p3_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
-      kP3VIdx, kP3MaxV, kOrientedRight, kNumTimeSteps, "MaxV");
+      kP3VIdx, kP3MaxV, kOrientedRight, "MaxV");
   const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
   // p3_cost.AddStateConstraint(p3_min_v_constraint);
@@ -293,11 +293,10 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   // Penalize control effort.
   const auto p1_omega_max_constraint =
       std::make_shared<SingleDimensionConstraint>(
-          kP1OmegaIdx, kMaxOmega, kOrientedRight, kNumTimeSteps, "SteeringMax");
+          kP1OmegaIdx, kMaxOmega, kOrientedRight, "SteeringMax");
   const auto p1_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kMaxOmega,
-                                                  !kOrientedRight,
-                                                  kNumTimeSteps, "SteeringMin");
+      std::make_shared<SingleDimensionConstraint>(
+          kP1OmegaIdx, -kMaxOmega, !kOrientedRight, "SteeringMin");
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   const auto p1_jerk_cost =
@@ -308,13 +307,11 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
   const auto p2_omega_max_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP2OmegaIdx, kMaxOmega,
-                                                  !kOrientedRight,
-                                                  kNumTimeSteps, "SteeringMax");
+      std::make_shared<SingleDimensionConstraint>(
+          kP2OmegaIdx, kMaxOmega, !kOrientedRight, "SteeringMax");
   const auto p2_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP2OmegaIdx, -kMaxOmega,
-                                                  kOrientedRight, kNumTimeSteps,
-                                                  "SteeringMin");
+      std::make_shared<SingleDimensionConstraint>(
+          kP2OmegaIdx, -kMaxOmega, kOrientedRight, "SteeringMin");
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
   const auto p2_jerk_cost =
@@ -326,11 +323,10 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
 
   const auto p3_omega_max_constraint =
       std::make_shared<SingleDimensionConstraint>(
-          kP3OmegaIdx, kMaxOmega, kOrientedRight, kNumTimeSteps, "SteeringMax");
+          kP3OmegaIdx, kMaxOmega, kOrientedRight, "SteeringMax");
   const auto p3_omega_min_constraint =
-      std::make_shared<SingleDimensionConstraint>(kP3OmegaIdx, -kMaxOmega,
-                                                  !kOrientedRight,
-                                                  kNumTimeSteps, "SteeringMin");
+      std::make_shared<SingleDimensionConstraint>(
+          kP3OmegaIdx, -kMaxOmega, !kOrientedRight, "SteeringMin");
   const auto p3_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
   const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP3AIdx,
@@ -372,33 +368,33 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   constexpr bool kKeepClose = true;
   const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
       new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              kMinProximity, !kKeepClose,
                               "ProximityConstraintP2"));
   const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
       new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
-                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              kMinProximity, !kKeepClose,
                               "ProximityConstraintP3"));
   p1_cost.AddStateConstraint(p1p2_proximity_constraint);
   p1_cost.AddStateConstraint(p1p3_proximity_constraint);
 
   const std::shared_ptr<ProximityConstraint> p2p1_proximity_constraint(
       new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
-                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              kMinProximity, !kKeepClose,
                               "ProximityConstraintP1"));
   const std::shared_ptr<ProximityConstraint> p2p3_proximity_constraint(
       new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
-                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              kMinProximity, !kKeepClose,
                               "ProximityConstraintP3"));
   p2_cost.AddStateConstraint(p2p1_proximity_constraint);
   p2_cost.AddStateConstraint(p2p3_proximity_constraint);
 
   const std::shared_ptr<ProximityConstraint> p3p1_proximity_constraint(
       new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx},
-                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              kMinProximity, !kKeepClose,
                               "ProximityConstraintP1"));
   const std::shared_ptr<ProximityConstraint> p3p2_proximity_constraint(
       new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx},
-                              kMinProximity, !kKeepClose, kNumTimeSteps,
+                              kMinProximity, !kKeepClose,
                               "ProximityConstraintP2"));
   p3_cost.AddStateConstraint(p3p1_proximity_constraint);
   p3_cost.AddStateConstraint(p3p2_proximity_constraint);

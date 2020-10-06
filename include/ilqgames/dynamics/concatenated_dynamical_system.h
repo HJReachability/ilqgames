@@ -55,7 +55,7 @@ namespace ilqgames {
 class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
  public:
   ~ConcatenatedDynamicalSystem() {}
-  ConcatenatedDynamicalSystem(const SubsystemList& subsystems, Time time_step);
+  ConcatenatedDynamicalSystem(const SubsystemList& subsystems);
 
   // Compute time derivative of state.
   VectorXf Evaluate(Time t, const VectorXf& x,
