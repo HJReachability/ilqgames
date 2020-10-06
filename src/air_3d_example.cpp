@@ -41,7 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/air_3d.h>
@@ -102,19 +102,27 @@ void Air3DExample::ConstructPlayerCosts() {
   p2_cost.AddControlCost(1, control_cost);
 
   // Constrain control effort.
-  const auto p1_omega_max_constraint = std::make_shared<SingleDimensionBarrier>(
-      Dyn::kOmega1Idx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p1_omega_min_constraint = std::make_shared<SingleDimensionBarrier>(
-      Dyn::kOmega1Idx, -kOmegaMax, true, "Omega Constraint (Min)");
-  p1_cost.AddControlBarrier(0, p1_omega_max_constraint);
-  p1_cost.AddControlBarrier(0, p1_omega_min_constraint);
+  const auto p1_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega1Idx, kOmegaMax,
+                                                  true, kNumTimeSteps,
+                                                  "Omega Constraint (Max)");
+  const auto p1_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega1Idx, -kOmegaMax,
+                                                  false, kNumTimeSteps,
+                                                  "Omega Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
-  const auto p2_omega_max_constraint = std::make_shared<SingleDimensionBarrier>(
-      Dyn::kOmega1Idx, kOmegaMax, false, "Omega Constraint (Max)");
-  const auto p2_omega_min_constraint = std::make_shared<SingleDimensionBarrier>(
-      Dyn::kOmega2Idx, -kOmegaMax, true, "Omega Constraint (Min)");
-  p2_cost.AddControlBarrier(1, p2_omega_max_constraint);
-  p2_cost.AddControlBarrier(1, p2_omega_min_constraint);
+  const auto p2_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega1Idx, kOmegaMax,
+                                                  true, kNumTimeSteps,
+                                                  "Omega Constraint (Max)");
+  const auto p2_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(Dyn::kOmega2Idx, -kOmegaMax,
+                                                  false, kNumTimeSteps,
+                                                  "Omega Constraint (Min)");
+  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
 
   // Target cost.
   const float kTargetRadius = 5.0;

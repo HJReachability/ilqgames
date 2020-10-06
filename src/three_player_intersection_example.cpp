@@ -41,10 +41,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/polyline2_signed_distance_barrier.h>
-#include <ilqgames/constraint/barrier/proximity_barrier.h>
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -218,116 +217,126 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<Polyline2SignedDistanceBarrier> p1_lane_r_barrier(
-      new Polyline2SignedDistanceBarrier(lane1, {kP1XIdx, kP1YIdx},
-                                         kLaneHalfWidth, !kOrientedRight,
-                                         "LaneRightBoundary"));
-  const std::shared_ptr<Polyline2SignedDistanceBarrier> p1_lane_l_barrier(
-      new Polyline2SignedDistanceBarrier(lane1, {kP1XIdx, kP1YIdx},
-                                         -kLaneHalfWidth, kOrientedRight,
-                                         "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(
+          lane1, {kP1XIdx, kP1YIdx}, kLaneHalfWidth, !kOrientedRight,
+          kNumTimeSteps, "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            kNumTimeSteps, "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  // p1_cost.AddStateBarrier(p1_lane_r_barrier);
-  // p1_cost.AddStateBarrier(p1_lane_l_barrier);
+  // p1_cost.AddStateConstraint(p1_lane_r_constraint);
+  // p1_cost.AddStateConstraint(p1_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<Polyline2SignedDistanceBarrier> p2_lane_r_barrier(
-      new Polyline2SignedDistanceBarrier(lane2, {kP2XIdx, kP2YIdx},
-                                         kLaneHalfWidth, !kOrientedRight,
-                                         "LaneRightBoundary"));
-  const std::shared_ptr<Polyline2SignedDistanceBarrier> p2_lane_l_barrier(
-      new Polyline2SignedDistanceBarrier(lane2, {kP2XIdx, kP2YIdx},
-                                         -kLaneHalfWidth, kOrientedRight,
-                                         "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(
+          lane2, {kP2XIdx, kP2YIdx}, kLaneHalfWidth, !kOrientedRight,
+          kNumTimeSteps, "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            kNumTimeSteps, "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  // p2_cost.AddStateBarrier(p2_lane_r_barrier);
-  // p2_cost.AddStateBarrier(p2_lane_l_barrier);
+  // p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  // p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
-  const std::shared_ptr<Polyline2SignedDistanceBarrier> p3_lane_r_barrier(
-      new Polyline2SignedDistanceBarrier(lane3, {kP3XIdx, kP3YIdx},
-                                         kLaneHalfWidth, !kOrientedRight,
-                                         "LaneRightBoundary"));
-  const std::shared_ptr<Polyline2SignedDistanceBarrier> p3_lane_l_barrier(
-      new Polyline2SignedDistanceBarrier(lane3, {kP3XIdx, kP3YIdx},
-                                         -kLaneHalfWidth, kOrientedRight,
-                                         "LaneLeftBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_r_constraint(
+      new Polyline2SignedDistanceConstraint(
+          lane3, {kP3XIdx, kP3YIdx}, kLaneHalfWidth, !kOrientedRight,
+          kNumTimeSteps, "LaneRightBoundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_l_constraint(
+      new Polyline2SignedDistanceConstraint(lane3, {kP3XIdx, kP3YIdx},
+                                            -kLaneHalfWidth, kOrientedRight,
+                                            kNumTimeSteps, "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  // p3_cost.AddStateBarrier(p3_lane_r_barrier);
-  // p3_cost.AddStateBarrier(p3_lane_l_barrier);
+  // p3_cost.AddStateConstraint(p3_lane_r_constraint);
+  // p3_cost.AddStateConstraint(p3_lane_l_constraint);
 
   // Max/min/nominal speed costs.
-  const auto p1_min_v_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP1VIdx, kMinV, kOrientedRight, "MinV");
-  const auto p1_max_v_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP1VIdx, kP1MaxV, !kOrientedRight, "MaxV");
+  const auto p1_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kMinV, !kOrientedRight, kNumTimeSteps, "MinV");
+  const auto p1_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP1VIdx, kP1MaxV, kOrientedRight, kNumTimeSteps, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  // p1_cost.AddStateBarrier(p1_min_v_barrier);
-  // p1_cost.AddStateBarrier(p1_max_v_barrier);
+  // p1_cost.AddStateConstraint(p1_min_v_constraint);
+  // p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
-  const auto p2_min_v_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP2VIdx, kMinV, kOrientedRight, "MinV");
-  const auto p2_max_v_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP2VIdx, kP2MaxV, !kOrientedRight, "MaxV");
+  const auto p2_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kMinV, !kOrientedRight, kNumTimeSteps, "MinV");
+  const auto p2_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP2VIdx, kP2MaxV, kOrientedRight, kNumTimeSteps, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  // p2_cost.AddStateBarrier(p2_min_v_barrier);
-  // p2_cost.AddStateBarrier(p2_max_v_barrier);
+  // p2_cost.AddStateConstraint(p2_min_v_constraint);
+  // p2_cost.AddStateConstraint(p2_max_v_constraint);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
-  const auto p3_min_v_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP3VIdx, kMinV, kOrientedRight, "MinV");
-  const auto p3_max_v_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP3VIdx, kP3MaxV, !kOrientedRight, "MaxV");
+  const auto p3_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kMinV, !kOrientedRight, kNumTimeSteps, "MinV");
+  const auto p3_max_v_constraint = std::make_shared<SingleDimensionConstraint>(
+      kP3VIdx, kP3MaxV, kOrientedRight, kNumTimeSteps, "MaxV");
   const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  // p3_cost.AddStateBarrier(p3_min_v_barrier);
-  // p3_cost.AddStateBarrier(p3_max_v_barrier);
+  // p3_cost.AddStateConstraint(p3_min_v_constraint);
+  // p3_cost.AddStateConstraint(p3_max_v_constraint);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
   // Penalize control effort.
-  const auto p1_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP1OmegaIdx, kMaxOmega, !kOrientedRight, "SteeringMax");
-  const auto p1_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP1OmegaIdx, -kMaxOmega, kOrientedRight, "SteeringMin");
+  const auto p1_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP1OmegaIdx, kMaxOmega, kOrientedRight, kNumTimeSteps, "SteeringMax");
+  const auto p1_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, -kMaxOmega,
+                                                  !kOrientedRight,
+                                                  kNumTimeSteps, "SteeringMin");
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   const auto p1_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
-  // p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
-  // p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
+  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
-  const auto p2_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP2OmegaIdx, kMaxOmega, !kOrientedRight, "SteeringMax");
-  const auto p2_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP2OmegaIdx, -kMaxOmega, kOrientedRight, "SteeringMin");
+  const auto p2_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(kP2OmegaIdx, kMaxOmega,
+                                                  !kOrientedRight,
+                                                  kNumTimeSteps, "SteeringMax");
+  const auto p2_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(kP2OmegaIdx, -kMaxOmega,
+                                                  kOrientedRight, kNumTimeSteps,
+                                                  "SteeringMin");
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
   const auto p2_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
-  // p2_cost.AddControlBarrier(1, p2_omega_max_barrier);
-  // p2_cost.AddControlBarrier(1, p2_omega_min_barrier);
+  // p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  // p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
   p2_cost.AddControlCost(1, p2_omega_cost);
   p2_cost.AddControlCost(1, p2_jerk_cost);
 
-  const auto p3_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP3OmegaIdx, kMaxOmega, !kOrientedRight, "SteeringMax");
-  const auto p3_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP3OmegaIdx, -kMaxOmega, kOrientedRight, "SteeringMin");
+  const auto p3_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP3OmegaIdx, kMaxOmega, kOrientedRight, kNumTimeSteps, "SteeringMax");
+  const auto p3_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(kP3OmegaIdx, -kMaxOmega,
+                                                  !kOrientedRight,
+                                                  kNumTimeSteps, "SteeringMin");
   const auto p3_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
   const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP3AIdx,
                                                          0.0, "Acceleration");
-  // p3_cost.AddControlBarrier(2, p3_omega_max_barrier);
-  // p3_cost.AddControlBarrier(2, p3_omega_min_barrier);
+  // p3_cost.AddControlConstraint(2, p3_omega_max_constraint);
+  // p3_cost.AddControlConstraint(2, p3_omega_min_constraint);
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
@@ -394,39 +403,39 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p3_cost.AddStateConstraint(p3p1_proximity_constraint);
   p3_cost.AddStateConstraint(p3p2_proximity_constraint);
 
-  // Collision-avoidance barriers.
-  // const std::shared_ptr<ProximityBarrier> p1p2_proximity_barrier(
-  //     new ProximityBarrier({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-  //                          kMinProximity, kBarrierOrientedInside,
-  //                          "ProximityBarrierP2"));
-  // const std::shared_ptr<ProximityBarrier> p1p3_proximity_barrier(
-  //     new ProximityBarrier({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
-  //                          kMinProximity, kBarrierOrientedInside,
-  //                          "ProximityBarrierP3"));
-  // p1_cost.AddStateBarrier(p1p2_proximity_barrier);
-  // p1_cost.AddStateBarrier(p1p3_proximity_barrier);
+  // Collision-avoidance constraints.
+  // const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
+  //     new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+  //                          kMinProximity, kConstraintOrientedInside,
+  //                          "ProximityConstraintP2"));
+  // const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
+  //     new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
+  //                          kMinProximity, kConstraintOrientedInside,
+  //                          "ProximityConstraintP3"));
+  // p1_cost.AddStateConstraint(p1p2_proximity_constraint);
+  // p1_cost.AddStateConstraint(p1p3_proximity_constraint);
 
-  // const std::shared_ptr<ProximityBarrier> p2p1_proximity_barrier(
-  //     new ProximityBarrier({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
-  //                          kMinProximity, kBarrierOrientedInside,
-  //                          "ProximityBarrierP1"));
-  // const std::shared_ptr<ProximityBarrier> p2p3_proximity_barrier(
-  //     new ProximityBarrier({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
-  //                          kMinProximity, kBarrierOrientedInside,
-  //                          "ProximityBarrierP3"));
-  // p2_cost.AddStateBarrier(p2p1_proximity_barrier);
-  // p2_cost.AddStateBarrier(p2p3_proximity_barrier);
+  // const std::shared_ptr<ProximityConstraint> p2p1_proximity_constraint(
+  //     new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
+  //                          kMinProximity, kConstraintOrientedInside,
+  //                          "ProximityConstraintP1"));
+  // const std::shared_ptr<ProximityConstraint> p2p3_proximity_constraint(
+  //     new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
+  //                          kMinProximity, kConstraintOrientedInside,
+  //                          "ProximityConstraintP3"));
+  // p2_cost.AddStateConstraint(p2p1_proximity_constraint);
+  // p2_cost.AddStateConstraint(p2p3_proximity_constraint);
 
-  // const std::shared_ptr<ProximityBarrier> p3p1_proximity_barrier(
-  //     new ProximityBarrier({kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx},
-  //                          kMinProximity, kBarrierOrientedInside,
-  //                          "ProximityBarrierP1"));
-  // const std::shared_ptr<ProximityBarrier> p3p2_proximity_barrier(
-  //     new ProximityBarrier({kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx},
-  //                          kMinProximity, kBarrierOrientedInside,
-  //                          "ProximityBarrierP2"));
-  // p3_cost.AddStateBarrier(p3p1_proximity_barrier);
-  // p3_cost.AddStateBarrier(p3p2_proximity_barrier);
+  // const std::shared_ptr<ProximityConstraint> p3p1_proximity_constraint(
+  //     new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx},
+  //                          kMinProximity, kConstraintOrientedInside,
+  //                          "ProximityConstraintP1"));
+  // const std::shared_ptr<ProximityConstraint> p3p2_proximity_constraint(
+  //     new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx},
+  //                          kMinProximity, kConstraintOrientedInside,
+  //                          "ProximityConstraintP2"));
+  // p3_cost.AddStateConstraint(p3p1_proximity_constraint);
+  // p3_cost.AddStateConstraint(p3p2_proximity_constraint);
 }
 
 inline std::vector<float> ThreePlayerIntersectionExample::Xs(

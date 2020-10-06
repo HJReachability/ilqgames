@@ -91,32 +91,17 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   // Current strategies.
   std::vector<Strategy> current_strategies(problem_->CurrentStrategies());
 
-  // Reset all constraint barrier weights to unity.
-  for (auto& cost : problem_->PlayerCosts()) cost.ResetBarrierWeights();
-
   // Things to keep track of during each iteration.
   size_t num_iterations = 0;
-  size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
-
-  // Turn barriers on/off.
-  auto turn_barriers_on = [this]() {
-    for (auto& cost : problem_->PlayerCosts()) cost.TurnBarriersOn();
-  };  // turn_barriers_on
-
-  auto turn_barriers_off = [this]() {
-    for (auto& cost : problem_->PlayerCosts()) cost.TurnBarriersOff();
-  };  // turn_barriers_off
 
   // Swap operating points and compute new current operating point. Future
   // operating points will be computed during the call to `ModifyLQStrategies`
   // which occurs after solving the LQ game.
-  bool was_operating_point_feasible;
   std::vector<float> total_costs;
   last_operating_point.swap(current_operating_point);
   CurrentOperatingPoint(last_operating_point, current_strategies,
-                        &current_operating_point,
-                        &was_operating_point_feasible);
+                        &current_operating_point);
 
   // Compute total costs.
   TotalCosts(current_operating_point, &total_costs);
@@ -134,22 +119,6 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
     // New iteration.
     num_iterations++;
-    num_iterations_since_barrier_rescaling++;
-
-    // Maybe rescale barrier barrier weights.
-    if (num_iterations_since_barrier_rescaling >
-        params_.barrier_scaling_iters) {
-      num_iterations_since_barrier_rescaling = 0;
-      for (PlayerCost& cost : problem_->PlayerCosts())
-        cost.ScaleBarrierWeights(params_.geometric_barrier_scaling);
-    }
-
-    // If operating point is feasible, turn on barriers. If it is
-    // not feasible, then turn them off.
-    if (was_operating_point_feasible)
-      turn_barriers_on();
-    else
-      turn_barriers_off();
 
     // Linearize dynamics about the new operating point, only if the system
     // can't be treated as linear from the outset, in which case we've already
@@ -169,19 +138,9 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
         linearization_, cost_quadraticization_, problem_->InitialState());
 
     // Modify this LQ solution.
-    if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
-                            &was_operating_point_feasible)) {
+    if (!ModifyLQStrategies(&current_strategies, &current_operating_point)) {
       // Maybe emit warning if exiting early.
-      if (num_iterations == 1) {
-        VLOG(1) << "Solver exited during first iteration, which may indicate "
-                   "an infeasible initial operating point.";
-
-        if (was_operating_point_feasible)
-          VLOG(1) << "Previous operating point was feasible.";
-        else {
-          VLOG(1) << "Previous operating point was infeasible.";
-        }
-      }
+      VLOG(1) << "Solver exited due to linesearch failure.";
 
       // Handle success flag.
       if (success) *success = false;
@@ -201,25 +160,6 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
                           total_costs, elapsed, has_converged);
   }
 
-  CHECK(!problem_->PlayerCosts().front().AreBarriersOn() ||
-        was_operating_point_feasible);
-
-  // Maybe emit warning if exiting early.
-  if (num_iterations == 1) {
-    VLOG(1) << "Solver exited after only 1 iteration but passed "
-               "backtracking checks, which may indicate an almost "
-               "converged initial operating point and strategies.";
-  }
-
-  if (!was_operating_point_feasible) {
-    VLOG(1) << "Solver found an infeasible solution. Failing.";
-
-    // Handle success flag.
-    if (success) *success = false;
-
-    return log;
-  }
-
   // Handle success flag.
   if (success) *success = true;
 
@@ -229,12 +169,11 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 void ILQSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point, bool* satisfies_barriers) const {
+    OperatingPoint* current_operating_point) const {
   CHECK_NOTNULL(current_operating_point);
 
-  // Initialize time, convergence, and barrier satisfaction checks.
+  // Initialize time.
   current_operating_point->t0 = last_operating_point.t0;
-  if (satisfies_barriers) *satisfies_barriers = true;
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
@@ -246,19 +185,6 @@ void ILQSolver::CurrentOperatingPoint(
     const VectorXf delta_x = x - last_operating_point.xs[kk];
     const auto& last_us = last_operating_point.us[kk];
     auto& current_us = current_operating_point->us[kk];
-
-    // Check barriers.
-    auto check_all_barriers = [this](Time t, const VectorXf& x,
-                                     const std::vector<VectorXf>& us) {
-      for (const auto& cost : problem_->PlayerCosts()) {
-        if (!cost.CheckBarriers(t, x, us)) return false;
-      }
-      return true;
-    };  // check_all_barriers
-
-    const bool checked_barriers = check_all_barriers(t, x, current_us);
-
-    if (satisfies_barriers) *satisfies_barriers &= checked_barriers;
 
     // Record state.
     current_operating_point->xs[kk] = x;
@@ -359,8 +285,7 @@ float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
 }
 
 bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
-                                   OperatingPoint* current_operating_point,
-                                   bool* is_new_operating_point_feasible) {
+                                   OperatingPoint* current_operating_point) {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
 
@@ -378,8 +303,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   float current_stepsize = params_.initial_alpha_scaling;
   float current_kkt_squared_error = constants::kInfinity;
   CurrentOperatingPoint(last_operating_point, *strategies,
-                        current_operating_point,
-                        is_new_operating_point_feasible);
+                        current_operating_point);
 
   if (!params_.linesearch) return true;
 
@@ -396,8 +320,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
     current_stepsize *= params_.geometric_alpha_scaling;
     CurrentOperatingPoint(last_operating_point, *strategies,
-                          current_operating_point,
-                          is_new_operating_point_feasible);
+                          current_operating_point);
   }
 
   // Output a warning. Solver should revert to last valid operating point.
@@ -532,7 +455,7 @@ void ILQSolver::ComputeCostQuadraticization(
           problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
         (*q)[kk][ii] = cost.Quadraticize(t, x, us);
       else
-        (*q)[kk][ii] = cost.QuadraticizeBarriersAndControlCosts(t, x, us);
+        (*q)[kk][ii] = cost.QuadraticizeControlCosts(t, x, us);
     }
   }
 }

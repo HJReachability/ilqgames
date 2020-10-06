@@ -112,8 +112,7 @@ class ILQSolver : public GameSolver {
   // Modify LQ strategies to improve convergence properties.
   // This function performs an Armijo linesearch and returns true if successful.
   bool ModifyLQStrategies(std::vector<Strategy>* strategies,
-                          OperatingPoint* current_operating_point,
-                          bool* is_new_operating_point_feasible);
+                          OperatingPoint* current_operating_point);
 
   // Compute distance (infinity norm) between states in the given dimensions.
   // If dimensions empty, checks all dimensions.
@@ -144,8 +143,7 @@ class ILQSolver : public GameSolver {
   // strategies and the last operating point.
   void CurrentOperatingPoint(const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
-                             OperatingPoint* current_operating_point,
-                             bool* satisfies_barriers = nullptr) const;
+                             OperatingPoint* current_operating_point) const;
 
   // Populate the given vector with a linearization of the dynamics about
   // the given operating point. Provide version with no operating point for use

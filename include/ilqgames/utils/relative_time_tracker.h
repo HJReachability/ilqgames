@@ -84,6 +84,9 @@ class RelativeTimeTracker {
 
   // Time step.
   static Time time_step_;
+
+  // Time horizon.
+
 };  //\class Cost
 
 }  // namespace ilqgames

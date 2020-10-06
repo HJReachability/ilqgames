@@ -44,7 +44,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/relative_distance_cost.h>
@@ -126,11 +126,13 @@ void ModifiedAir3DExample::ConstructPlayerCosts() {
 
   // Constrain control effort.
   // const auto omega_max_constraint =
-  // std::make_shared<SingleDimensionBarrier>(
-  //     Dyn::kOmegaIdx, kOmegaMax, false, "Omega Constraint (Max)");
+  // std::make_shared<SingleDimensionConstraint>(
+  //     Dyn::kOmegaIdx, kOmegaMax, true, kNumTimeSteps,"Omega Constraint
+  //     (Max)");
   // const auto omega_min_constraint =
-  // std::make_shared<SingleDimensionBarrier>(
-  //     Dyn::kOmegaIdx, -kOmegaMax, true, "Omega Constraint (Min)");
+  // std::make_shared<SingleDimensionConstraint>(
+  //     Dyn::kOmegaIdx, -kOmegaMax, false,kNumTimeSteps, "Omega Constraint
+  //     (Min)");
   // p1_cost.AddControlConstraint(0, omega_max_constraint);
   // p1_cost.AddControlConstraint(0, omega_min_constraint);
   // p2_cost.AddControlConstraint(1, omega_max_constraint);

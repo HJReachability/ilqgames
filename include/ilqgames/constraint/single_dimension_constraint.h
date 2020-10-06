@@ -58,9 +58,8 @@ class SingleDimensionConstraint : public TimeInvariantConstraint {
  public:
   ~SingleDimensionConstraint() {}
   SingleDimensionConstraint(Dimension dim, float threshold, bool keep_below,
-                            bool is_equality, size_t num_time_steps,
-                            const std::string& name = "")
-      : TimeInvariantConstraint(is_equality, num_time_steps, name),
+                            size_t num_time_steps, const std::string& name = "")
+      : TimeInvariantConstraint(false, num_time_steps, name),
         dim_(dim),
         threshold_(threshold),
         keep_below_(keep_below) {}
