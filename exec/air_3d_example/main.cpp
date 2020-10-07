@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/examples/air_3d_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
@@ -118,7 +119,7 @@ int main(int argc, char** argv) {
 
   auto problem = std::make_shared<ilqgames::Air3DExample>();
   problem->Initialize();
-  ilqgames::ILQSolver solver(problem, params);
+  ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   LOG(INFO) << "Computing feedback solution.";
   const auto start = std::chrono::system_clock::now();

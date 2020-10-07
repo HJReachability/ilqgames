@@ -102,6 +102,7 @@ class Problem {
                                  const std::vector<Strategy>& strategies);
 
   // Accessors.
+  bool IsConstrained() const;
   virtual Time InitialTime() const { return operating_point_->t0; }
   const VectorXf& InitialState() const { return x0_; }
   // size_t NumTimeSteps() const { return num_time_steps_; }

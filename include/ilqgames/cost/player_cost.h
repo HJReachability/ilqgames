@@ -120,6 +120,9 @@ class PlayerCost {
   const PlayerPtrMultiMap<Constraint>& ControlConstraints() const {
     return control_constraints_;
   }
+  bool IsConstrained() const {
+    return !state_constraints_.empty() || !control_constraints_.empty();
+  }
 
  private:
   // Name to be used with error msgs.

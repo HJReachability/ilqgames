@@ -79,7 +79,9 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
   // Determine how much time should be allocated for any individual lower level
   // solver call.
   const Time max_runtime_unconstrained_problem =
-      max_runtime / static_cast<Time>(params_.max_solver_iters);
+      (problem_->IsConstrained())
+          ? max_runtime / static_cast<Time>(params_.max_solver_iters)
+          : max_runtime;
 
   // Solve unconstrained problem.
   bool unconstrained_success = false;
@@ -92,6 +94,9 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
   VLOG_IF(2, unconstrained_success)
       << "Unconstrained solver succeeded on first call.";
   if (success) *success &= unconstrained_success;
+
+  // Exit if problem is unconstrained.
+  if (!problem_->IsConstrained()) return log;
 
   // Run until convergence or until the time runs out.
   Time elapsed = max_runtime_unconstrained_problem;

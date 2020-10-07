@@ -45,6 +45,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -68,7 +69,7 @@ DEFINE_bool(last_traj, false,
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
-DEFINE_bool(linesearch, true, "Should the solver linesearch?");
+DEFINE_bool(linesearch, false, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
 DEFINE_double(convergence_tolerance, 0.1, "KKT squared error tolerance.");
 DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
@@ -115,7 +116,8 @@ int main(int argc, char** argv) {
 
   auto open_loop_problem = std::make_shared<ilqgames::DubinsOriginExample>();
   open_loop_problem->Initialize();
-  ilqgames::ILQSolver open_loop_solver(open_loop_problem, params);
+  ilqgames::AugmentedLagrangianSolver open_loop_solver(open_loop_problem,
+                                                       params);
 
   std::shared_ptr<const ilqgames::SolverLog> log = open_loop_solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> open_loop_logs =
@@ -143,7 +145,7 @@ int main(int argc, char** argv) {
   params.open_loop = !kOpenLoop;
   auto feedback_problem = std::make_shared<ilqgames::DubinsOriginExample>();
   feedback_problem->Initialize();
-  ilqgames::ILQSolver feedback_solver(feedback_problem, params);
+  ilqgames::AugmentedLagrangianSolver feedback_solver(feedback_problem, params);
 
   // Solve the game.
   log = feedback_solver.Solve();

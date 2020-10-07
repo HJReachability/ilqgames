@@ -193,4 +193,12 @@ void Problem::OverwriteSolution(const OperatingPoint& operating_point,
   *strategies_ = strategies;
 }
 
+bool Problem::IsConstrained() const {
+  for (const auto& pc : player_costs_) {
+    if (pc.IsConstrained()) return true;
+  }
+
+  return false;
+}
+
 }  // namespace ilqgames
