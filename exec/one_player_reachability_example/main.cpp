@@ -45,6 +45,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -126,7 +127,8 @@ int main(int argc, char** argv) {
   auto open_loop_problem =
       std::make_shared<ilqgames::OnePlayerReachabilityExample>();
   open_loop_problem->Initialize();
-  ilqgames::ILQSolver open_loop_solver(open_loop_problem, params);
+  ilqgames::AugmentedLagrangianSolver open_loop_solver(open_loop_problem,
+                                                       params);
 
   LOG(INFO) << "Computing open-loop solution.";
   std::shared_ptr<const ilqgames::SolverLog> log = open_loop_solver.Solve();
@@ -162,7 +164,7 @@ int main(int argc, char** argv) {
   auto feedback_problem =
       std::make_shared<ilqgames::OnePlayerReachabilityExample>();
   feedback_problem->Initialize();
-  ilqgames::ILQSolver feedback_solver(feedback_problem, params);
+  ilqgames::AugmentedLagrangianSolver feedback_solver(feedback_problem, params);
   // Solve the game.
   LOG(INFO) << "Computing feedback solution.";
   log = feedback_solver.Solve();

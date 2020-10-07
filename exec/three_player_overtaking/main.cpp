@@ -44,6 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -112,7 +113,7 @@ int main(int argc, char** argv) {
 
   auto problem = std::make_shared<ilqgames::ThreePlayerOvertakingExample>();
   problem->Initialize();
-  ilqgames::ILQSolver solver(problem, params);
+  ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();
