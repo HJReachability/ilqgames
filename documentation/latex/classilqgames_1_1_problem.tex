@@ -24,22 +24,13 @@ virtual void {\bfseries Set\+Up\+Next\+Receding\+Horizon} (const Vector\+Xf \&x0
 virtual void {\bfseries Overwrite\+Solution} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies)\hypertarget{classilqgames_1_1_problem_a14744049661872191758323a4947f072}{}\label{classilqgames_1_1_problem_a14744049661872191758323a4947f072}
 
 \item 
-Time {\bfseries Compute\+Relative\+Time\+Stamp} (size\+\_\+t time\+\_\+index) const \hypertarget{classilqgames_1_1_problem_a424e7aaa780d06a7ab18ea19fb0cda40}{}\label{classilqgames_1_1_problem_a424e7aaa780d06a7ab18ea19fb0cda40}
+bool {\bfseries Is\+Constrained} () const \hypertarget{classilqgames_1_1_problem_a4b628747d62e1871c6cc5d01e5c1f0df}{}\label{classilqgames_1_1_problem_a4b628747d62e1871c6cc5d01e5c1f0df}
 
 \item 
 virtual Time {\bfseries Initial\+Time} () const \hypertarget{classilqgames_1_1_problem_ab0eeee481eeb53317658fb9a38648f30}{}\label{classilqgames_1_1_problem_ab0eeee481eeb53317658fb9a38648f30}
 
 \item 
 const Vector\+Xf \& {\bfseries Initial\+State} () const \hypertarget{classilqgames_1_1_problem_a9b4d86b6f76908fdfc5ac82aae9320cb}{}\label{classilqgames_1_1_problem_a9b4d86b6f76908fdfc5ac82aae9320cb}
-
-\item 
-size\+\_\+t {\bfseries Num\+Time\+Steps} () const \hypertarget{classilqgames_1_1_problem_afdd2a8fe429014bc5aa5fe9de4cbd0c1}{}\label{classilqgames_1_1_problem_afdd2a8fe429014bc5aa5fe9de4cbd0c1}
-
-\item 
-Time {\bfseries Time\+Step} () const \hypertarget{classilqgames_1_1_problem_af0a09c4e19ddf5fca85136d4187eb3d8}{}\label{classilqgames_1_1_problem_af0a09c4e19ddf5fca85136d4187eb3d8}
-
-\item 
-Time {\bfseries Time\+Horizon} () const \hypertarget{classilqgames_1_1_problem_acdabeeb3611f8887b0d104ea41d0ab12}{}\label{classilqgames_1_1_problem_acdabeeb3611f8887b0d104ea41d0ab12}
 
 \item 
 std\+::vector$<$ \hyperlink{classilqgames_1_1_player_cost}{Player\+Cost} $>$ \& {\bfseries Player\+Costs} ()\hypertarget{classilqgames_1_1_problem_ae59a04bdc7c289ef9272dee1e51df892}{}\label{classilqgames_1_1_problem_ae59a04bdc7c289ef9272dee1e51df892}
@@ -86,15 +77,6 @@ size\+\_\+t {\bfseries Sync\+To\+Existing\+Problem} (const Vector\+Xf \&x0, Time
 \end{DoxyCompactItemize}
 \subsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
-\item 
-const Time {\bfseries time\+\_\+horizon\+\_\+}\hypertarget{classilqgames_1_1_problem_ab93ced52c3e5aa22bdf45cb94eaaaa2e}{}\label{classilqgames_1_1_problem_ab93ced52c3e5aa22bdf45cb94eaaaa2e}
-
-\item 
-const Time {\bfseries time\+\_\+step\+\_\+}\hypertarget{classilqgames_1_1_problem_af66867cb1c107633fe644d223fd6046b}{}\label{classilqgames_1_1_problem_af66867cb1c107633fe644d223fd6046b}
-
-\item 
-const size\+\_\+t {\bfseries num\+\_\+time\+\_\+steps\+\_\+}\hypertarget{classilqgames_1_1_problem_a7f8a3ec65d0c1ae8008169336a696257}{}\label{classilqgames_1_1_problem_a7f8a3ec65d0c1ae8008169336a696257}
-
 \item 
 std\+::shared\+\_\+ptr$<$ const \hyperlink{classilqgames_1_1_multi_player_integrable_system}{Multi\+Player\+Integrable\+System} $>$ {\bfseries dynamics\+\_\+}\hypertarget{classilqgames_1_1_problem_a278a73f88a14262e31a56478301b6bde}{}\label{classilqgames_1_1_problem_a278a73f88a14262e31a56478301b6bde}
 

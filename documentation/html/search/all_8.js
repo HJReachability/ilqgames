@@ -1,10 +1,8 @@
 var searchData=
 [
-  ['lineardynamicsapproximation',['LinearDynamicsApproximation',['../structilqgames_1_1_linear_dynamics_approximation.html',1,'ilqgames']]],
-  ['linesegment2',['LineSegment2',['../classilqgames_1_1_line_segment2.html',1,'ilqgames']]],
-  ['locallyconvexproximitycost',['LocallyConvexProximityCost',['../classilqgames_1_1_locally_convex_proximity_cost.html',1,'ilqgames']]],
-  ['looptimer',['LoopTimer',['../classilqgames_1_1_loop_timer.html',1,'ilqgames']]],
-  ['lqfeedbacksolver',['LQFeedbackSolver',['../classilqgames_1_1_l_q_feedback_solver.html',1,'ilqgames']]],
-  ['lqopenloopsolver',['LQOpenLoopSolver',['../classilqgames_1_1_l_q_open_loop_solver.html',1,'ilqgames']]],
-  ['lqsolver',['LQSolver',['../classilqgames_1_1_l_q_solver.html',1,'ilqgames']]]
+  ['modifiedair3dexample',['ModifiedAir3DExample',['../classilqgames_1_1_modified_air3_d_example.html',1,'ilqgames']]],
+  ['modifiedthreeplayerintersectionexample',['ModifiedThreePlayerIntersectionExample',['../classilqgames_1_1_modified_three_player_intersection_example.html',1,'ilqgames']]],
+  ['multiplayerdynamicalsystem',['MultiPlayerDynamicalSystem',['../classilqgames_1_1_multi_player_dynamical_system.html',1,'ilqgames']]],
+  ['multiplayerflatsystem',['MultiPlayerFlatSystem',['../classilqgames_1_1_multi_player_flat_system.html',1,'ilqgames']]],
+  ['multiplayerintegrablesystem',['MultiPlayerIntegrableSystem',['../classilqgames_1_1_multi_player_integrable_system.html',1,'ilqgames']]]
 ];

@@ -44,6 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
@@ -70,9 +71,9 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-DEFINE_double(initial_alpha_scaling, 1.0, "Initial step size in linesearch.");
+DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
 DEFINE_double(convergence_tolerance, 1.0, "KKT squared error tolerance.");
-DEFINE_double(expected_decrease, 0.9, "KKT sq err expected decrease per iter.");
+DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -108,17 +109,20 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.open_loop = FLAGS_open_loop;
   params.max_backtracking_steps = 100;
-  //  params.max_solver_iters = 10000;
+  params.max_solver_iters = 100;
+  params.unconstrained_solver_max_iters = 10;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_barriers_in_linesearch = true;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
+  params.geometric_mu_scaling = 1.1;
+  params.geometric_mu_downscaling = 0.5;
+  params.geometric_lambda_downscaling = 0.5;
   //  params.open_loop = true;
 
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
   problem->Initialize();
-  ilqgames::ILQSolver solver(problem, params);
+  ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();

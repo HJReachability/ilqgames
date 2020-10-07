@@ -175,13 +175,14 @@ boxfont setfont
 1 boundaspect scale
 (ilqgames::Cost) cw
 (ilqgames::RelativeTimeTracker) cw
-(ilqgames::Barrier) cw
+(ilqgames::Constraint) cw
 (ilqgames::ExtremeValueCost) cw
 (ilqgames::FinalTimeCost) cw
 (ilqgames::NominalPathLengthCost) cw
 (ilqgames::RouteProgressCost) cw
 (ilqgames::TimeInvariantCost) cw
-(ilqgames::TimeInvariantBarrier) cw
+(ilqgames::FinalTimeConstraint) cw
+(ilqgames::TimeInvariantConstraint) cw
 (ilqgames::CurvatureCost) cw
 (ilqgames::LocallyConvexProximityCost) cw
 (ilqgames::OrientationCost) cw
@@ -210,14 +211,15 @@ boundx scalefactor div boundy scalefactor div scale
 
  (ilqgames::Cost) 2.500000 16.000000 box
  (ilqgames::RelativeTimeTracker) 2.500000 17.000000 box
- (ilqgames::Barrier) 0.000000 15.000000 box
+ (ilqgames::Constraint) 0.000000 15.000000 box
  (ilqgames::ExtremeValueCost) 1.000000 15.000000 box
  (ilqgames::FinalTimeCost) 2.000000 15.000000 box
  (ilqgames::NominalPathLengthCost) 3.000000 15.000000 box
  (ilqgames::RouteProgressCost) 4.000000 15.000000 box
  (ilqgames::TimeInvariantCost) 5.000000 15.000000 box
- (ilqgames::TimeInvariantBarrier) 0.000000 14.000000 box
-0.000000 14.000000 mark
+ (ilqgames::FinalTimeConstraint) 1.000000 14.000000 box
+ (ilqgames::TimeInvariantConstraint) 1.000000 13.000000 box
+1.000000 13.000000 mark
  (ilqgames::CurvatureCost) 6.000000 14.000000 box
  (ilqgames::LocallyConvexProximityCost) 6.000000 13.000000 box
  (ilqgames::OrientationCost) 6.000000 12.000000 box
@@ -261,7 +263,11 @@ solid
 solid
 1 5.000000 14.250000 out
 solid
-0 0.000000 14.750000 in
+0 0.000000 14.500000 hedge
+solid
+0 0.000000 13.500000 hedge
+solid
+0.000000 15.000000 13.500000 vedge
 solid
 0 5.000000 14.500000 hedge
 solid

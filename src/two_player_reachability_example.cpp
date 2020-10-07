@@ -42,7 +42,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/two_player_unicycle_4d.h>
@@ -80,7 +80,7 @@ using Dyn = TwoPlayerUnicycle4D;
 }  // anonymous namespace
 
 void TwoPlayerReachabilityExample::ConstructDynamics() {
-  dynamics_.reset(new TwoPlayerUnicycle4D(time_step_));
+  dynamics_.reset(new TwoPlayerUnicycle4D());
 }
 
 void TwoPlayerReachabilityExample::ConstructInitialState() {
@@ -98,11 +98,10 @@ void TwoPlayerReachabilityExample::ConstructPlayerCosts() {
   auto& p1_cost = player_costs_[0];
   auto& p2_cost = player_costs_[1];
 
-  const auto control_cost =
-      std::make_shared<QuadraticCost>(kControlCostWeight, -1, 0.0, "ControlCost");
+  const auto control_cost = std::make_shared<QuadraticCost>(
+      kControlCostWeight, -1, 0.0, "ControlCost");
   p1_cost.AddControlCost(0, control_cost);
   p2_cost.AddControlCost(1, control_cost);
-
 
   // Target cost.
   static constexpr bool kReach = true;

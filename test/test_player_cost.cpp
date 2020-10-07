@@ -97,7 +97,7 @@ TEST_F(PlayerCostTest, QuadraticizeWorks) {
   const QuadraticCostApproximation quad =
       player_cost_.Quadraticize(0.0, x_, us_);
 
-  // Check state Hessian is just kCostWeight on the diagonal.
+  // Check state Hessian is just kCostzaWeight on the diagonal.
   EXPECT_TRUE(quad.state.hess.diagonal().isApprox(
       VectorXf::Constant(kVectorDimension, kCostWeight),
       constants::kSmallNumber));

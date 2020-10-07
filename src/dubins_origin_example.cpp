@@ -100,8 +100,7 @@ static const Dimension kP2OmegaIdx = 0;
 
 void DubinsOriginExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
-      {std::make_shared<P1>(kSpeed), std::make_shared<P2>(kSpeed)},
-      time_step_));
+      {std::make_shared<P1>(kSpeed), std::make_shared<P2>(kSpeed)}));
 }
 
 void DubinsOriginExample::ConstructInitialState() {

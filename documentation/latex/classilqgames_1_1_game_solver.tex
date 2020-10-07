@@ -3,13 +3,13 @@
 Inheritance diagram for ilqgames\+:\+:Game\+Solver\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[height=3.000000cm]{classilqgames_1_1_game_solver}
+\includegraphics[height=2.000000cm]{classilqgames_1_1_game_solver}
 \end{center}
 \end{figure}
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Solve} (bool $\ast$success=nullptr, Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())=0\hypertarget{classilqgames_1_1_game_solver_a33845e75d3148ee43f068bcb85b2d297}{}\label{classilqgames_1_1_game_solver_a33845e75d3148ee43f068bcb85b2d297}
+virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Solve} (bool $\ast$success=nullptr, Time max\+\_\+runtime=constants\+::k\+Infinity)=0\hypertarget{classilqgames_1_1_game_solver_adfc52c3804a21ccd8fc0d7940bfdfcbe}{}\label{classilqgames_1_1_game_solver_adfc52c3804a21ccd8fc0d7940bfdfcbe}
 
 \item 
 \hyperlink{classilqgames_1_1_problem}{Problem} \& {\bfseries Get\+Problem} ()\hypertarget{classilqgames_1_1_game_solver_a03e86a0b9070715738e11b9cfbc93321}{}\label{classilqgames_1_1_game_solver_a03e86a0b9070715738e11b9cfbc93321}
@@ -23,26 +23,11 @@ virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solve
 \item 
 virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Create\+New\+Log} () const \hypertarget{classilqgames_1_1_game_solver_add427a4fe7b7d3d0e2dbb4a47105c765}{}\label{classilqgames_1_1_game_solver_add427a4fe7b7d3d0e2dbb4a47105c765}
 
-\item 
-virtual void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)\hypertarget{classilqgames_1_1_game_solver_a02d8f01b0742df2c0f288e8519c58282}{}\label{classilqgames_1_1_game_solver_a02d8f01b0742df2c0f288e8519c58282}
-
-\item 
-void {\bfseries Compute\+Cost\+Quadraticization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ $\ast$q)\hypertarget{classilqgames_1_1_game_solver_aba8d0d2965cb5140809327e765b1898d}{}\label{classilqgames_1_1_game_solver_aba8d0d2965cb5140809327e765b1898d}
-
 \end{DoxyCompactItemize}
 \subsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
 \item 
 const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_problem}{Problem} $>$ {\bfseries problem\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a3c1d8f6d4d9142d6bca23623391ca2c3}{}\label{classilqgames_1_1_game_solver_a3c1d8f6d4d9142d6bca23623391ca2c3}
-
-\item 
-std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ {\bfseries linearization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_ad31cd30bf0b2fd95461672da928e91f2}{}\label{classilqgames_1_1_game_solver_ad31cd30bf0b2fd95461672da928e91f2}
-
-\item 
-std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries cost\+\_\+quadraticization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_aa7a4c4edd7ecee0d856b928c5d27ded6}{}\label{classilqgames_1_1_game_solver_aa7a4c4edd7ecee0d856b928c5d27ded6}
-
-\item 
-std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries last\+\_\+cost\+\_\+quadraticization\+\_\+}\hypertarget{classilqgames_1_1_game_solver_a463e0e69bd055f4fa78841be22782ea8}{}\label{classilqgames_1_1_game_solver_a463e0e69bd055f4fa78841be22782ea8}
 
 \item 
 const \hyperlink{structilqgames_1_1_solver_params}{Solver\+Params} {\bfseries params\+\_\+}\hypertarget{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}{}\label{classilqgames_1_1_game_solver_adb70fc48a6420c1b516becd5c108a92a}
@@ -60,7 +45,6 @@ Definition at line 78 of file game\+\_\+solver.\+h.
 
 
 
-The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
 \item 
-/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/solver/game\+\_\+solver.\+h\item 
-/home/travis/build/\+H\+J\+Reachability/ilqgames/src/game\+\_\+solver.\+cpp\end{DoxyCompactItemize}
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/solver/game\+\_\+solver.\+h\end{DoxyCompactItemize}

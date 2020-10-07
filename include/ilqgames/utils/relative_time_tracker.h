@@ -36,8 +36,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all named objects which depend upon the initial time. Examples
-// of derived classes are Cost and EqualityConstraint.
+// Base class for all named objects which depend upon the initial time and need
+// to convert between absolute times and time steps. Examples of derived classes
+// are Cost.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,26 +47,40 @@
 
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+
 namespace ilqgames {
 
 class RelativeTimeTracker {
  public:
   virtual ~RelativeTimeTracker() {}
 
-  // Reset the initial time associated to this cost.
+  // Access and reset initial time.
   static void ResetInitialTime(Time t0) { initial_time_ = t0; };
+  static Time InitialTime() { return initial_time_; }
+
+  // Convert between time step and initial time.
+  static Time RelativeTime(size_t kk) {
+    return static_cast<Time>(kk) * time::kTimeStep;
+  }
+  static Time AbsoluteTime(size_t kk) {
+    return initial_time_ + static_cast<Time>(kk) * time::kTimeStep;
+  }
+  static size_t TimeIndex(Time t) {
+    CHECK_GE(t, initial_time_);
+    return static_cast<size_t>((t - initial_time_) / time::kTimeStep);
+  }
 
   // Access the name of this object.
   const std::string& Name() const { return name_; }
 
  protected:
-  RelativeTimeTracker(const std::string& name)
-      : name_(name) {}
+  RelativeTimeTracker(const std::string& name) : name_(name) {}
 
   // Name associated to every cost.
   const std::string name_;
 
-  // Initial time associated to this cost.
+  // Initial time.
   static Time initial_time_;
 };  //\class Cost
 

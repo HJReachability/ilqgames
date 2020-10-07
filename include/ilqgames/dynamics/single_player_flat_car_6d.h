@@ -71,8 +71,7 @@ class SinglePlayerFlatCar6D : public SinglePlayerFlatSystem {
   VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const;
 
   // Discrete time approximation of the underlying linearized system.
-  void LinearizedSystem(Time time_step, Eigen::Ref<MatrixXf> A,
-                        Eigen::Ref<MatrixXf> B) const;
+  void LinearizedSystem(Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
@@ -128,14 +127,14 @@ inline VectorXf SinglePlayerFlatCar6D::Evaluate(const VectorXf& x,
 }
 
 inline void SinglePlayerFlatCar6D::LinearizedSystem(
-    Time time_step, Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
-  A(kPxIdx, kVxIdx) += time_step;
-  A(kPyIdx, kVyIdx) += time_step;
-  A(kVxIdx, kAxIdx) += time_step;
-  A(kVyIdx, kAyIdx) += time_step;
+    Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
+  A(kPxIdx, kVxIdx) += time::kTimeStep;
+  A(kPyIdx, kVyIdx) += time::kTimeStep;
+  A(kVxIdx, kAxIdx) += time::kTimeStep;
+  A(kVyIdx, kAyIdx) += time::kTimeStep;
 
-  B(kAxIdx, 0) = time_step;
-  B(kAyIdx, 1) = time_step;
+  B(kAxIdx, 0) = time::kTimeStep;
+  B(kAyIdx, 1) = time::kTimeStep;
 }
 
 inline MatrixXf SinglePlayerFlatCar6D::InverseDecouplingMatrix(

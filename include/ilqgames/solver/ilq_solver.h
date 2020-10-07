@@ -69,14 +69,28 @@ class ILQSolver : public GameSolver {
   ILQSolver(const std::shared_ptr<Problem>& problem,
             const SolverParams& params = SolverParams())
       : GameSolver(problem, params),
+        linearization_(time::kNumTimeSteps),
+        cost_quadraticization_(time::kNumTimeSteps),
         last_kkt_squared_error_(constants::kInfinity) {
     // Set up LQ solver.
     if (params_.open_loop)
       lq_solver_.reset(
-          new LQOpenLoopSolver(problem_->Dynamics(), problem_->NumTimeSteps()));
+          new LQOpenLoopSolver(problem_->Dynamics(), time::kNumTimeSteps));
     else
       lq_solver_.reset(
-          new LQFeedbackSolver(problem_->Dynamics(), problem_->NumTimeSteps()));
+          new LQFeedbackSolver(problem_->Dynamics(), time::kNumTimeSteps));
+
+    // If this system is flat then compute the linearization once, now.
+    if (problem_->Dynamics()->TreatAsLinear())
+      ComputeLinearization(&linearization_);
+
+    // Prepopulate quadraticization.
+    for (auto& quads : cost_quadraticization_)
+      quads.resize(problem_->Dynamics()->NumPlayers(),
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
+
+    // Set last quadraticization to current, to start.
+    last_cost_quadraticization_ = cost_quadraticization_;
   }
 
   // Solve this game. Returns true if converged.
@@ -84,17 +98,26 @@ class ILQSolver : public GameSolver {
       bool* success = nullptr,
       Time max_runtime = std::numeric_limits<Time>::infinity());
 
+  // Accessors.
+  // NOTE: these should be primarily used by higher-level solvers.
+  std::vector<std::vector<QuadraticCostApproximation>>* Quadraticization() {
+    return &cost_quadraticization_;
+  }
+
+  std::vector<LinearDynamicsApproximation>* Linearization() {
+    return &linearization_;
+  }
+
  protected:
   // Modify LQ strategies to improve convergence properties.
   // This function performs an Armijo linesearch and returns true if successful.
   bool ModifyLQStrategies(std::vector<Strategy>* strategies,
-                          OperatingPoint* current_operating_point,
-                          bool* is_new_operating_point_feasible);
+                          OperatingPoint* current_operating_point);
 
   // Compute distance (infinity norm) between states in the given dimensions.
   // If dimensions empty, checks all dimensions.
-  virtual float StateDistance(const VectorXf& x1, const VectorXf& x2,
-                              const std::vector<Dimension>& dims) const;
+  float StateDistance(const VectorXf& x1, const VectorXf& x2,
+                      const std::vector<Dimension>& dims) const;
 
   // Check if solver has converged.
   virtual bool HasConverged(const OperatingPoint& last_op,
@@ -114,14 +137,35 @@ class ILQSolver : public GameSolver {
 
   // Compute current KKT squared error. In the process, update the
   // quadraticization.
-  float KKTSquaredError(const OperatingPoint& current_op);
+  virtual float KKTSquaredError(const OperatingPoint& current_op);
 
   // Compute the current operating point based on the current set of
   // strategies and the last operating point.
   void CurrentOperatingPoint(const OperatingPoint& last_operating_point,
                              const std::vector<Strategy>& current_strategies,
-                             OperatingPoint* current_operating_point,
-                             bool* satisfies_barriers = nullptr) const;
+                             OperatingPoint* current_operating_point) const;
+
+  // Populate the given vector with a linearization of the dynamics about
+  // the given operating point. Provide version with no operating point for use
+  // with feedback linearizable systems.
+  void ComputeLinearization(
+      const OperatingPoint& op,
+      std::vector<LinearDynamicsApproximation>* linearization);
+  void ComputeLinearization(
+      std::vector<LinearDynamicsApproximation>* linearization);
+
+  // Compute the quadratic cost approximation at the given operating point.
+  void ComputeCostQuadraticization(
+      const OperatingPoint& op,
+      std::vector<std::vector<QuadraticCostApproximation>>* q);
+
+  // Linearization and quadraticization. Both are time-indexed (and
+  // quadraticizations' inner vector is indexed by player). Also keep track of
+  // the quadraticization from last iteration.
+  std::vector<LinearDynamicsApproximation> linearization_;
+  std::vector<std::vector<QuadraticCostApproximation>> cost_quadraticization_;
+  std::vector<std::vector<QuadraticCostApproximation>>
+      last_cost_quadraticization_;
 
   // Core LQ Solver.
   std::unique_ptr<LQSolver> lq_solver_;

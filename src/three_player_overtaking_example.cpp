@@ -175,8 +175,7 @@ void ThreePlayerOvertakingExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
        std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-       std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
-      time_step_));
+       std::make_shared<SinglePlayerCar6D>(kInterAxleLength)}));
 }
 
 void ThreePlayerOvertakingExample::ConstructInitialState() {

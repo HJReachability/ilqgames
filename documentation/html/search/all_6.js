@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['gamesolver',['GameSolver',['../classilqgames_1_1_game_solver.html',1,'ilqgames']]]
+  ['ilqsolver',['ILQSolver',['../classilqgames_1_1_i_l_q_solver.html',1,'ilqgames']]]
 ];

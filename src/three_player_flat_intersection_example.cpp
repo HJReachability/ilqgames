@@ -57,10 +57,7 @@
 #include <ilqgames/dynamics/single_player_flat_unicycle_4d.h>
 #include <ilqgames/examples/three_player_flat_intersection_example.h>
 #include <ilqgames/geometry/polyline2.h>
-#include <ilqgames/solver/ilq_flat_solver.h>
-#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -188,8 +185,7 @@ static const Dimension kP3AIdx = 1;
 void ThreePlayerFlatIntersectionExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedFlatSystem(
       {std::make_shared<P1>(kInterAxleLength),
-       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
-      time_step_));
+       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()}));
 }
 
 void ThreePlayerFlatIntersectionExample::ConstructInitialState() {

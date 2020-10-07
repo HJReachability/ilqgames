@@ -61,8 +61,8 @@ class SinglePlayerDynamicalSystem {
   // NOTE: this function signature violates Google style guide return by
   // pointer convention intentionally, in order to comply with Eigen standard:
   // https://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
-  virtual void Linearize(Time t, Time time_step, const VectorXf& x,
-                         const VectorXf& u, Eigen::Ref<MatrixXf> A,
+  virtual void Linearize(Time t, const VectorXf& x, const VectorXf& u,
+                         Eigen::Ref<MatrixXf> A,
                          Eigen::Ref<MatrixXf> B) const = 0;
 
   // Distance metric on the state space. By default, just the *squared* 2-norm.

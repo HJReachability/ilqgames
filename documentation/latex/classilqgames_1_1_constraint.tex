@@ -1,0 +1,93 @@
+\hypertarget{classilqgames_1_1_constraint}{}\section{ilqgames\+:\+:Constraint Class Reference}
+\label{classilqgames_1_1_constraint}\index{ilqgames\+::\+Constraint@{ilqgames\+::\+Constraint}}
+Inheritance diagram for ilqgames\+:\+:Constraint\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.066421cm]{classilqgames_1_1_constraint}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool {\bfseries Is\+Satisfied} (Time t, const Vector\+Xf \&input, float $\ast$level) const \hypertarget{classilqgames_1_1_constraint_a53f7a194695153ab3c66598c54553cdf}{}\label{classilqgames_1_1_constraint_a53f7a194695153ab3c66598c54553cdf}
+
+\item 
+bool {\bfseries Is\+Satisfied} (float level) const \hypertarget{classilqgames_1_1_constraint_aa5c764487cb888508c8bea165a0c532b}{}\label{classilqgames_1_1_constraint_aa5c764487cb888508c8bea165a0c532b}
+
+\item 
+virtual float {\bfseries Evaluate} (Time t, const Vector\+Xf \&input) const =0\hypertarget{classilqgames_1_1_constraint_a399cd2ac91e7e09f58ef37cab151d4f4}{}\label{classilqgames_1_1_constraint_a399cd2ac91e7e09f58ef37cab151d4f4}
+
+\item 
+float {\bfseries Evaluate\+Augmented\+Lagrangian} (Time t, const Vector\+Xf \&input) const \hypertarget{classilqgames_1_1_constraint_a0d2a13d153e73dd815fe9e08b2fab978}{}\label{classilqgames_1_1_constraint_a0d2a13d153e73dd815fe9e08b2fab978}
+
+\item 
+virtual void {\bfseries Quadraticize} (Time t, const Vector\+Xf \&input, Matrix\+Xf $\ast$hess, Vector\+Xf $\ast$grad) const =0\hypertarget{classilqgames_1_1_constraint_a94538ad0da7e881d1a3bd4009c43f775}{}\label{classilqgames_1_1_constraint_a94538ad0da7e881d1a3bd4009c43f775}
+
+\item 
+bool {\bfseries Is\+Equality} () const \hypertarget{classilqgames_1_1_constraint_a5d825e56fb8435de0f55c23e4af84d6a}{}\label{classilqgames_1_1_constraint_a5d825e56fb8435de0f55c23e4af84d6a}
+
+\item 
+float \& {\bfseries Lambda} (Time t)\hypertarget{classilqgames_1_1_constraint_a99560d1b41f475b8327e742ea6e75306}{}\label{classilqgames_1_1_constraint_a99560d1b41f475b8327e742ea6e75306}
+
+\item 
+float {\bfseries Lambda} (Time t) const \hypertarget{classilqgames_1_1_constraint_a92c777a068225fc5bcd982b2ece55ca3}{}\label{classilqgames_1_1_constraint_a92c777a068225fc5bcd982b2ece55ca3}
+
+\item 
+void {\bfseries Increment\+Lambda} (Time t, float value)\hypertarget{classilqgames_1_1_constraint_a41450a7d296c8e31857e44d056e1b9ab}{}\label{classilqgames_1_1_constraint_a41450a7d296c8e31857e44d056e1b9ab}
+
+\item 
+void {\bfseries Scale\+Lambdas} (float scale)\hypertarget{classilqgames_1_1_constraint_a8b708fd62f64cd72828d0536d9ad7671}{}\label{classilqgames_1_1_constraint_a8b708fd62f64cd72828d0536d9ad7671}
+
+\item 
+float {\bfseries Mu} (Time t, const Vector\+Xf \&input) const \hypertarget{classilqgames_1_1_constraint_a703d0ccdeb1157adc9a681bf7857b9dc}{}\label{classilqgames_1_1_constraint_a703d0ccdeb1157adc9a681bf7857b9dc}
+
+\item 
+float {\bfseries Mu} (float lambda, float g) const \hypertarget{classilqgames_1_1_constraint_a6280ae8452b7ff990843d81bed470016}{}\label{classilqgames_1_1_constraint_a6280ae8452b7ff990843d81bed470016}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static float \& {\bfseries Global\+Mu} ()\hypertarget{classilqgames_1_1_constraint_ab8d5b4e624d92938469cf219ea42293d}{}\label{classilqgames_1_1_constraint_ab8d5b4e624d92938469cf219ea42293d}
+
+\item 
+static void {\bfseries Scale\+Mu} (float scale)\hypertarget{classilqgames_1_1_constraint_a131ca1c98e53240d06dcf9e405d8c885}{}\label{classilqgames_1_1_constraint_a131ca1c98e53240d06dcf9e405d8c885}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+{\bfseries Constraint} (bool is\+\_\+equality, const std\+::string \&name)\hypertarget{classilqgames_1_1_constraint_acf86b4a9aab163591e785f90b3263fe3}{}\label{classilqgames_1_1_constraint_acf86b4a9aab163591e785f90b3263fe3}
+
+\item 
+void {\bfseries Modify\+Derivatives} (Time t, float g, float $\ast$dx, float $\ast$ddx, float $\ast$dy=nullptr, float $\ast$ddy=nullptr, float $\ast$dxdy=nullptr) const \hypertarget{classilqgames_1_1_constraint_a2eae3f666687733f58ccd8338089df14}{}\label{classilqgames_1_1_constraint_a2eae3f666687733f58ccd8338089df14}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+bool {\bfseries is\+\_\+equality\+\_\+}\hypertarget{classilqgames_1_1_constraint_ae045194a79f1cb886fd969c4fd55faf8}{}\label{classilqgames_1_1_constraint_ae045194a79f1cb886fd969c4fd55faf8}
+
+\item 
+std\+::vector$<$ float $>$ {\bfseries lambdas\+\_\+}\hypertarget{classilqgames_1_1_constraint_ac04602b21370f03090bda557c88f3da7}{}\label{classilqgames_1_1_constraint_ac04602b21370f03090bda557c88f3da7}
+
+\end{DoxyCompactItemize}
+\subsection*{Static Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+static float {\bfseries mu\+\_\+} = 10.\+0\hypertarget{classilqgames_1_1_constraint_a8622600933da02b1f3f7b05b02c40d9a}{}\label{classilqgames_1_1_constraint_a8622600933da02b1f3f7b05b02c40d9a}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+
+
+Definition at line 63 of file constraint.\+h.
+
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/include/ilqgames/constraint/constraint.\+h\item 
+/home/travis/build/\+H\+J\+Reachability/ilqgames/src/constraint.\+cpp\end{DoxyCompactItemize}

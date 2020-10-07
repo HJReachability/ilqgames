@@ -146,24 +146,15 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>SetUpNextRece
 <tr class="memitem:a14744049661872191758323a4947f072 inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a14744049661872191758323a4947f072"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>OverwriteSolution</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;strategies)</td></tr>
 <tr class="separator:a14744049661872191758323a4947f072 inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a424e7aaa780d06a7ab18ea19fb0cda40 inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a424e7aaa780d06a7ab18ea19fb0cda40"></a>
-Time&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeRelativeTimeStamp</b> (size_t time_index) const </td></tr>
-<tr class="separator:a424e7aaa780d06a7ab18ea19fb0cda40 inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b628747d62e1871c6cc5d01e5c1f0df inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b628747d62e1871c6cc5d01e5c1f0df"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsConstrained</b> () const </td></tr>
+<tr class="separator:a4b628747d62e1871c6cc5d01e5c1f0df inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab0eeee481eeb53317658fb9a38648f30 inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab0eeee481eeb53317658fb9a38648f30"></a>
 virtual Time&#160;</td><td class="memItemRight" valign="bottom"><b>InitialTime</b> () const </td></tr>
 <tr class="separator:ab0eeee481eeb53317658fb9a38648f30 inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b4d86b6f76908fdfc5ac82aae9320cb inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9b4d86b6f76908fdfc5ac82aae9320cb"></a>
 const VectorXf &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>InitialState</b> () const </td></tr>
 <tr class="separator:a9b4d86b6f76908fdfc5ac82aae9320cb inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afdd2a8fe429014bc5aa5fe9de4cbd0c1 inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afdd2a8fe429014bc5aa5fe9de4cbd0c1"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumTimeSteps</b> () const </td></tr>
-<tr class="separator:afdd2a8fe429014bc5aa5fe9de4cbd0c1 inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af0a09c4e19ddf5fca85136d4187eb3d8 inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af0a09c4e19ddf5fca85136d4187eb3d8"></a>
-Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeStep</b> () const </td></tr>
-<tr class="separator:af0a09c4e19ddf5fca85136d4187eb3d8 inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acdabeeb3611f8887b0d104ea41d0ab12 inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdabeeb3611f8887b0d104ea41d0ab12"></a>
-Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeHorizon</b> () const </td></tr>
-<tr class="separator:acdabeeb3611f8887b0d104ea41d0ab12 inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae59a04bdc7c289ef9272dee1e51df892 inherit pub_methods_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae59a04bdc7c289ef9272dee1e51df892"></a>
 std::vector&lt; <a class="el" href="classilqgames_1_1_player_cost.html">PlayerCost</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>PlayerCosts</b> ()</td></tr>
 <tr class="separator:ae59a04bdc7c289ef9272dee1e51df892 inherit pub_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -196,15 +187,6 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ConstructInit
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>SyncToExistingProblem</b> (const VectorXf &amp;x0, Time t0, Time planner_runtime, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op)</td></tr>
 <tr class="separator:ae7f62429b51816a8221603f314ce46c8 inherit pro_methods_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classilqgames_1_1_problem"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classilqgames_1_1_problem')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classilqgames_1_1_problem.html">ilqgames::Problem</a></td></tr>
-<tr class="memitem:ab93ced52c3e5aa22bdf45cb94eaaaa2e inherit pro_attribs_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab93ced52c3e5aa22bdf45cb94eaaaa2e"></a>
-const Time&#160;</td><td class="memItemRight" valign="bottom"><b>time_horizon_</b></td></tr>
-<tr class="separator:ab93ced52c3e5aa22bdf45cb94eaaaa2e inherit pro_attribs_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af66867cb1c107633fe644d223fd6046b inherit pro_attribs_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af66867cb1c107633fe644d223fd6046b"></a>
-const Time&#160;</td><td class="memItemRight" valign="bottom"><b>time_step_</b></td></tr>
-<tr class="separator:af66867cb1c107633fe644d223fd6046b inherit pro_attribs_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f8a3ec65d0c1ae8008169336a696257 inherit pro_attribs_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7f8a3ec65d0c1ae8008169336a696257"></a>
-const size_t&#160;</td><td class="memItemRight" valign="bottom"><b>num_time_steps_</b></td></tr>
-<tr class="separator:a7f8a3ec65d0c1ae8008169336a696257 inherit pro_attribs_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a278a73f88a14262e31a56478301b6bde inherit pro_attribs_classilqgames_1_1_problem"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a278a73f88a14262e31a56478301b6bde"></a>
 std::shared_ptr&lt; const <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">MultiPlayerIntegrableSystem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>dynamics_</b></td></tr>
 <tr class="separator:a278a73f88a14262e31a56478301b6bde inherit pro_attribs_classilqgames_1_1_problem"><td class="memSeparator" colspan="2">&#160;</td></tr>

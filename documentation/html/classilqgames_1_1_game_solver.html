@@ -101,16 +101,16 @@ Inheritance diagram for ilqgames::GameSolver:</div>
  <div class="center">
   <img src="classilqgames_1_1_game_solver.png" usemap="#ilqgames::GameSolver_map" alt=""/>
   <map id="ilqgames::GameSolver_map" name="ilqgames::GameSolver_map">
-<area href="classilqgames_1_1_i_l_q_solver.html" alt="ilqgames::ILQSolver" shape="rect" coords="0,56,144,80"/>
-<area href="classilqgames_1_1_i_l_q_flat_solver.html" alt="ilqgames::ILQFlatSolver" shape="rect" coords="0,112,144,136"/>
+<area href="classilqgames_1_1_augmented_lagrangian_solver.html" alt="ilqgames::AugmentedLagrangianSolver" shape="rect" coords="0,56,230,80"/>
+<area href="classilqgames_1_1_i_l_q_solver.html" alt="ilqgames::ILQSolver" shape="rect" coords="240,56,470,80"/>
 </map>
  </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a33845e75d3148ee43f068bcb85b2d297"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33845e75d3148ee43f068bcb85b2d297"></a>
-virtual std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (bool *success=nullptr, Time max_runtime=std::numeric_limits&lt; Time &gt;::infinity())=0</td></tr>
-<tr class="separator:a33845e75d3148ee43f068bcb85b2d297"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfc52c3804a21ccd8fc0d7940bfdfcbe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adfc52c3804a21ccd8fc0d7940bfdfcbe"></a>
+virtual std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Solve</b> (bool *success=nullptr, Time max_runtime=constants::kInfinity)=0</td></tr>
+<tr class="separator:adfc52c3804a21ccd8fc0d7940bfdfcbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a03e86a0b9070715738e11b9cfbc93321"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03e86a0b9070715738e11b9cfbc93321"></a>
 <a class="el" href="classilqgames_1_1_problem.html">Problem</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>GetProblem</b> ()</td></tr>
 <tr class="separator:a03e86a0b9070715738e11b9cfbc93321"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -123,27 +123,12 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:add427a4fe7b7d3d0e2dbb4a47105c765"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="add427a4fe7b7d3d0e2dbb4a47105c765"></a>
 virtual std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>CreateNewLog</b> () const </td></tr>
 <tr class="separator:add427a4fe7b7d3d0e2dbb4a47105c765"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02d8f01b0742df2c0f288e8519c58282"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02d8f01b0742df2c0f288e8519c58282"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeLinearization</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op, std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt; *linearization)</td></tr>
-<tr class="separator:a02d8f01b0742df2c0f288e8519c58282"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aba8d0d2965cb5140809327e765b1898d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba8d0d2965cb5140809327e765b1898d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ComputeCostQuadraticization</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;op, std::vector&lt; std::vector&lt; <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a> &gt;&gt; *q)</td></tr>
-<tr class="separator:aba8d0d2965cb5140809327e765b1898d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
 <tr class="memitem:a3c1d8f6d4d9142d6bca23623391ca2c3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c1d8f6d4d9142d6bca23623391ca2c3"></a>
 const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_problem.html">Problem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>problem_</b></td></tr>
 <tr class="separator:a3c1d8f6d4d9142d6bca23623391ca2c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad31cd30bf0b2fd95461672da928e91f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad31cd30bf0b2fd95461672da928e91f2"></a>
-std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approximation.html">LinearDynamicsApproximation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>linearization_</b></td></tr>
-<tr class="separator:ad31cd30bf0b2fd95461672da928e91f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7a4c4edd7ecee0d856b928c5d27ded6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa7a4c4edd7ecee0d856b928c5d27ded6"></a>
-std::vector&lt; std::vector&lt; <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>cost_quadraticization_</b></td></tr>
-<tr class="separator:aa7a4c4edd7ecee0d856b928c5d27ded6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a463e0e69bd055f4fa78841be22782ea8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a463e0e69bd055f4fa78841be22782ea8"></a>
-std::vector&lt; std::vector&lt; <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>last_cost_quadraticization_</b></td></tr>
-<tr class="separator:a463e0e69bd055f4fa78841be22782ea8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb70fc48a6420c1b516becd5c108a92a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb70fc48a6420c1b516becd5c108a92a"></a>
 const <a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a>&#160;</td><td class="memItemRight" valign="bottom"><b>params_</b></td></tr>
 <tr class="separator:adb70fc48a6420c1b516becd5c108a92a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -154,9 +139,8 @@ const <a class="el" href="structilqgames_1_1_solver_params.html">SolverParams</a
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
 <p>Definition at line <a class="el" href="game__solver_8h_source.html#l00078">78</a> of file <a class="el" href="game__solver_8h_source.html">game_solver.h</a>.</p>
-</div><hr/>The documentation for this class was generated from the following files:<ul>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/solver/<a class="el" href="game__solver_8h_source.html">game_solver.h</a></li>
-<li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="game__solver_8cpp_source.html">game_solver.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

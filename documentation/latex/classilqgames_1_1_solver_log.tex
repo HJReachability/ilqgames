@@ -9,10 +9,10 @@ Inheritance diagram for ilqgames\+:\+:Solver\+Log\+:\begin{figure}[H]
 \subsection*{Public Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-{\bfseries Solver\+Log} (Time time\+\_\+step)\hypertarget{classilqgames_1_1_solver_log_a7cc54ade816d9ab9d8e794f72a8aee64}{}\label{classilqgames_1_1_solver_log_a7cc54ade816d9ab9d8e794f72a8aee64}
+void {\bfseries Add\+Solver\+Iterate} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies, const std\+::vector$<$ float $>$ \&total\+\_\+costs, Time cumulative\+\_\+runtime, bool was\+\_\+converged)\hypertarget{classilqgames_1_1_solver_log_abbd4f1c7a064c3ae772633762d60a11e}{}\label{classilqgames_1_1_solver_log_abbd4f1c7a064c3ae772633762d60a11e}
 
 \item 
-void {\bfseries Add\+Solver\+Iterate} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies, const std\+::vector$<$ float $>$ \&total\+\_\+costs, Time cumulative\+\_\+runtime, bool was\+\_\+converged)\hypertarget{classilqgames_1_1_solver_log_abbd4f1c7a064c3ae772633762d60a11e}{}\label{classilqgames_1_1_solver_log_abbd4f1c7a064c3ae772633762d60a11e}
+void {\bfseries Add\+Log} (const \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} \&log)\hypertarget{classilqgames_1_1_solver_log_ae0b4da5de15e8a03a0c64e79db9fb60d}{}\label{classilqgames_1_1_solver_log_ae0b4da5de15e8a03a0c64e79db9fb60d}
 
 \item 
 void {\bfseries Clear\+All\+But\+First\+Iterate} ()\hypertarget{classilqgames_1_1_solver_log_aeb7c725598ed426c4428bd51ceaa0931}{}\label{classilqgames_1_1_solver_log_aeb7c725598ed426c4428bd51ceaa0931}
@@ -22,9 +22,6 @@ bool {\bfseries Was\+Converged} () const \hypertarget{classilqgames_1_1_solver_l
 
 \item 
 bool {\bfseries Was\+Converged} (size\+\_\+t idx) const \hypertarget{classilqgames_1_1_solver_log_ace7a4654de1ca7e4250ebe3a93adad28}{}\label{classilqgames_1_1_solver_log_ace7a4654de1ca7e4250ebe3a93adad28}
-
-\item 
-Time {\bfseries Time\+Step} () const \hypertarget{classilqgames_1_1_solver_log_a133c4f7326bc17d88dac054988a8ba2c}{}\label{classilqgames_1_1_solver_log_a133c4f7326bc17d88dac054988a8ba2c}
 
 \item 
 Time {\bfseries Initial\+Time} () const \hypertarget{classilqgames_1_1_solver_log_aaaf83583b07bc9b9974ff0a21b11129b}{}\label{classilqgames_1_1_solver_log_aaaf83583b07bc9b9974ff0a21b11129b}
@@ -37,9 +34,6 @@ Player\+Index {\bfseries Num\+Players} () const \hypertarget{classilqgames_1_1_s
 
 \item 
 size\+\_\+t {\bfseries Num\+Iterates} () const \hypertarget{classilqgames_1_1_solver_log_a205590ee3aadd88aaf11ef6b5bb774dc}{}\label{classilqgames_1_1_solver_log_a205590ee3aadd88aaf11ef6b5bb774dc}
-
-\item 
-size\+\_\+t {\bfseries Num\+Time\+Steps} () const \hypertarget{classilqgames_1_1_solver_log_a21898bab7582fcf5ca77fe336479b07b}{}\label{classilqgames_1_1_solver_log_a21898bab7582fcf5ca77fe336479b07b}
 
 \item 
 std\+::vector$<$ float $>$ {\bfseries Total\+Costs} () const \hypertarget{classilqgames_1_1_solver_log_a175236dc1d4d3028511b0c82500095c5}{}\label{classilqgames_1_1_solver_log_a175236dc1d4d3028511b0c82500095c5}

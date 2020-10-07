@@ -41,7 +41,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
@@ -98,8 +98,8 @@ static const Dimension kP1OmegaIdx = 0;
 }  // anonymous namespace
 
 void OnePlayerReachabilityExample::ConstructDynamics() {
-  dynamics_.reset(new ConcatenatedDynamicalSystem(
-      {std::make_shared<P1>(kSpeed)}, time_step_));
+  dynamics_.reset(
+      new ConcatenatedDynamicalSystem({std::make_shared<P1>(kSpeed)}));
 }
 
 void OnePlayerReachabilityExample::ConstructInitialState() {
@@ -120,12 +120,14 @@ void OnePlayerReachabilityExample::ConstructPlayerCosts() {
   p1_cost.AddControlCost(0, control_cost);
 
   // Constrain control effort.
-  const auto p1_omega_max_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP1OmegaIdx, kOmegaMax, false, "Input Barrier (Max)");
-  const auto p1_omega_min_barrier = std::make_shared<SingleDimensionBarrier>(
-      kP1OmegaIdx, -kOmegaMax, true, "Input Barrier (Min)");
-  p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
-  p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
+  const auto p1_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(kP1OmegaIdx, kOmegaMax, true,
+                                                  "Input Constraint (Max)");
+  const auto p1_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          kP1OmegaIdx, -kOmegaMax, false, "Input Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
 
   // Target cost.
   const Polyline2 circle =

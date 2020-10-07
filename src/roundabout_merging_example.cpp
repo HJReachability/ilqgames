@@ -72,11 +72,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 500.0;
@@ -194,8 +189,7 @@ void RoundaboutMergingExample::ConstructDynamics() {
       {std::make_shared<P1>(kInterAxleDistance),
        std::make_shared<P2>(kInterAxleDistance),
        std::make_shared<P3>(kInterAxleDistance),
-       std::make_shared<P4>(kInterAxleDistance)},
-      kTimeStep));
+       std::make_shared<P4>(kInterAxleDistance)}));
 }
 
 void RoundaboutMergingExample::ConstructInitialState() {
@@ -222,13 +216,13 @@ void RoundaboutMergingExample::ConstructInitialState() {
 void RoundaboutMergingExample::ConstructInitialOperatingPoint() {
   // Initialize operating points to follow these lanes at the nominal speed.
   // InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
-  //                      kTimeStep, operating_point_.get());
+  //                      operating_point_.get());
   // InitializeAlongRoute(lane2, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
-  //                      kTimeStep, operating_point_.get());
+  //                      operating_point_.get());
   // InitializeAlongRoute(lane3, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
-  //                      kTimeStep, operating_point_.get());
+  //                      operating_point_.get());
   // InitializeAlongRoute(lane4, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
-  //                      kTimeStep, operating_point_.get());
+  //                      operating_point_.get());
   Problem::ConstructInitialOperatingPoint();
 }
 

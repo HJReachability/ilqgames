@@ -99,7 +99,6 @@ class MultiPlayerIntegrableSystem {
   static bool IntegrationUsesEuler() { return integrate_using_euler_; }
 
   // Getters.
-  Time TimeStep() const { return time_step_; }
   Dimension XDim() const { return xdim_; }
   Dimension TotalUDim() const {
     Dimension total = 0;
@@ -116,14 +115,10 @@ class MultiPlayerIntegrableSystem {
   }
 
  protected:
-  MultiPlayerIntegrableSystem(Dimension xdim, Time time_step)
-      : xdim_(xdim), time_step_(time_step) {}
+  MultiPlayerIntegrableSystem(Dimension xdim) : xdim_(xdim) {}
 
   // State dimension.
   const Dimension xdim_;
-
-  // Time step.
-  const Time time_step_;
 
   // Whether to use single Euler during integration. Typically this is false but
   // it is typically used either for testing (we only derive Nash typically in

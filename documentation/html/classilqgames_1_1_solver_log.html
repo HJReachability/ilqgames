@@ -105,12 +105,12 @@ Inheritance diagram for ilqgames::SolverLog:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a7cc54ade816d9ab9d8e794f72a8aee64"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7cc54ade816d9ab9d8e794f72a8aee64"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>SolverLog</b> (Time time_step)</td></tr>
-<tr class="separator:a7cc54ade816d9ab9d8e794f72a8aee64"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbd4f1c7a064c3ae772633762d60a11e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abbd4f1c7a064c3ae772633762d60a11e"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>AddSolverIterate</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;strategies, const std::vector&lt; float &gt; &amp;total_costs, Time cumulative_runtime, bool was_converged)</td></tr>
 <tr class="separator:abbd4f1c7a064c3ae772633762d60a11e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0b4da5de15e8a03a0c64e79db9fb60d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae0b4da5de15e8a03a0c64e79db9fb60d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>AddLog</b> (const <a class="el" href="classilqgames_1_1_solver_log.html">SolverLog</a> &amp;log)</td></tr>
+<tr class="separator:ae0b4da5de15e8a03a0c64e79db9fb60d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeb7c725598ed426c4428bd51ceaa0931"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeb7c725598ed426c4428bd51ceaa0931"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ClearAllButFirstIterate</b> ()</td></tr>
 <tr class="separator:aeb7c725598ed426c4428bd51ceaa0931"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -120,9 +120,6 @@ bool&#160;</td><td class="memItemRight" valign="bottom"><b>WasConverged</b> () c
 <tr class="memitem:ace7a4654de1ca7e4250ebe3a93adad28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace7a4654de1ca7e4250ebe3a93adad28"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>WasConverged</b> (size_t idx) const </td></tr>
 <tr class="separator:ace7a4654de1ca7e4250ebe3a93adad28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a133c4f7326bc17d88dac054988a8ba2c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a133c4f7326bc17d88dac054988a8ba2c"></a>
-Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeStep</b> () const </td></tr>
-<tr class="separator:a133c4f7326bc17d88dac054988a8ba2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaaf83583b07bc9b9974ff0a21b11129b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaaf83583b07bc9b9974ff0a21b11129b"></a>
 Time&#160;</td><td class="memItemRight" valign="bottom"><b>InitialTime</b> () const </td></tr>
 <tr class="separator:aaaf83583b07bc9b9974ff0a21b11129b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,9 +132,6 @@ PlayerIndex&#160;</td><td class="memItemRight" valign="bottom"><b>NumPlayers</b>
 <tr class="memitem:a205590ee3aadd88aaf11ef6b5bb774dc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a205590ee3aadd88aaf11ef6b5bb774dc"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumIterates</b> () const </td></tr>
 <tr class="separator:a205590ee3aadd88aaf11ef6b5bb774dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21898bab7582fcf5ca77fe336479b07b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21898bab7582fcf5ca77fe336479b07b"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumTimeSteps</b> () const </td></tr>
-<tr class="separator:a21898bab7582fcf5ca77fe336479b07b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a175236dc1d4d3028511b0c82500095c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a175236dc1d4d3028511b0c82500095c5"></a>
 std::vector&lt; float &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>TotalCosts</b> () const </td></tr>
 <tr class="separator:a175236dc1d4d3028511b0c82500095c5"><td class="memSeparator" colspan="2">&#160;</td></tr>

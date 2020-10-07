@@ -53,25 +53,20 @@
 #include <memory>
 #include <vector>
 
-// Time horizon and step.
-DEFINE_double(time_horizon, 10.0, "Total time horizon (s).");
-DEFINE_double(time_step, 0.1, "Length of discrete time step (s).");
+// // Time horizon and step.
+// DEFINE_double(time_horizon, 10.0, "Total time horizon (s).");
+// DEFINE_double(time_step, 0.1, "Length of discrete time step (s).");
 
 namespace ilqgames {
 
-Problem::Problem()
-    : time_horizon_(FLAGS_time_horizon),
-      time_step_(FLAGS_time_step),
-      num_time_steps_(static_cast<size_t>(
-          (constants::kSmallNumber + FLAGS_time_horizon) / FLAGS_time_step)),
-      initialized_(false) {}
+Problem::Problem() : initialized_(false) {}
 
 size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
                                       Time planner_runtime,
                                       OperatingPoint& op) {
   CHECK(initialized_);
   CHECK_GE(planner_runtime, 0.0);
-  CHECK_LE(planner_runtime + t0, InitialTime() + TimeHorizon());
+  CHECK_LE(planner_runtime + t0, operating_point_->t0 + time::kTimeHorizon);
   CHECK_GE(t0, operating_point_->t0);
 
   // Integrate x0 forward from t0 by approximately planner_runtime to get
@@ -80,15 +75,15 @@ size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
   // timestep at least 'planner_runtime' has elapsed (done by rounding).
   constexpr float kRoundingError = 0.9;
   const Time relative_t0 = t0 - op.t0;
-  size_t current_timestep = static_cast<size_t>(relative_t0 / time_step_);
+  size_t current_timestep = static_cast<size_t>(relative_t0 / time::kTimeStep);
   Time remaining_time_this_step =
-      (current_timestep + 1) * time_step_ - relative_t0;
-  if (remaining_time_this_step < kRoundingError * time_step_) {
+      (current_timestep + 1) * time::kTimeStep - relative_t0;
+  if (remaining_time_this_step < kRoundingError * time::kTimeStep) {
     current_timestep += 1;
-    remaining_time_this_step = time_step_ - remaining_time_this_step;
+    remaining_time_this_step = time::kTimeStep - remaining_time_this_step;
   }
 
-  CHECK_LT(remaining_time_this_step, time_step_);
+  CHECK_LT(remaining_time_this_step, time::kTimeStep);
 
   // Initially, set x to the integrated version of x0 at the next timestep.
   VectorXf x = dynamics_->IntegrateToNextTimeStep(t0, x0, *operating_point_,
@@ -97,13 +92,13 @@ size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
   if (remaining_time_this_step <= planner_runtime) {
     const size_t num_steps_to_integrate = static_cast<size_t>(
         constants::kSmallNumber +  // Add to avoid truncation error.
-        (planner_runtime - remaining_time_this_step) / time_step_);
+        (planner_runtime - remaining_time_this_step) / time::kTimeStep);
     const size_t last_integration_timestep =
         current_timestep + num_steps_to_integrate;
 
     x = dynamics_->Integrate(current_timestep + 1, last_integration_timestep, x,
                              *operating_point_, *strategies_);
-    op.t0 += time_step_ * num_steps_to_integrate;
+    op.t0 += time::kTimeStep * num_steps_to_integrate;
   }
 
   // Find index of nearest state in the existing plan to this state.
@@ -125,7 +120,7 @@ size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
   RelativeTimeTracker::ResetInitialTime(op.t0);
 
   // Check an invariant.
-  CHECK_LE(std::abs(t0 + planner_runtime - op.t0), time_step_);
+  CHECK_LE(std::abs(t0 + planner_runtime - op.t0), time::kTimeStep);
   return first_timestep_in_new_problem;
 }
 
@@ -139,7 +134,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
 
   // Set final timestep to consider in current operating point.
   const size_t after_final_timestep =
-      first_timestep_in_new_problem + NumTimeSteps();
+      first_timestep_in_new_problem + time::kNumTimeSteps;
   const size_t timestep_iterator_end =
       std::min(after_final_timestep, operating_point_->xs.size());
 
@@ -163,20 +158,20 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   }
 
   // Make sure operating point is the right size.
-  CHECK_GE(operating_point_->xs.size(), NumTimeSteps());
-  if (operating_point_->xs.size() > NumTimeSteps()) {
-    operating_point_->xs.resize(NumTimeSteps());
-    operating_point_->us.resize(NumTimeSteps());
+  CHECK_GE(operating_point_->xs.size(), time::kNumTimeSteps);
+  if (operating_point_->xs.size() > time::kNumTimeSteps) {
+    operating_point_->xs.resize(time::kNumTimeSteps);
+    operating_point_->us.resize(time::kNumTimeSteps);
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      (*strategies_)[ii].Ps.resize(NumTimeSteps());
-      (*strategies_)[ii].alphas.resize(NumTimeSteps());
+      (*strategies_)[ii].Ps.resize(time::kNumTimeSteps);
+      (*strategies_)[ii].alphas.resize(time::kNumTimeSteps);
     }
   }
 
   // Set new operating point controls and strategies to zero and propagate
   // state forward accordingly.
   for (size_t kk = timestep_iterator_end - first_timestep_in_new_problem;
-       kk < NumTimeSteps(); kk++) {
+       kk < time::kNumTimeSteps; kk++) {
     operating_point_->us[kk].resize(dynamics_->NumPlayers());
     for (size_t ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       (*strategies_)[ii].Ps[kk].setZero(dynamics_->UDim(ii), dynamics_->XDim());
@@ -185,7 +180,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
     }
 
     operating_point_->xs[kk] = dynamics_->Integrate(
-        InitialTime() + ComputeRelativeTimeStamp(kk - 1), time_step_,
+        RelativeTimeTracker::RelativeTime(kk - 1), time::kTimeStep,
         operating_point_->xs[kk - 1], operating_point_->us[kk - 1]);
   }
 }
@@ -196,6 +191,14 @@ void Problem::OverwriteSolution(const OperatingPoint& operating_point,
 
   *operating_point_ = operating_point;
   *strategies_ = strategies;
+}
+
+bool Problem::IsConstrained() const {
+  for (const auto& pc : player_costs_) {
+    if (pc.IsConstrained()) return true;
+  }
+
+  return false;
 }
 
 }  // namespace ilqgames

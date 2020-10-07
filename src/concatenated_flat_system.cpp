@@ -49,16 +49,14 @@
 namespace ilqgames {
 
 ConcatenatedFlatSystem::ConcatenatedFlatSystem(
-    const FlatSubsystemList& subsystems, Time time_step)
-    : MultiPlayerFlatSystem(
-          std::accumulate(
-              subsystems.begin(), subsystems.end(), 0,
-              [](Dimension total,
-                 const std::shared_ptr<SinglePlayerFlatSystem>& subsystem) {
-                CHECK_NOTNULL(subsystem.get());
-                return total + subsystem->XDim();
-              }),
-          time_step),
+    const FlatSubsystemList& subsystems)
+    : MultiPlayerFlatSystem(std::accumulate(
+          subsystems.begin(), subsystems.end(), 0,
+          [](Dimension total,
+             const std::shared_ptr<SinglePlayerFlatSystem>& subsystem) {
+            CHECK_NOTNULL(subsystem.get());
+            return total + subsystem->XDim();
+          })),
       subsystems_(subsystems) {
   // Populate subsystem start dimensions.
   subsystem_start_dims_.push_back(0);
@@ -95,7 +93,7 @@ void ConcatenatedFlatSystem::ComputeLinearizedSystem() const {
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
     subsystem->LinearizedSystem(
-        time_step_, linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
+        linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
         linearization.Bs[ii].block(dims_so_far, 0, xdim, udim));
 
     dims_so_far += xdim;
@@ -105,9 +103,9 @@ void ConcatenatedFlatSystem::ComputeLinearizedSystem() const {
 
   // Reconstruct the continuous system.
   linearization.A -= MatrixXf::Identity(xdim_, xdim_);
-  linearization.A /= time_step_;
+  linearization.A /= time::kTimeStep;
   for (size_t ii = 0; ii < NumPlayers(); ii++)
-    linearization.Bs[ii] /= time_step_;
+    linearization.Bs[ii] /= time::kTimeStep;
   continuous_linear_system_.reset(
       new LinearDynamicsApproximation(linearization));
 }

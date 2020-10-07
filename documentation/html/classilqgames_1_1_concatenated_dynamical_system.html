@@ -106,9 +106,9 @@ Inheritance diagram for ilqgames::ConcatenatedDynamicalSystem:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:afbac1f5e7a0ceaa9b59a0354e959266f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afbac1f5e7a0ceaa9b59a0354e959266f"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ConcatenatedDynamicalSystem</b> (const SubsystemList &amp;subsystems, Time time_step)</td></tr>
-<tr class="separator:afbac1f5e7a0ceaa9b59a0354e959266f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ea0fa373cf8c541ac18cb986a53c51f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1ea0fa373cf8c541ac18cb986a53c51f"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ConcatenatedDynamicalSystem</b> (const SubsystemList &amp;subsystems)</td></tr>
+<tr class="separator:a1ea0fa373cf8c541ac18cb986a53c51f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba82e3499a437d6c27c8575f0e749298"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba82e3499a437d6c27c8575f0e749298"></a>
 VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
 <tr class="separator:aba82e3499a437d6c27c8575f0e749298"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,9 +162,6 @@ VectorXf&#160;</td><td class="memItemRight" valign="bottom"><b>Integrate</b> (Ti
 <tr class="memitem:adf8ab89fd04892a1806814ef4ce89188 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adf8ab89fd04892a1806814ef4ce89188"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>TreatAsLinear</b> () const </td></tr>
 <tr class="separator:adf8ab89fd04892a1806814ef4ce89188 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1dfd36e77c611fb9d72ba7d2f66dbc08 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1dfd36e77c611fb9d72ba7d2f66dbc08"></a>
-Time&#160;</td><td class="memItemRight" valign="bottom"><b>TimeStep</b> () const </td></tr>
-<tr class="separator:a1dfd36e77c611fb9d72ba7d2f66dbc08 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1f3d72304e04f6906e6e1066717411a7 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1f3d72304e04f6906e6e1066717411a7"></a>
 Dimension&#160;</td><td class="memItemRight" valign="bottom"><b>XDim</b> () const </td></tr>
 <tr class="separator:a1f3d72304e04f6906e6e1066717411a7 inherit pub_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -185,20 +182,17 @@ static void&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrateUsing
 static bool&#160;</td><td class="memItemRight" valign="bottom"><b>IntegrationUsesEuler</b> ()</td></tr>
 <tr class="separator:a7d8d977e079520ad4eb6e2e38833b25c inherit pub_static_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classilqgames_1_1_multi_player_dynamical_system"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classilqgames_1_1_multi_player_dynamical_system')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classilqgames_1_1_multi_player_dynamical_system.html">ilqgames::MultiPlayerDynamicalSystem</a></td></tr>
-<tr class="memitem:a11acc6ee2c06ce966f32017c5711d518 inherit pro_methods_classilqgames_1_1_multi_player_dynamical_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11acc6ee2c06ce966f32017c5711d518"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MultiPlayerDynamicalSystem</b> (Dimension xdim, Time time_step)</td></tr>
-<tr class="separator:a11acc6ee2c06ce966f32017c5711d518 inherit pro_methods_classilqgames_1_1_multi_player_dynamical_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06e2300d28448e4135b7ca600f3828a6 inherit pro_methods_classilqgames_1_1_multi_player_dynamical_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a06e2300d28448e4135b7ca600f3828a6"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>MultiPlayerDynamicalSystem</b> (Dimension xdim)</td></tr>
+<tr class="separator:a06e2300d28448e4135b7ca600f3828a6 inherit pro_methods_classilqgames_1_1_multi_player_dynamical_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_methods_classilqgames_1_1_multi_player_integrable_system"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classilqgames_1_1_multi_player_integrable_system')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">ilqgames::MultiPlayerIntegrableSystem</a></td></tr>
-<tr class="memitem:a7b66a8aa057ed007006d884b5fe333af inherit pro_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b66a8aa057ed007006d884b5fe333af"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>MultiPlayerIntegrableSystem</b> (Dimension xdim, Time time_step)</td></tr>
-<tr class="separator:a7b66a8aa057ed007006d884b5fe333af inherit pro_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0c950b1732a06fe9b98392b3b83109f6 inherit pro_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0c950b1732a06fe9b98392b3b83109f6"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>MultiPlayerIntegrableSystem</b> (Dimension xdim)</td></tr>
+<tr class="separator:a0c950b1732a06fe9b98392b3b83109f6 inherit pro_methods_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classilqgames_1_1_multi_player_integrable_system"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classilqgames_1_1_multi_player_integrable_system')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">ilqgames::MultiPlayerIntegrableSystem</a></td></tr>
 <tr class="memitem:ad6f5958f0f51492aa1d368765f417a19 inherit pro_attribs_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad6f5958f0f51492aa1d368765f417a19"></a>
 const Dimension&#160;</td><td class="memItemRight" valign="bottom"><b>xdim_</b></td></tr>
 <tr class="separator:ad6f5958f0f51492aa1d368765f417a19 inherit pro_attribs_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adbd2c27a82e441fab50201f583a869f2 inherit pro_attribs_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbd2c27a82e441fab50201f583a869f2"></a>
-const Time&#160;</td><td class="memItemRight" valign="bottom"><b>time_step_</b></td></tr>
-<tr class="separator:adbd2c27a82e441fab50201f583a869f2 inherit pro_attribs_classilqgames_1_1_multi_player_integrable_system"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_static_attribs_classilqgames_1_1_multi_player_integrable_system"><td colspan="2" onclick="javascript:toggleInherit('pro_static_attribs_classilqgames_1_1_multi_player_integrable_system')"><img src="closed.png" alt="-"/>&#160;Static Protected Attributes inherited from <a class="el" href="classilqgames_1_1_multi_player_integrable_system.html">ilqgames::MultiPlayerIntegrableSystem</a></td></tr>
 <tr class="memitem:a45d12b2d86a80f04fac29bd88eb8179a inherit pro_static_attribs_classilqgames_1_1_multi_player_integrable_system"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a45d12b2d86a80f04fac29bd88eb8179a"></a>
 static bool&#160;</td><td class="memItemRight" valign="bottom"><b>integrate_using_euler_</b> = false</td></tr>
@@ -206,7 +200,7 @@ static bool&#160;</td><td class="memItemRight" valign="bottom"><b>integrate_usin
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="concatenated__dynamical__system_8h_source.html#l00055">55</a> of file <a class="el" href="concatenated__dynamical__system_8h_source.html">concatenated_dynamical_system.h</a>.</p>
+<p>Definition at line <a class="el" href="concatenated__dynamical__system_8h_source.html#l00057">57</a> of file <a class="el" href="concatenated__dynamical__system_8h_source.html">concatenated_dynamical_system.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/dynamics/<a class="el" href="concatenated__dynamical__system_8h_source.html">concatenated_dynamical_system.h</a></li>
 <li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="concatenated__dynamical__system_8cpp_source.html">concatenated_dynamical_system.cpp</a></li>

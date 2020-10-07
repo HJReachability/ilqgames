@@ -3,7 +3,7 @@
 Inheritance diagram for ilqgames\+:\+:I\+L\+Q\+Solver\+:\begin{figure}[H]
 \begin{center}
 \leavevmode
-\includegraphics[height=3.000000cm]{classilqgames_1_1_i_l_q_solver}
+\includegraphics[height=2.000000cm]{classilqgames_1_1_i_l_q_solver}
 \end{center}
 \end{figure}
 \subsection*{Public Member Functions}
@@ -14,14 +14,20 @@ Inheritance diagram for ilqgames\+:\+:I\+L\+Q\+Solver\+:\begin{figure}[H]
 \item 
 virtual std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_solver_log}{Solver\+Log} $>$ {\bfseries Solve} (bool $\ast$success=nullptr, Time max\+\_\+runtime=std\+::numeric\+\_\+limits$<$ Time $>$\+::infinity())\hypertarget{classilqgames_1_1_i_l_q_solver_ad86d47ce8a04ab5f8e8fcfbf3db6b02e}{}\label{classilqgames_1_1_i_l_q_solver_ad86d47ce8a04ab5f8e8fcfbf3db6b02e}
 
+\item 
+std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ $\ast$ {\bfseries Quadraticization} ()\hypertarget{classilqgames_1_1_i_l_q_solver_aff4b3d9342d6813ba328633676f14c90}{}\label{classilqgames_1_1_i_l_q_solver_aff4b3d9342d6813ba328633676f14c90}
+
+\item 
+std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$ {\bfseries Linearization} ()\hypertarget{classilqgames_1_1_i_l_q_solver_ae7eb0d1f56161f69ccfd7db875ca87ae}{}\label{classilqgames_1_1_i_l_q_solver_ae7eb0d1f56161f69ccfd7db875ca87ae}
+
 \end{DoxyCompactItemize}
 \subsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$is\+\_\+new\+\_\+operating\+\_\+point\+\_\+feasible)\hypertarget{classilqgames_1_1_i_l_q_solver_ada2e91b02b1e88947540dc3f9bbae7f0}{}\label{classilqgames_1_1_i_l_q_solver_ada2e91b02b1e88947540dc3f9bbae7f0}
+bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point)\hypertarget{classilqgames_1_1_i_l_q_solver_aacc4cfbccac0fb2eb344cadb03f76887}{}\label{classilqgames_1_1_i_l_q_solver_aacc4cfbccac0fb2eb344cadb03f76887}
 
 \item 
-virtual float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}{}\label{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}
+float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}{}\label{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}
 
 \item 
 virtual bool {\bfseries Has\+Converged} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+op, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op) const \hypertarget{classilqgames_1_1_i_l_q_solver_a16009dd589014a579b8b8ec5cbe89e87}{}\label{classilqgames_1_1_i_l_q_solver_a16009dd589014a579b8b8ec5cbe89e87}
@@ -33,14 +39,32 @@ void {\bfseries Total\+Costs} (const \hyperlink{structilqgames_1_1_operating_poi
 bool {\bfseries Check\+Armijo\+Condition} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op, float current\+\_\+stepsize, float $\ast$current\+\_\+kkt\+\_\+squared\+\_\+error)\hypertarget{classilqgames_1_1_i_l_q_solver_a4e7525bb720f83e255dac165f0bbeb57}{}\label{classilqgames_1_1_i_l_q_solver_a4e7525bb720f83e255dac165f0bbeb57}
 
 \item 
-float {\bfseries K\+K\+T\+Squared\+Error} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op)\hypertarget{classilqgames_1_1_i_l_q_solver_a9845b60307967eca6aa6897897d5ee69}{}\label{classilqgames_1_1_i_l_q_solver_a9845b60307967eca6aa6897897d5ee69}
+virtual float {\bfseries K\+K\+T\+Squared\+Error} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op)\hypertarget{classilqgames_1_1_i_l_q_solver_a9845b60307967eca6aa6897897d5ee69}{}\label{classilqgames_1_1_i_l_q_solver_a9845b60307967eca6aa6897897d5ee69}
 
 \item 
-void {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$satisfies\+\_\+barriers=nullptr) const \hypertarget{classilqgames_1_1_i_l_q_solver_ae5dd6b941a6caa2091547e27b7ca8869}{}\label{classilqgames_1_1_i_l_q_solver_ae5dd6b941a6caa2091547e27b7ca8869}
+void {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point) const \hypertarget{classilqgames_1_1_i_l_q_solver_ae0145c002de655fd2b012d2142cacb6a}{}\label{classilqgames_1_1_i_l_q_solver_ae0145c002de655fd2b012d2142cacb6a}
+
+\item 
+void {\bfseries Compute\+Linearization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)\hypertarget{classilqgames_1_1_i_l_q_solver_a36c9160e4d5503b5160d04c0acd842d5}{}\label{classilqgames_1_1_i_l_q_solver_a36c9160e4d5503b5160d04c0acd842d5}
+
+\item 
+void {\bfseries Compute\+Linearization} (std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ $\ast$linearization)\hypertarget{classilqgames_1_1_i_l_q_solver_a28112eeff11ad20d5e5ead00bb61d80c}{}\label{classilqgames_1_1_i_l_q_solver_a28112eeff11ad20d5e5ead00bb61d80c}
+
+\item 
+void {\bfseries Compute\+Cost\+Quadraticization} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&op, std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$$>$ $\ast$q)\hypertarget{classilqgames_1_1_i_l_q_solver_a54d6c9c2afc1164cbcbc6b2eec7d2086}{}\label{classilqgames_1_1_i_l_q_solver_a54d6c9c2afc1164cbcbc6b2eec7d2086}
 
 \end{DoxyCompactItemize}
 \subsection*{Protected Attributes}
 \begin{DoxyCompactItemize}
+\item 
+std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Linear\+Dynamics\+Approximation} $>$ {\bfseries linearization\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_a8b02b9f196152504e2b4f746704f99a7}{}\label{classilqgames_1_1_i_l_q_solver_a8b02b9f196152504e2b4f746704f99a7}
+
+\item 
+std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries cost\+\_\+quadraticization\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_af45202b8baa2630b5a3c47c6bf853005}{}\label{classilqgames_1_1_i_l_q_solver_af45202b8baa2630b5a3c47c6bf853005}
+
+\item 
+std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} $>$ $>$ {\bfseries last\+\_\+cost\+\_\+quadraticization\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_ad23a3a3fc170e9b966c9232b9c9de971}{}\label{classilqgames_1_1_i_l_q_solver_ad23a3a3fc170e9b966c9232b9c9de971}
+
 \item 
 std\+::unique\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_l_q_solver}{L\+Q\+Solver} $>$ {\bfseries lq\+\_\+solver\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_afb4b2fed2450e965d347dd6a38a33bb6}{}\label{classilqgames_1_1_i_l_q_solver_afb4b2fed2450e965d347dd6a38a33bb6}
 

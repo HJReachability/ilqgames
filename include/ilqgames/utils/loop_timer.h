@@ -67,7 +67,7 @@ class LoopTimer {
 
   // Tic and toc. Start and stop loop timer.
   void Tic();
-  void Toc();
+  Time Toc();
 
   // High probability upper bound on next loop runtime, with initial guess to be
   // returned if not enough data has been observed yet.

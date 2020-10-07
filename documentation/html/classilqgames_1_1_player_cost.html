@@ -114,18 +114,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>AddStateCost</b> (con
 <tr class="memitem:aba4df0e6414aba024c86bf77fe57f819"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aba4df0e6414aba024c86bf77fe57f819"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>AddControlCost</b> (PlayerIndex idx, const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &gt; &amp;cost)</td></tr>
 <tr class="separator:aba4df0e6414aba024c86bf77fe57f819"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96eacffc74e2f7574d6c9c1296a6729c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a96eacffc74e2f7574d6c9c1296a6729c"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>AddStateBarrier</b> (const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_barrier.html">Barrier</a> &gt; &amp;barrier)</td></tr>
-<tr class="separator:a96eacffc74e2f7574d6c9c1296a6729c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af00870025b9bff184c121ed28712eff2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af00870025b9bff184c121ed28712eff2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>AddControlBarrier</b> (PlayerIndex idx, const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_barrier.html">Barrier</a> &gt; &amp;barrier)</td></tr>
-<tr class="separator:af00870025b9bff184c121ed28712eff2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5c9248e4ecb96a6d1e49ccef9a5c545"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac5c9248e4ecb96a6d1e49ccef9a5c545"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>AddStateConstraint</b> (const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_equality_constraint.html">EqualityConstraint</a> &gt; &amp;constraint)</td></tr>
-<tr class="separator:ac5c9248e4ecb96a6d1e49ccef9a5c545"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb5f7c1664e4cba0e789047ace875eac"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb5f7c1664e4cba0e789047ace875eac"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>AddControlConstraint</b> (PlayerIndex idx, const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_equality_constraint.html">EqualityConstraint</a> &gt; &amp;constraint)</td></tr>
-<tr class="separator:abb5f7c1664e4cba0e789047ace875eac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c1a21f669ab3f937c3be8a49bf7b5b3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c1a21f669ab3f937c3be8a49bf7b5b3"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>AddStateConstraint</b> (const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_constraint.html">Constraint</a> &gt; &amp;constraint)</td></tr>
+<tr class="separator:a9c1a21f669ab3f937c3be8a49bf7b5b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9df6549112ab9b03bd639b4955b700da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9df6549112ab9b03bd639b4955b700da"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>AddControlConstraint</b> (PlayerIndex idx, const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_constraint.html">Constraint</a> &gt; &amp;constraint)</td></tr>
+<tr class="separator:a9df6549112ab9b03bd639b4955b700da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac1ad99a1822d97a53d084fd9da162cb1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1ad99a1822d97a53d084fd9da162cb1"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>Evaluate</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
 <tr class="separator:ac1ad99a1822d97a53d084fd9da162cb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -138,42 +132,9 @@ float&#160;</td><td class="memItemRight" valign="bottom"><b>EvaluateOffset</b> (
 <tr class="memitem:ad3962847f8eda8bcfecf2096e6abccb6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad3962847f8eda8bcfecf2096e6abccb6"></a>
 <a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a>&#160;</td><td class="memItemRight" valign="bottom"><b>Quadraticize</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
 <tr class="separator:ad3962847f8eda8bcfecf2096e6abccb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5986cbef9121912f74735dcad338e50a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5986cbef9121912f74735dcad338e50a"></a>
-<a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a>&#160;</td><td class="memItemRight" valign="bottom"><b>QuadraticizeBarriersAndControlCosts</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
-<tr class="separator:a5986cbef9121912f74735dcad338e50a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41f2c3cac0d44adaaf0654006ab4bbd3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41f2c3cac0d44adaaf0654006ab4bbd3"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>TurnBarriersOn</b> ()</td></tr>
-<tr class="separator:a41f2c3cac0d44adaaf0654006ab4bbd3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aff8945f0b63b3ebfe61636d43f0e0bed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aff8945f0b63b3ebfe61636d43f0e0bed"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>TurnBarriersOff</b> ()</td></tr>
-<tr class="separator:aff8945f0b63b3ebfe61636d43f0e0bed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3c9c1044f87e32188418adacc6efd40f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c9c1044f87e32188418adacc6efd40f"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>AreBarriersOn</b> () const </td></tr>
-<tr class="separator:a3c9c1044f87e32188418adacc6efd40f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afdf789ce1aba79245b9af55ffe97668e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afdf789ce1aba79245b9af55ffe97668e"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>CheckBarriers</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
-<tr class="separator:afdf789ce1aba79245b9af55ffe97668e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45d657992c6f7c9aefdd134e1902dd82"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a45d657992c6f7c9aefdd134e1902dd82"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumStateBarriers</b> () const </td></tr>
-<tr class="separator:a45d657992c6f7c9aefdd134e1902dd82"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9777b060432027514848f18015b8c81b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9777b060432027514848f18015b8c81b"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumControlBarriers</b> () const </td></tr>
-<tr class="separator:a9777b060432027514848f18015b8c81b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c3268b3d9f2d1768096ac0c3adb7cb9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7c3268b3d9f2d1768096ac0c3adb7cb9"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>CheckConstraints</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
-<tr class="separator:a7c3268b3d9f2d1768096ac0c3adb7cb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b3e0bac90840bac45c57b74c9efcf19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b3e0bac90840bac45c57b74c9efcf19"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumStateConstraints</b> () const </td></tr>
-<tr class="separator:a3b3e0bac90840bac45c57b74c9efcf19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a61ab18fcd64b4fb99014ef14178f61d1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61ab18fcd64b4fb99014ef14178f61d1"></a>
-size_t&#160;</td><td class="memItemRight" valign="bottom"><b>NumControlConstraints</b> () const </td></tr>
-<tr class="separator:a61ab18fcd64b4fb99014ef14178f61d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecd0761c305c18284a348ab958e545ce"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aecd0761c305c18284a348ab958e545ce"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ScaleBarrierWeights</b> (float scale=0.5)</td></tr>
-<tr class="separator:aecd0761c305c18284a348ab958e545ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaac79536c50721cbe5051010f77fda48"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaac79536c50721cbe5051010f77fda48"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ResetBarrierWeights</b> ()</td></tr>
-<tr class="separator:aaac79536c50721cbe5051010f77fda48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1273b7fbbfc4cca818ebdcf6942662ba"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1273b7fbbfc4cca818ebdcf6942662ba"></a>
+<a class="el" href="structilqgames_1_1_quadratic_cost_approximation.html">QuadraticCostApproximation</a>&#160;</td><td class="memItemRight" valign="bottom"><b>QuadraticizeControlCosts</b> (Time t, const VectorXf &amp;x, const std::vector&lt; VectorXf &gt; &amp;us) const </td></tr>
+<tr class="separator:a1273b7fbbfc4cca818ebdcf6942662ba"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aabdacf36b0f3bc01b96ea1b62da9737a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aabdacf36b0f3bc01b96ea1b62da9737a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>SetTimeAdditive</b> ()</td></tr>
 <tr class="separator:aabdacf36b0f3bc01b96ea1b62da9737a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -201,25 +162,22 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>SetTimeOfExtremeCost<
 <tr class="memitem:a16a676ec8d145d97d555cbebe79ac5fd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a16a676ec8d145d97d555cbebe79ac5fd"></a>
 const PtrVector&lt; <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>StateCosts</b> () const </td></tr>
 <tr class="separator:a16a676ec8d145d97d555cbebe79ac5fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad809161f85e1d22af874e2cd5278a753"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad809161f85e1d22af874e2cd5278a753"></a>
-const PlayerPtrMap&lt; <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ControlCosts</b> () const </td></tr>
-<tr class="separator:ad809161f85e1d22af874e2cd5278a753"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7a6ec650d903f9da305b1bc2ac10c514"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7a6ec650d903f9da305b1bc2ac10c514"></a>
-const PtrVector&lt; <a class="el" href="classilqgames_1_1_barrier.html">Barrier</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>StateBarriers</b> () const </td></tr>
-<tr class="separator:a7a6ec650d903f9da305b1bc2ac10c514"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb8bb0c60d77c86d212550ab87cd8ba2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adb8bb0c60d77c86d212550ab87cd8ba2"></a>
-const PlayerPtrMap&lt; <a class="el" href="classilqgames_1_1_barrier.html">Barrier</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ControlBarriers</b> () const </td></tr>
-<tr class="separator:adb8bb0c60d77c86d212550ab87cd8ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0887bc7f840ec900ab84048a66d8b96d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0887bc7f840ec900ab84048a66d8b96d"></a>
-const PtrVector&lt; <a class="el" href="classilqgames_1_1_equality_constraint.html">EqualityConstraint</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>StateConstraints</b> () const </td></tr>
-<tr class="separator:a0887bc7f840ec900ab84048a66d8b96d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a048ee53fa0e664e1ebc12026332b96be"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a048ee53fa0e664e1ebc12026332b96be"></a>
-const PlayerPtrMultiMap&lt; <a class="el" href="classilqgames_1_1_equality_constraint.html">EqualityConstraint</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ControlConstraints</b> () const </td></tr>
-<tr class="separator:a048ee53fa0e664e1ebc12026332b96be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6d470d800deac7f52eb54ae180648c5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6d470d800deac7f52eb54ae180648c5"></a>
+const PlayerPtrMultiMap&lt; <a class="el" href="classilqgames_1_1_cost.html">Cost</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ControlCosts</b> () const </td></tr>
+<tr class="separator:aa6d470d800deac7f52eb54ae180648c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c0fdceae7cb5c2a41c9e2962fad63ea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5c0fdceae7cb5c2a41c9e2962fad63ea"></a>
+const PtrVector&lt; <a class="el" href="classilqgames_1_1_constraint.html">Constraint</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>StateConstraints</b> () const </td></tr>
+<tr class="separator:a5c0fdceae7cb5c2a41c9e2962fad63ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4de79c8a7df42e68d39cc5afdb7fa6a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4de79c8a7df42e68d39cc5afdb7fa6a6"></a>
+const PlayerPtrMultiMap&lt; <a class="el" href="classilqgames_1_1_constraint.html">Constraint</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>ControlConstraints</b> () const </td></tr>
+<tr class="separator:a4de79c8a7df42e68d39cc5afdb7fa6a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a700b6b0ce1844c3f780cb59b28bc5cd8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a700b6b0ce1844c3f780cb59b28bc5cd8"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>IsConstrained</b> () const </td></tr>
+<tr class="separator:a700b6b0ce1844c3f780cb59b28bc5cd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p>Definition at line <a class="el" href="player__cost_8h_source.html#l00058">58</a> of file <a class="el" href="player__cost_8h_source.html">player_cost.h</a>.</p>
+<p>Definition at line <a class="el" href="player__cost_8h_source.html#l00057">57</a> of file <a class="el" href="player__cost_8h_source.html">player_cost.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following files:<ul>
 <li>/home/travis/build/HJReachability/ilqgames/include/ilqgames/cost/<a class="el" href="player__cost_8h_source.html">player_cost.h</a></li>
 <li>/home/travis/build/HJReachability/ilqgames/src/<a class="el" href="player__cost_8cpp_source.html">player_cost.cpp</a></li>

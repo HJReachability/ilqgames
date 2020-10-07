@@ -21,16 +21,10 @@ void {\bfseries Add\+State\+Cost} (const std\+::shared\+\_\+ptr$<$ \hyperlink{cl
 void {\bfseries Add\+Control\+Cost} (Player\+Index idx, const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \&cost)\hypertarget{classilqgames_1_1_player_cost_aba4df0e6414aba024c86bf77fe57f819}{}\label{classilqgames_1_1_player_cost_aba4df0e6414aba024c86bf77fe57f819}
 
 \item 
-void {\bfseries Add\+State\+Barrier} (const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_barrier}{Barrier} $>$ \&barrier)\hypertarget{classilqgames_1_1_player_cost_a96eacffc74e2f7574d6c9c1296a6729c}{}\label{classilqgames_1_1_player_cost_a96eacffc74e2f7574d6c9c1296a6729c}
+void {\bfseries Add\+State\+Constraint} (const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ \&constraint)\hypertarget{classilqgames_1_1_player_cost_a9c1a21f669ab3f937c3be8a49bf7b5b3}{}\label{classilqgames_1_1_player_cost_a9c1a21f669ab3f937c3be8a49bf7b5b3}
 
 \item 
-void {\bfseries Add\+Control\+Barrier} (Player\+Index idx, const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_barrier}{Barrier} $>$ \&barrier)\hypertarget{classilqgames_1_1_player_cost_af00870025b9bff184c121ed28712eff2}{}\label{classilqgames_1_1_player_cost_af00870025b9bff184c121ed28712eff2}
-
-\item 
-void {\bfseries Add\+State\+Constraint} (const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_equality_constraint}{Equality\+Constraint} $>$ \&constraint)\hypertarget{classilqgames_1_1_player_cost_ac5c9248e4ecb96a6d1e49ccef9a5c545}{}\label{classilqgames_1_1_player_cost_ac5c9248e4ecb96a6d1e49ccef9a5c545}
-
-\item 
-void {\bfseries Add\+Control\+Constraint} (Player\+Index idx, const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_equality_constraint}{Equality\+Constraint} $>$ \&constraint)\hypertarget{classilqgames_1_1_player_cost_abb5f7c1664e4cba0e789047ace875eac}{}\label{classilqgames_1_1_player_cost_abb5f7c1664e4cba0e789047ace875eac}
+void {\bfseries Add\+Control\+Constraint} (Player\+Index idx, const std\+::shared\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ \&constraint)\hypertarget{classilqgames_1_1_player_cost_a9df6549112ab9b03bd639b4955b700da}{}\label{classilqgames_1_1_player_cost_a9df6549112ab9b03bd639b4955b700da}
 
 \item 
 float {\bfseries Evaluate} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_ac1ad99a1822d97a53d084fd9da162cb1}{}\label{classilqgames_1_1_player_cost_ac1ad99a1822d97a53d084fd9da162cb1}
@@ -45,40 +39,7 @@ float {\bfseries Evaluate\+Offset} (Time t, Time next\+\_\+t, const Vector\+Xf \
 \hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} {\bfseries Quadraticize} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_ad3962847f8eda8bcfecf2096e6abccb6}{}\label{classilqgames_1_1_player_cost_ad3962847f8eda8bcfecf2096e6abccb6}
 
 \item 
-\hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} {\bfseries Quadraticize\+Barriers\+And\+Control\+Costs} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_a5986cbef9121912f74735dcad338e50a}{}\label{classilqgames_1_1_player_cost_a5986cbef9121912f74735dcad338e50a}
-
-\item 
-void {\bfseries Turn\+Barriers\+On} ()\hypertarget{classilqgames_1_1_player_cost_a41f2c3cac0d44adaaf0654006ab4bbd3}{}\label{classilqgames_1_1_player_cost_a41f2c3cac0d44adaaf0654006ab4bbd3}
-
-\item 
-void {\bfseries Turn\+Barriers\+Off} ()\hypertarget{classilqgames_1_1_player_cost_aff8945f0b63b3ebfe61636d43f0e0bed}{}\label{classilqgames_1_1_player_cost_aff8945f0b63b3ebfe61636d43f0e0bed}
-
-\item 
-bool {\bfseries Are\+Barriers\+On} () const \hypertarget{classilqgames_1_1_player_cost_a3c9c1044f87e32188418adacc6efd40f}{}\label{classilqgames_1_1_player_cost_a3c9c1044f87e32188418adacc6efd40f}
-
-\item 
-bool {\bfseries Check\+Barriers} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_afdf789ce1aba79245b9af55ffe97668e}{}\label{classilqgames_1_1_player_cost_afdf789ce1aba79245b9af55ffe97668e}
-
-\item 
-size\+\_\+t {\bfseries Num\+State\+Barriers} () const \hypertarget{classilqgames_1_1_player_cost_a45d657992c6f7c9aefdd134e1902dd82}{}\label{classilqgames_1_1_player_cost_a45d657992c6f7c9aefdd134e1902dd82}
-
-\item 
-size\+\_\+t {\bfseries Num\+Control\+Barriers} () const \hypertarget{classilqgames_1_1_player_cost_a9777b060432027514848f18015b8c81b}{}\label{classilqgames_1_1_player_cost_a9777b060432027514848f18015b8c81b}
-
-\item 
-bool {\bfseries Check\+Constraints} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_a7c3268b3d9f2d1768096ac0c3adb7cb9}{}\label{classilqgames_1_1_player_cost_a7c3268b3d9f2d1768096ac0c3adb7cb9}
-
-\item 
-size\+\_\+t {\bfseries Num\+State\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a3b3e0bac90840bac45c57b74c9efcf19}{}\label{classilqgames_1_1_player_cost_a3b3e0bac90840bac45c57b74c9efcf19}
-
-\item 
-size\+\_\+t {\bfseries Num\+Control\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a61ab18fcd64b4fb99014ef14178f61d1}{}\label{classilqgames_1_1_player_cost_a61ab18fcd64b4fb99014ef14178f61d1}
-
-\item 
-void {\bfseries Scale\+Barrier\+Weights} (float scale=0.\+5)\hypertarget{classilqgames_1_1_player_cost_aecd0761c305c18284a348ab958e545ce}{}\label{classilqgames_1_1_player_cost_aecd0761c305c18284a348ab958e545ce}
-
-\item 
-void {\bfseries Reset\+Barrier\+Weights} ()\hypertarget{classilqgames_1_1_player_cost_aaac79536c50721cbe5051010f77fda48}{}\label{classilqgames_1_1_player_cost_aaac79536c50721cbe5051010f77fda48}
+\hyperlink{structilqgames_1_1_quadratic_cost_approximation}{Quadratic\+Cost\+Approximation} {\bfseries Quadraticize\+Control\+Costs} (Time t, const Vector\+Xf \&x, const std\+::vector$<$ Vector\+Xf $>$ \&us) const \hypertarget{classilqgames_1_1_player_cost_a1273b7fbbfc4cca818ebdcf6942662ba}{}\label{classilqgames_1_1_player_cost_a1273b7fbbfc4cca818ebdcf6942662ba}
 
 \item 
 void {\bfseries Set\+Time\+Additive} ()\hypertarget{classilqgames_1_1_player_cost_aabdacf36b0f3bc01b96ea1b62da9737a}{}\label{classilqgames_1_1_player_cost_aabdacf36b0f3bc01b96ea1b62da9737a}
@@ -108,19 +69,16 @@ void {\bfseries Set\+Time\+Of\+Extreme\+Cost} (size\+\_\+t kk)\hypertarget{class
 const Ptr\+Vector$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \& {\bfseries State\+Costs} () const \hypertarget{classilqgames_1_1_player_cost_a16a676ec8d145d97d555cbebe79ac5fd}{}\label{classilqgames_1_1_player_cost_a16a676ec8d145d97d555cbebe79ac5fd}
 
 \item 
-const Player\+Ptr\+Map$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \& {\bfseries Control\+Costs} () const \hypertarget{classilqgames_1_1_player_cost_ad809161f85e1d22af874e2cd5278a753}{}\label{classilqgames_1_1_player_cost_ad809161f85e1d22af874e2cd5278a753}
+const Player\+Ptr\+Multi\+Map$<$ \hyperlink{classilqgames_1_1_cost}{Cost} $>$ \& {\bfseries Control\+Costs} () const \hypertarget{classilqgames_1_1_player_cost_aa6d470d800deac7f52eb54ae180648c5}{}\label{classilqgames_1_1_player_cost_aa6d470d800deac7f52eb54ae180648c5}
 
 \item 
-const Ptr\+Vector$<$ \hyperlink{classilqgames_1_1_barrier}{Barrier} $>$ \& {\bfseries State\+Barriers} () const \hypertarget{classilqgames_1_1_player_cost_a7a6ec650d903f9da305b1bc2ac10c514}{}\label{classilqgames_1_1_player_cost_a7a6ec650d903f9da305b1bc2ac10c514}
+const Ptr\+Vector$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ \& {\bfseries State\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a5c0fdceae7cb5c2a41c9e2962fad63ea}{}\label{classilqgames_1_1_player_cost_a5c0fdceae7cb5c2a41c9e2962fad63ea}
 
 \item 
-const Player\+Ptr\+Map$<$ \hyperlink{classilqgames_1_1_barrier}{Barrier} $>$ \& {\bfseries Control\+Barriers} () const \hypertarget{classilqgames_1_1_player_cost_adb8bb0c60d77c86d212550ab87cd8ba2}{}\label{classilqgames_1_1_player_cost_adb8bb0c60d77c86d212550ab87cd8ba2}
+const Player\+Ptr\+Multi\+Map$<$ \hyperlink{classilqgames_1_1_constraint}{Constraint} $>$ \& {\bfseries Control\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a4de79c8a7df42e68d39cc5afdb7fa6a6}{}\label{classilqgames_1_1_player_cost_a4de79c8a7df42e68d39cc5afdb7fa6a6}
 
 \item 
-const Ptr\+Vector$<$ \hyperlink{classilqgames_1_1_equality_constraint}{Equality\+Constraint} $>$ \& {\bfseries State\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a0887bc7f840ec900ab84048a66d8b96d}{}\label{classilqgames_1_1_player_cost_a0887bc7f840ec900ab84048a66d8b96d}
-
-\item 
-const Player\+Ptr\+Multi\+Map$<$ \hyperlink{classilqgames_1_1_equality_constraint}{Equality\+Constraint} $>$ \& {\bfseries Control\+Constraints} () const \hypertarget{classilqgames_1_1_player_cost_a048ee53fa0e664e1ebc12026332b96be}{}\label{classilqgames_1_1_player_cost_a048ee53fa0e664e1ebc12026332b96be}
+bool {\bfseries Is\+Constrained} () const \hypertarget{classilqgames_1_1_player_cost_a700b6b0ce1844c3f780cb59b28bc5cd8}{}\label{classilqgames_1_1_player_cost_a700b6b0ce1844c3f780cb59b28bc5cd8}
 
 \end{DoxyCompactItemize}
 
@@ -128,7 +86,7 @@ const Player\+Ptr\+Multi\+Map$<$ \hyperlink{classilqgames_1_1_equality_constrain
 \subsection{Detailed Description}
 
 
-Definition at line 58 of file player\+\_\+cost.\+h.
+Definition at line 57 of file player\+\_\+cost.\+h.
 
 
 
