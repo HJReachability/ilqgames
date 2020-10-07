@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,81 +36,82 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on proximity between two pairs of state dimensions (representing
-// 2D position of vehicles whose states have been concatenated). Can be oriented
-// either `inside` or `outside`, i.e., can constrain the states to be close
-// together or far apart (respectively).
+// (Time-invariant) proximity (inequality) constraint between two vehicles, i.e.
+//           g(x) = (+/-) (||(px1, py1) - (px2, py2)|| - d) <= 0
+//
+// NOTE: The `keep_within` argument specifies the sign of g (true corresponds to
+// positive).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/proximity_barrier.h>
+#include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <memory>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-bool ProximityBarrier::IsSatisfiedLevel(const VectorXf& input,
-                                        float* level) const {
+float ProximityConstraint::Evaluate(const VectorXf& input) const {
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
-  const float delta_sq = dx * dx + dy * dy;
+  const float value = std::hypot(dx, dy) - threshold_;
 
-  // Sign corresponding to orientation of this constraint.
-  const float sign = (inside_) ? -1.0 : 1.0;
-
-  // Maybe populate level.
-  *level = sign * (threshold_sq_ - delta_sq);
-
-  return (inside_) ? delta_sq < threshold_sq_ : delta_sq > threshold_sq_;
+  return (keep_within_) ? value : -value;
 }
 
-void ProximityBarrier::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                    VectorXf* grad) const {
+void ProximityConstraint::Quadraticize(Time t, const VectorXf& input,
+                                       MatrixXf* hess, VectorXf* grad) const {
   CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
+  CHECK_EQ(hess->rows(), input.size());
+  CHECK_EQ(hess->cols(), input.size());
+  CHECK_EQ(grad->size(), input.size());
 
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
-
-  // Compute Hessian and gradient.
+  // Compute proximity.
   const float dx = input(xidx1_) - input(xidx2_);
   const float dy = input(yidx1_) - input(yidx2_);
-  const float dx2 = dx * dx;
-  const float dy2 = dy * dy;
-  const float delta_sq = dx2 + dy2;
+  const float prox = std::hypot(dx, dy);
+  const float sign = (keep_within_) ? 1.0 : -1.0;
+  const float g = sign * (prox - threshold_);
 
-  const float grad_coeff = 2.0 / (threshold_sq_ - delta_sq);
-  const float weighted_grad_coeff = weight_ * grad_coeff;
-  (*grad)(xidx1_) += weighted_grad_coeff * dx;
-  (*grad)(xidx2_) -= weighted_grad_coeff * dx;
-  (*grad)(yidx1_) += weighted_grad_coeff * dy;
-  (*grad)(yidx2_) -= weighted_grad_coeff * dy;
+  // Compute gradient and Hessian.
+  const float rel_dx = dx / prox;
+  const float rel_dy = dy / prox;
 
-  const float hess_x1x1 = weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
+  float grad_x1 = sign * rel_dx;
+  float grad_y1 = sign * rel_dy;
+  float hess_x1x1 = sign * (1.0 - rel_dx * rel_dx) / prox;
+  float hess_y1y1 = sign * (1.0 - rel_dy * rel_dy) / prox;
+  float hess_x1y1 = -sign * rel_dx * rel_dy / prox;
+
+  ModifyDerivatives(t, g, &grad_x1, &hess_x1x1, &grad_y1, &hess_y1y1,
+                    &hess_x1y1);
+
+  (*grad)(xidx1_) += grad_x1;
+  (*grad)(xidx2_) -= grad_x1;
+
+  (*grad)(yidx1_) += grad_y1;
+  (*grad)(yidx2_) -= grad_y1;
+
   (*hess)(xidx1_, xidx1_) += hess_x1x1;
   (*hess)(xidx1_, xidx2_) -= hess_x1x1;
   (*hess)(xidx2_, xidx1_) -= hess_x1x1;
   (*hess)(xidx2_, xidx2_) += hess_x1x1;
 
-  const float hess_y1y1 = weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
   (*hess)(yidx1_, yidx1_) += hess_y1y1;
   (*hess)(yidx1_, yidx2_) -= hess_y1y1;
   (*hess)(yidx2_, yidx1_) -= hess_y1y1;
   (*hess)(yidx2_, yidx2_) += hess_y1y1;
 
-  const float hess_x1y1 = weighted_grad_coeff * grad_coeff * dx * dy;
   (*hess)(xidx1_, yidx1_) += hess_x1y1;
-  (*hess)(yidx1_, xidx1_) += hess_x1y1;
   (*hess)(xidx1_, yidx2_) -= hess_x1y1;
-  (*hess)(yidx1_, xidx2_) -= hess_x1y1;
   (*hess)(xidx2_, yidx1_) -= hess_x1y1;
-  (*hess)(yidx2_, xidx1_) -= hess_x1y1;
   (*hess)(xidx2_, yidx2_) += hess_x1y1;
+  (*hess)(yidx1_, xidx1_) += hess_x1y1;
+  (*hess)(yidx1_, xidx2_) -= hess_x1y1;
+  (*hess)(yidx2_, xidx1_) -= hess_x1y1;
   (*hess)(yidx2_, xidx2_) += hess_x1y1;
 }
 

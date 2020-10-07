@@ -56,8 +56,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/polyline2_signed_distance_barrier.h>
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
@@ -135,8 +135,7 @@ void SkeletonExample::ConstructDynamics() {
   static constexpr float kInterAxleDistance = 4.0;  // m
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleDistance),
-       std::make_shared<P2>(kInterAxleDistance)},
-      time_step_));
+       std::make_shared<P2>(kInterAxleDistance)}));
 }
 
 void SkeletonExample::ConstructInitialState() {
@@ -155,7 +154,7 @@ void SkeletonExample::ConstructInitialState() {
 
 void SkeletonExample::ConstructPlayerCosts() {
   // Set up costs for all players. These are containers for holding each
-  // player's constituent cost functions and barriers that hold pointwise in
+  // player's constituent cost functions and constraints that hold pointwise in
   // time and can apply to either state or control (for *any* player).
   // These costs can also build in regularization on the state or the control,
   // which essentially boils down to adding a scaled identity matrix to each's
@@ -182,35 +181,45 @@ void SkeletonExample::ConstructPlayerCosts() {
 
   // Constrain each control input to lie in an interval.
   // Step 3. Try uncommenting these blocks.
-  // const auto p1_omega_max_barrier =
-  //     std::make_shared<SingleDimensionBarrier>(
-  //         P1::kOmegaIdx, kOmegaMax, false, "Omega Barrier (Max)");
-  // const auto p1_omega_min_barrier =
-  //     std::make_shared<SingleDimensionBarrier>(
-  //         P1::kOmegaIdx, -kOmegaMax, true, "Omega Barrier (Min)");
-  // const auto p1_a_max_barrier = std::make_shared<SingleDimensionBarrier>(
-  //     P1::kAIdx, kAMax, false, "Acceleration Barrier (Max)");
-  // const auto p1_a_min_barrier = std::make_shared<SingleDimensionBarrier>(
-  //     P1::kAIdx, -kAMax, true, "Acceleration Barrier (Min)");
-  // p1_cost.AddControlBarrier(0, p1_omega_max_barrier);
-  // p1_cost.AddControlBarrier(0, p1_omega_min_barrier);
-  // p1_cost.AddControlBarrier(0, p1_a_max_barrier);
-  // p1_cost.AddControlBarrier(0, p1_a_min_barrier);
+  // const auto p1_omega_max_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P1::kOmegaIdx, kOmegaMax, true,  "Omega Constraint
+  //         (Max)");
+  // const auto p1_omega_min_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P1::kOmegaIdx, -kOmegaMax, false, "Omega Constraint
+  //         (Min)");
+  // const auto p1_a_max_constraint =
+  // std::make_shared<SingleDimensionConstraint>(
+  //     P1::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
+  // const auto p1_a_min_constraint =
+  // std::make_shared<SingleDimensionConstraint>(
+  //     P1::kAIdx, -kAMax, false, "Acceleration Constraint
+  //     (Min)");
+  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  // p1_cost.AddControlConstraint(0, p1_a_max_constraint);
+  // p1_cost.AddControlConstraint(0, p1_a_min_constraint);
 
-  // const auto p2_omega_max_barrier =
-  //     std::make_shared<SingleDimensionBarrier>(
-  //         P2::kOmegaIdx, kOmegaMax, false, "Omega Barrier (Max)");
-  // const auto p2_omega_min_barrier =
-  //     std::make_shared<SingleDimensionBarrier>(
-  //         P2::kOmegaIdx, -kOmegaMax, true, "Omega Barrier (Min)");
-  // const auto p2_a_max_barrier = std::make_shared<SingleDimensionBarrier>(
-  //     P2::kAIdx, kAMax, false, "Acceleration Barrier (Max)");
-  // const auto p2_a_min_barrier = std::make_shared<SingleDimensionBarrier>(
-  //     P2::kAIdx, -kAMax, true, "Acceleration Barrier (Min)");
-  // p2_cost.AddControlBarrier(1, p2_omega_max_barrier);
-  // p2_cost.AddControlBarrier(1, p2_omega_min_barrier);
-  // p2_cost.AddControlBarrier(1, p2_a_max_barrier);
-  // p2_cost.AddControlBarrier(1, p2_a_min_barrier);
+  // const auto p2_omega_max_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P2::kOmegaIdx, kOmegaMax, true, "Omega Constraint
+  //         (Max)");
+  // const auto p2_omega_min_constraint =
+  //     std::make_shared<SingleDimensionConstraint>(
+  //         P2::kOmegaIdx, -kOmegaMax, false, "Omega Constraint
+  //         (Min)");
+  // const auto p2_a_max_constraint =
+  // std::make_shared<SingleDimensionConstraint>(
+  //     P2::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
+  // const auto p2_a_min_constraint =
+  // std::make_shared<SingleDimensionConstraint>(
+  //     P2::kAIdx, -kAMax, false, "Acceleration Constraint
+  //     (Min)");
+  // p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  // p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
+  // p2_cost.AddControlConstraint(1, p2_a_max_constraint);
+  // p2_cost.AddControlConstraint(1, p2_a_min_constraint);
 
   // Encourage each player to go a given nominal speed.
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
@@ -222,7 +231,7 @@ void SkeletonExample::ConstructPlayerCosts() {
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
   // Encourage each player to remain near the lane center. Could also add
-  // barriers to stay in the lane.
+  // constraints to stay in the lane.
   const Polyline2 lane1(
       {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
   const Polyline2 lane2({Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 5.0),
@@ -239,7 +248,7 @@ void SkeletonExample::ConstructPlayerCosts() {
                                  "LaneCenter"));
   p2_cost.AddStateCost(p2_lane_cost);
 
-  // Penalize proximity (could also use a barrier).
+  // Penalize proximity (could also use a constraint).
   constexpr float kMinProximity = 6.0;  // m
   const std::shared_ptr<ProximityCost> p1p2_proximity_cost(
       new ProximityCost(kProximityCostWeight, {kP1XIdx, kP1YIdx},

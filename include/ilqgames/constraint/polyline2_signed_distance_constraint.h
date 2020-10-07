@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,51 +36,64 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all time-invariant constraints.
+// (Time-invariant) inequality constraint encoding
+//           g(x) = signed_distance(x, polyline) - d <= (or >=) 0
 //
+// NOTE: The `keep_left` argument specifies the sign of the inequality (true
+// corresponds to <=).
+
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_BARRIER_TIME_INVARIANT_BARRIER_H
-#define ILQGAMES_CONSTRAINT_BARRIER_TIME_INVARIANT_BARRIER_H
+#ifndef ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
 
-#include <ilqgames/constraint/barrier/barrier.h>
-#include <ilqgames/cost/cost.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
+#include <ilqgames/geometry/line_segment2.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
 
 namespace ilqgames {
 
-class TimeInvariantBarrier : public Barrier {
+class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
  public:
-  virtual ~TimeInvariantBarrier() {}
+  ~Polyline2SignedDistanceConstraint() {}
+  Polyline2SignedDistanceConstraint(const Polyline2& polyline,
+                                    const std::pair<Dimension, Dimension>& dims,
+                                    float threshold, bool keep_left,
+                                    const std::string& name = "")
+      : TimeInvariantConstraint(false, name),
+        polyline_(polyline),
+        xidx_(dims.first),
+        yidx_(dims.second),
+        threshold_(threshold),
+        keep_left_(keep_left) {}
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(Time t, const VectorXf& input, float* level) const {
-    CHECK_NOTNULL(level);
-    return IsSatisfiedLevel(input, level);
-  };
-  virtual bool IsSatisfiedLevel(const VectorXf& input, float* level) const = 0;
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const;
 
-  // Evaluate the barrier at the current input (use base class implementation
-  // and provide arbitrary time).
-  float Evaluate(const VectorXf& input) const {
-    return Barrier::Evaluate(0.0, input);
-  };
-
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
   void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
-    Quadraticize(input, hess, grad);
-  };
-  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+                    VectorXf* grad) const;
 
- protected:
-  explicit TimeInvariantBarrier(const std::string& name = "") : Barrier(name) {}
-};  //\class TimeInvariantBarrier
+ private:
+  // Polyline.
+  const Polyline2 polyline_;
+
+  // Position dimension indices.
+  const Dimension xidx_;
+  const Dimension yidx_;
+
+  // Nominal distance threshold.
+  const float threshold_;
+
+  // Keep left (or right), i.e., orientation of the inequality.
+  const bool keep_left_;
+};  // namespace Polyline2SignedDistanceConstraint
 
 }  // namespace ilqgames
 

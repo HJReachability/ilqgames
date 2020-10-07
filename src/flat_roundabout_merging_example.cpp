@@ -59,10 +59,7 @@
 #include <ilqgames/examples/flat_roundabout_merging_example.h>
 #include <ilqgames/examples/roundabout_lane_center.h>
 #include <ilqgames/geometry/polyline2.h>
-#include <ilqgames/solver/ilq_flat_solver.h>
-#include <ilqgames/solver/lq_feedback_solver.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
@@ -191,8 +188,7 @@ void FlatRoundaboutMergingExample::ConstructDynamics() {
       new ConcatenatedFlatSystem({std::make_shared<P1>(kInterAxleDistance),
                                   std::make_shared<P2>(kInterAxleDistance),
                                   std::make_shared<P3>(kInterAxleDistance),
-                                  std::make_shared<P4>(kInterAxleDistance)},
-                                 kTimeStep));
+                                  std::make_shared<P4>(kInterAxleDistance)}));
 }
 
 void FlatRoundaboutMergingExample::ConstructInitialState() {
@@ -221,13 +217,13 @@ void FlatRoundaboutMergingExample::ConstructInitialState() {
 void FlatRoundaboutMergingExample::ConstructInitialOperatingPoint() {
   // Initialize operating points to follow these lanes at the nominal speed.
   InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
-                       kTimeStep, operating_point_.get());
+                       operating_point_.get());
   InitializeAlongRoute(lane2, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
-                       kTimeStep, operating_point_.get());
+                       operating_point_.get());
   InitializeAlongRoute(lane3, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
-                       kTimeStep, operating_point_.get());
+                       operating_point_.get());
   InitializeAlongRoute(lane4, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
-                       kTimeStep, operating_point_.get());
+                       operating_point_.get());
 }
 
 void FlatRoundaboutMergingExample::ConstructPlayerCosts() {

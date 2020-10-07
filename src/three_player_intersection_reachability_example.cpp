@@ -165,8 +165,7 @@ static const Dimension kP3AIdx = 1;
 void ThreePlayerIntersectionReachabilityExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleLength),
-       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
-      time_step_));
+       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()}));
 }
 
 void ThreePlayerIntersectionReachabilityExample::ConstructInitialState() {

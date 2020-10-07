@@ -101,17 +101,13 @@ class Problem {
   virtual void OverwriteSolution(const OperatingPoint& operating_point,
                                  const std::vector<Strategy>& strategies);
 
-  // Compute time stamp from time index.
-  Time ComputeRelativeTimeStamp(size_t time_index) const {
-    return time_step_ * static_cast<Time>(time_index);
-  }
-
   // Accessors.
+  bool IsConstrained() const;
   virtual Time InitialTime() const { return operating_point_->t0; }
   const VectorXf& InitialState() const { return x0_; }
-  size_t NumTimeSteps() const { return num_time_steps_; }
-  Time TimeStep() const { return time_step_; }
-  Time TimeHorizon() const { return time_horizon_; }
+  // size_t NumTimeSteps() const { return num_time_steps_; }
+  // Time TimeStep() const { return time_step_; }
+  // Time TimeHorizon() const { return time_horizon_; }
   std::vector<PlayerCost>& PlayerCosts() { return player_costs_; }
   const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
   const std::shared_ptr<const MultiPlayerIntegrableSystem>& Dynamics() const {
@@ -141,12 +137,13 @@ class Problem {
   virtual void ConstructPlayerCosts() = 0;
   virtual void ConstructInitialState() = 0;
   virtual void ConstructInitialOperatingPoint() {
-    operating_point_.reset(new OperatingPoint(num_time_steps_, 0.0, dynamics_));
+    operating_point_.reset(
+        new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
   }
   virtual void ConstructInitialStrategies() {
     strategies_.reset(new std::vector<Strategy>());
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-      strategies_->emplace_back(num_time_steps_, dynamics_->XDim(),
+      strategies_->emplace_back(time::kNumTimeSteps, dynamics_->XDim(),
                                 dynamics_->UDim(ii));
   }
 
@@ -156,10 +153,10 @@ class Problem {
   size_t SyncToExistingProblem(const VectorXf& x0, Time t0,
                                Time planner_runtime, OperatingPoint& op);
 
-  // Time horizon (s), time step (s), and number of time steps.
-  const Time time_horizon_;
-  const Time time_step_;
-  const size_t num_time_steps_;
+  // // Time horizon (s), time step (s), and number of time steps.
+  // const Time time_horizon_;
+  // const Time time_step_;
+  // const size_t num_time_steps_;
 
   // Dynamical system.
   std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics_;

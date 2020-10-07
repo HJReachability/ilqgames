@@ -77,9 +77,9 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
       auto& entry = e.first->second;
       entry.resize(log->NumIterates());
       for (size_t jj = 0; jj < log->NumIterates(); jj++) {
-        entry[jj].resize(log->NumTimeSteps());
+        entry[jj].resize(time::kNumTimeSteps);
 
-        for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
+        for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
           const VectorXf x = log->State(jj, kk);
           entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk), x);
         }
@@ -99,53 +99,52 @@ PlayerCostCache::PlayerCostCache(const std::shared_ptr<const SolverLog>& log,
       auto& entry = e.first->second;
       entry.resize(log->NumIterates());
       for (size_t jj = 0; jj < log->NumIterates(); jj++) {
-        entry[jj].resize(log->NumTimeSteps());
+        entry[jj].resize(time::kNumTimeSteps);
 
-        for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
+        for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
           entry[jj][kk] = cost->Evaluate(log->IndexToTime(kk),
                                          log->Control(jj, kk, other_player));
         }
       }
     }
 
-    // Handle barriers.
-    for (const auto& barrier : player_cost.StateBarriers()) {
-      auto e = evaluated_costs.emplace(barrier->EquivalentCost().Name(),
+    // Handle constraints.
+    for (const auto& constraint : player_cost.StateConstraints()) {
+      auto e = evaluated_costs.emplace(constraint->Name(),
                                        std::vector<std::vector<float>>());
       LOG_IF(WARNING, !e.second)
-          << "Player " << ii << " has duplicate barrier with name: "
-          << barrier->EquivalentCost().Name();
+          << "Player " << ii
+          << " has duplicate constraint with name: " << constraint->Name();
 
       auto& entry = e.first->second;
       entry.resize(log->NumIterates());
       for (size_t jj = 0; jj < log->NumIterates(); jj++) {
-        entry[jj].resize(log->NumTimeSteps());
+        entry[jj].resize(time::kNumTimeSteps);
 
-        for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
+        for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
           const VectorXf x = log->State(jj, kk);
-          entry[jj][kk] =
-              barrier->EquivalentCost().Evaluate(log->IndexToTime(kk), x);
+          entry[jj][kk] = constraint->Evaluate(log->IndexToTime(kk), x);
         }
       }
     }
 
-    // Now handle control barriers.
-    for (const auto& barrier_pair : player_cost.ControlBarriers()) {
-      const auto other_player = barrier_pair.first;
-      const auto& barrier = barrier_pair.second;
-      auto e = evaluated_costs.emplace(barrier->EquivalentCost().Name(),
+    // Now handle control constraints.
+    for (const auto& constraint_pair : player_cost.ControlConstraints()) {
+      const auto other_player = constraint_pair.first;
+      const auto& constraint = constraint_pair.second;
+      auto e = evaluated_costs.emplace(constraint->Name(),
                                        std::vector<std::vector<float>>());
       LOG_IF(WARNING, !e.second)
-          << "Player " << ii << " has duplicate barrier with name: "
-          << barrier->EquivalentCost().Name();
+          << "Player " << ii
+          << " has duplicate constraint with name: " << constraint->Name();
 
       auto& entry = e.first->second;
       entry.resize(log->NumIterates());
       for (size_t jj = 0; jj < log->NumIterates(); jj++) {
-        entry[jj].resize(log->NumTimeSteps());
+        entry[jj].resize(time::kNumTimeSteps);
 
-        for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
-          entry[jj][kk] = barrier->EquivalentCost().Evaluate(
+        for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+          entry[jj][kk] = constraint->Evaluate(
               log->IndexToTime(kk), log->Control(jj, kk, other_player));
         }
       }
@@ -163,9 +162,9 @@ float PlayerCostCache::Interpolate(size_t iterate, Time t, PlayerIndex player,
 
   // Interpolate this list.
   const size_t lo = log_->TimeToIndex(t);
-  const size_t hi = std::min(lo + 1, log_->NumTimeSteps() - 1);
+  const size_t hi = std::min(lo + 1, time::kNumTimeSteps - 1);
 
-  const float frac = (t - log_->IndexToTime(lo)) / log_->TimeStep();
+  const float frac = (t - log_->IndexToTime(lo)) / time::kTimeStep;
   return (1.0 - frac) * costs[lo] + frac * costs[hi];
 }
 

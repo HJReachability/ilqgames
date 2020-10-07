@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) vector equality constraint, i.e., 0.5*||x - \hat x||^2 = 0.
+// Base class for all time-invariant explicit constraints.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_VECTOR_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_VECTOR_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
 
-#include <ilqgames/constraint/explicit/time_invariant_equality_constraint.h>
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,40 +52,26 @@
 
 namespace ilqgames {
 
-class VectorEqualityConstraint : public TimeInvariantEqualityConstraint {
+class TimeInvariantConstraint : public Constraint {
  public:
-  ~VectorEqualityConstraint() {}
-  VectorEqualityConstraint(const VectorXf& nominal,
-                           const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name), nominal_(nominal) {}
+  virtual ~TimeInvariantConstraint() {}
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), nominal_.size());
-    const float value = 0.5 * (input - nominal_).squaredNorm();
+  // Evaluate this constraint value, i.e., g(x).
+  virtual float Evaluate(const VectorXf& input) const = 0;
+  float Evaluate(Time t, const VectorXf& input) const {
+    return Evaluate(input);
+  };
 
-    if (*level) *level = value;
-    return std::abs(value) < constants::kSmallNumber;
-  }
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  // NOTE: this is time-varying because time is used to select lambda.
+  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                            VectorXf* grad) const = 0;
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                    Eigen::Ref<VectorXf> grad) const {
-    CHECK_EQ(input.size(), nominal_.size());
-    CHECK_EQ(hess.rows(), input.size());
-    CHECK_EQ(hess.cols(), input.size());
-    CHECK_EQ(grad.size(), input.size());
-
-    hess.setIdentity();
-    grad = input - nominal_;
-  }
-
- private:
-  // Nominal vector.
-  const VectorXf nominal_;
-};  //\class VectorEqualityConstraint
+ protected:
+  explicit TimeInvariantConstraint(bool is_equality, const std::string& name)
+      : Constraint(is_equality, name) {}
+};  // namespace TimeInvariantConstraint
 
 }  // namespace ilqgames
 

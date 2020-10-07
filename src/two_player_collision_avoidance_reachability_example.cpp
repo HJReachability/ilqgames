@@ -95,8 +95,7 @@ static const Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
 void TwoPlayerCollisionAvoidanceReachabilityExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleDistance),
-       std::make_shared<P2>(kInterAxleDistance)},
-      time_step_));
+       std::make_shared<P2>(kInterAxleDistance)}));
 }
 
 void TwoPlayerCollisionAvoidanceReachabilityExample::ConstructInitialState() {
@@ -137,9 +136,9 @@ void TwoPlayerCollisionAvoidanceReachabilityExample::ConstructPlayerCosts() {
 
   // NOTE: Assumes line segments traced by each player at initialization do not
   // intersect.
-  const float nominal_distance =
-      (p1_position(0.5 * time_horizon_) - p2_position(0.5 * time_horizon_))
-          .norm();
+  const float nominal_distance = (p1_position(0.5 * time::kTimeHorizon) -
+                                  p2_position(0.5 * time::kTimeHorizon))
+                                     .norm();
   const std::shared_ptr<SignedDistanceCost> collision_avoidance_cost(
       new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
                              nominal_distance, "CollisionAvoidance"));

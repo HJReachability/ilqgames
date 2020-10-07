@@ -56,7 +56,7 @@ class SinglePlayerFlatSystem {
   virtual VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const = 0;
 
   // Discrete time approximation of the underlying linearized system.
-  virtual void LinearizedSystem(Time time_step, Eigen::Ref<MatrixXf> A,
+  virtual void LinearizedSystem(Eigen::Ref<MatrixXf> A,
                                 Eigen::Ref<MatrixXf> B) const = 0;
 
   // Utilities for feedback linearization.

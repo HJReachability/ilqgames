@@ -63,7 +63,7 @@ bool NumericalCheckLocalNashEquilibrium(
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    Time time_step, float max_perturbation, bool open_loop = false);
+    float max_perturbation, bool open_loop = false);
 bool NumericalCheckLocalNashEquilibrium(const Problem& problem,
                                         float max_perturbation,
                                         bool open_loop = false);
@@ -74,7 +74,7 @@ bool NumericalCheckLocalNashEquilibrium(const Problem& problem,
 // coordinates.
 bool CheckSufficientLocalNashEquilibrium(
     const std::vector<PlayerCost>& player_costs,
-    const OperatingPoint& operating_point, Time time_step,
+    const OperatingPoint& operating_point,
     const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics =
         nullptr);
 bool CheckSufficientLocalNashEquilibrium(const Problem& problem);

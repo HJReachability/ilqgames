@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,48 +36,65 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the value of a single dimension of the input. This constraint
-// can be oriented either `left` or `right`, i.e., enforcing that the input is <
-// or > the specified threshold, respectively.
+// (Time-invariant) proximity (inequality) constraint between two vehicles, i.e.
+//           g(x) = (+/-) (||(px1, py1) - (px2, py2)|| - d) <= 0
+//
+// NOTE: The `keep_within` argument specifies the sign of g (true corresponds to
+// positive).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
+#ifndef ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
+
+#include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <memory>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-bool SingleDimensionBarrier::IsSatisfiedLevel(const VectorXf& input,
-                                              float* level) const {
-  // Sign corresponding to the orientation of this constraint.
-  const float sign = (oriented_right_) ? 1.0 : -1.0;
+class ProximityConstraint : public TimeInvariantConstraint {
+ public:
+  ~ProximityConstraint() {}
+  ProximityConstraint(const std::pair<Dimension, Dimension>& dims1,
+                      const std::pair<Dimension, Dimension>& dims2,
+                      float threshold, bool keep_within,
+                      const std::string& name = "")
+      : TimeInvariantConstraint(false, name),
+        xidx1_(dims1.first),
+        yidx1_(dims1.second),
+        xidx2_(dims2.first),
+        yidx2_(dims2.second),
+        threshold_(threshold),
+        keep_within_(keep_within) {
+    CHECK_GT(threshold_, 0.0);
+  }
 
-  // Maybe populate level.
-  const float delta = threshold_ - input(dimension_);
-  *level = sign * delta;
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const;
 
-  return (oriented_right_) ? delta < 0.0 : delta > 0.0;
-}
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const;
 
-void SingleDimensionBarrier::Quadraticize(const VectorXf& input, MatrixXf* hess,
-                                          VectorXf* grad) const {
-  CHECK_NOTNULL(hess);
-  CHECK_NOTNULL(grad);
+ private:
+  // Position dimension indices for both players.
+  const Dimension xidx1_;
+  const Dimension yidx1_;
+  const Dimension xidx2_;
+  const Dimension yidx2_;
 
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
+  // Nominal distance threshold.
+  const float threshold_;
 
-  // Compute Hessian and gradient.
-  const float delta_inv = 1.0 / (threshold_ - input(dimension_));
-  const float weighted_delta_inv = weight_ * delta_inv;
-  (*grad)(dimension_) += weighted_delta_inv;
-  (*hess)(dimension_, dimension_) += weighted_delta_inv * delta_inv;
-}
+  // Keep within (or without), i.e., orientation of the inequality.
+  const bool keep_within_;
+};  // namespace ProximityConstraint
 
 }  // namespace ilqgames
+
+#endif

@@ -44,6 +44,7 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
@@ -108,7 +109,6 @@ int main(int argc, char** argv) {
 
   // Solve for open-loop information pattern.
   ilqgames::SolverParams params;
-  params.enforce_barriers_in_linesearch = true;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
@@ -119,7 +119,7 @@ int main(int argc, char** argv) {
 
   const auto problem = std::make_shared<ilqgames::ModifiedAir3DExample>();
   problem->Initialize();
-  ilqgames::ILQSolver solver(problem, params);
+  ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   LOG(INFO) << "Computing feedback solution.";
   const auto start = std::chrono::system_clock::now();

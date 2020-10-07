@@ -36,14 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// (Time-invariant) linear equality constraint, i.e., a^T x - b = 0.
+// (Time-invariant) affine vector constraint, i.e., g(x) = ||A x - b||.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_AFFINE_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_AFFINE_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_AFFINE_VECTOR_CONSTRAINT_H
 
-#include <ilqgames/constraint/explicit/time_invariant_equality_constraint.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,41 +52,61 @@
 
 namespace ilqgames {
 
-class AffineEqualityConstraint : public TimeInvariantEqualityConstraint {
+class AffineVectorConstraint : public TimeInvariantConstraint {
  public:
-  ~AffineEqualityConstraint() {}
-  AffineEqualityConstraint(const VectorXf& a, float b,
-                           const std::string& name = "")
-      : TimeInvariantEqualityConstraint(name), a_(a), b_(b) {}
-
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(const VectorXf& input, float* level) const {
-    CHECK_EQ(input.size(), a_.size());
-    const float value = a_.transpose() * input + b_;
-
-    if (*level) *level = value;
-    return std::abs(value) < constants::kSmallNumber;
+  ~AffineVectorConstraint() {}
+  AffineVectorConstraint(const MatrixXf& A, const VectorXf& b, bool is_equality,
+                         const std::string& name = "")
+      : TimeInvariantConstraint(is_equality, name),
+        A_(A),
+        b_(b),
+        ATA_(A.transpose() * A),
+        AAT_(A * A.transpose()) {
+    CHECK_EQ(A_.rows(), b_.size());
   }
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  void Quadraticize(const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                    Eigen::Ref<VectorXf> grad) const {
-    CHECK_EQ(input.size(), a_.size());
-    CHECK_EQ(hess.rows(), input.size());
-    CHECK_EQ(hess.cols(), input.size());
-    CHECK_EQ(grad.size(), input.size());
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const {
+    CHECK_EQ(A_.rows(), input.size());
+    return (A_ * input - b_).norm();
+  }
 
-    // Do nothing to the Hessian - assume that it's already zero.
-    grad = a_;
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    CHECK_NOTNULL(hess);
+    CHECK_NOTNULL(grad);
+    CHECK_EQ(input.size(), b_.size());
+    CHECK_EQ(hess->rows(), input.size());
+    CHECK_EQ(hess->cols(), input.size());
+    CHECK_EQ(grad->size(), input.size());
+
+    // Get current lambda and mu.
+    const float lambda = Lambda(t);
+    const float mu = Mu(t, input);
+
+    // Compute value of the constraint.
+    const VectorXf delta = A_ * input - b_;
+    const float value = delta.norm();
+
+    // Compute gradient and Hessian.
+    const VectorXf AT_delta = A_.transpose() * delta;
+    (*grad) += (mu + lambda / value) * AT_delta;
+    (*hess) += (lambda / value) *
+                   (AAT_ - AT_delta * AT_delta.transpose() / (value * value)) +
+               mu * ATA_;
   }
 
  private:
-  // Coefficient vector and nominal value.
-  const VectorXf a_;
-  const float b_;
-};  //\class AffineEqualityConstraint
+  // A and b.
+  const MatrixXf A_;
+  const VectorXf b_;
+
+  // Precompute ATA and AAT.
+  const MatrixXf ATA_;
+  const MatrixXf AAT_;
+};  //\class AffineVectorConstraint
 
 }  // namespace ilqgames
 

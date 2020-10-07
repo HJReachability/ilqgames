@@ -71,7 +71,7 @@ class SinglePlayerCar7D : public SinglePlayerDynamicalSystem {
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
 
   // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Distance metric between two states.
@@ -118,12 +118,12 @@ inline VectorXf SinglePlayerCar7D::Evaluate(Time t, const VectorXf& x,
   return xdot;
 }
 
-inline void SinglePlayerCar7D::Linearize(Time t, Time time_step,
-                                         const VectorXf& x, const VectorXf& u,
+inline void SinglePlayerCar7D::Linearize(Time t, const VectorXf& x,
+                                         const VectorXf& u,
                                          Eigen::Ref<MatrixXf> A,
                                          Eigen::Ref<MatrixXf> B) const {
-  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
-  const float stheta = std::sin(x(kThetaIdx)) * time_step;
+  const float ctheta = std::cos(x(kThetaIdx)) * time::kTimeStep;
+  const float stheta = std::sin(x(kThetaIdx)) * time::kTimeStep;
   const float cphi = std::cos(x(kPhiIdx));
   const float tphi = std::tan(x(kPhiIdx));
 
@@ -134,17 +134,18 @@ inline void SinglePlayerCar7D::Linearize(Time t, Time time_step,
   A(kPyIdx, kVIdx) += stheta;
 
   A(kThetaIdx, kPhiIdx) +=
-      x(kVIdx) * time_step / (inter_axle_distance_ * cphi * cphi);
-  A(kThetaIdx, kVIdx) += tphi * time_step / inter_axle_distance_;
+      x(kVIdx) * time::kTimeStep / (inter_axle_distance_ * cphi * cphi);
+  A(kThetaIdx, kVIdx) += tphi * time::kTimeStep / inter_axle_distance_;
 
-  A(kKappaIdx, kPhiIdx) += 2.0 * time_step * u(kOmegaIdx) * tphi /
+  A(kKappaIdx, kPhiIdx) += 2.0 * time::kTimeStep * u(kOmegaIdx) * tphi /
                            (cphi * cphi * inter_axle_distance_);
 
-  A(kSIdx, kVIdx) += time_step;
+  A(kSIdx, kVIdx) += time::kTimeStep;
 
-  B(kPhiIdx, kOmegaIdx) = time_step;
-  B(kVIdx, kAIdx) = time_step;
-  B(kKappaIdx, kOmegaIdx) = time_step / (cphi * cphi * inter_axle_distance_);
+  B(kPhiIdx, kOmegaIdx) = time::kTimeStep;
+  B(kVIdx, kAIdx) = time::kTimeStep;
+  B(kKappaIdx, kOmegaIdx) =
+      time::kTimeStep / (cphi * cphi * inter_axle_distance_);
 }
 
 inline float SinglePlayerCar7D::DistanceBetween(const VectorXf& x0,

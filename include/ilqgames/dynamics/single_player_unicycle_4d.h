@@ -63,7 +63,7 @@ class SinglePlayerUnicycle4D : public SinglePlayerDynamicalSystem {
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
 
   // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Distance metric between two states.
@@ -98,13 +98,12 @@ inline VectorXf SinglePlayerUnicycle4D::Evaluate(Time t, const VectorXf& x,
   return xdot;
 }
 
-inline void SinglePlayerUnicycle4D::Linearize(Time t, Time time_step,
-                                              const VectorXf& x,
+inline void SinglePlayerUnicycle4D::Linearize(Time t, const VectorXf& x,
                                               const VectorXf& u,
                                               Eigen::Ref<MatrixXf> A,
                                               Eigen::Ref<MatrixXf> B) const {
-  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
-  const float stheta = std::sin(x(kThetaIdx)) * time_step;
+  const float ctheta = std::cos(x(kThetaIdx)) * time::kTimeStep;
+  const float stheta = std::sin(x(kThetaIdx)) * time::kTimeStep;
 
   A(kPxIdx, kThetaIdx) += -x(kVIdx) * stheta;
   A(kPxIdx, kVIdx) += ctheta;
@@ -112,8 +111,8 @@ inline void SinglePlayerUnicycle4D::Linearize(Time t, Time time_step,
   A(kPyIdx, kThetaIdx) += x(kVIdx) * ctheta;
   A(kPyIdx, kVIdx) += stheta;
 
-  B(kThetaIdx, kOmegaIdx) = time_step;
-  B(kVIdx, kAIdx) = time_step;
+  B(kThetaIdx, kOmegaIdx) = time::kTimeStep;
+  B(kVIdx, kAIdx) = time::kTimeStep;
 }
 
 inline float SinglePlayerUnicycle4D::DistanceBetween(const VectorXf& x0,

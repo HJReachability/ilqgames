@@ -65,10 +65,10 @@ namespace ilqgames {
 class Air3D : public MultiPlayerDynamicalSystem {
  public:
   ~Air3D() {}
-  Air3D(float evader_speed, float pursuer_speed, Time time_step)
+  Air3D(float evader_speed, float pursuer_speed)
       : evader_speed_(evader_speed),
         pursuer_speed_(pursuer_speed),
-        MultiPlayerDynamicalSystem(kNumXDims, time_step) {}
+        MultiPlayerDynamicalSystem(kNumXDims) {}
 
   // Compute time derivative of state.
   VectorXf Evaluate(Time t, const VectorXf& x,
@@ -130,20 +130,20 @@ inline LinearDynamicsApproximation Air3D::Linearize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   LinearDynamicsApproximation linearization(*this);
 
-  const float ctheta = std::cos(x(kRThetaIdx)) * time_step_;
-  const float stheta = std::sin(x(kRThetaIdx)) * time_step_;
+  const float ctheta = std::cos(x(kRThetaIdx)) * time::kTimeStep;
+  const float stheta = std::sin(x(kRThetaIdx)) * time::kTimeStep;
 
-  linearization.A(kRxIdx, kRyIdx) += us[0](kOmega1Idx) * time_step_;
+  linearization.A(kRxIdx, kRyIdx) += us[0](kOmega1Idx) * time::kTimeStep;
   linearization.A(kRxIdx, kRThetaIdx) -= pursuer_speed_ * stheta;
 
-  linearization.A(kRyIdx, kRxIdx) -= us[0](kOmega1Idx) * time_step_;
+  linearization.A(kRyIdx, kRxIdx) -= us[0](kOmega1Idx) * time::kTimeStep;
   linearization.A(kRyIdx, kRThetaIdx) += pursuer_speed_ * ctheta;
 
-  linearization.Bs[0](kRxIdx, kOmega1Idx) = x(kRyIdx) * time_step_;
-  linearization.Bs[0](kRyIdx, kOmega1Idx) = -x(kRxIdx) * time_step_;
-  linearization.Bs[0](kRThetaIdx, kOmega1Idx) = -time_step_;
+  linearization.Bs[0](kRxIdx, kOmega1Idx) = x(kRyIdx) * time::kTimeStep;
+  linearization.Bs[0](kRyIdx, kOmega1Idx) = -x(kRxIdx) * time::kTimeStep;
+  linearization.Bs[0](kRThetaIdx, kOmega1Idx) = -time::kTimeStep;
 
-  linearization.Bs[1](kRThetaIdx, kOmega2Idx) = time_step_;
+  linearization.Bs[1](kRThetaIdx, kOmega2Idx) = time::kTimeStep;
 
   return linearization;
 }

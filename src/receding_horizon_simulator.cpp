@@ -97,8 +97,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     t += kExtraTime;  // + planner_runtime;
 
     if (t >= final_time ||
-        !splicer.ContainsTime(t + planner_runtime +
-                              solver->GetProblem().TimeStep()))
+        !splicer.ContainsTime(t + planner_runtime + time::kTimeStep))
       break;
 
     x = solver->GetProblem().Dynamics()->Integrate(

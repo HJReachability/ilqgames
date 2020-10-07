@@ -36,19 +36,14 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all explicit equality constraints. These constraints are of
-// the form: g(x) = 0 for some vector x.
-//
-// In addition to checking for satisfaction (and returning the squared norm of
-// the constraint value g(x)), they also support computing a Jacobian of the
-// constraint value.
+// Equality constraint that is only active after the threshold time.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_FINAL_TIME_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_FINAL_TIME_CONSTRAINT_H
 
-#include <ilqgames/utils/relative_time_tracker.h>
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -57,28 +52,39 @@
 
 namespace ilqgames {
 
-class EqualityConstraint : public RelativeTimeTracker {
+class FinalTimeConstraint : public Constraint {
  public:
-  virtual ~EqualityConstraint() {}
+  ~FinalTimeConstraint() {}
+  FinalTimeConstraint(const std::shared_ptr<Constraint>& constraint,
+                      Time threshold_time)
+      : Constraint(*constraint),
+        constraint_(constraint),
+        threshold_time_(threshold_time) {
+    CHECK_NOTNULL(constraint_);
+  }
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  virtual bool IsSatisfied(Time t, const VectorXf& input,
-                           float* level) const = 0;
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(Time t, const VectorXf& input) const {
+    return (t < initial_time_ + threshold_time_)
+               ? 0.0
+               : constraint_->Evaluate(t, input);
+  }
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  virtual void Quadraticize(Time t, const VectorXf& input,
-                            Eigen::Ref<MatrixXf> hess,
-                            Eigen::Ref<VectorXf> grad) const = 0;
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    if (t >= initial_time_ + threshold_time_)
+      constraint_->Quadraticize(t, input, hess, grad);
+  }
 
- protected:
-  explicit EqualityConstraint(const std::string& name)
-      : RelativeTimeTracker(name) {}
+ private:
+  // Underlying constraint.
+  const std::shared_ptr<Constraint> constraint_;
 
-  // Name of this constraint.
-  const std::string name_;
-};  //\class EqualityConstraint
+  // Time threshold relative to initial time after which to apply constraint.
+  const Time threshold_time_;
+};  //\class FinalTimeConstraint
 
 }  // namespace ilqgames
 

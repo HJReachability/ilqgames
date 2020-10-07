@@ -36,14 +36,16 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Equality constraint that is only active after the threshold time.
+// (Time-invariant) single dimension constraint, i.e., g(x) = (+/-) (x_i - d),
+// where d is a threshold and sign is determined by the `keep_below` argument
+// (positive is true).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_CONSTRAINT_EXPLICIT_FINAL_TIME_EQUALITY_CONSTRAINT_H
-#define ILQGAMES_CONSTRAINT_EXPLICIT_FINAL_TIME_EQUALITY_CONSTRAINT_H
+#ifndef ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
+#define ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
 
-#include <ilqgames/constraint/explicit/equality_constraint.h>
+#include <ilqgames/constraint/time_invariant_constraint.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -52,43 +54,53 @@
 
 namespace ilqgames {
 
-class FinalTimeEqualityConstraint : public EqualityConstraint {
+class SingleDimensionConstraint : public TimeInvariantConstraint {
  public:
-  ~FinalTimeEqualityConstraint() {}
-  FinalTimeEqualityConstraint(
-      const std::shared_ptr<EqualityConstraint>& constraint,
-      Time threshold_time, const std::string& name = "")
-      : EqualityConstraint(name),
-        constraint_(constraint),
-        threshold_time_(threshold_time) {
-    CHECK_NOTNULL(constraint_);
+  ~SingleDimensionConstraint() {}
+  SingleDimensionConstraint(Dimension dim, float threshold, bool keep_below,
+                            const std::string& name = "")
+      : TimeInvariantConstraint(false, name),
+        dim_(dim),
+        threshold_(threshold),
+        keep_below_(keep_below) {}
+
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const {
+    return (keep_below_) ? input(dim_) - threshold_ : threshold_ - input(dim_);
   }
 
-  // Check if this constraint is satisfied, and optionally return the constraint
-  // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
-    if (t < initial_time_ + threshold_time_) {
-      if (*level) *level = 0.0;
-      return true;
-    } else
-      return constraint_->IsSatisfied(t, input, level);
-  }
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    CHECK_NOTNULL(hess);
+    CHECK_NOTNULL(grad);
+    CHECK_EQ(hess->rows(), input.size());
+    CHECK_EQ(hess->cols(), input.size());
+    CHECK_EQ(grad->size(), input.size());
 
-  // Quadraticize the constraint value. Do *not* keep a running sum since we
-  // keep separate multipliers for each constraint.
-  void Quadraticize(Time t, const VectorXf& input, Eigen::Ref<MatrixXf> hess,
-                    Eigen::Ref<VectorXf> grad) const {
-    if (t >= initial_time_ + threshold_time_)
-      constraint_->Quadraticize(t, input, hess, grad);
+    // Get current lambda.
+    const float lambda = Lambda(t);
+
+    // Compute gradient and Hessian.
+    const float sign = (keep_below_) ? 1.0 : -1.0;
+    const float x = input(dim_);
+    const float g = sign * (x - threshold_);
+
+    float dx = sign;
+    float ddx = 0.0;
+    ModifyDerivatives(t, g, &dx, &ddx);
+
+    (*grad)(dim_) += dx;
+    (*hess)(dim_, dim_) += ddx;
   }
 
  private:
-  // Underlying constraint.
-  const std::shared_ptr<EqualityConstraint> constraint_;
-
-  // Time threshold relative to initial time after which to apply constraint.
-  const Time threshold_time_;
-};  //\class EqualityConstraint
+  // Dimension to constrain, threshold value, and sign of constraint.
+  const Dimension dim_;
+  const float threshold_;
+  const bool keep_below_;
+};  //\class SingleDimensionConstraint
 
 }  // namespace ilqgames
 

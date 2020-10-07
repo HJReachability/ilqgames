@@ -59,7 +59,7 @@ std::string DefaultExperimentName();
 class SolverLog : private Uncopyable {
  public:
   ~SolverLog() {}
-  explicit SolverLog(Time time_step) : time_step_(time_step) {}
+  SolverLog() {}
 
   // Add a new solver iterate.
   void AddSolverIterate(const OperatingPoint& operating_point,
@@ -71,6 +71,15 @@ class SolverLog : private Uncopyable {
     total_player_costs_.push_back(total_costs);
     cumulative_runtimes_.push_back(cumulative_runtime);
     was_converged_.push_back(was_converged);
+  }
+
+  // Add a whole other log.
+  void AddLog(const SolverLog& log) {
+    for (size_t ii = 0; ii < log.NumIterates(); ii++) {
+      AddSolverIterate(log.operating_points_[ii], log.strategies_[ii],
+                       log.total_player_costs_[ii],
+                       log.cumulative_runtimes_[ii], log.was_converged_[ii]);
+    }
   }
 
   // Clear all but first entry. Used by the solver to return initial conditions
@@ -89,7 +98,6 @@ class SolverLog : private Uncopyable {
   // Accessors.
   bool WasConverged() const { return was_converged_.back(); }
   bool WasConverged(size_t idx) const { return was_converged_[idx]; }
-  Time TimeStep() const { return time_step_; }
   Time InitialTime() const {
     return (NumIterates() > 0) ? operating_points_[0].t0 : 0.0;
   }
@@ -99,14 +107,7 @@ class SolverLog : private Uncopyable {
   }
   PlayerIndex NumPlayers() const { return strategies_[0].size(); }
   size_t NumIterates() const { return operating_points_.size(); }
-  size_t NumTimeSteps() const {
-    return 1 + static_cast<size_t>(
-                   (constants::kSmallNumber + FinalTime() - InitialTime()) /
-                   time_step_);
-  }
-  std::vector<float> TotalCosts() const {
-    return total_player_costs_.back();
-  }
+  std::vector<float> TotalCosts() const { return total_player_costs_.back(); }
 
   const std::vector<Strategy>& InitialStrategies() const {
     return strategies_.front();
@@ -163,12 +164,12 @@ class SolverLog : private Uncopyable {
   // Get index corresponding to the time step immediately before the given time.
   size_t TimeToIndex(Time t) const {
     return static_cast<size_t>(
-        std::max(constants::kSmallNumber, t - InitialTime()) / time_step_);
+        std::max(constants::kSmallNumber, t - InitialTime()) / time::kTimeStep);
   }
 
   // Get time stamp corresponding to a particular index.
   Time IndexToTime(size_t idx) const {
-    return InitialTime() + time_step_ * static_cast<Time>(idx);
+    return InitialTime() + time::kTimeStep * static_cast<Time>(idx);
   }
 
   // Save to disk.
@@ -176,9 +177,6 @@ class SolverLog : private Uncopyable {
             const std::string& experiment_name = DefaultExperimentName()) const;
 
  private:
-  // Time discretization.
-  const Time time_step_;
-
   // Operating points, strategies, total costs, and cumulative runtime indexed
   // by solver iterate.
   std::vector<OperatingPoint> operating_points_;

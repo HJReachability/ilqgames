@@ -74,15 +74,10 @@ void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
 }  // anonymous namespace
 
 std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
-  const auto solver_call_time = clock::now();
+  const auto solver_call_time = Clock::now();
 
   // Create a new log.
   std::shared_ptr<SolverLog> log = CreateNewLog();
-
-  // Keep iterating until convergence.
-  auto elapsed_time = [](const std::chrono::time_point<clock>& start) {
-    return std::chrono::duration<Time>(clock::now() - start).count();
-  };  // elapsed_time
 
   // Last and current operating points. Make sure the last one starts from the
   // current state so that the current one will start there as well.
@@ -96,66 +91,34 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   // Current strategies.
   std::vector<Strategy> current_strategies(problem_->CurrentStrategies());
 
-  // Reset all constraint barrier weights to unity.
-  for (auto& cost : problem_->PlayerCosts()) cost.ResetBarrierWeights();
-
   // Things to keep track of during each iteration.
   size_t num_iterations = 0;
-  size_t num_iterations_since_barrier_rescaling = 0;
   bool has_converged = false;
-
-  // Turn barriers on/off.
-  auto turn_barriers_on = [this]() {
-    for (auto& cost : problem_->PlayerCosts()) cost.TurnBarriersOn();
-  };  // turn_barriers_on
-
-  auto turn_barriers_off = [this]() {
-    for (auto& cost : problem_->PlayerCosts()) cost.TurnBarriersOff();
-  };  // turn_barriers_off
 
   // Swap operating points and compute new current operating point. Future
   // operating points will be computed during the call to `ModifyLQStrategies`
   // which occurs after solving the LQ game.
-  bool was_operating_point_feasible;
   std::vector<float> total_costs;
   last_operating_point.swap(current_operating_point);
   CurrentOperatingPoint(last_operating_point, current_strategies,
-                        &current_operating_point,
-                        &was_operating_point_feasible);
+                        &current_operating_point);
 
   // Compute total costs.
   TotalCosts(current_operating_point, &total_costs);
 
   // Log current iterate.
+  Time elapsed = 0.0;
   log->AddSolverIterate(current_operating_point, current_strategies,
-                        total_costs, elapsed_time(solver_call_time),
-                        has_converged);
+                        total_costs, elapsed, has_converged);
 
   // Main loop with timer for anytime execution.
   while (num_iterations < params_.max_solver_iters && !has_converged &&
-         elapsed_time(solver_call_time) <
-             max_runtime - timer_.RuntimeUpperBound()) {
+         elapsed < max_runtime - timer_.RuntimeUpperBound()) {
     // Start loop timer.
     timer_.Tic();
 
     // New iteration.
     num_iterations++;
-    num_iterations_since_barrier_rescaling++;
-
-    // Maybe rescale barrier barrier weights.
-    if (num_iterations_since_barrier_rescaling >
-        params_.barrier_scaling_iters) {
-      num_iterations_since_barrier_rescaling = 0;
-      for (PlayerCost& cost : problem_->PlayerCosts())
-        cost.ScaleBarrierWeights(params_.geometric_barrier_scaling);
-    }
-
-    // If operating point is feasible, turn on barriers. If it is
-    // not feasible, then turn them off.
-    if (was_operating_point_feasible)
-      turn_barriers_on();
-    else
-      turn_barriers_off();
 
     // Linearize dynamics about the new operating point, only if the system
     // can't be treated as linear from the outset, in which case we've already
@@ -175,20 +138,9 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
         linearization_, cost_quadraticization_, problem_->InitialState());
 
     // Modify this LQ solution.
-    if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
-                            &was_operating_point_feasible)) {
+    if (!ModifyLQStrategies(&current_strategies, &current_operating_point)) {
       // Maybe emit warning if exiting early.
-      if (num_iterations == 1) {
-        VLOG(1)
-            << "Solver exited after during first iteration, which may indicate "
-               "an infeasible initial operating point.";
-
-        if (was_operating_point_feasible)
-          VLOG(1) << "Previous operating point was feasible.";
-        else {
-          VLOG(1) << "Previous operating point was infeasible.";
-        }
-      }
+      VLOG(1) << "Solver exited due to linesearch failure.";
 
       // Handle success flag.
       if (success) *success = false;
@@ -200,32 +152,12 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     TotalCosts(current_operating_point, &total_costs);
     has_converged = HasConverged(last_operating_point, current_operating_point);
 
+    // Record loop runtime.
+    elapsed += timer_.Toc();
+
     // Log current iterate.
     log->AddSolverIterate(current_operating_point, current_strategies,
-                          total_costs, elapsed_time(solver_call_time),
-                          has_converged);
-
-    // Record loop runtime.
-    timer_.Toc();
-  }
-
-  CHECK(!problem_->PlayerCosts().front().AreBarriersOn() ||
-        was_operating_point_feasible);
-
-  // Maybe emit warning if exiting early.
-  if (num_iterations == 1) {
-    VLOG(1) << "Solver exited after only 1 iteration but passed "
-               "backtracking checks, which may indicate an almost "
-               "converged initial operating point and strategies.";
-  }
-
-  if (!was_operating_point_feasible) {
-    VLOG(1) << "Solver found an infeasible solution. Failing.";
-
-    // Handle success flag.
-    if (success) *success = false;
-
-    return log;
+                          total_costs, elapsed, has_converged);
   }
 
   // Handle success flag.
@@ -237,36 +169,21 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 void ILQSolver::CurrentOperatingPoint(
     const OperatingPoint& last_operating_point,
     const std::vector<Strategy>& current_strategies,
-    OperatingPoint* current_operating_point, bool* satisfies_barriers) const {
+    OperatingPoint* current_operating_point) const {
   CHECK_NOTNULL(current_operating_point);
 
-  // Initialize time, convergence, and barrier satisfaction checks.
+  // Initialize time.
   current_operating_point->t0 = last_operating_point.t0;
-  if (satisfies_barriers) *satisfies_barriers = true;
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
 
     // Unpack.
     const VectorXf delta_x = x - last_operating_point.xs[kk];
     const auto& last_us = last_operating_point.us[kk];
     auto& current_us = current_operating_point->us[kk];
-
-    // Check barriers.
-    auto check_all_barriers = [this](Time t, const VectorXf& x,
-                                     const std::vector<VectorXf>& us) {
-      for (const auto& cost : problem_->PlayerCosts()) {
-        if (!cost.CheckBarriers(t, x, us)) return false;
-      }
-      return true;
-    };  // check_all_barriers
-
-    const bool checked_barriers = check_all_barriers(t, x, current_us);
-
-    if (satisfies_barriers) *satisfies_barriers &= checked_barriers;
 
     // Record state.
     current_operating_point->xs[kk] = x;
@@ -278,15 +195,14 @@ void ILQSolver::CurrentOperatingPoint(
     }
 
     // Integrate dynamics for one time step.
-    if (kk < problem_->NumTimeSteps() - 1)
-      x = problem_->Dynamics()->Integrate(t, problem_->TimeStep(), x,
-                                          current_us);
+    if (kk < time::kNumTimeSteps - 1)
+      x = problem_->Dynamics()->Integrate(t, time::kTimeStep, x, current_us);
   }
 }
 
 // bool ILQSolver::HasConverged(const OperatingPoint& last_op,
 //                              const OperatingPoint& current_op) const {
-//   for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+//   for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
 //     const float delta_x_distance = StateDistance(
 //         current_op.xs[kk], last_op.xs[kk], params_.trust_region_dimensions);
 
@@ -311,9 +227,8 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
   }
 
   // Accumulate costs.
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
 
     for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
       const float current_cost = problem_->PlayerCosts()[ii].Evaluate(
@@ -338,17 +253,36 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
 
 float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
                                const std::vector<Dimension>& dims) const {
-  if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
+  auto total_distance = [&dims](const VectorXf& x1, const VectorXf& x2) {
+    if (dims.empty()) return (x1 - x2).cwiseAbs().maxCoeff();
 
-  float distance = 0.0;
-  for (const Dimension dim : dims) distance += std::abs(x1(dim) - x2(dim));
+    float distance = 0.0;
+    for (const Dimension dim : dims) distance += std::abs(x1(dim) - x2(dim));
 
-  return distance;
+    return distance;
+  };  // total_distance
+
+  if (problem_->Dynamics()->TreatAsLinear()) {
+    const auto& dyn = problem_->FlatDynamics();
+
+    // If singular return infinite distance and throw a warning. Otherwise, use
+    // base class implementation but for nonlinear system states.
+    if (dyn.IsLinearSystemStateSingular(x1) ||
+        dyn.IsLinearSystemStateSingular(x2)) {
+      LOG(WARNING)
+          << "Singular state encountered when computing state distance.";
+      return std::numeric_limits<float>::infinity();
+    }
+
+    return total_distance(dyn.FromLinearSystemState(x1),
+                          dyn.FromLinearSystemState(x2));
+  }
+
+  return total_distance(x1, x2);
 }
 
 bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
-                                   OperatingPoint* current_operating_point,
-                                   bool* is_new_operating_point_feasible) {
+                                   OperatingPoint* current_operating_point) {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
 
@@ -366,8 +300,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   float current_stepsize = params_.initial_alpha_scaling;
   float current_kkt_squared_error = constants::kInfinity;
   CurrentOperatingPoint(last_operating_point, *strategies,
-                        current_operating_point,
-                        is_new_operating_point_feasible);
+                        current_operating_point);
 
   if (!params_.linesearch) return true;
 
@@ -384,8 +317,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
     current_stepsize *= params_.geometric_alpha_scaling;
     CurrentOperatingPoint(last_operating_point, *strategies,
-                          current_operating_point,
-                          is_new_operating_point_feasible);
+                          current_operating_point);
   }
 
   // Output a warning. Solver should revert to last valid operating point.
@@ -410,7 +342,7 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
   // computed.
   if (!expected_decrease_.get()) {
     expected_decrease_ = make_unique<float>(0.0);
-    for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
       for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
         const auto& quad = cost_quadraticization_[kk][ii];
 
@@ -451,7 +383,7 @@ float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
   ComputeCostQuadraticization(current_op, &cost_quadraticization_);
 
   float total_squared_error = 0.0;
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
 
@@ -467,6 +399,60 @@ float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
   }
 
   return total_squared_error;
+}
+
+void ILQSolver::ComputeLinearization(
+    const OperatingPoint& op,
+    std::vector<LinearDynamicsApproximation>* linearization) {
+  CHECK_NOTNULL(linearization);
+
+  // Check if linearization is the right length.
+  if (linearization->size() != op.xs.size())
+    linearization->resize(op.xs.size());
+
+  // Cast dynamics to appropriate type.
+  const auto dyn = static_cast<const MultiPlayerDynamicalSystem*>(
+      problem_->Dynamics().get());
+
+  // Populate one timestep at a time.
+  for (size_t kk = 0; kk < op.xs.size(); kk++) {
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
+    (*linearization)[kk] = dyn->Linearize(t, op.xs[kk], op.us[kk]);
+  }
+}
+
+void ILQSolver::ComputeLinearization(
+    std::vector<LinearDynamicsApproximation>* linearization) {
+  CHECK_NOTNULL(linearization);
+
+  // Cast dynamics to appropriate type and make sure the system is linearizable.
+  CHECK(problem_->Dynamics()->TreatAsLinear());
+  const auto& dyn = problem_->FlatDynamics();
+
+  // Populate one timestep at a time.
+  for (size_t kk = 0; kk < linearization->size(); kk++)
+    (*linearization)[kk] = dyn.LinearizedSystem();
+}
+
+void ILQSolver::ComputeCostQuadraticization(
+    const OperatingPoint& op,
+    std::vector<std::vector<QuadraticCostApproximation>>* q) {
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
+    const auto& x = op.xs[kk];
+    const auto& us = op.us[kk];
+
+    // Quadraticize costs.
+    for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
+      const PlayerCost& cost = problem_->PlayerCosts()[ii];
+
+      if (cost.IsTimeAdditive() ||
+          problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
+        (*q)[kk][ii] = cost.Quadraticize(t, x, us);
+      else
+        (*q)[kk][ii] = cost.QuadraticizeControlCosts(t, x, us);
+    }
+  }
 }
 
 }  // namespace ilqgames

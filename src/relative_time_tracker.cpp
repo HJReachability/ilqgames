@@ -45,6 +45,6 @@
 
 namespace ilqgames {
 
-Time RelativeTimeTracker::initial_time_ = 0.0;
+Time RelativeTimeTracker::initial_time_ = 0.0;  // s
 
 }  // namespace ilqgames

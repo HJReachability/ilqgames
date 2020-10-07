@@ -66,8 +66,9 @@ std::vector<float> ComputeStrategyCosts(
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    float time_step, bool open_loop = false);
-std::vector<float> ComputeStrategyCosts(const Problem& problem);
+    bool open_loop = false);
+std::vector<float> ComputeStrategyCosts(const Problem& problem,
+                                        bool open_loop = false);
 
 }  // namespace ilqgames
 

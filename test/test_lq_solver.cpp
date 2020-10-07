@@ -66,11 +66,6 @@
 using namespace ilqgames;
 
 namespace {
-// Time parameters.
-static constexpr Time kTimeStep = 0.1;
-static constexpr Time kTimeHorizon = 10.0;
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Solve two-player infinite horizon (time-invariant) LQ game by Lyapunov
 // iterations.
@@ -120,16 +115,16 @@ class SinglePlayerUtilityDynamics : public SinglePlayerDynamicalSystem {
   SinglePlayerUtilityDynamics() : SinglePlayerDynamicalSystem(2, 2) {
     CHECK_EQ(xdim_, udim_);
     A_ = MatrixXf::Identity(xdim_, xdim_);
-    B_ = kTimeStep * 0.41 * MatrixXf::Identity(xdim_, xdim_);
-    A_(0, 1) = kTimeStep;
+    B_ = time::kTimeStep * 0.41 * MatrixXf::Identity(xdim_, xdim_);
+    A_(0, 1) = time::kTimeStep;
   }
 
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const {
-    return (A_ - MatrixXf::Identity(xdim_, xdim_)) * x / kTimeStep +
-           B_ * u / kTimeStep;
+    return (A_ - MatrixXf::Identity(xdim_, xdim_)) * x / time::kTimeStep +
+           B_ * u / time::kTimeStep;
   }
 
-  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
     A = A_;
     B = B_;
@@ -148,8 +143,8 @@ class SinglePlayerUtilityDynamics : public SinglePlayerDynamicalSystem {
 class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
  public:
   ~TwoPlayerPointMass1D() {}
-  TwoPlayerPointMass1D(Time time_step)
-      : MultiPlayerDynamicalSystem(2, time_step), A_(2, 2), B1_(2), B2_(2) {
+  TwoPlayerPointMass1D()
+      : MultiPlayerDynamicalSystem(2), A_(2, 2), B1_(2), B2_(2) {
     A_ = MatrixXf::Zero(2, 2);
     A_(0, 1) = 1.0;
 
@@ -175,9 +170,9 @@ class TwoPlayerPointMass1D : public MultiPlayerDynamicalSystem {
                                         const std::vector<VectorXf>& us) const {
     LinearDynamicsApproximation linearization(*this);
 
-    linearization.A += A_ * time_step_;
-    linearization.Bs[0] = B1_ * time_step_;
-    linearization.Bs[1] = B2_ * time_step_;
+    linearization.A += A_ * time::kTimeStep;
+    linearization.Bs[0] = B1_ * time::kTimeStep;
+    linearization.Bs[1] = B2_ * time::kTimeStep;
     return linearization;
   }
 
@@ -195,7 +190,7 @@ template <typename T>
 class ProvideDefaultConstructor : public T {
  public:
   ProvideDefaultConstructor()
-      : T(std::make_shared<TwoPlayerPointMass1D>(kTimeStep), kNumTimeSteps) {}
+      : T(std::make_shared<TwoPlayerPointMass1D>(), time::kNumTimeSteps) {}
 };  // class ProvideDefaultConstructor
 
 }  // anonymous namespace
@@ -204,7 +199,7 @@ template <typename T>
 class LQSolverTest : public ::testing::Test {
  protected:
   void SetUp() {
-    dynamics_.reset(new TwoPlayerPointMass1D(kTimeStep));
+    dynamics_.reset(new TwoPlayerPointMass1D);
     x0_ = VectorXf::Ones(2);
 
     // Set linearization and quadraticizations.
@@ -213,8 +208,8 @@ class LQSolverTest : public ::testing::Test {
 
     // Set a zero operating point.
     operating_point_.reset(
-        new OperatingPoint(kNumTimeSteps, dynamics_->NumPlayers(), 0.0));
-    for (size_t kk = 0; kk < kNumTimeSteps; kk++) {
+        new OperatingPoint(time::kNumTimeSteps, dynamics_->NumPlayers(), 0.0));
+    for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
       operating_point_->xs[kk] =
           MatrixXf::Zero(dynamics_->XDim(), dynamics_->XDim());
       for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
@@ -260,11 +255,12 @@ class LQSolverTest : public ::testing::Test {
     quadraticizations_.push_back(player_costs_[1].Quadraticize(
         0.0, operating_point_->xs[0], operating_point_->us[0]));
 
-    lq_solution_ = lq_solver_.Solve(
-        std::vector<LinearDynamicsApproximation>(kNumTimeSteps, linearization_),
-        std::vector<std::vector<QuadraticCostApproximation>>(
-            kNumTimeSteps, quadraticizations_),
-        x0_);
+    lq_solution_ =
+        lq_solver_.Solve(std::vector<LinearDynamicsApproximation>(
+                             time::kNumTimeSteps, linearization_),
+                         std::vector<std::vector<QuadraticCostApproximation>>(
+                             time::kNumTimeSteps, quadraticizations_),
+                         x0_);
   }
 
   // Dynamics.
@@ -323,12 +319,12 @@ TEST_F(LQFeedbackSolverTest, MatchesLyapunovIterations) {
 TEST_F(LQFeedbackSolverTest, NashEquilibrium) {
   // Make sure this is a feedback Nash and not an open loop Nash.
   constexpr float kMaxPerturbation = 0.1;
-  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
-      kTimeStep, kMaxPerturbation));
-  EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
-      kTimeStep, kMaxPerturbation, true));
+  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(player_costs_, lq_solution_,
+                                                 *operating_point_, *dynamics_,
+                                                 x0_, kMaxPerturbation));
+  EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(player_costs_, lq_solution_,
+                                                  *operating_point_, *dynamics_,
+                                                  x0_, kMaxPerturbation, true));
 }
 
 TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
@@ -340,12 +336,12 @@ TEST_F(LQFeedbackSolverTest, NashEquilibriumWithLinearCostTerms) {
 
   // Make sure this is a feedback Nash and not an open loop Nash.
   constexpr float kMaxPerturbation = 0.1;
-  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
-      kTimeStep, kMaxPerturbation));
-  EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
-      kTimeStep, kMaxPerturbation, true));
+  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(player_costs_, lq_solution_,
+                                                 *operating_point_, *dynamics_,
+                                                 x0_, kMaxPerturbation));
+  EXPECT_FALSE(NumericalCheckLocalNashEquilibrium(player_costs_, lq_solution_,
+                                                  *operating_point_, *dynamics_,
+                                                  x0_, kMaxPerturbation, true));
 }
 
 TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
@@ -385,9 +381,9 @@ TEST_F(LQOpenLoopSolverTest, NashEquilibrium) {
 
   // Make sure this is an open loop Nash.
   constexpr float kMaxPerturbation = 0.1;
-  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(
-      player_costs_, lq_solution_, *operating_point_, *dynamics_, x0_,
-      kTimeStep, kMaxPerturbation, true));
+  EXPECT_TRUE(NumericalCheckLocalNashEquilibrium(player_costs_, lq_solution_,
+                                                 *operating_point_, *dynamics_,
+                                                 x0_, kMaxPerturbation, true));
 }
 
 TEST(SinglePlayerOpenLoopFeedback, TestSameSolution) {
@@ -397,7 +393,8 @@ TEST(SinglePlayerOpenLoopFeedback, TestSameSolution) {
   lin.A = single.A();
   lin.Bs.push_back(single.B());
 
-  const std::vector<LinearDynamicsApproximation> big_lin(kNumTimeSteps, lin);
+  const std::vector<LinearDynamicsApproximation> big_lin(time::kNumTimeSteps,
+                                                         lin);
 
   // Cost structure to regulate to the origin.
   QuadraticCostApproximation quad(single.UDim());
@@ -407,14 +404,14 @@ TEST(SinglePlayerOpenLoopFeedback, TestSameSolution) {
                               VectorXf::Zero(single.UDim())));
 
   const std::vector<std::vector<QuadraticCostApproximation>> big_quad(
-      kNumTimeSteps, {quad});
+      time::kNumTimeSteps, {quad});
 
   // Solve open-loop and feedback separately.
   const std::shared_ptr<ConcatenatedDynamicalSystem> dyn(
       new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerUtilityDynamics>()}, kTimeStep));
-  LQOpenLoopSolver ol(dyn, kNumTimeSteps);
-  LQFeedbackSolver fb(dyn, kNumTimeSteps);
+          {std::make_shared<SinglePlayerUtilityDynamics>()}));
+  LQOpenLoopSolver ol(dyn, time::kNumTimeSteps);
+  LQFeedbackSolver fb(dyn, time::kNumTimeSteps);
 
   const VectorXf x0 = VectorXf::Ones(single.XDim());
   const std::vector<Strategy> ol_strategy = ol.Solve(big_lin, big_quad, x0);

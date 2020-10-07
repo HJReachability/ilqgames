@@ -41,12 +41,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/examples/minimally_invasive_receding_horizon_simulator.h>
-#include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/examples/modified_three_player_intersection_example.h>
+#include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/examples/three_player_intersection_reachability_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/solver_log.h>
@@ -111,7 +112,6 @@ int main(int argc, char** argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
-  params.enforce_barriers_in_linesearch = true;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
@@ -123,12 +123,12 @@ int main(int argc, char** argv) {
   auto original_problem =
       std::make_shared<ilqgames::ModifiedThreePlayerIntersectionExample>();
   original_problem->Initialize();
-  ilqgames::ILQSolver original_solver(original_problem, params);
+  ilqgames::AugmentedLagrangianSolver original_solver(original_problem, params);
 
   auto safety_problem =
       std::make_shared<ilqgames::ThreePlayerIntersectionReachabilityExample>();
   safety_problem->Initialize();
-  ilqgames::ILQSolver safety_solver(safety_problem, params);
+  ilqgames::AugmentedLagrangianSolver safety_solver(safety_problem, params);
 
   // Solve the game in a receding horizon.
   constexpr ilqgames::Time kFinalTime = 10.0;       // s

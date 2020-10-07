@@ -58,8 +58,7 @@ namespace ilqgames {
 class TwoPlayerUnicycle4D : public MultiPlayerDynamicalSystem {
  public:
   ~TwoPlayerUnicycle4D() {}
-  TwoPlayerUnicycle4D(Time time_step)
-      : MultiPlayerDynamicalSystem(kNumXDims, time_step) {}
+  TwoPlayerUnicycle4D() : MultiPlayerDynamicalSystem(kNumXDims) {}
 
   // Compute time derivative of state.
   VectorXf Evaluate(Time t, const VectorXf& x,
@@ -121,8 +120,8 @@ inline LinearDynamicsApproximation TwoPlayerUnicycle4D::Linearize(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   LinearDynamicsApproximation linearization(*this);
 
-  const float ctheta = std::cos(x(kThetaIdx)) * time_step_;
-  const float stheta = std::sin(x(kThetaIdx)) * time_step_;
+  const float ctheta = std::cos(x(kThetaIdx)) * time::kTimeStep;
+  const float stheta = std::sin(x(kThetaIdx)) * time::kTimeStep;
 
   linearization.A(kPxIdx, kThetaIdx) += -x(kVIdx) * stheta;
   linearization.A(kPxIdx, kVIdx) += ctheta;
@@ -130,11 +129,11 @@ inline LinearDynamicsApproximation TwoPlayerUnicycle4D::Linearize(
   linearization.A(kPyIdx, kThetaIdx) += x(kVIdx) * ctheta;
   linearization.A(kPyIdx, kVIdx) += stheta;
 
-  linearization.Bs[0](kThetaIdx, kOmegaIdx) = time_step_;
-  linearization.Bs[0](kVIdx, kAIdx) = time_step_;
+  linearization.Bs[0](kThetaIdx, kOmegaIdx) = time::kTimeStep;
+  linearization.Bs[0](kVIdx, kAIdx) = time::kTimeStep;
 
-  linearization.Bs[1](kPxIdx, kDxIdx) = time_step_;
-  linearization.Bs[1](kPyIdx, kDyIdx) = time_step_;
+  linearization.Bs[1](kPxIdx, kDxIdx) = time::kTimeStep;
+  linearization.Bs[1](kPyIdx, kDyIdx) = time::kTimeStep;
 
   return linearization;
 }

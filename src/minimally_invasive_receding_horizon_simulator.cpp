@@ -131,7 +131,7 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
 
     if (t >= final_time ||
         !splicer.ContainsTime(t + planner_runtime +
-                              original->GetProblem().TimeStep()))
+                              time::kTimeStep))
       break;
 
     x = dynamics.Integrate(t - kExtraTime, t, x,

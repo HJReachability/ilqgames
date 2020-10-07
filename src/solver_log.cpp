@@ -68,7 +68,7 @@ VectorXf SolverLog::InterpolateState(size_t iterate, Time t) const {
   const size_t hi = std::min(lo + 1, op.xs.size() - 1);
 
   // Fraction of the way between lo and hi.
-  const float frac = (t - IndexToTime(lo)) / time_step_;
+  const float frac = (t - IndexToTime(lo)) / time::kTimeStep;
   return (1.0 - frac) * op.xs[lo] + frac * op.xs[hi];
 }
 
@@ -80,7 +80,7 @@ float SolverLog::InterpolateState(size_t iterate, Time t, Dimension dim) const {
   const size_t hi = std::min(lo + 1, op.xs.size() - 1);
 
   // Fraction of the way between lo and hi.
-  const float frac = (t - IndexToTime(lo)) / time_step_;
+  const float frac = (t - IndexToTime(lo)) / time::kTimeStep;
   return (1.0 - frac) * op.xs[lo](dim) + frac * op.xs[hi](dim);
 }
 
@@ -93,7 +93,7 @@ VectorXf SolverLog::InterpolateControl(size_t iterate, Time t,
   const size_t hi = std::min(lo + 1, op.xs.size() - 1);
 
   // Fraction of the way between lo and hi.
-  const float frac = (t - IndexToTime(lo)) / time_step_;
+  const float frac = (t - IndexToTime(lo)) / time::kTimeStep;
   return (1.0 - frac) * op.us[lo][player] + frac * op.us[hi][player];
 }
 
@@ -106,7 +106,7 @@ float SolverLog::InterpolateControl(size_t iterate, Time t, PlayerIndex player,
   const size_t hi = std::min(lo + 1, op.xs.size() - 1);
 
   // Fraction of the way between lo and hi.
-  const float frac = (t - IndexToTime(lo)) / time_step_;
+  const float frac = (t - IndexToTime(lo)) / time::kTimeStep;
   return (1.0 - frac) * op.us[lo][player](dim) + frac * op.us[hi][player](dim);
 }
 
@@ -147,7 +147,7 @@ bool SolverLog::Save(bool only_last_trajectory,
     file.close();
 
     // Dump cumulative runtimes.
-    file.open(sub_dir_name + "/runtimes.txt");
+    file.open(sub_dir_name + "/cumulative_runtimes.txt");
     file << cumulative_runtimes_[ii] << std::endl;
     file.close();
 
