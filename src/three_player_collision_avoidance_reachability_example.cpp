@@ -102,8 +102,7 @@ void ThreePlayerCollisionAvoidanceReachabilityExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleDistance),
        std::make_shared<P2>(kInterAxleDistance),
-       std::make_shared<P3>(kInterAxleDistance)},
-      time_step_));
+       std::make_shared<P3>(kInterAxleDistance)}));
 }
 
 void ThreePlayerCollisionAvoidanceReachabilityExample::ConstructInitialState() {

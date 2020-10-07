@@ -52,6 +52,8 @@
 
 namespace ilqgames {
 
+using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
+
 class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
  public:
   ~ConcatenatedDynamicalSystem() {}
@@ -95,7 +97,7 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
   }
   std::vector<Dimension> PositionDimensions() const;
 
-private:
+ private:
   // List of subsystems, each of which controls the affects of a single player.
   const SubsystemList subsystems_;
 

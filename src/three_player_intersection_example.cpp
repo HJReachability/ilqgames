@@ -73,11 +73,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0;  // m
@@ -171,8 +166,7 @@ static const Dimension kP3AIdx = 1;
 void ThreePlayerIntersectionExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleLength),
-       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()},
-      kTimeStep));
+       std::make_shared<P2>(kInterAxleLength), std::make_shared<P3>()}));
 }
 
 void ThreePlayerIntersectionExample::ConstructInitialState() {

@@ -135,8 +135,7 @@ void SkeletonExample::ConstructDynamics() {
   static constexpr float kInterAxleDistance = 4.0;  // m
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleDistance),
-       std::make_shared<P2>(kInterAxleDistance)},
-      time_step_));
+       std::make_shared<P2>(kInterAxleDistance)}));
 }
 
 void SkeletonExample::ConstructInitialState() {

@@ -173,8 +173,7 @@ void ThreePlayerFlatOvertakingExample::ConstructDynamics() {
   dynamics_.reset(
       new ConcatenatedFlatSystem({std::make_shared<P1>(kInterAxleLength),
                                   std::make_shared<P2>(kInterAxleLength),
-                                  std::make_shared<P3>(kInterAxleLength)},
-                                 time_step_));
+                                  std::make_shared<P3>(kInterAxleLength)}));
 }
 
 void ThreePlayerFlatOvertakingExample::ConstructInitialState() {

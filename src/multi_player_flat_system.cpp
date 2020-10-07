@@ -54,7 +54,7 @@ VectorXf MultiPlayerFlatSystem::Integrate(
     const std::vector<VectorXf>& vs) const {
   // Number of integration steps and corresponding time step.
   constexpr size_t kNumIntegrationSteps = 2;
-  const double dt = time_step_ / static_cast<Time>(kNumIntegrationSteps);
+  const double dt = time::kTimeStep / static_cast<Time>(kNumIntegrationSteps);
 
   CHECK_NOTNULL(continuous_linear_system_.get());
   auto xi_dot = [this, &vs](const VectorXf& xi) {

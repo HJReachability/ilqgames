@@ -50,6 +50,9 @@
 
 namespace ilqgames {
 
+using FlatSubsystemList =
+    std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
+
 class ConcatenatedFlatSystem : public MultiPlayerFlatSystem {
  public:
   ~ConcatenatedFlatSystem() {}

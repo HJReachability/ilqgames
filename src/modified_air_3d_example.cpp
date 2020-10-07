@@ -99,7 +99,7 @@ static const Dimension kP2VyIdx = Dyn::kNumXDims + Dyn::kVyIdx;
 
 void ModifiedAir3DExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
-      {std::make_shared<Dyn>(), std::make_shared<Dyn>()}, time_step_));
+      {std::make_shared<Dyn>(), std::make_shared<Dyn>()}));
 }
 
 void ModifiedAir3DExample::ConstructInitialState() {

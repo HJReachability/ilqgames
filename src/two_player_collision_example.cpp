@@ -156,8 +156,7 @@ static const Dimension kP2JerkIdx = 1;
 void TwoPlayerCollisionExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-       std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
-      time_step_));
+       std::make_shared<SinglePlayerCar6D>(kInterAxleLength)}));
 }
 
 void TwoPlayerCollisionExample::ConstructInitialState() {
@@ -285,19 +284,19 @@ void TwoPlayerCollisionExample::ConstructPlayerCosts() {
   constexpr float kFinalTimeWindow = 0.5;  // s
   const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
-      time_horizon_ - kFinalTimeWindow, "GoalX");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalX");
   const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
-      time_horizon_ - kFinalTimeWindow, "GoalY");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalY");
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
 
   const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
-      time_horizon_ - kFinalTimeWindow, "GoalX");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalX");
   const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
-      time_horizon_ - kFinalTimeWindow, "GoalY");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalY");
   p2_cost.AddStateCost(p2_goalx_cost);
   p2_cost.AddStateCost(p2_goaly_cost);
 

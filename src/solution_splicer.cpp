@@ -55,17 +55,16 @@ namespace ilqgames {
 
 SolutionSplicer::SolutionSplicer(const SolverLog& log)
     : strategies_(log.FinalStrategies()),
-      operating_point_(log.FinalOperatingPoint()),
-      time_step_(log.TimeStep()) {}
+      operating_point_(log.FinalOperatingPoint()) {}
 
 void SolutionSplicer::Splice(const SolverLog& log) {
   CHECK_GE(log.FinalOperatingPoint().t0, operating_point_.t0);
-  CHECK_GE(operating_point_.xs.size(), log.NumTimeSteps());
-  CHECK_EQ(log.FinalOperatingPoint().xs.size(), log.NumTimeSteps());
+  CHECK_GE(operating_point_.xs.size(), time::kNumTimeSteps);
+  CHECK_EQ(log.FinalOperatingPoint().xs.size(), time::kNumTimeSteps);
 
   const size_t current_timestep = static_cast<size_t>(
       1e-4 +  // Add a little so that conversion doesn't end up subtracting 1.
-      (log.FinalOperatingPoint().t0 - operating_point_.t0) / log.TimeStep());
+      (log.FinalOperatingPoint().t0 - operating_point_.t0) / time::kTimeStep);
 
   // HACK! If we're close enough to the beginning of the old trajectory, just
   // save the first few steps along it in case a lower-level path follower uses
@@ -99,13 +98,13 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   // NOTE: makes use of default behavior of std::vector<T>.resize() in that it
   // does not delete earlier entries.
   const size_t num_spliced_timesteps =
-      current_timestep - initial_timestep + log.NumTimeSteps();
+      current_timestep - initial_timestep + time::kNumTimeSteps;
   CHECK_LE(num_spliced_timesteps,
-           log.NumTimeSteps() + kNumPreviousTimeStepsToSave);
+           time::kNumTimeSteps + kNumPreviousTimeStepsToSave);
 
   operating_point_.xs.resize(num_spliced_timesteps);
   operating_point_.us.resize(num_spliced_timesteps);
-  operating_point_.t0 += initial_timestep * log.TimeStep();
+  operating_point_.t0 += initial_timestep * time::kTimeStep;
 
   for (auto& strategy : strategies_) {
     strategy.Ps.resize(num_spliced_timesteps);
@@ -113,9 +112,9 @@ void SolutionSplicer::Splice(const SolverLog& log) {
   }
 
   // Copy over new solution to overwrite existing log after first timestep.
-  CHECK_EQ(current_timestep + log.NumTimeSteps() - initial_timestep,
+  CHECK_EQ(current_timestep + time::kNumTimeSteps - initial_timestep,
            operating_point_.xs.size());
-  for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn; kk < log.NumTimeSteps();
+  for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn; kk < time::kNumTimeSteps;
        kk++) {
     const size_t kk_new_solution = current_timestep + kk - initial_timestep;
     operating_point_.xs[kk_new_solution] = log.FinalOperatingPoint().xs[kk];

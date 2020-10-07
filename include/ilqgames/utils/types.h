@@ -83,12 +83,6 @@ using PointList2 = std::vector<Point2>;
 using Time = double;
 #endif
 
-class SinglePlayerDynamicalSystem;
-using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
-
-class SinglePlayerFlatSystem;
-using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
-
 template <typename T>
 using PlayerPtrMap = std::unordered_map<PlayerIndex, std::shared_ptr<T>>;
 

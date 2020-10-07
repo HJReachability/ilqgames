@@ -63,7 +63,7 @@ class SinglePlayerPointMass2D : public SinglePlayerDynamicalSystem {
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
 
   // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Distance metric between two states.
@@ -98,16 +98,15 @@ inline VectorXf SinglePlayerPointMass2D::Evaluate(Time t, const VectorXf& x,
   return xdot;
 }
 
-inline void SinglePlayerPointMass2D::Linearize(Time t, Time time_step,
-                                               const VectorXf& x,
+inline void SinglePlayerPointMass2D::Linearize(Time t, const VectorXf& x,
                                                const VectorXf& u,
                                                Eigen::Ref<MatrixXf> A,
                                                Eigen::Ref<MatrixXf> B) const {
-  A(kPxIdx, kVxIdx) += time_step;
-  A(kPyIdx, kVyIdx) += time_step;
+  A(kPxIdx, kVxIdx) += time::kTimeStep;
+  A(kPyIdx, kVyIdx) += time::kTimeStep;
 
-  B(kVxIdx, kAxIdx) = time_step;
-  B(kVyIdx, kAyIdx) = time_step;
+  B(kVxIdx, kAxIdx) = time::kTimeStep;
+  B(kVyIdx, kAyIdx) = time::kTimeStep;
 }
 
 inline float SinglePlayerPointMass2D::DistanceBetween(

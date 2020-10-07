@@ -80,7 +80,7 @@ using Dyn = TwoPlayerUnicycle4D;
 }  // anonymous namespace
 
 void TwoPlayerReachabilityExample::ConstructDynamics() {
-  dynamics_.reset(new TwoPlayerUnicycle4D(time_step_));
+  dynamics_.reset(new TwoPlayerUnicycle4D());
 }
 
 void TwoPlayerReachabilityExample::ConstructInitialState() {

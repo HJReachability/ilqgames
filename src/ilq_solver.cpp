@@ -74,7 +74,7 @@ void ScaleAlphas(float scaling, std::vector<Strategy>* strategies) {
 }  // anonymous namespace
 
 std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
-  const auto solver_call_time = clock::now();
+  const auto solver_call_time = Clock::now();
 
   // Create a new log.
   std::shared_ptr<SolverLog> log = CreateNewLog();
@@ -177,9 +177,8 @@ void ILQSolver::CurrentOperatingPoint(
 
   // Integrate dynamics and populate operating point, one time step at a time.
   VectorXf x(last_operating_point.xs[0]);
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
 
     // Unpack.
     const VectorXf delta_x = x - last_operating_point.xs[kk];
@@ -196,15 +195,14 @@ void ILQSolver::CurrentOperatingPoint(
     }
 
     // Integrate dynamics for one time step.
-    if (kk < problem_->NumTimeSteps() - 1)
-      x = problem_->Dynamics()->Integrate(t, problem_->TimeStep(), x,
-                                          current_us);
+    if (kk < time::kNumTimeSteps - 1)
+      x = problem_->Dynamics()->Integrate(t, time::kTimeStep, x, current_us);
   }
 }
 
 // bool ILQSolver::HasConverged(const OperatingPoint& last_op,
 //                              const OperatingPoint& current_op) const {
-//   for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+//   for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
 //     const float delta_x_distance = StateDistance(
 //         current_op.xs[kk], last_op.xs[kk], params_.trust_region_dimensions);
 
@@ -229,9 +227,8 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
   }
 
   // Accumulate costs.
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
 
     for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
       const float current_cost = problem_->PlayerCosts()[ii].Evaluate(
@@ -345,7 +342,7 @@ bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
   // computed.
   if (!expected_decrease_.get()) {
     expected_decrease_ = make_unique<float>(0.0);
-    for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+    for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
       for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
         const auto& quad = cost_quadraticization_[kk][ii];
 
@@ -386,7 +383,7 @@ float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
   ComputeCostQuadraticization(current_op, &cost_quadraticization_);
 
   float total_squared_error = 0.0;
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
 
@@ -419,8 +416,7 @@ void ILQSolver::ComputeLinearization(
 
   // Populate one timestep at a time.
   for (size_t kk = 0; kk < op.xs.size(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
     (*linearization)[kk] = dyn->Linearize(t, op.xs[kk], op.us[kk]);
   }
 }
@@ -441,9 +437,8 @@ void ILQSolver::ComputeLinearization(
 void ILQSolver::ComputeCostQuadraticization(
     const OperatingPoint& op,
     std::vector<std::vector<QuadraticCostApproximation>>* q) {
-  for (size_t kk = 0; kk < problem_->NumTimeSteps(); kk++) {
-    const Time t =
-        problem_->InitialTime() + problem_->ComputeRelativeTimeStamp(kk);
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const Time t = RelativeTimeTracker::RelativeTime(kk);
     const auto& x = op.xs[kk];
     const auto& us = op.us[kk];
 

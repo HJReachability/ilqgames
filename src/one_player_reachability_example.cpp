@@ -98,8 +98,8 @@ static const Dimension kP1OmegaIdx = 0;
 }  // anonymous namespace
 
 void OnePlayerReachabilityExample::ConstructDynamics() {
-  dynamics_.reset(new ConcatenatedDynamicalSystem(
-      {std::make_shared<P1>(kSpeed)}, time_step_));
+  dynamics_.reset(
+      new ConcatenatedDynamicalSystem({std::make_shared<P1>(kSpeed)}));
 }
 
 void OnePlayerReachabilityExample::ConstructInitialState() {

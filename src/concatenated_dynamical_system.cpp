@@ -49,7 +49,7 @@
 namespace ilqgames {
 
 ConcatenatedDynamicalSystem::ConcatenatedDynamicalSystem(
-    const SubsystemList& subsystems, Time time_step)
+    const SubsystemList& subsystems)
     : MultiPlayerDynamicalSystem(std::accumulate(
           subsystems.begin(), subsystems.end(), 0,
           [](Dimension total,
@@ -96,7 +96,7 @@ LinearDynamicsApproximation ConcatenatedDynamicalSystem::Linearize(
     const Dimension xdim = subsystem->XDim();
     const Dimension udim = subsystem->UDim();
     subsystem->Linearize(
-        t, time_step_, x.segment(dims_so_far, xdim), us[ii],
+        t, x.segment(dims_so_far, xdim), us[ii],
         linearization.A.block(dims_so_far, dims_so_far, xdim, xdim),
         linearization.Bs[ii].block(dims_so_far, 0, xdim, udim));
 

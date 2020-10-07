@@ -58,7 +58,7 @@ namespace ilqgames {
 void InitializeAlongRoute(const Polyline2& route, float initial_route_pos,
                           float nominal_speed,
                           const std::pair<Dimension, Dimension>& position_dims,
-                          Time time_step, OperatingPoint* operating_point);
+                          OperatingPoint* operating_point);
 
 }  // namespace ilqgames
 
