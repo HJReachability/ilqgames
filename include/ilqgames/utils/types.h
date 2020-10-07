@@ -61,6 +61,8 @@
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 
+namespace ilqgames {
+
 // ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
 
 using Eigen::MatrixXf;
@@ -108,7 +110,6 @@ struct Empty {};
 
 // ------------------------------- CONSTANTS -------------------------------- //
 
-namespace ilqgames {
 namespace constants {
 #ifdef __APPLE__
 // Acceleration due to gravity (m/s/s).

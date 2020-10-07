@@ -112,7 +112,6 @@ int main(int argc, char** argv) {
   params.max_solver_iters = 100;
   params.unconstrained_solver_max_iters = 10;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_barriers_in_linesearch = true;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;

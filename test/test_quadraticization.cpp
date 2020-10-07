@@ -42,9 +42,6 @@
 
 #include <ilqgames/constraint/affine_scalar_constraint.h>
 #include <ilqgames/constraint/affine_vector_constraint.h>
-#include <ilqgames/constraint/barrier/polyline2_signed_distance_barrier.h>
-#include <ilqgames/constraint/barrier/proximity_barrier.h>
-#include <ilqgames/constraint/barrier/single_dimension_barrier.h>
 #include <ilqgames/constraint/constraint.h>
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
@@ -83,11 +80,6 @@ namespace {
 // Cost weight and dimension.
 static constexpr float kCostWeight = 1.0;
 static constexpr Dimension kInputDimension = 10;
-
-// Time horizon.
-static constexpr Time kTimeHorizon = 10.0;  // s
-static const size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / RelativeTimeTracker::TimeStep());
 
 // Step size for forward differences.
 static constexpr float kGradForwardStep = 1e-3;
@@ -146,7 +138,8 @@ MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
 void CheckQuadraticization(const Cost& cost, bool is_constraint) {
   // Random number generator to make random timestamps.
   std::default_random_engine rng(0);
-  std::uniform_real_distribution<Time> time_distribution(0.0, kTimeHorizon);
+  std::uniform_real_distribution<Time> time_distribution(0.0,
+                                                         time::kTimeHorizon);
   std::bernoulli_distribution sign_distribution;
   std::uniform_real_distribution<float> entry_distribution(0.5, 5.0);
 
@@ -289,33 +282,10 @@ TEST(OrientationCostTest, QuadraticizesCorrectly) {
   CheckQuadraticization(cost, false);
 }
 
-TEST(ProximityBarrierTest, QuadraticizesCorrectly) {
-  ProximityBarrier outside_barrier({0, 1}, {2, 3}, 0.0, false);
-  CheckQuadraticization(outside_barrier, false);
-}
-
-TEST(SingleDimensionBarrierTest, SingleDimensionCorrectly) {
-  SingleDimensionBarrier left_barrier(0, 10.0, false);
-  CheckQuadraticization(left_barrier, false);
-
-  SingleDimensionBarrier right_barrier(0, -10.0, true);
-  CheckQuadraticization(right_barrier, false);
-}
-
 TEST(Polyline2SignedDistanceCostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   Polyline2SignedDistanceCost cost(polyline, {0, 1});
   CheckQuadraticization(cost, false);
-}
-
-TEST(Polyline2SignedDistanceBarrierTest, QuadraticizesCorrectly) {
-  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
-
-  Polyline2SignedDistanceBarrier left_barrier(polyline, {0, 1}, 10.0, false);
-  CheckQuadraticization(left_barrier, false);
-
-  Polyline2SignedDistanceBarrier right_barrier(polyline, {0, 1}, -10.0, true);
-  CheckQuadraticization(right_barrier, false);
 }
 
 TEST(SignedDistanceCostTest, QuadraticizesCorrectly) {
@@ -334,31 +304,29 @@ TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
 
 TEST(AffineScalarConstraintTest, QuadraticizesCorrectly) {
   AffineScalarConstraint constraint(
-      VectorXf::LinSpaced(kInputDimension, -1.0, 1.0), 0.5, false,
-      kNumTimeSteps);
+      VectorXf::LinSpaced(kInputDimension, -1.0, 1.0), 0.5, false);
   CheckQuadraticization(constraint, true);
 }
 
 TEST(AffineVectorConstraintTest, QuadraticizesCorrectly) {
   AffineVectorConstraint constraint(
       10.0 * MatrixXf::Random(kInputDimension, kInputDimension),
-      VectorXf::Random(kInputDimension), false, kNumTimeSteps);
+      VectorXf::Random(kInputDimension), false);
   CheckQuadraticization(constraint, true);
 }
 
 TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
-  ProximityConstraint constraint({0, 1}, {2, 3}, 0.7, false, kNumTimeSteps);
+  ProximityConstraint constraint({0, 1}, {2, 3}, 0.7, false);
   CheckQuadraticization(constraint, true);
 }
 
 TEST(Polyline2SignedDistanceConstraintTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
-  Polyline2SignedDistanceConstraint constraint(polyline, {0, 1}, 10.0, true,
-                                               kNumTimeSteps);
+  Polyline2SignedDistanceConstraint constraint(polyline, {0, 1}, 10.0, true);
   CheckQuadraticization(constraint, true);
 }
 
 TEST(SingleDimensionConstraintTest, QuadraticizesCorrectly) {
-  SingleDimensionConstraint constraint(0, 1.0, true, false, kNumTimeSteps);
+  SingleDimensionConstraint constraint(0, 1.0, true);
   CheckQuadraticization(constraint, true);
 }
