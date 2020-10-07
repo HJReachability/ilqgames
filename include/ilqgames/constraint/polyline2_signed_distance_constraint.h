@@ -70,9 +70,7 @@ class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
         xidx_(dims.first),
         yidx_(dims.second),
         threshold_(threshold),
-        keep_left_(keep_left) {
-    CHECK_GT(threshold_, 0.0);
-  }
+        keep_left_(keep_left) {}
 
   // Evaluate this constraint value, i.e., g(x).
   float Evaluate(const VectorXf& input) const;

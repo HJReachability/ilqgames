@@ -71,9 +71,9 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-DEFINE_double(initial_alpha_scaling, 1.0, "Initial step size in linesearch.");
+DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
 DEFINE_double(convergence_tolerance, 1.0, "KKT squared error tolerance.");
-DEFINE_double(expected_decrease, 0.9, "KKT sq err expected decrease per iter.");
+DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
