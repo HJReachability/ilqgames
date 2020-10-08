@@ -86,6 +86,7 @@ class PlayerCost {
   float Evaluate(Time t, const VectorXf& x,
                  const std::vector<VectorXf>& us) const;
   float Evaluate(const OperatingPoint& op, Time time_step) const;
+  float Evaluate(const OperatingPoint& op) const;
   float EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
                        const std::vector<VectorXf>& us) const;
 
