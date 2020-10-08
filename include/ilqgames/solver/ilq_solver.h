@@ -71,7 +71,9 @@ class ILQSolver : public GameSolver {
       : GameSolver(problem, params),
         linearization_(time::kNumTimeSteps),
         cost_quadraticization_(time::kNumTimeSteps),
-        last_kkt_squared_error_(constants::kInfinity) {
+        last_merit_function_value_(constants::kInfinity),
+        expected_linear_decrease_(constants::kInfinity),
+        expected_quadratic_decrease_(constants::kInfinity) {
     // Set up LQ solver.
     if (params_.open_loop)
       lq_solver_.reset(
@@ -112,7 +114,8 @@ class ILQSolver : public GameSolver {
   // Modify LQ strategies to improve convergence properties.
   // This function performs an Armijo linesearch and returns true if successful.
   bool ModifyLQStrategies(std::vector<Strategy>* strategies,
-                          OperatingPoint* current_operating_point);
+                          OperatingPoint* current_operating_point,
+                          bool* has_converged);
 
   // Compute distance (infinity norm) between states in the given dimensions.
   // If dimensions empty, checks all dimensions.
@@ -120,9 +123,9 @@ class ILQSolver : public GameSolver {
                       const std::vector<Dimension>& dims) const;
 
   // Check if solver has converged.
-  virtual bool HasConverged(const OperatingPoint& last_op,
-                            const OperatingPoint& current_op) const {
-    return last_kkt_squared_error_ < params_.convergence_tolerance;
+  virtual bool HasConverged(float current_merit_function_value) const {
+    return (last_merit_function_value_ - current_merit_function_value) <
+           params_.convergence_tolerance;
   }
 
   // Compute overall costs and set times of extreme costs.
@@ -130,14 +133,17 @@ class ILQSolver : public GameSolver {
                   std::vector<float>* total_costs) const;
 
   // Armijo condition check. Returns true if the new operating point satisfies
-  // the Armijo condition, and also returns current kkt squared error.
-  bool CheckArmijoCondition(const OperatingPoint& current_op,
-                            float current_stepsize,
-                            float* current_kkt_squared_error);
+  // the Armijo condition, and also returns current merit function value.
+  bool CheckArmijoCondition(float current_merit_function_value,
+                            float current_stepsize) const;
 
-  // Compute current KKT squared error. In the process, update the
+  // Compute current merit function value. In the process, update the
   // quadraticization.
-  virtual float KKTSquaredError(const OperatingPoint& current_op);
+  virtual float MeritFunction(const OperatingPoint& current_op);
+
+  // Compute expected decrease.
+  virtual void SetExpectedDecrease(
+      const std::vector<Strategy>& current_strategies);
 
   // Compute the current operating point based on the current set of
   // strategies and the last operating point.
@@ -170,11 +176,13 @@ class ILQSolver : public GameSolver {
   // Core LQ Solver.
   std::unique_ptr<LQSolver> lq_solver_;
 
-  // Last KKT squared error and expected decrease (unmultiplied by step size),
-  // and whether that expected decrease is up to date for this iteration (i.e.,
-  // ptr will be null).
-  float last_kkt_squared_error_;
-  std::unique_ptr<float> expected_decrease_;
+  // Last merit function value and expected decreases (unmultiplied by step
+  // size). Expected decreases are computed following
+  // https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf but for the sum of
+  // all players' costs.
+  float last_merit_function_value_;
+  float expected_linear_decrease_;
+  float expected_quadratic_decrease_;
 };  // class ILQSolver
 
 }  // namespace ilqgames

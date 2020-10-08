@@ -165,6 +165,13 @@ float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
   return cost;
 }
 
+float PlayerCost::Evaluate(const OperatingPoint& op) const {
+  float total_cost = 0.0;
+  for (size_t kk = 0; kk < op.xs.size(); kk++) total_cost += Evaluate(op, kk);
+
+  return total_cost;
+}
+
 float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
                                  const std::vector<VectorXf>& us) const {
   float total_cost = 0.0;
