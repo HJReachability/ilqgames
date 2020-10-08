@@ -128,17 +128,18 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     if (!problem_->Dynamics()->TreatAsLinear())
       ComputeLinearization(current_operating_point, &linearization_);
 
-    // Do quadraticize in the first iteration.
-    if (num_iterations == 1)
-      ComputeCostQuadraticization(current_operating_point,
-                                  &cost_quadraticization_);
+    // Quadraticize costs..
+    last_cost_quadraticization_.swap(cost_quadraticization_);
+    ComputeCostQuadraticization(current_operating_point,
+                                &cost_quadraticization_);
 
     // Solve LQ game.
     current_strategies = lq_solver_->Solve(
         linearization_, cost_quadraticization_, problem_->InitialState());
 
     // Modify this LQ solution.
-    if (!ModifyLQStrategies(&current_strategies, &current_operating_point)) {
+    if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
+                            &has_converged)) {
       // Maybe emit warning if exiting early.
       VLOG(1) << "Solver exited due to linesearch failure.";
 
@@ -150,7 +151,6 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
     // Compute total costs and check if we've converged.
     TotalCosts(current_operating_point, &total_costs);
-    has_converged = HasConverged(last_operating_point, current_operating_point);
 
     // Record loop runtime.
     elapsed += timer_.Toc();
@@ -282,13 +282,18 @@ float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
 }
 
 bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
-                                   OperatingPoint* current_operating_point) {
+                                   OperatingPoint* current_operating_point,
+                                   bool* has_converged) {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
+  CHECK_NOTNULL(has_converged);
 
   // DEBUG: show how alphas are decaying - i.e., we're finding a fixed point.
   //  std::cout << strategies->front().alphas.front().squaredNorm() <<
   //  std::endl;
+
+  // Precompute expected decrease before we do anything else.
+  SetExpectedDecrease(*strategies);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary
   // backtracking.
@@ -298,7 +303,6 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   // Armijo condition.
   const OperatingPoint last_operating_point(*current_operating_point);
   float current_stepsize = params_.initial_alpha_scaling;
-  float current_kkt_squared_error = constants::kInfinity;
   CurrentOperatingPoint(last_operating_point, *strategies,
                         current_operating_point);
 
@@ -306,14 +310,19 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
 
   // Keep reducing alphas until we satisfy the Armijo condition.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
-    if (CheckArmijoCondition(*current_operating_point, current_stepsize,
-                             &current_kkt_squared_error)) {
-      // Success! Update cached terms.
-      last_kkt_squared_error_ = current_kkt_squared_error;
-      expected_decrease_.release();
+    // Compute merit function value.
+    const float current_merit_function_value =
+        MeritFunction(*current_operating_point);
+
+    // Check Armijo condition.
+    if (CheckArmijoCondition(current_merit_function_value, current_stepsize)) {
+      // Success! Update cached terms and check convergence.
+      *has_converged = HasConverged(current_merit_function_value);
+      last_merit_function_value_ = current_merit_function_value;
       return true;
     }
 
+    // Scale down the alphas and try again.
     ScaleAlphas(params_.geometric_alpha_scaling, strategies);
     current_stepsize *= params_.geometric_alpha_scaling;
     CurrentOperatingPoint(last_operating_point, *strategies,
@@ -323,82 +332,53 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   // Output a warning. Solver should revert to last valid operating point.
   VLOG(1) << "Exceeded maximum number of backtracking steps.";
   return false;
-}
+}  // namespace ilqgames
 
-bool ILQSolver::CheckArmijoCondition(const OperatingPoint& current_op,
-                                     float current_stepsize,
-                                     float* current_kkt_squared_error) {
-  CHECK_NOTNULL(current_kkt_squared_error);
-
-  // Compute current KKT squared error. In the process, this will compute a new
-  // quadratic approximation at the current operating point and save the old
-  // quadraticization.
-  // NOTE: Currently, all KKT computations assume an *open loop* KKT structure.
-  // It remains to show that this is correct for *feedback* games, but
-  // empirically it seems to work ok.
-  *current_kkt_squared_error = KKTSquaredError(current_op);
-
-  // Compute total expected decrease of KKT squared error if not already
-  // computed.
-  if (!expected_decrease_.get()) {
-    expected_decrease_ = make_unique<float>(0.0);
-    for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
-      for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
-        const auto& quad = cost_quadraticization_[kk][ii];
-
-        const Eigen::HouseholderQR<MatrixXf> state_qr(quad.state.hess);
-        const float current_expected_decrease =
-            state_qr.solve(quad.state.grad).squaredNorm();
-        *expected_decrease_ += std::accumulate(
-            quad.control.begin(), quad.control.end(), current_expected_decrease,
-            [](float total,
-               const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
-              const Eigen::HouseholderQR<MatrixXf> control_qr(
-                  entry.second.hess);
-              return total + control_qr.solve(entry.second.grad).squaredNorm();
-            });
-      }
-    }
-  }
+bool ILQSolver::CheckArmijoCondition(float current_merit_function_value,
+                                     float current_stepsize) const {
   // Adjust total expected decrease.
-  const float scaled_expected_decrease = *expected_decrease_ * 2.0 *
-                                         current_stepsize *
-                                         params_.expected_decrease_fraction;
+  const float scaled_expected_decrease =
+      params_.expected_decrease_fraction * current_stepsize *
+      (expected_linear_decrease_ +
+       current_stepsize * expected_quadratic_decrease_);
 
   // std::cout << "expected: " << total_expected_decrease << "\n"
   //           << "actual: "
   //           << last_kkt_squared_error_ - *current_kkt_squared_error
   //           << std::endl;
 
-  return (last_kkt_squared_error_ - *current_kkt_squared_error >=
+  return (last_merit_function_value_ - current_merit_function_value >=
           scaled_expected_decrease);
 }
 
-float ILQSolver::KKTSquaredError(const OperatingPoint& current_op) {
-  // NOTE: Currently, all KKT computations assume an *open loop* KKT structure.
-  // It remains to show that this is correct for *feedback* games, but
-  // empirically it seems to work ok.
-  // NOTE: this will update the current quadraticization and save the old one.
-  last_cost_quadraticization_.swap(cost_quadraticization_);
-  ComputeCostQuadraticization(current_op, &cost_quadraticization_);
-
-  float total_squared_error = 0.0;
+void ILQSolver::SetExpectedDecrease(
+    const std::vector<Strategy>& current_strategies) {
+  // Compute both linear and quadratic terms from
+  // https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf (55), but summed for
+  // all players.
+  expected_linear_decrease_ = 0.0;
+  expected_quadratic_decrease_ = 0.0;
   for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
+      const auto& alpha = current_strategies[ii].alphas[kk];
 
-      // Accumulate state and control gradient squared norms.
-      const float current_squared_error = quad.state.grad.squaredNorm();
-      total_squared_error += std::accumulate(
-          quad.control.begin(), quad.control.end(), current_squared_error,
-          [](float total,
-             const std::pair<PlayerIndex, SingleCostApproximation>& entry) {
-            return total + entry.second.grad.squaredNorm();
-          });
+      for (const auto& entry : quad.control) {
+        expected_linear_decrease_ -= entry.second.grad.transpose() * alpha;
+        expected_quadratic_decrease_ +=
+            0.5 * alpha.transpose() * entry.second.hess * alpha;
+      }
     }
   }
+}
 
-  return total_squared_error;
+float ILQSolver::MeritFunction(const OperatingPoint& current_op) {
+  // Accumulate total cost for all players as the merit function.
+  float total_cost = 0.0;
+  for (const auto& pc : problem_->PlayerCosts())
+    total_cost += pc.Evaluate(current_op);
+
+  return total_cost;
 }
 
 void ILQSolver::ComputeLinearization(
@@ -425,7 +405,8 @@ void ILQSolver::ComputeLinearization(
     std::vector<LinearDynamicsApproximation>* linearization) {
   CHECK_NOTNULL(linearization);
 
-  // Cast dynamics to appropriate type and make sure the system is linearizable.
+  // Cast dynamics to appropriate type and make sure the system is
+  // linearizable.
   CHECK(problem_->Dynamics()->TreatAsLinear());
   const auto& dyn = problem_->FlatDynamics();
 

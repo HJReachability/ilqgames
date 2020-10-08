@@ -24,22 +24,25 @@ std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Li
 \subsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point)\hypertarget{classilqgames_1_1_i_l_q_solver_aacc4cfbccac0fb2eb344cadb03f76887}{}\label{classilqgames_1_1_i_l_q_solver_aacc4cfbccac0fb2eb344cadb03f76887}
+bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged)\hypertarget{classilqgames_1_1_i_l_q_solver_ac2d4f1fda81dec233cc881d0092fe37a}{}\label{classilqgames_1_1_i_l_q_solver_ac2d4f1fda81dec233cc881d0092fe37a}
 
 \item 
 float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}{}\label{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}
 
 \item 
-virtual bool {\bfseries Has\+Converged} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+op, const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op) const \hypertarget{classilqgames_1_1_i_l_q_solver_a16009dd589014a579b8b8ec5cbe89e87}{}\label{classilqgames_1_1_i_l_q_solver_a16009dd589014a579b8b8ec5cbe89e87}
+virtual bool {\bfseries Has\+Converged} (float current\+\_\+merit\+\_\+function\+\_\+value) const \hypertarget{classilqgames_1_1_i_l_q_solver_a3a179c3f6bb207a0e9c7f995649d4e7d}{}\label{classilqgames_1_1_i_l_q_solver_a3a179c3f6bb207a0e9c7f995649d4e7d}
 
 \item 
 void {\bfseries Total\+Costs} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op, std\+::vector$<$ float $>$ $\ast$total\+\_\+costs) const \hypertarget{classilqgames_1_1_i_l_q_solver_acf0f45f07d5484a9a60b3a2e1db1647a}{}\label{classilqgames_1_1_i_l_q_solver_acf0f45f07d5484a9a60b3a2e1db1647a}
 
 \item 
-bool {\bfseries Check\+Armijo\+Condition} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op, float current\+\_\+stepsize, float $\ast$current\+\_\+kkt\+\_\+squared\+\_\+error)\hypertarget{classilqgames_1_1_i_l_q_solver_a4e7525bb720f83e255dac165f0bbeb57}{}\label{classilqgames_1_1_i_l_q_solver_a4e7525bb720f83e255dac165f0bbeb57}
+bool {\bfseries Check\+Armijo\+Condition} (float current\+\_\+merit\+\_\+function\+\_\+value, float current\+\_\+stepsize) const \hypertarget{classilqgames_1_1_i_l_q_solver_a588b7fa207a616ccb30cde5d41ddad6b}{}\label{classilqgames_1_1_i_l_q_solver_a588b7fa207a616ccb30cde5d41ddad6b}
 
 \item 
-virtual float {\bfseries K\+K\+T\+Squared\+Error} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op)\hypertarget{classilqgames_1_1_i_l_q_solver_a9845b60307967eca6aa6897897d5ee69}{}\label{classilqgames_1_1_i_l_q_solver_a9845b60307967eca6aa6897897d5ee69}
+virtual float {\bfseries Merit\+Function} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op)\hypertarget{classilqgames_1_1_i_l_q_solver_af7c6030e72d5d886f55dbf5792206016}{}\label{classilqgames_1_1_i_l_q_solver_af7c6030e72d5d886f55dbf5792206016}
+
+\item 
+virtual void {\bfseries Set\+Expected\+Decrease} (const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies)\hypertarget{classilqgames_1_1_i_l_q_solver_a9c2be65e67cdbeaa908655af49e28a6e}{}\label{classilqgames_1_1_i_l_q_solver_a9c2be65e67cdbeaa908655af49e28a6e}
 
 \item 
 void {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point) const \hypertarget{classilqgames_1_1_i_l_q_solver_ae0145c002de655fd2b012d2142cacb6a}{}\label{classilqgames_1_1_i_l_q_solver_ae0145c002de655fd2b012d2142cacb6a}
@@ -69,10 +72,13 @@ std\+::vector$<$ std\+::vector$<$ \hyperlink{structilqgames_1_1_quadratic_cost_a
 std\+::unique\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_l_q_solver}{L\+Q\+Solver} $>$ {\bfseries lq\+\_\+solver\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_afb4b2fed2450e965d347dd6a38a33bb6}{}\label{classilqgames_1_1_i_l_q_solver_afb4b2fed2450e965d347dd6a38a33bb6}
 
 \item 
-float {\bfseries last\+\_\+kkt\+\_\+squared\+\_\+error\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_aad3c6e1b11d4c17ff63d87b3755c11b9}{}\label{classilqgames_1_1_i_l_q_solver_aad3c6e1b11d4c17ff63d87b3755c11b9}
+float {\bfseries last\+\_\+merit\+\_\+function\+\_\+value\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_a41e4e2648d28a5b2000f6fb24336a7f9}{}\label{classilqgames_1_1_i_l_q_solver_a41e4e2648d28a5b2000f6fb24336a7f9}
 
 \item 
-std\+::unique\+\_\+ptr$<$ float $>$ {\bfseries expected\+\_\+decrease\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_a58f9f117f6c03931c46d4ccece3386c7}{}\label{classilqgames_1_1_i_l_q_solver_a58f9f117f6c03931c46d4ccece3386c7}
+float {\bfseries expected\+\_\+linear\+\_\+decrease\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_ae90016435471a1f237f87db731d7bbf1}{}\label{classilqgames_1_1_i_l_q_solver_ae90016435471a1f237f87db731d7bbf1}
+
+\item 
+float {\bfseries expected\+\_\+quadratic\+\_\+decrease\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_abebd5254abd151949a603ce33dc59a14}{}\label{classilqgames_1_1_i_l_q_solver_abebd5254abd151949a603ce33dc59a14}
 
 \end{DoxyCompactItemize}
 
