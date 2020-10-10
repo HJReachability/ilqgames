@@ -72,20 +72,20 @@ static constexpr float kOmegaMax = 1.5;  // rad/s
 static constexpr float kAMax = 4.0;      // m/s
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 5.0;
+static constexpr float kOmegaCostWeight = 10.0;
 static constexpr float kACostWeight = 5.0;
 static constexpr float kNominalVCostWeight = 10.0;
-static constexpr float kLaneCostWeight = 1.0;
+static constexpr float kLaneCostWeight = 0.1;
 
 // Probability distribution between P3a and P3b.
 static constexpr float kP3aProbability = 0.25;
 static constexpr float kP3bProbability = 1.0 - kP3aProbability;
 
 // Nominal speed.
-static constexpr float kP1NominalV = 2.0;   // m/s
-static constexpr float kP2NominalV = 2.0;   // m/s
-static constexpr float kP3aNominalV = 2.0;  // m/s
-static constexpr float kP3bNominalV = 8.0;  // m/s
+static constexpr float kP1NominalV = 2.0;    // m/s
+static constexpr float kP2NominalV = 2.0;    // m/s
+static constexpr float kP3aNominalV = 2.0;   // m/s
+static constexpr float kP3bNominalV = 12.0;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = 3.0;    // m
@@ -188,12 +188,34 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
   auto& p3b_cost = player_costs_[3];
 
   // Quadratic control costs.
+  // NOTE: ego (P1) wants to be polite to everyone else.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, P1::kOmegaIdx, 0.0, "OmegaCost");
   const auto p1_a_cost = std::make_shared<QuadraticCost>(
       kACostWeight, P1::kAIdx, 0.0, "AccelerationCost");
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_a_cost);
+
+  const auto p1p2_omega_cost = std::make_shared<QuadraticCost>(
+      kOmegaCostWeight, P2::kOmegaIdx, 0.0, "P2OmegaCost");
+  const auto p1p2_a_cost = std::make_shared<QuadraticCost>(
+      kACostWeight, P2::kAIdx, 0.0, "P2AccelerationCost");
+  p1_cost.AddControlCost(1, p1p2_omega_cost);
+  p1_cost.AddControlCost(1, p1p2_a_cost);
+
+  const auto p1p3a_omega_cost = std::make_shared<QuadraticCost>(
+      kP3aProbability * kOmegaCostWeight, P3::kOmegaIdx, 0.0, "P3aOmegaCost");
+  const auto p1p3a_a_cost = std::make_shared<QuadraticCost>(
+      kP3aProbability * kACostWeight, P3::kAIdx, 0.0, "P3aAccelerationCost");
+  p1_cost.AddControlCost(2, p1p3a_omega_cost);
+  p1_cost.AddControlCost(2, p1p3a_a_cost);
+
+  const auto p1p3b_omega_cost = std::make_shared<QuadraticCost>(
+      kP3bProbability * kOmegaCostWeight, P3::kOmegaIdx, 0.0, "P3bOmegaCost");
+  const auto p1p3b_a_cost = std::make_shared<QuadraticCost>(
+      kP3bProbability * kACostWeight, P3::kAIdx, 0.0, "P3bAccelerationCost");
+  p1_cost.AddControlCost(3, p1p3b_omega_cost);
+  p1_cost.AddControlCost(3, p1p3b_a_cost);
 
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, P2::kOmegaIdx, 0.0, "OmegaCost");
@@ -212,46 +234,54 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
   p3b_cost.AddControlCost(3, p3_a_cost);
 
   // Constrain each control input to lie in an interval.
-  // Step 3. Try uncommenting these blocks.
-  // const auto p1_omega_max_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P1::kOmegaIdx, kOmegaMax, true,  "Omega Constraint
-  //         (Max)");
-  // const auto p1_omega_min_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P1::kOmegaIdx, -kOmegaMax, false, "Omega Constraint
-  //         (Min)");
-  // const auto p1_a_max_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     P1::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
-  // const auto p1_a_min_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     P1::kAIdx, -kAMax, false, "Acceleration Constraint
-  //     (Min)");
-  // p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
-  // p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
-  // p1_cost.AddControlConstraint(0, p1_a_max_constraint);
-  // p1_cost.AddControlConstraint(0, p1_a_min_constraint);
+  const auto p1_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, kOmegaMax, true, "Omega Constraint (Max)");
+  const auto p1_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P1::kOmegaIdx, -kOmegaMax, false, "Omega Constraint (Min)");
+  const auto p1_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P1::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
+  const auto p1_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P1::kAIdx, -kAMax, false, "Acceleration Constraint (Min)");
+  p1_cost.AddControlConstraint(0, p1_omega_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_omega_min_constraint);
+  p1_cost.AddControlConstraint(0, p1_a_max_constraint);
+  p1_cost.AddControlConstraint(0, p1_a_min_constraint);
 
-  // const auto p2_omega_max_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P2::kOmegaIdx, kOmegaMax, true, "Omega Constraint
-  //         (Max)");
-  // const auto p2_omega_min_constraint =
-  //     std::make_shared<SingleDimensionConstraint>(
-  //         P2::kOmegaIdx, -kOmegaMax, false, "Omega Constraint
-  //         (Min)");
-  // const auto p2_a_max_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     P2::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
-  // const auto p2_a_min_constraint =
-  // std::make_shared<SingleDimensionConstraint>(
-  //     P2::kAIdx, -kAMax, false, "Acceleration Constraint
-  //     (Min)");
-  // p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
-  // p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
-  // p2_cost.AddControlConstraint(1, p2_a_max_constraint);
-  // p2_cost.AddControlConstraint(1, p2_a_min_constraint);
+  const auto p2_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, kOmegaMax, true, "Omega Constraint (Max)");
+  const auto p2_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P2::kOmegaIdx, -kOmegaMax, false, "Omega Constraint (Min)");
+  const auto p2_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P2::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
+  const auto p2_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P2::kAIdx, -kAMax, false, "Acceleration Constraint (Min)");
+  p2_cost.AddControlConstraint(1, p2_omega_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_omega_min_constraint);
+  p2_cost.AddControlConstraint(1, p2_a_max_constraint);
+  p2_cost.AddControlConstraint(1, p2_a_min_constraint);
+
+  const auto p3_omega_max_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P3::kOmegaIdx, kOmegaMax, true, "Omega Constraint (Max)");
+  const auto p3_omega_min_constraint =
+      std::make_shared<SingleDimensionConstraint>(
+          P3::kOmegaIdx, -kOmegaMax, false, "Omega Constraint (Min)");
+  const auto p3_a_max_constraint = std::make_shared<SingleDimensionConstraint>(
+      P3::kAIdx, kAMax, true, "Acceleration Constraint (Max)");
+  const auto p3_a_min_constraint = std::make_shared<SingleDimensionConstraint>(
+      P3::kAIdx, -kAMax, false, "Acceleration Constraint (Min)");
+  p3a_cost.AddControlConstraint(2, p3_omega_max_constraint);
+  p3a_cost.AddControlConstraint(2, p3_omega_min_constraint);
+  p3a_cost.AddControlConstraint(2, p3_a_max_constraint);
+  p3a_cost.AddControlConstraint(2, p3_a_min_constraint);
+  p3b_cost.AddControlConstraint(3, p3_omega_max_constraint);
+  p3b_cost.AddControlConstraint(3, p3_omega_min_constraint);
+  p3b_cost.AddControlConstraint(3, p3_a_max_constraint);
+  p3b_cost.AddControlConstraint(3, p3_a_min_constraint);
 
   // Encourage each player to go a given nominal speed.
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
@@ -270,8 +300,7 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
       kNominalVCostWeight, kP3bVIdx, kP3bNominalV, "NominalV");
   p3b_cost.AddStateCost(p3b_nominal_v_cost);
 
-  // Encourage each player to remain near the lane center. Could also add
-  // constraints to stay in the lane.
+  // Encourage each player to remain near the lane center.
   const Polyline2 right_lane(
       {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
   const Polyline2 left_lane(
@@ -296,6 +325,52 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
       new QuadraticPolyline2Cost(kLaneCostWeight, left_lane,
                                  {kP3bXIdx, kP3bYIdx}, "LaneCenter"));
   p3b_cost.AddStateCost(p3b_lane_cost);
+
+  // Constrain all cars to stay in their lane (except P1 to stay on the road).
+  constexpr float kLaneHalfWidth = 4.0;  // m
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_road_constraint_l(
+      new Polyline2SignedDistanceConstraint(left_lane, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, false,
+                                            "Left Road Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_road_constraint_r(
+      new Polyline2SignedDistanceConstraint(right_lane, {kP1XIdx, kP1YIdx},
+                                            kLaneHalfWidth, true,
+                                            "Right Road Boundary"));
+  p1_cost.AddStateConstraint(p1_road_constraint_l);
+  p1_cost.AddStateConstraint(p1_road_constraint_r);
+
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_constraint_l(
+      new Polyline2SignedDistanceConstraint(right_lane, {kP2XIdx, kP2YIdx},
+                                            -kLaneHalfWidth, false,
+                                            "Left Lane Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_constraint_r(
+      new Polyline2SignedDistanceConstraint(right_lane, {kP2XIdx, kP2YIdx},
+                                            kLaneHalfWidth, true,
+                                            "Right Lane Boundary"));
+  p2_cost.AddStateConstraint(p2_lane_constraint_l);
+  p2_cost.AddStateConstraint(p2_lane_constraint_r);
+
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3a_lane_constraint_l(new Polyline2SignedDistanceConstraint(
+          left_lane, {kP3aXIdx, kP3aYIdx}, -kLaneHalfWidth, false,
+          "Left Lane Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3a_lane_constraint_r(new Polyline2SignedDistanceConstraint(
+          left_lane, {kP3aXIdx, kP3aYIdx}, kLaneHalfWidth, true,
+          "Right Lane Boundary"));
+  p3a_cost.AddStateConstraint(p3a_lane_constraint_l);
+  p3a_cost.AddStateConstraint(p3a_lane_constraint_r);
+
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3b_lane_constraint_l(new Polyline2SignedDistanceConstraint(
+          left_lane, {kP3bXIdx, kP3bYIdx}, -kLaneHalfWidth, false,
+          "Left Lane Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3b_lane_constraint_r(new Polyline2SignedDistanceConstraint(
+          left_lane, {kP3bXIdx, kP3bYIdx}, kLaneHalfWidth, true,
+          "Right Lane Boundary"));
+  p3b_cost.AddStateConstraint(p3b_lane_constraint_l);
+  p3b_cost.AddStateConstraint(p3b_lane_constraint_r);
 
   // Constrain proximity.
   // NOTE: P2 knows P3a is the real clone so there's no need to constrain
