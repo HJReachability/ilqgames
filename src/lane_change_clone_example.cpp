@@ -72,10 +72,10 @@ static constexpr float kOmegaMax = 1.5;  // rad/s
 static constexpr float kAMax = 4.0;      // m/s
 
 // Cost weights.
-static constexpr float kOmegaCostWeight = 25.0;
-static constexpr float kACostWeight = 15.0;
-static constexpr float kNominalVCostWeight = 100.0;
-static constexpr float kLaneCostWeight = 25.0;
+static constexpr float kOmegaCostWeight = 5.0;
+static constexpr float kACostWeight = 5.0;
+static constexpr float kNominalVCostWeight = 10.0;
+static constexpr float kLaneCostWeight = 1.0;
 
 // Probability distribution between P3a and P3b.
 static constexpr float kP3aProbability = 0.25;
@@ -84,24 +84,24 @@ static constexpr float kP3bProbability = 1.0 - kP3aProbability;
 // Nominal speed.
 static constexpr float kP1NominalV = 2.0;   // m/s
 static constexpr float kP2NominalV = 2.0;   // m/s
-static constexpr float kP3aNominalV = 3.0;  // m/s
-static constexpr float kP3bNominalV = 5.0;  // m/s
+static constexpr float kP3aNominalV = 2.0;  // m/s
+static constexpr float kP3bNominalV = 8.0;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = 3.0;    // m
-static constexpr float kP1InitialY = -15.0;  // m
+static constexpr float kP1InitialY = -20.0;  // m
 
 static constexpr float kP2InitialX = 3.0;   // m
 static constexpr float kP2InitialY = -5.0;  // m
 
 static constexpr float kP3InitialX = -3.0;   // m
-static constexpr float kP3InitialY = -30.0;  // m
+static constexpr float kP3InitialY = -40.0;  // m
 
 static constexpr float kP1InitialTheta = M_PI_2;  // rad
-static constexpr float kP1InitialV = 1.0;         // m/s
+static constexpr float kP1InitialV = 2.0;         // m/s
 
 static constexpr float kP2InitialTheta = M_PI_2;  // rad
-static constexpr float kP2InitialV = 1.0;         // m/s
+static constexpr float kP2InitialV = 2.0;         // m/s
 
 static constexpr float kP3InitialTheta = M_PI_2;  // rad
 static constexpr float kP3InitialV = 4.0;         // m/s

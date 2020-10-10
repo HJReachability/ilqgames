@@ -289,7 +289,8 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   CHECK_NOTNULL(has_converged);
 
   // DEBUG: show how alphas are decaying - i.e., we're finding a fixed point.
-  std::cout << strategies->front().alphas.front().squaredNorm() << std::endl;
+  //  std::cout << strategies->front().alphas.front().squaredNorm() <<
+  //  std::endl;
 
   // Precompute expected decrease before we do anything else.
   SetExpectedDecrease(*strategies);
