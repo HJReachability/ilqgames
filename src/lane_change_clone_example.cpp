@@ -74,9 +74,8 @@ static constexpr float kAMax = 4.0;      // m/s
 // Cost weights.
 static constexpr float kOmegaCostWeight = 25.0;
 static constexpr float kACostWeight = 15.0;
-static constexpr float kNominalVCostWeight = 10.0;
+static constexpr float kNominalVCostWeight = 100.0;
 static constexpr float kLaneCostWeight = 25.0;
-static constexpr float kProximityCostWeight = 100.0;
 
 // Probability distribution between P3a and P3b.
 static constexpr float kP3aProbability = 0.25;
@@ -99,10 +98,10 @@ static constexpr float kP3InitialX = -3.0;   // m
 static constexpr float kP3InitialY = -30.0;  // m
 
 static constexpr float kP1InitialTheta = M_PI_2;  // rad
-static constexpr float kP1InitialV = 2.0;         // m/s
+static constexpr float kP1InitialV = 1.0;         // m/s
 
 static constexpr float kP2InitialTheta = M_PI_2;  // rad
-static constexpr float kP2InitialV = 2.0;         // m/s
+static constexpr float kP2InitialV = 1.0;         // m/s
 
 static constexpr float kP3InitialTheta = M_PI_2;  // rad
 static constexpr float kP3InitialV = 4.0;         // m/s
@@ -207,10 +206,10 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
       kOmegaCostWeight, P3::kOmegaIdx, 0.0, "OmegaCost");
   const auto p3_a_cost = std::make_shared<QuadraticCost>(
       kACostWeight, P3::kAIdx, 0.0, "AccelerationCost");
-  p3a_cost.AddControlCost(1, p3_omega_cost);
-  p3a_cost.AddControlCost(1, p3_a_cost);
-  p3b_cost.AddControlCost(1, p3_omega_cost);
-  p3b_cost.AddControlCost(1, p3_a_cost);
+  p3a_cost.AddControlCost(2, p3_omega_cost);
+  p3a_cost.AddControlCost(2, p3_a_cost);
+  p3b_cost.AddControlCost(3, p3_omega_cost);
+  p3b_cost.AddControlCost(3, p3_a_cost);
 
   // Constrain each control input to lie in an interval.
   // Step 3. Try uncommenting these blocks.
