@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,28 +36,56 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all constraints. We assume that all constraints are
-// *inequalities*, which support a check for satisfaction. All constraints must
-// also implement the cost interface corresponding to a barrier function.
+// Base class for all explicit (scalar-valued) equality constraints. These
+// constraints are of the form: g(x) = 0 for some vector x.
+//
+// In addition to checking for satisfaction (and returning the constraint value
+// g(x)), they also support computing first and second derivatives of the
+// constraint value itself and the square of the constraint value, each scaled
+// by lambda or mu respectively (from the augmented Lagrangian). That is, they
+// compute gradients and Hessians of
+//         L(x, lambda, mu) = lambda * g(x) + mu * g(x) * g(x) / 2
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/constraint/constraint.h>
+#include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
+#include <memory>
 #include <string>
 
 namespace ilqgames {
 
-float Constraint::Evaluate(Time t, const VectorXf& input) const {
-  float level = 0.0;
-  CHECK(IsSatisfiedLevel(t, input, &level));
-  CHECK_LT(level, 0.0);
+float Constraint::mu_ = 10.0;
 
-  // For a concise introduction to log barrier methods, please refer to
-  // Calafiore and El Ghaoui, pp. 453.
-  return -weight_ * std::log(-level);
+void Constraint::ModifyDerivatives(Time t, float g, float* dx, float* ddx,
+                                   float* dy, float* ddy, float* dxdy) const {
+  // Unpack lambda.
+  const float lambda = lambdas_[TimeIndex(t)];
+  const float mu = Mu(lambda, g);
+
+  // Assumes that these are just the derivatives of g(x, y), and modifies them
+  // to be derivatives of lambda g(x) + mu g(x) g(x) / 2.
+  const float new_dx = lambda * *dx + mu * g * *dx;
+  const float new_ddx = lambda * *ddx + mu * (*dx * *dx + g * *ddx);
+
+  if (dy) {
+    CHECK_NOTNULL(ddy);
+    CHECK_NOTNULL(dxdy);
+
+    const float new_dy = lambda * *dy + mu * g * *dy;
+    const float new_ddy = lambda * *ddy + mu * (*dy * *dy + g * *ddy);
+    const float new_dxdy = lambda * *dxdy + mu * (*dy * *dx + g * *dxdy);
+
+    *dy = new_dy;
+    *ddy = new_ddy;
+    *dxdy = new_dxdy;
+  }
+
+  *dx = new_dx;
+  *ddx = new_ddx;
 }
 
 }  // namespace ilqgames

@@ -68,8 +68,7 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
   VectorXf Evaluate(const VectorXf& x, const VectorXf& u) const;
 
   // Discrete time approximation of the underlying linearized system.
-  void LinearizedSystem(Time time_step, Eigen::Ref<MatrixXf> A,
-                        Eigen::Ref<MatrixXf> B) const;
+  void LinearizedSystem(Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Utilities for feedback linearization.
   MatrixXf InverseDecouplingMatrix(const VectorXf& x) const;
@@ -82,6 +81,9 @@ class SinglePlayerFlatUnicycle4D : public SinglePlayerFlatSystem {
 
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
+
+  // Position dimensions.
+  std::vector<Dimension> PositionDimensions() const { return {kPxIdx, kPyIdx}; }
 
   // Constexprs for state indices.
   static const Dimension kNumXDims;
@@ -112,12 +114,12 @@ inline VectorXf SinglePlayerFlatUnicycle4D::Evaluate(const VectorXf& x,
 }
 
 inline void SinglePlayerFlatUnicycle4D::LinearizedSystem(
-    Time time_step, Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
-  A(kPxIdx, kVxIdx) += time_step;
-  A(kPyIdx, kVyIdx) += time_step;
+    Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
+  A(kPxIdx, kVxIdx) += time::kTimeStep;
+  A(kPyIdx, kVyIdx) += time::kTimeStep;
 
-  B(kVxIdx, 0) = time_step;
-  B(kVyIdx, 1) = time_step;
+  B(kVxIdx, 0) = time::kTimeStep;
+  B(kVyIdx, 1) = time::kTimeStep;
 }
 
 inline MatrixXf SinglePlayerFlatUnicycle4D::InverseDecouplingMatrix(

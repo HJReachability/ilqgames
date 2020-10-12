@@ -52,7 +52,13 @@ namespace ilqgames {
 class RoundaboutMergingExample : public TopDownRenderableProblem {
  public:
   ~RoundaboutMergingExample() {}
-  RoundaboutMergingExample(const SolverParams& params);
+  RoundaboutMergingExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, initial operating point, player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructInitialOperatingPoint();
+  void ConstructPlayerCosts();
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& x) const;

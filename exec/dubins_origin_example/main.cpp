@@ -45,6 +45,8 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
@@ -67,10 +69,10 @@ DEFINE_bool(last_traj, false,
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
-DEFINE_bool(linesearch, true, "Should the solver linesearch?");
+DEFINE_bool(linesearch, false, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 0.5, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
+DEFINE_double(convergence_tolerance, 0.1, "KKT squared error tolerance.");
+DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -107,25 +109,25 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_constraints_in_linesearch = true;
-  params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
+  params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.open_loop = kOpenLoop;
 
-  auto open_loop_problem =
-      std::make_shared<ilqgames::DubinsOriginExample>(params);
-  std::shared_ptr<const ilqgames::SolverLog> log = open_loop_problem->Solve();
+  auto open_loop_problem = std::make_shared<ilqgames::DubinsOriginExample>();
+  open_loop_problem->Initialize();
+  ilqgames::AugmentedLagrangianSolver open_loop_solver(open_loop_problem,
+                                                       params);
+
+  std::shared_ptr<const ilqgames::SolverLog> log = open_loop_solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> open_loop_logs =
       {log};
 
+  open_loop_problem->OverwriteSolution(log->FinalOperatingPoint(),
+                                       log->FinalStrategies());
   static constexpr float kMaxPerturbation = 1e-1;
   bool is_local_nash = NumericalCheckLocalNashEquilibrium(
-      open_loop_problem->Solver().PlayerCosts(),
-      open_loop_problem->CurrentStrategies(),
-      open_loop_problem->CurrentOperatingPoint(),
-      open_loop_problem->Solver().Dynamics(), open_loop_problem->InitialState(),
-      open_loop_problem->Solver().TimeStep(), kMaxPerturbation, kOpenLoop);
+      *open_loop_problem, kMaxPerturbation, kOpenLoop);
   if (is_local_nash)
     LOG(INFO) << "Open-loop solution is a local Nash.";
   else
@@ -141,21 +143,20 @@ int main(int argc, char** argv) {
 
   // Solve for feedback equilibrium.
   params.open_loop = !kOpenLoop;
-  auto feedback_problem =
-      std::make_shared<ilqgames::DubinsOriginExample>(params);
+  auto feedback_problem = std::make_shared<ilqgames::DubinsOriginExample>();
+  feedback_problem->Initialize();
+  ilqgames::AugmentedLagrangianSolver feedback_solver(feedback_problem, params);
 
   // Solve the game.
-  log = feedback_problem->Solve();
+  log = feedback_solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> feedback_logs =
       {log};
 
   // Check if solution satisfies sufficient conditions for being a local Nash.
+  feedback_problem->OverwriteSolution(log->FinalOperatingPoint(),
+                                      log->FinalStrategies());
   is_local_nash = NumericalCheckLocalNashEquilibrium(
-      feedback_problem->Solver().PlayerCosts(),
-      feedback_problem->CurrentStrategies(),
-      feedback_problem->CurrentOperatingPoint(),
-      feedback_problem->Solver().Dynamics(), feedback_problem->InitialState(),
-      feedback_problem->Solver().TimeStep(), kMaxPerturbation, !kOpenLoop);
+      *feedback_problem, kMaxPerturbation, !kOpenLoop);
   if (is_local_nash)
     LOG(INFO) << "Feedback solution is a local Nash.";
   else
@@ -177,8 +178,8 @@ int main(int argc, char** argv) {
   ilqgames::TopDownRenderer top_down_renderer(
       sliders, {open_loop_problem, feedback_problem});
   ilqgames::CostInspector cost_inspector(
-      sliders, {open_loop_problem->Solver().PlayerCosts(),
-                feedback_problem->Solver().PlayerCosts()});
+      sliders,
+      {open_loop_problem->PlayerCosts(), feedback_problem->PlayerCosts()});
   // std::shared_ptr<ilqgames::ControlSliders> sliders(
   //     new ilqgames::ControlSliders({feedback_logs, feedback_logs}));
   // ilqgames::TopDownRenderer top_down_renderer(

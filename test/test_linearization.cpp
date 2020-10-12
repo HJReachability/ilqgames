@@ -40,12 +40,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/dynamics/air_3d.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_5d.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_car_7d.h>
 #include <ilqgames/dynamics/single_player_delayed_dubins_car.h>
 #include <ilqgames/dynamics/single_player_dubins_car.h>
+#include <ilqgames/dynamics/single_player_point_mass_2d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/dynamics/single_player_unicycle_5d.h>
 #include <ilqgames/dynamics/two_player_unicycle_4d.h>
@@ -61,14 +63,13 @@ namespace {
 // Step size for forward differences.
 static constexpr float kForwardStep = 1e-3;
 static constexpr float kNumericalPrecision = 1e-2;
-static constexpr Time kTimeStep = 0.1;
 
 // Dubins car speed.
 static constexpr float kDubinsSpeed = 1.0;
 
 // Functions to compute numerical Jacobians.
 void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
-                       Time time_step, const VectorXf& x, const VectorXf& u,
+                       const VectorXf& x, const VectorXf& u,
                        Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) {
   // Check dimensions.
   EXPECT_EQ(system.XDim(), x.size());
@@ -84,8 +85,8 @@ void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
     VectorXf x_forward(x);
     x_forward(ii) += kForwardStep;
 
-    A.col(ii) +=
-        (system.Evaluate(t, x_forward, u) - xdot) * time_step / kForwardStep;
+    A.col(ii) += (system.Evaluate(t, x_forward, u) - xdot) * time::kTimeStep /
+                 kForwardStep;
   }
 
   // Compute each column of B by forward differences.
@@ -93,14 +94,14 @@ void NumericalJacobian(const SinglePlayerDynamicalSystem& system, Time t,
     VectorXf u_forward(u);
     u_forward(ii) += kForwardStep;
 
-    B.col(ii) =
-        (system.Evaluate(t, x, u_forward) - xdot) * time_step / kForwardStep;
+    B.col(ii) = (system.Evaluate(t, x, u_forward) - xdot) * time::kTimeStep /
+                kForwardStep;
   }
 }
 
 LinearDynamicsApproximation NumericalJacobian(
-    const MultiPlayerDynamicalSystem& system, Time t, Time time_step,
-    const VectorXf& x, const std::vector<VectorXf>& us) {
+    const MultiPlayerDynamicalSystem& system, Time t, const VectorXf& x,
+    const std::vector<VectorXf>& us) {
   // Check dimensions.
   EXPECT_EQ(system.XDim(), x.size());
   EXPECT_EQ(system.NumPlayers(), us.size());
@@ -116,8 +117,8 @@ LinearDynamicsApproximation NumericalJacobian(
     VectorXf x_forward(x);
     x_forward(ii) += kForwardStep;
 
-    linearization.A.col(ii) +=
-        (system.Evaluate(t, x_forward, us) - xdot) * time_step / kForwardStep;
+    linearization.A.col(ii) += (system.Evaluate(t, x_forward, us) - xdot) *
+                               time::kTimeStep / kForwardStep;
   }
 
   // Compute each column of A by forward differences.
@@ -128,8 +129,8 @@ LinearDynamicsApproximation NumericalJacobian(
 
     for (Dimension jj = 0; jj < system.UDim(ii); jj++) {
       u_forward(jj) += kForwardStep;
-      B.col(jj) =
-          (system.Evaluate(t, x, us_forward) - xdot) * time_step / kForwardStep;
+      B.col(jj) = (system.Evaluate(t, x, us_forward) - xdot) * time::kTimeStep /
+                  kForwardStep;
       u_forward(jj) -= kForwardStep;
     }
   }
@@ -153,11 +154,11 @@ void CheckLinearization(const SinglePlayerDynamicalSystem& system) {
 
     MatrixXf A_analytic(MatrixXf::Identity(system.XDim(), system.XDim()));
     MatrixXf B_analytic(MatrixXf::Zero(system.XDim(), system.UDim()));
-    system.Linearize(t, kTimeStep, x, u, A_analytic, B_analytic);
+    system.Linearize(t, x, u, A_analytic, B_analytic);
 
     MatrixXf A_numerical(MatrixXf::Identity(system.XDim(), system.XDim()));
     MatrixXf B_numerical(MatrixXf::Zero(system.XDim(), system.UDim()));
-    NumericalJacobian(system, t, kTimeStep, x, u, A_numerical, B_numerical);
+    NumericalJacobian(system, t, x, u, A_numerical, B_numerical);
 
     EXPECT_NEAR((A_analytic - A_numerical).cwiseAbs().maxCoeff(), 0.0,
                 kNumericalPrecision);
@@ -184,7 +185,7 @@ void CheckLinearization(const MultiPlayerDynamicalSystem& system) {
 
     const LinearDynamicsApproximation analytic = system.Linearize(t, x, us);
     const LinearDynamicsApproximation numerical =
-        NumericalJacobian(system, t, kTimeStep, x, us);
+        NumericalJacobian(system, t, x, us);
 
     EXPECT_NEAR((analytic.A - numerical.A).cwiseAbs().maxCoeff(), 0.0,
                 kNumericalPrecision);
@@ -235,7 +236,7 @@ TEST(SinglePlayerCar7DTest, LinearizesCorrectly) {
 }
 
 TEST(TwoPlayerUnicycle4DTest, LinearizesCorrectly) {
-  const TwoPlayerUnicycle4D system(kTimeStep);
+  const TwoPlayerUnicycle4D system;
   CheckLinearization(system);
 }
 
@@ -243,7 +244,17 @@ TEST(ConcatenatedDynamicalSystemTest, LinearizesCorrectly) {
   constexpr float kInterAxleLength = 5.0;  // m
   const ConcatenatedDynamicalSystem system(
       {std::make_shared<SinglePlayerUnicycle4D>(),
-       std::make_shared<SinglePlayerCar5D>(kInterAxleLength)},
-      kTimeStep);
+       std::make_shared<SinglePlayerCar5D>(kInterAxleLength)});
+  CheckLinearization(system);
+}
+
+TEST(Air3DTest, LinearizesCorrectly) {
+  constexpr float kSpeed = 3.0;  // m/s
+  const Air3D system(kSpeed, kSpeed);
+  CheckLinearization(system);
+}
+
+TEST(SinglePlayerPointMass2DTest, LinearizesCorrectly) {
+  const SinglePlayerPointMass2D system;
   CheckLinearization(system);
 }

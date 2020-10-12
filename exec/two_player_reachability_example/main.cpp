@@ -44,6 +44,8 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
@@ -66,13 +68,14 @@ DEFINE_bool(last_traj, false,
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Regularization.
-DEFINE_double(regularization, 1.0, "Regularization.");
+DEFINE_double(state_regularization, 1.0, "State regularization.");
+DEFINE_double(control_regularization, 1.0, "Control regularization.");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 0.5, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.01, "L_inf tolerance for convergence.");
+DEFINE_double(convergence_tolerance, 0.01, "KKT squared error tolerance.");
+DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -107,22 +110,22 @@ int main(int argc, char** argv) {
   // Solve for open-loop information pattern.
   static constexpr bool kOpenLoop = true;
   ilqgames::SolverParams params;
-  params.enforce_constraints_in_linesearch = true;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.enforce_constraints_in_linesearch = true;
-  params.trust_region_size = FLAGS_trust_region_size;
+  params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.state_regularization = FLAGS_regularization;
-  params.control_regularization = FLAGS_regularization;
+  params.state_regularization = FLAGS_state_regularization;
+  params.control_regularization = FLAGS_control_regularization;
 
   const auto start = std::chrono::system_clock::now();
   const auto problem =
-      std::make_shared<ilqgames::TwoPlayerReachabilityExample>(params);
+      std::make_shared<ilqgames::TwoPlayerReachabilityExample>();
+  problem->Initialize();
+  ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   LOG(INFO) << "Computing feedback solution.";
-  const std::shared_ptr<const ilqgames::SolverLog> log = problem->Solve();
+  const std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
   LOG(INFO) << "Solver completed in "
             << std::chrono::duration<ilqgames::Time>(
@@ -130,12 +133,11 @@ int main(int argc, char** argv) {
                    .count()
             << " seconds.";
 
+  problem->OverwriteSolution(log->FinalOperatingPoint(),
+                             log->FinalStrategies());
   static constexpr float kMaxPerturbation = 1e-1;
-  const bool is_local_nash = NumericalCheckLocalNashEquilibrium(
-      problem->Solver().PlayerCosts(), problem->CurrentStrategies(),
-      problem->CurrentOperatingPoint(), problem->Solver().Dynamics(),
-      problem->InitialState(), problem->Solver().TimeStep(), kMaxPerturbation,
-      kOpenLoop);
+  const bool is_local_nash =
+      NumericalCheckLocalNashEquilibrium(*problem, kMaxPerturbation, kOpenLoop);
   if (is_local_nash)
     LOG(INFO) << "Solution is a local Nash.";
   else
@@ -154,8 +156,7 @@ int main(int argc, char** argv) {
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
   // std::shared_ptr<ilqgames::ControlSliders> sliders(
   //     new ilqgames::ControlSliders({feedback_logs, feedback_logs}));
   // ilqgames::TopDownRenderer top_down_renderer(

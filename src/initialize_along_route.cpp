@@ -55,15 +55,16 @@ namespace ilqgames {
 void InitializeAlongRoute(const Polyline2& route, float initial_route_pos,
                           float nominal_speed,
                           const std::pair<Dimension, Dimension>& position_dims,
-                          Time time_step, OperatingPoint* operating_point) {
+                          OperatingPoint* operating_point) {
   CHECK_NOTNULL(operating_point);
   CHECK(!operating_point->xs.empty());
   CHECK_GT(operating_point->xs[0].size(), 0);
 
   // Loop through each time step and determine where we should be.
   for (size_t kk = 0; kk < operating_point->xs.size(); kk++) {
-    const float route_pos =
-        initial_route_pos + nominal_speed * static_cast<Time>(kk) * time_step;
+    const float route_pos = initial_route_pos + nominal_speed *
+                                                    static_cast<Time>(kk) *
+                                                    time::kTimeStep;
 
     const Point2 route_pt = route.PointAt(route_pos);
     operating_point->xs[kk](position_dims.first) = route_pt.x();

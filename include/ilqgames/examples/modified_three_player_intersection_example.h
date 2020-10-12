@@ -36,54 +36,35 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all iterative LQ game solvers.
-// Structured so that derived classes may only modify the `ModifyLQStrategies`
-// and `HasConverged` virtual functions.
+// Three player intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/solver/ilq_flat_solver.h>
-#include <ilqgames/solver/lq_solver.h>
-#include <ilqgames/utils/linear_dynamics_approximation.h>
-#include <ilqgames/utils/loop_timer.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/quadratic_cost_approximation.h>
-#include <ilqgames/utils/strategy.h>
-#include <ilqgames/utils/types.h>
+#ifndef ILQGAMES_EXAMPLES_MODIFIED_THREE_PLAYER_INTERSECTION_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_MODIFIED_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
-#include <glog/logging.h>
-#include <memory>
-#include <vector>
+#include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-void ILQFlatSolver::ComputeLinearization(
-    std::vector<LinearDynamicsApproximation>* linearization) {
-  CHECK_NOTNULL(linearization);
+class ModifiedThreePlayerIntersectionExample : public TopDownRenderableProblem {
+ public:
+  ~ModifiedThreePlayerIntersectionExample() {}
+  ModifiedThreePlayerIntersectionExample() : TopDownRenderableProblem() {}
 
-  // Cast dynamics to appropriate type.
-  const auto dyn = static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
-  // Populate one timestep at a time.
-  for (size_t kk = 0; kk < linearization->size(); kk++)
-    (*linearization)[kk] = dyn->LinearizedSystem();
-}
-
-float ILQFlatSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
-                                   const std::vector<Dimension>& dims) const {
-  const auto& dyn = *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
-
-  // If singular return infinite distance and throw a warning. Otherwise, use
-  // base class implementation but for nonlinear system states.
-  if (dyn.IsLinearSystemStateSingular(x1) ||
-      dyn.IsLinearSystemStateSingular(x2)) {
-    LOG(WARNING) << "Singular state encountered when computing state distance.";
-    return std::numeric_limits<float>::infinity();
-  }
-
-  return GameSolver::StateDistance(dyn.FromLinearSystemState(x1),
-                                   dyn.FromLinearSystemState(x2), dims);
-}
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class ModifiedThreePlayerIntersectionExample
 
 }  // namespace ilqgames
+
+#endif

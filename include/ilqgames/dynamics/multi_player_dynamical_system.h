@@ -75,8 +75,8 @@ class MultiPlayerDynamicalSystem : public MultiPlayerIntegrableSystem {
   virtual PlayerIndex NumPlayers() const = 0;
 
  protected:
-  explicit MultiPlayerDynamicalSystem(Dimension xdim, Time time_step)
-      : MultiPlayerIntegrableSystem(xdim, time_step) {}
+  explicit MultiPlayerDynamicalSystem(Dimension xdim)
+      : MultiPlayerIntegrableSystem(xdim) {}
 
 };  //\class MultiPlayerDynamicalSystem
 

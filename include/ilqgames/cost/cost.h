@@ -44,6 +44,7 @@
 #ifndef ILQGAMES_COST_COST_H
 #define ILQGAMES_COST_COST_H
 
+#include <ilqgames/utils/relative_time_tracker.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>
@@ -51,7 +52,7 @@
 
 namespace ilqgames {
 
-class Cost {
+class Cost : public RelativeTimeTracker {
  public:
   virtual ~Cost() {}
 
@@ -63,28 +64,16 @@ class Cost {
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad) const = 0;
 
-  // Access the name of this cost.
-  const std::string& Name() const { return name_; }
-
-  // Reset the initial time associated to this cost.
-  static void ResetInitialTime(Time t0) { initial_time_ = t0; };
-
   // Reset and scale weight.
   void SetWeight(float weight) { weight_ = weight; }
   void ScaleWeight(float scale) { weight_ *= scale; }
 
  protected:
-  explicit Cost(float weight, const std::string& name = "")
-      : weight_(weight), name_(name) {}
+  explicit Cost(float weight, const std::string& name)
+    : RelativeTimeTracker(name), weight_(weight) {}
 
   // Multiplicative weight associated to this cost.
   float weight_;
-
-  // Name associated to every cost.
-  const std::string name_;
-
-  // Initial time associated to this cost.
-  static Time initial_time_;
 };  //\class Cost
 
 }  // namespace ilqgames

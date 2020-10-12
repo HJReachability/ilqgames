@@ -44,6 +44,7 @@
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
+#include <ilqgames/utils/compute_strategy_costs.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
@@ -62,7 +63,7 @@ std::vector<float> ComputeStrategyCosts(
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    float time_step, bool open_loop) {
+    bool open_loop) {
   // Start at the initial state.
   VectorXf x(x0);
   Time t = 0.0;
@@ -83,8 +84,8 @@ std::vector<float> ComputeStrategyCosts(
                                 operating_point.us[kk][ii]);
     }
 
-    const VectorXf next_x = dynamics.Integrate(t, time_step, x, us);
-    const Time next_t = t + time_step;
+    const VectorXf next_x = dynamics.Integrate(t, time::kTimeStep, x, us);
+    const Time next_t = t + time::kTimeStep;
 
     // Update costs.
     for (PlayerIndex ii = 0; ii < dynamics.NumPlayers(); ii++) {
@@ -101,6 +102,14 @@ std::vector<float> ComputeStrategyCosts(
   }
 
   return total_costs;
+}
+
+std::vector<float> ComputeStrategyCosts(const Problem& problem,
+                                        bool open_loop) {
+  return ComputeStrategyCosts(
+      problem.PlayerCosts(), problem.CurrentStrategies(),
+      problem.CurrentOperatingPoint(), *problem.Dynamics(),
+      problem.InitialState(), open_loop);
 }
 
 }  // namespace ilqgames

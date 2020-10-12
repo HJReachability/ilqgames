@@ -40,6 +40,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/affine_scalar_constraint.h>
+#include <ilqgames/constraint/affine_vector_constraint.h>
+#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
 #include <ilqgames/constraint/proximity_constraint.h>
 #include <ilqgames/constraint/single_dimension_constraint.h>
@@ -51,9 +54,11 @@
 #include <ilqgames/cost/polyline2_signed_distance_cost.h>
 #include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/cost/quadratic_cost.h>
+#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
 #include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
+#include <ilqgames/cost/relative_distance_cost.h>
 #include <ilqgames/cost/route_progress_cost.h>
 #include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/cost/semiquadratic_norm_cost.h>
@@ -83,18 +88,20 @@ static constexpr float kHessForwardStep = 1e-3;
 static constexpr float kNumericalPrecision = 0.15;
 static constexpr float kNumericalPrecisionFraction = 0.1;
 
-// Function to compute numerical gradient of a cost.
-VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
+// Function to compute numerical gradient of a cost. `eval` is a function to
+// evaluate the cost.
+template <typename E>
+VectorXf NumericalGradient(const E& eval, Time t, const VectorXf& input) {
   VectorXf grad(input.size());
 
   // Central differences.
   VectorXf query(input);
   for (size_t ii = 0; ii < input.size(); ii++) {
     query(ii) += kGradForwardStep;
-    const float hi = cost.Evaluate(t, query);
+    const float hi = eval(t, query);
 
     query(ii) = input(ii) - kGradForwardStep;
-    const float lo = cost.Evaluate(t, query);
+    const float lo = eval(t, query);
 
     grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
     query(ii) = input(ii);
@@ -102,26 +109,6 @@ VectorXf NumericalGradient(const Cost& cost, Time t, const VectorXf& input) {
 
   return grad;
 }
-
-// VectorXf NumericalStateGradient(const GeneralizedControlCost& cost, Time t,
-//                                 const VectorXf& xi, const VectorXf& v) {
-//   VectorXf grad(xi.size());
-
-//   // Central differences.
-//   VectorXf query(xi);
-//   for (size_t ii = 0; ii < xi.size(); ii++) {
-//     query(ii) += kGradForwardStep;
-//     const float hi = cost.Evaluate(t, query, v);
-
-//     query(ii) = xi(ii) - kGradForwardStep;
-//     const float lo = cost.Evaluate(t, query, v);
-
-//     grad(ii) = 0.5 * (hi - lo) / kGradForwardStep;
-//     query(ii) = xi(ii);
-//   }
-
-//   return grad;
-// }
 
 // Function to compute numerical Hessian of a cost.
 MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
@@ -148,38 +135,12 @@ MatrixXf NumericalHessian(const Cost& cost, Time t, const VectorXf& input) {
   return hess;
 }
 
-// MatrixXf NumericalStateHessian(const GeneralizedControlCost& cost, Time t,
-//                                const VectorXf& xi, const VectorXf& v) {
-//   MatrixXf hess(xi.size(), xi.size());
-
-//   // Central differences on analytic gradients (otherwise things get too
-//   noisy). MatrixXf hess_v(v.size(), v.size()); MatrixXf
-//   hess_analytic(xi.size(), xi.size()); VectorXf query(xi); for (size_t ii =
-//   0; ii < xi.size(); ii++) {
-//     VectorXf grad_analytic_hi = VectorXf::Zero(xi.size());
-//     VectorXf grad_analytic_lo = VectorXf::Zero(xi.size());
-
-//     query(ii) += kHessForwardStep;
-//     cost.Quadraticize(t, query, v, &hess_v, &hess_analytic,
-//     &grad_analytic_hi);
-
-//     query(ii) = xi(ii) - kHessForwardStep;
-//     cost.Quadraticize(t, query, v, &hess_v, &hess_analytic,
-//     &grad_analytic_lo);
-
-//     hess.col(ii) =
-//         0.5 * (grad_analytic_hi - grad_analytic_lo) / kHessForwardStep;
-//     query(ii) = xi(ii);
-//   }
-
-//   return hess;
-// }
-
 // Test that each cost's gradient and Hessian match a numerical approximation.
-void CheckQuadraticization(const Cost& cost) {
+void CheckQuadraticization(const Cost& cost, bool is_constraint) {
   // Random number generator to make random timestamps.
   std::default_random_engine rng(0);
-  std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
+  std::uniform_real_distribution<Time> time_distribution(0.0,
+                                                         time::kTimeHorizon);
   std::bernoulli_distribution sign_distribution;
   std::uniform_real_distribution<float> entry_distribution(0.5, 5.0);
 
@@ -199,7 +160,18 @@ void CheckQuadraticization(const Cost& cost) {
     cost.Quadraticize(t, input, &hess_analytic, &grad_analytic);
 
     MatrixXf hess_numerical = NumericalHessian(cost, t, input);
-    VectorXf grad_numerical = NumericalGradient(cost, t, input);
+
+    // Custom method for evaluating the cost/constraint.
+    auto eval = [&cost, &is_constraint](Time t, const VectorXf& input) {
+      if (is_constraint) {
+        const auto& constraint = *static_cast<const Constraint*>(&cost);
+        return constraint.EvaluateAugmentedLagrangian(t, input);
+      }
+
+      return cost.Evaluate(t, input);
+    };
+
+    VectorXf grad_numerical = NumericalGradient(eval, t, input);
 
 #if 1
     if ((hess_analytic - hess_numerical).lpNorm<Eigen::Infinity>() >=
@@ -229,175 +201,97 @@ void CheckQuadraticization(const Cost& cost) {
   }
 }
 
-// void CheckQuadraticization(const GeneralizedControlCost& cost,
-//                            const Cost& corresponding_cost,
-//                            const ConcatenatedFlatSystem& dynamics,
-//                            PlayerIndex player) {
-//   // State and control dimension.
-//   const Dimension xdim = dynamics.XDim();
-//   const Dimension udim = dynamics.UDim(player);
-
-//   // Random number generator to make random timestamps.
-//   std::default_random_engine rng(0);
-//   std::uniform_real_distribution<Time> time_distribution(0.0, 10.0);
-//   std::bernoulli_distribution sign_distribution;
-//   std::uniform_real_distribution<float> entry_distribution(0.25, 5.0);
-
-//   // Try a bunch of random points.
-//   constexpr size_t kNumRandomPoints = 20;
-//   for (size_t ii = 0; ii < kNumRandomPoints; ii++) {
-//     VectorXf xi(xdim);
-//     for (size_t jj = 0; jj < xdim; jj++) {
-//       const float s = sign_distribution(rng);
-//       xi(jj) = (1.0 - 2.0 * s) * entry_distribution(rng);
-//     }
-
-//     VectorXf v(udim);
-//     for (size_t jj = 0; jj < udim; jj++) {
-//       v(jj) = entry_distribution(rng);
-//     }
-
-//     const Time t = time_distribution(rng);
-
-//     // Compute all the analytic Hessians and gradient.
-//     MatrixXf hess_v_analytic(MatrixXf::Zero(udim, udim));
-//     MatrixXf hess_xi_analytic(MatrixXf::Zero(xdim, xdim));
-//     VectorXf grad_xi_analytic(VectorXf::Zero(xdim));
-//     cost.Quadraticize(t, xi, v, &hess_v_analytic, &hess_xi_analytic,
-//                       &grad_xi_analytic);
-//     // Numerical xi derivatives.
-//     const MatrixXf hess_xi_numerical = NumericalStateHessian(cost, t, xi, v);
-//     const VectorXf grad_xi_numerical = NumericalStateGradient(cost, t, xi,
-//     v);
-
-//     // Numerical v Hessian based on corresponding cost transformed by the
-//     // inverse decoupling matrix.
-//     const auto& subsystem = *dynamics.Subsystems()[player];
-//     const VectorXf x = dynamics.FromLinearSystemState(xi, player);
-//     const VectorXf u = subsystem.LinearizingControl(x, v);
-//     MatrixXf hess_u(MatrixXf::Zero(udim, udim));
-//     corresponding_cost.Quadraticize(t, u, &hess_u, nullptr);
-
-//     const MatrixXf M_inv = subsystem.InverseDecouplingMatrix(x);
-//     const MatrixXf hess_v_numerical = M_inv.transpose() * hess_u * M_inv;
-
-// #if 0
-//     if ((grad_xi_analytic - grad_xi_numerical).lpNorm<Eigen::Infinity>() >=
-//         kNumericalPrecision) {
-//       std::cout << "xi: " << xi.transpose() << std::endl;
-//       std::cout << "v: " << v.transpose() << std::endl;
-//       std::cout << "numeric hess: \n" << hess_xi_numerical << std::endl;
-//       std::cout << "analytic hess: \n" << hess_xi_analytic << std::endl;
-//       std::cout << "numeric grad: \n" << grad_xi_numerical << std::endl;
-//       std::cout << "analytic grad: \n" << grad_xi_analytic << std::endl;
-//     }
-// #endif
-
-//     EXPECT_LT((hess_v_analytic - hess_v_numerical).lpNorm<Eigen::Infinity>(),
-//               kNumericalPrecision);
-//     EXPECT_LT((hess_xi_analytic -
-//     hess_xi_numerical).lpNorm<Eigen::Infinity>(),
-//               kNumericalPrecision);
-//     EXPECT_LT((grad_xi_analytic -
-//     grad_xi_numerical).lpNorm<Eigen::Infinity>(),
-//               kNumericalPrecision);
-//   }
-// }
-
-}  // anonymous namespace
+}  // namespace
 
 TEST(QuadraticCostTest, QuadraticizesCorrectly) {
   QuadraticCost cost(kCostWeight, -1, 1.0);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
+}
+
+TEST(QuadraticDifferenceCostTest, QuadraticizesCorrectly) {
+  QuadraticDifferenceCost cost(kCostWeight, {0, 1}, {1, 2});
+  CheckQuadraticization(cost, false);
+}
+
+TEST(RelativeDistanceCostTest, QuadraticizesCorrectly) {
+  RelativeDistanceCost cost(kCostWeight, {0, 1}, {1, 2});
+  CheckQuadraticization(cost, false);
 }
 
 TEST(QuadraticNormCostTest, QuadraticizesCorrectly) {
   QuadraticNormCost cost(kCostWeight, {1, 2}, 1.0);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(SemiquadraticCostTest, QuadraticizesCorrectly) {
   SemiquadraticCost cost(kCostWeight, 0, 0.0, true);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(SemiquadraticNormCostTest, QuadraticizesCorrectly) {
   SemiquadraticNormCost cost(kCostWeight, {1, 2}, 1.0, true);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(QuadraticPolyline2CostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   QuadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1});
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(RouteProgressCostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   constexpr float kNominalSpeed = 0.1;
   RouteProgressCost cost(kCostWeight, kNominalSpeed, polyline, {0, 1});
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(SemiquadraticPolyline2CostTest, QuadraticizesCorrectly) {
   Polyline2 polyline(
       {Point2(-200.0, -200.0), Point2(0.5, 1.0), Point2(200.0, 200.0)});
   SemiquadraticPolyline2Cost cost(kCostWeight, polyline, {0, 1}, 0.5, true);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(CurvatureCostTest, QuadraticizesCorrectly) {
   CurvatureCost cost(kCostWeight, 0, 1);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(NominalPathLengthCostTest, QuadraticizesCorrectly) {
   NominalPathLengthCost cost(kCostWeight, 0, 1.0);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(ProximityCostTest, QuadraticizesCorrectly) {
   ProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(LocallyConvexProximityCostTest, QuadraticizesCorrectly) {
   LocallyConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 0.0);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(WeightedConvexProximityCostTest, QuadraticizesCorrectly) {
   WeightedConvexProximityCost cost(kCostWeight, {0, 1}, {2, 3}, 4, 5, 0.0);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(OrientationCostTest, QuadraticizesCorrectly) {
   OrientationCost cost(kCostWeight, 1, M_PI_2);
-  CheckQuadraticization(cost);
-}
-
-TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
-  ProximityConstraint outside_constraint({0, 1}, {2, 3}, 0.0, false);
-  CheckQuadraticization(outside_constraint);
-}
-
-TEST(SingleDimensionConstraintTest, SingleDimensionCorrectly) {
-  SingleDimensionConstraint left_constraint(0, 10.0, false);
-  CheckQuadraticization(left_constraint);
-
-  SingleDimensionConstraint right_constraint(0, -10.0, true);
-  CheckQuadraticization(right_constraint);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(Polyline2SignedDistanceCostTest, QuadraticizesCorrectly) {
   Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
   Polyline2SignedDistanceCost cost(polyline, {0, 1});
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(SignedDistanceCostTest, QuadraticizesCorrectly) {
   SignedDistanceCost cost({0, 1}, {2, 3}, 5.0);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
 }
 
 TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
@@ -406,5 +300,34 @@ TEST(ExtremeValueCostTest, QuadraticizesCorrectly) {
   const std::shared_ptr<const QuadraticCost> cost2(
       new QuadraticCost(kCostWeight, -1, 1.0));
   ExtremeValueCost cost({cost1, cost2}, true);
-  CheckQuadraticization(cost);
+  CheckQuadraticization(cost, false);
+}
+
+TEST(AffineScalarConstraintTest, QuadraticizesCorrectly) {
+  AffineScalarConstraint constraint(
+      VectorXf::LinSpaced(kInputDimension, -1.0, 1.0), 0.5, false);
+  CheckQuadraticization(constraint, true);
+}
+
+TEST(AffineVectorConstraintTest, QuadraticizesCorrectly) {
+  AffineVectorConstraint constraint(
+      10.0 * MatrixXf::Random(kInputDimension, kInputDimension),
+      VectorXf::Random(kInputDimension), false);
+  CheckQuadraticization(constraint, true);
+}
+
+TEST(ProximityConstraintTest, QuadraticizesCorrectly) {
+  ProximityConstraint constraint({0, 1}, {2, 3}, 0.7, false);
+  CheckQuadraticization(constraint, true);
+}
+
+TEST(Polyline2SignedDistanceConstraintTest, QuadraticizesCorrectly) {
+  Polyline2 polyline({Point2(-2.0, -2.0), Point2(0.5, 1.0), Point2(2.0, 2.0)});
+  Polyline2SignedDistanceConstraint constraint(polyline, {0, 1}, 10.0, true);
+  CheckQuadraticization(constraint, true);
+}
+
+TEST(SingleDimensionConstraintTest, QuadraticizesCorrectly) {
+  SingleDimensionConstraint constraint(0, 1.0, true);
+  CheckQuadraticization(constraint, true);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,49 +36,37 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the value of a single dimension of the input. This constraint
-// can be oriented either `left` or `right`, i.e., enforcing that the input is <
-// or > the specified threshold, respectively.
+// Air3D dynamics, from:
+// https://www.cs.ubc.ca/~mitchell/Papers/publishedIEEEtac05.pdf.
+//
+// Here, two Dubins cars are navigating in relative coordinates, and the usual
+// setup is a pursuit-evasion game.
+//
+// Dynamics are:
+//                 \dot r_x = -v_e + v_p cos(r_theta) + u_e r_y
+//                 \dot r_y = v_p sin(r_theta) - u_e r_x
+//                 \dot r_theta = u_p - u_e
+// and the convention below is that controls are "omega" and the evader is P1
+// and the pursuer is P2.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/single_dimension_constraint.h>
-#include <ilqgames/utils/types.h>
-
-#include <glog/logging.h>
-#include <string>
-#include <utility>
+#include <ilqgames/dynamics/air_3d.h>
 
 namespace ilqgames {
 
-bool SingleDimensionConstraint::IsSatisfiedLevel(const VectorXf& input,
-                                                 float* level) const {
-  // Sign corresponding to the orientation of this constraint.
-  const float sign = (oriented_right_) ? 1.0 : -1.0;
+// Constexprs for state indices.
+const Dimension Air3D::kNumXDims = 3;
+const Dimension Air3D::kRxIdx = 0;
+const Dimension Air3D::kRyIdx = 1;
+const Dimension Air3D::kRThetaIdx = 2;
 
-  // Maybe populate level.
-  const float delta = threshold_ - input(dimension_);
-  *level = sign * delta;
+// Constexprs for control indices.
+const PlayerIndex Air3D::kNumPlayers = 2;
 
-  return (oriented_right_) ? delta < 0.0 : delta > 0.0;
+const Dimension Air3D::kNumU1Dims = 1;
+const Dimension Air3D::kOmega1Idx = 0;
+
+const Dimension Air3D::kNumU2Dims = 1;
+const Dimension Air3D::kOmega2Idx = 0;
 }
-
-void SingleDimensionConstraint::Quadraticize(const VectorXf& input,
-                                             MatrixXf* hess,
-                                             VectorXf* grad) const {
-  CHECK_NOTNULL(hess);
-  CHECK_NOTNULL(grad);
-
-  // Check dimensions.
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
-
-  // Compute Hessian and gradient.
-  const float delta_inv = 1.0 / (threshold_ - input(dimension_));
-  const float weighted_delta_inv = weight_ * delta_inv;
-  (*grad)(dimension_) += weighted_delta_inv;
-  (*hess)(dimension_, dimension_) += weighted_delta_inv * delta_inv;
-}
-
-}  // namespace ilqgames

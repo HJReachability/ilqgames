@@ -71,7 +71,7 @@ void TopDownRenderer::Render() {
   std::transform(
       problems_.begin(), problems_.end(), num_agents.begin(),
       [](const std::shared_ptr<const TopDownRenderableProblem>& problem) {
-        return problem->Solver().Dynamics().NumPlayers();
+        return problem->Dynamics()->NumPlayers();
       });
 
   // Set up main top-down viewer window.
@@ -120,16 +120,16 @@ void TopDownRenderer::Render() {
     const auto& log = logs[problem_idx];
 
     // (1) Draw this trajectory iterate.
-    std::vector<ImVec2> points(log->NumTimeSteps());
+    std::vector<ImVec2> points(time::kNumTimeSteps);
     for (size_t ii = 0; ii < num_agents[problem_idx]; ii++) {
-      for (size_t kk = 0; kk < log->NumTimeSteps(); kk++) {
+      for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
         const VectorXf x = log->State(sliders_->SolverIterate(problem_idx), kk);
         points[kk] =
             PositionToWindowCoordinates(problem->Xs(x)[ii], problem->Ys(x)[ii]);
       }
 
       constexpr bool kPolylineIsClosed = false;
-      draw_list->AddPolyline(points.data(), log->NumTimeSteps(),
+      draw_list->AddPolyline(points.data(), time::kNumTimeSteps,
                              trajectory_color, kPolylineIsClosed,
                              trajectory_thickness);
     }

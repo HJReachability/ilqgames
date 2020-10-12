@@ -68,8 +68,11 @@ class SinglePlayerDelayedDubinsCar : public SinglePlayerDynamicalSystem {
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
 
   // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
+
+  // Position dimensions.
+  std::vector<Dimension> PositionDimensions() const { return {kPxIdx, kPyIdx}; }
 
   // Constexprs for state indices.
   static const Dimension kNumXDims;
@@ -101,16 +104,16 @@ inline VectorXf SinglePlayerDelayedDubinsCar::Evaluate(
 }
 
 inline void SinglePlayerDelayedDubinsCar::Linearize(
-    Time t, Time time_step, const VectorXf& x, const VectorXf& u,
-    Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const {
-  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
-  const float stheta = std::sin(x(kThetaIdx)) * time_step;
+    Time t, const VectorXf& x, const VectorXf& u, Eigen::Ref<MatrixXf> A,
+    Eigen::Ref<MatrixXf> B) const {
+  const float ctheta = std::cos(x(kThetaIdx)) * time::kTimeStep;
+  const float stheta = std::sin(x(kThetaIdx)) * time::kTimeStep;
 
   A(kPxIdx, kThetaIdx) += -v_ * stheta;
   A(kPyIdx, kThetaIdx) += v_ * ctheta;
-  A(kThetaIdx, kOmegaIdx) += time_step;
+  A(kThetaIdx, kOmegaIdx) += time::kTimeStep;
 
-  B(kOmegaIdx, kAlphaIdx) = time_step;
+  B(kOmegaIdx, kAlphaIdx) = time::kTimeStep;
 }
 
 }  // namespace ilqgames

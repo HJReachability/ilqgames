@@ -62,7 +62,7 @@ bool NumericalCheckLocalNashEquilibrium(
     const std::vector<Strategy>& strategies,
     const OperatingPoint& operating_point,
     const MultiPlayerIntegrableSystem& dynamics, const VectorXf& x0,
-    Time time_step, float max_perturbation, bool open_loop) {
+    float max_perturbation, bool open_loop) {
   CHECK_EQ(strategies.size(), player_costs.size());
   CHECK_EQ(strategies.size(), dynamics.NumPlayers());
   CHECK_EQ(x0.size(), dynamics.XDim());
@@ -76,9 +76,8 @@ bool NumericalCheckLocalNashEquilibrium(
       MultiPlayerIntegrableSystem::IntegrationUsesEuler();
   if (!was_integrating_using_euler)
     MultiPlayerIntegrableSystem::IntegrateUsingEuler();
-  const std::vector<float> nominal_costs =
-      ComputeStrategyCosts(player_costs, strategies, operating_point, dynamics,
-                           x0, time_step, open_loop);
+  const std::vector<float> nominal_costs = ComputeStrategyCosts(
+      player_costs, strategies, operating_point, dynamics, x0, open_loop);
 
   // For each player, perturb strategies with Gaussian noise a bunch of times
   // and if cost decreases then return false.
@@ -94,12 +93,12 @@ bool NumericalCheckLocalNashEquilibrium(
         alphak_upper(jj) += max_perturbation;
 
         // Compute new costs.
-        const std::vector<float> perturbed_costs_lower = ComputeStrategyCosts(
-            player_costs, perturbed_strategies_lower, operating_point, dynamics,
-            x0, time_step, open_loop);
-        const std::vector<float> perturbed_costs_upper = ComputeStrategyCosts(
-            player_costs, perturbed_strategies_upper, operating_point, dynamics,
-            x0, time_step, open_loop);
+        const std::vector<float> perturbed_costs_lower =
+            ComputeStrategyCosts(player_costs, perturbed_strategies_lower,
+                                 operating_point, dynamics, x0, open_loop);
+        const std::vector<float> perturbed_costs_upper =
+            ComputeStrategyCosts(player_costs, perturbed_strategies_upper,
+                                 operating_point, dynamics, x0, open_loop);
 
         // Check Nash condition.
         if (std::min(perturbed_costs_lower[ii], perturbed_costs_upper[ii]) <
@@ -133,10 +132,19 @@ bool NumericalCheckLocalNashEquilibrium(
   return true;
 }
 
+bool NumericalCheckLocalNashEquilibrium(const Problem& problem,
+                                        float max_perturbation,
+                                        bool open_loop) {
+  return NumericalCheckLocalNashEquilibrium(
+      problem.PlayerCosts(), problem.CurrentStrategies(),
+      problem.CurrentOperatingPoint(), *problem.Dynamics(),
+      problem.InitialState(), max_perturbation, open_loop);
+}
+
 bool CheckSufficientLocalNashEquilibrium(
     const std::vector<PlayerCost>& player_costs,
-    const OperatingPoint& operating_point, Time time_step,
-    const std::shared_ptr<const MultiPlayerFlatSystem>& dynamics) {
+    const OperatingPoint& operating_point,
+    const std::shared_ptr<const MultiPlayerIntegrableSystem> dynamics) {
   // Unpack number of players and number of time steps.
   const PlayerIndex num_players = player_costs.size();
   const size_t num_time_steps = operating_point.xs.size();
@@ -148,14 +156,18 @@ bool CheckSufficientLocalNashEquilibrium(
 
   // Quadraticize costs and check PSD conditions.
   for (size_t kk = 0; kk < num_time_steps; kk++) {
-    const Time t = operating_point.t0 + static_cast<Time>(kk) * time_step;
+    const Time t = operating_point.t0 + static_cast<Time>(kk) * time::kTimeStep;
     VectorXf x = operating_point.xs[kk];
     std::vector<VectorXf> us = operating_point.us[kk];
 
-    if (dynamics.get()) {
+    // Maybe convert out of linear system coordinates.
+    if (dynamics.get() && dynamics->TreatAsLinear()) {
+      const auto& dyn =
+          *static_cast<const MultiPlayerFlatSystem*>(dynamics.get());
+
       // Previous x, us are actually xi, vs.
-      x = dynamics->FromLinearSystemState(x.eval());
-      us = dynamics->LinearizingControls(x, std::vector<VectorXf>(us));
+      x = dyn.FromLinearSystemState(x.eval());
+      us = dyn.LinearizingControls(x, std::vector<VectorXf>(us));
     }
 
     std::transform(player_costs.begin(), player_costs.end(),
@@ -185,6 +197,12 @@ bool CheckSufficientLocalNashEquilibrium(
   }
 
   return true;
+}
+
+bool CheckSufficientLocalNashEquilibrium(const Problem& problem) {
+  return CheckSufficientLocalNashEquilibrium(problem.PlayerCosts(),
+                                             problem.CurrentOperatingPoint(),
+                                             problem.Dynamics());
 }
 
 }  // namespace ilqgames

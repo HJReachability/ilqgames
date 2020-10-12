@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on proximity between two pairs of state dimensions (representing
-// 2D position of vehicles whose states have been concatenated). Can be oriented
-// either `inside` or `outside`, i.e., can constrain the states to be close
-// together or far apart (respectively).
+// (Time-invariant) proximity (inequality) constraint between two vehicles, i.e.
+//           g(x) = (+/-) (||(px1, py1) - (px2, py2)|| - d) <= 0
+//
+// NOTE: The `keep_within` argument specifies the sign of g (true corresponds to
+// positive).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -47,58 +48,52 @@
 #define ILQGAMES_CONSTRAINT_PROXIMITY_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
-#include <ilqgames/cost/proximity_cost.h>
 #include <ilqgames/utils/types.h>
 
-#include <math.h>
+#include <glog/logging.h>
+#include <memory>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
 class ProximityConstraint : public TimeInvariantConstraint {
  public:
-  ProximityConstraint(const std::pair<Dimension, Dimension>& position_idxs1,
-                      const std::pair<Dimension, Dimension>& position_idxs2,
-                      float threshold, bool inside = false,
+  ~ProximityConstraint() {}
+  ProximityConstraint(const std::pair<Dimension, Dimension>& dims1,
+                      const std::pair<Dimension, Dimension>& dims2,
+                      float threshold, bool keep_within,
                       const std::string& name = "")
-      : TimeInvariantConstraint(name),
-        threshold_sq_(threshold * threshold),
-        inside_(inside),
-        xidx1_(position_idxs1.first),
-        yidx1_(position_idxs1.second),
-        xidx2_(position_idxs2.first),
-        yidx2_(position_idxs2.second) {
-    // Set equivalent cost pointer.
-    CHECK(!inside) << "Right now we only have a cost that supports outside "
-                      "oriented constraints.";
-    const float new_threshold = threshold + kCostBuffer;
-    equivalent_cost_.reset(new ProximityCost(kInitialEquivalentCostWeight,
-                                             position_idxs1, position_idxs2,
-                                             new_threshold, name + "/Cost"));
+      : TimeInvariantConstraint(false, name),
+        xidx1_(dims1.first),
+        yidx1_(dims1.second),
+        xidx2_(dims2.first),
+        yidx2_(dims2.second),
+        threshold_(threshold),
+        keep_within_(keep_within) {
+    CHECK_GT(threshold_, 0.0);
   }
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const;
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                     VectorXf* grad) const;
 
  private:
-  // Threshold for squared relative distance.
-  const float threshold_sq_;
+  // Position dimension indices for both players.
+  const Dimension xidx1_;
+  const Dimension yidx1_;
+  const Dimension xidx2_;
+  const Dimension yidx2_;
 
-  // Orientation, either `inside` (states should be close) or `outside` (states
-  // should be far apart).
-  const bool inside_;
+  // Nominal distance threshold.
+  const float threshold_;
 
-  // Position indices for two vehicles.
-  const Dimension xidx1_, yidx1_;
-  const Dimension xidx2_, yidx2_;
-};  //\class ProximityConstraint
+  // Keep within (or without), i.e., orientation of the inequality.
+  const bool keep_within_;
+};  // namespace ProximityConstraint
 
 }  // namespace ilqgames
 

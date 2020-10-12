@@ -72,11 +72,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 10.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0;  // m
@@ -155,19 +150,17 @@ static const Dimension kP1OmegaIdx = 0;
 static const Dimension kP1JerkIdx = 1;
 static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
+
 }  // anonymous namespace
 
-TwoPlayerCollisionExample::TwoPlayerCollisionExample(
-    const SolverParams& params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
-          kTimeStep));
+void TwoPlayerCollisionExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+       std::make_shared<SinglePlayerCar6D>(kInterAxleLength)}));
+}
 
-  // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+void TwoPlayerCollisionExample::ConstructInitialState() {
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
@@ -176,28 +169,14 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
   x0_(kP2YIdx) = kP2InitialY;
   x0_(kP2HeadingIdx) = kP2InitialHeading;
   x0_(kP2VIdx) = kP2InitialSpeed;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void TwoPlayerCollisionExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
-
-  // Orientation cost
-  const auto p1_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP1HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP1");
-  // p1_cost.AddStateCost(p1_nominal_orientation_cost);
-  const auto p2_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP2HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP2");
-  // p2_cost.AddStateCost(p2_nominal_orientation_cost);
+  player_costs_.emplace_back("P1", 1.0, 0.0);
+  player_costs_.emplace_back("P2", 1.0, 0.0);
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
 
   // cost for deviating from the center of the lane (for both p1 and p2)
   const Polyline2 lane1_p1p2({Point2(2.5, -50.0), Point2(2.5, 50.0)});
@@ -305,19 +284,19 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
   constexpr float kFinalTimeWindow = 0.5;  // s
   const auto p1_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1XIdx, kP1GoalX),
-      kTimeHorizon - kFinalTimeWindow, "GoalX");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalX");
   const auto p1_goaly_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP1YIdx, kP1GoalY),
-      kTimeHorizon - kFinalTimeWindow, "GoalY");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalY");
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
 
   const auto p2_goalx_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2XIdx, kP2GoalX),
-      kTimeHorizon - kFinalTimeWindow, "GoalX");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalX");
   const auto p2_goaly_cost = std::make_shared<FinalTimeCost>(
       std::make_shared<QuadraticCost>(kGoalCostWeight, kP2YIdx, kP2GoalY),
-      kTimeHorizon - kFinalTimeWindow, "GoalY");
+      time::kTimeHorizon - kFinalTimeWindow, "GoalY");
   p2_cost.AddStateCost(p2_goalx_cost);
   p2_cost.AddStateCost(p2_goaly_cost);
 
@@ -331,10 +310,6 @@ TwoPlayerCollisionExample::TwoPlayerCollisionExample(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
   p2_cost.AddStateCost(p2p1_proximity_cost);
-
-  // Set up solver.
-  solver_.reset(
-      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> TwoPlayerCollisionExample::Xs(

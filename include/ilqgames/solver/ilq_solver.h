@@ -66,17 +66,123 @@ namespace ilqgames {
 class ILQSolver : public GameSolver {
  public:
   virtual ~ILQSolver() {}
-  ILQSolver(const std::shared_ptr<const MultiPlayerDynamicalSystem>& dynamics,
-            const std::vector<PlayerCost>& player_costs, Time time_horizon,
+  ILQSolver(const std::shared_ptr<Problem>& problem,
             const SolverParams& params = SolverParams())
-      : GameSolver(dynamics, player_costs, time_horizon, params) {}
+      : GameSolver(problem, params),
+        linearization_(time::kNumTimeSteps),
+        cost_quadraticization_(time::kNumTimeSteps),
+        last_merit_function_value_(constants::kInfinity),
+        expected_linear_decrease_(constants::kInfinity),
+        expected_quadratic_decrease_(constants::kInfinity) {
+    // Set up LQ solver.
+    if (params_.open_loop)
+      lq_solver_.reset(
+          new LQOpenLoopSolver(problem_->Dynamics(), time::kNumTimeSteps));
+    else
+      lq_solver_.reset(
+          new LQFeedbackSolver(problem_->Dynamics(), time::kNumTimeSteps));
+
+    // If this system is flat then compute the linearization once, now.
+    if (problem_->Dynamics()->TreatAsLinear())
+      ComputeLinearization(&linearization_);
+
+    // Prepopulate quadraticization.
+    for (auto& quads : cost_quadraticization_)
+      quads.resize(problem_->Dynamics()->NumPlayers(),
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
+
+    // Set last quadraticization to current, to start.
+    last_cost_quadraticization_ = cost_quadraticization_;
+  }
+
+  // Solve this game. Returns true if converged.
+  virtual std::shared_ptr<SolverLog> Solve(
+      bool* success = nullptr,
+      Time max_runtime = std::numeric_limits<Time>::infinity());
+
+  // Accessors.
+  // NOTE: these should be primarily used by higher-level solvers.
+  std::vector<std::vector<QuadraticCostApproximation>>* Quadraticization() {
+    return &cost_quadraticization_;
+  }
+
+  std::vector<LinearDynamicsApproximation>* Linearization() {
+    return &linearization_;
+  }
 
  protected:
+  // Modify LQ strategies to improve convergence properties.
+  // This function performs an Armijo linesearch and returns true if successful.
+  bool ModifyLQStrategies(std::vector<Strategy>* strategies,
+                          OperatingPoint* current_operating_point,
+                          bool* has_converged);
+
+  // Compute distance (infinity norm) between states in the given dimensions.
+  // If dimensions empty, checks all dimensions.
+  float StateDistance(const VectorXf& x1, const VectorXf& x2,
+                      const std::vector<Dimension>& dims) const;
+
+  // Check if solver has converged.
+  virtual bool HasConverged(float current_merit_function_value) const {
+    return (last_merit_function_value_ - current_merit_function_value) <
+           params_.convergence_tolerance;
+  }
+
+  // Compute overall costs and set times of extreme costs.
+  void TotalCosts(const OperatingPoint& current_op,
+                  std::vector<float>* total_costs) const;
+
+  // Armijo condition check. Returns true if the new operating point satisfies
+  // the Armijo condition, and also returns current merit function value.
+  bool CheckArmijoCondition(float current_merit_function_value,
+                            float current_stepsize) const;
+
+  // Compute current merit function value. In the process, update the
+  // quadraticization.
+  virtual float MeritFunction(const OperatingPoint& current_op);
+
+  // Compute expected decrease.
+  virtual void SetExpectedDecrease(
+      const std::vector<Strategy>& current_strategies);
+
+  // Compute the current operating point based on the current set of
+  // strategies and the last operating point.
+  void CurrentOperatingPoint(const OperatingPoint& last_operating_point,
+                             const std::vector<Strategy>& current_strategies,
+                             OperatingPoint* current_operating_point) const;
+
   // Populate the given vector with a linearization of the dynamics about
-  // the given operating point.
-  virtual void ComputeLinearization(
+  // the given operating point. Provide version with no operating point for use
+  // with feedback linearizable systems.
+  void ComputeLinearization(
       const OperatingPoint& op,
       std::vector<LinearDynamicsApproximation>* linearization);
+  void ComputeLinearization(
+      std::vector<LinearDynamicsApproximation>* linearization);
+
+  // Compute the quadratic cost approximation at the given operating point.
+  void ComputeCostQuadraticization(
+      const OperatingPoint& op,
+      std::vector<std::vector<QuadraticCostApproximation>>* q);
+
+  // Linearization and quadraticization. Both are time-indexed (and
+  // quadraticizations' inner vector is indexed by player). Also keep track of
+  // the quadraticization from last iteration.
+  std::vector<LinearDynamicsApproximation> linearization_;
+  std::vector<std::vector<QuadraticCostApproximation>> cost_quadraticization_;
+  std::vector<std::vector<QuadraticCostApproximation>>
+      last_cost_quadraticization_;
+
+  // Core LQ Solver.
+  std::unique_ptr<LQSolver> lq_solver_;
+
+  // Last merit function value and expected decreases (unmultiplied by step
+  // size). Expected decreases are computed following
+  // https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf but for the sum of
+  // all players' costs.
+  float last_merit_function_value_;
+  float expected_linear_decrease_;
+  float expected_quadratic_decrease_;
 };  // class ILQSolver
 
 }  // namespace ilqgames

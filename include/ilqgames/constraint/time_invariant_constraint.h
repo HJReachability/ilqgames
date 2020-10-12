@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all time-invariant constraints.
+// Base class for all time-invariant explicit constraints.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -44,9 +44,10 @@
 #define ILQGAMES_CONSTRAINT_TIME_INVARIANT_CONSTRAINT_H
 
 #include <ilqgames/constraint/constraint.h>
-#include <ilqgames/cost/cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
 
 namespace ilqgames {
@@ -55,33 +56,22 @@ class TimeInvariantConstraint : public Constraint {
  public:
   virtual ~TimeInvariantConstraint() {}
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(Time t, const VectorXf& input, float* level) const {
-    CHECK_NOTNULL(level);
-    return IsSatisfiedLevel(input, level);
-  };
-  virtual bool IsSatisfiedLevel(const VectorXf& input, float* level) const = 0;
-
-  // Evaluate the barrier at the current input (use base class implementation
-  // and provide arbitrary time).
-  float Evaluate(const VectorXf& input) const {
-    return Constraint::Evaluate(0.0, input);
+  // Evaluate this constraint value, i.e., g(x).
+  virtual float Evaluate(const VectorXf& input) const = 0;
+  float Evaluate(Time t, const VectorXf& input) const {
+    return Evaluate(input);
   };
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const {
-    Quadraticize(input, hess, grad);
-  };
-  virtual void Quadraticize(const VectorXf& input, MatrixXf* hess,
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  // NOTE: this is time-varying because time is used to select lambda.
+  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad) const = 0;
 
  protected:
-  explicit TimeInvariantConstraint(const std::string& name = "")
-      : Constraint(name) {}
-};  //\class TimeInvariantConstraint
+  explicit TimeInvariantConstraint(bool is_equality, const std::string& name)
+      : Constraint(is_equality, name) {}
+};  // namespace TimeInvariantConstraint
 
 }  // namespace ilqgames
 

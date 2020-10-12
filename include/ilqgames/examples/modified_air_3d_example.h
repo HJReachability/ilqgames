@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,15 +36,38 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all cost functions. All costs must support evaluation and
-// quadraticization. By default, cost functions are of only state or control.
+// Two player Air3D example from:
+// https://www.cs.ubc.ca/~mitchell/Papers/publishedIEEEtac05.pdf.
+//
+// Modified such that it does *not* use relative dynamics and instead considers
+// the motion of each player separately.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/cost/cost.h>
+#ifndef ILQGAMES_EXAMPLES_MODIFIED_AIR_3D_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_MODIFIED_AIR_3D_EXAMPLE_H
+
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-Time Cost::initial_time_ = 0.0;
+class ModifiedAir3DExample : public TopDownRenderableProblem {
+ public:
+  ~ModifiedAir3DExample() {}
+  ModifiedAir3DExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
+
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class ModifiedAir3DExample
 
 }  // namespace ilqgames
+
+#endif

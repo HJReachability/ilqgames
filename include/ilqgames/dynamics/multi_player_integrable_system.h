@@ -74,9 +74,14 @@ class MultiPlayerIntegrableSystem {
       Time t, const VectorXf& x0, const OperatingPoint& operating_point,
       const std::vector<Strategy>& strategies) const;
 
+  // Make a utility version of the above that operates on Eigen::Refs.
+  VectorXf Integrate(Time t0, Time time_interval,
+                     const Eigen::Ref<VectorXf>& x0,
+                     const std::vector<Eigen::Ref<VectorXf>>& us) const;
+
   // Can this system be treated as linear for the purposes of LQ solves?
-  // For example, linear systems and feedback linearizable systems should return
-  // true here.
+  // For example, linear systems and feedback linearizable systems should
+  // return true here.
   virtual bool TreatAsLinear() const { return false; }
 
   // Stitch between two states of the system. By default, just takes the
@@ -94,16 +99,15 @@ class MultiPlayerIntegrableSystem {
   static bool IntegrationUsesEuler() { return integrate_using_euler_; }
 
   // Getters.
-  Time TimeStep() const { return time_step_; }
   Dimension XDim() const { return xdim_; }
   Dimension TotalUDim() const {
     Dimension total = 0;
     for (PlayerIndex ii = 0; ii < NumPlayers(); ii++) total += UDim(ii);
     return total;
   }
-
   virtual Dimension UDim(PlayerIndex player_idx) const = 0;
   virtual PlayerIndex NumPlayers() const = 0;
+  virtual std::vector<Dimension> PositionDimensions() const = 0;
 
   // Distance metric between two states. By default, just the *squared* 2-norm.
   virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
@@ -111,14 +115,10 @@ class MultiPlayerIntegrableSystem {
   }
 
  protected:
-  MultiPlayerIntegrableSystem(Dimension xdim, Time time_step)
-      : xdim_(xdim), time_step_(time_step) {}
+  MultiPlayerIntegrableSystem(Dimension xdim) : xdim_(xdim) {}
 
   // State dimension.
   const Dimension xdim_;
-
-  // Time step.
-  const Time time_step_;
 
   // Whether to use single Euler during integration. Typically this is false but
   // it is typically used either for testing (we only derive Nash typically in

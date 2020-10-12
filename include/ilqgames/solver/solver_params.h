@@ -60,18 +60,7 @@ struct SolverParams {
   float initial_alpha_scaling = 0.5;
   float geometric_alpha_scaling = 0.5;
   size_t max_backtracking_steps = 10;
-  bool enforce_constraints_in_linesearch = false;
-
-  // Maximum absolute difference between states in the given dimension to
-  // satisfy trust region. Only active if linesearching is on. If dimensions
-  // empty then applies in all dimensions.
-  float trust_region_size = 10.0;
-  std::vector<Dimension> trust_region_dimensions;
-
-  // Number of iterations until each constraint barrier weights are scaled by
-  // the given factor (< 1).
-  size_t barrier_scaling_iters = 10;
-  float geometric_barrier_scaling = 0.5;
+  float expected_decrease_fraction = 0.1;
 
   // Whether solver should shoot for an open loop or feedback Nash.
   bool open_loop = false;
@@ -79,6 +68,14 @@ struct SolverParams {
   // State and control regularization.
   float state_regularization = 0.0;
   float control_regularization = 0.0;
+
+  // Augmented Lagrangian parameters.
+  size_t unconstrained_solver_max_iters = 10;
+  float geometric_mu_scaling = 1.1;
+  float geometric_mu_downscaling = 0.5;
+  float geometric_lambda_downscaling = 0.5;
+  float constraint_error_tolerance = 1e-1;
+};  // struct SolverParams
 
   // Adersarial time: Pure Cooperative (adversarial_time = 0), or
   // Adversarial-to-Cooperative (adversarial_time != 0)

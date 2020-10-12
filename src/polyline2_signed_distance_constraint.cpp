@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,23 +36,26 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the signed distance to a polyline. Can be oriented either
-// `right` or `left`, i.e., can constrain the signed distance to be either > or
-// < the given threshold, respectively.
+// (Time-invariant) inequality constraint encoding
+//           g(x) = (+/-) (signed_distance(x, polyline) - d) <= 0
 //
+// NOTE: The `keep_left` argument specifies the sign of g (true corresponds to
+// positive).
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
+#include <ilqgames/geometry/line_segment2.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
-bool Polyline2SignedDistanceConstraint::IsSatisfiedLevel(const VectorXf& input,
-                                                         float* level) const {
+float Polyline2SignedDistanceConstraint::Evaluate(const VectorXf& input) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
 
@@ -61,86 +64,83 @@ bool Polyline2SignedDistanceConstraint::IsSatisfiedLevel(const VectorXf& input,
   polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), nullptr, nullptr,
                          &signed_distance_sq);
 
-  // Maybe set level.
-  const float sign = (oriented_right_) ? 1.0 : -1.0;
-  *level = sign * (signed_threshold_sq_ - signed_distance_sq);
-
-  return (oriented_right_) ? signed_distance_sq > signed_threshold_sq_
-                           : signed_distance_sq < signed_threshold_sq_;
+  const float value = signed_sqrt(signed_distance_sq) - threshold_;
+  return (keep_left_) ? value : -value;
 }
 
-void Polyline2SignedDistanceConstraint::Quadraticize(const VectorXf& input,
+void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
+                                                     const VectorXf& input,
                                                      MatrixXf* hess,
                                                      VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
-
-  CHECK_NOTNULL(hess);
   CHECK_NOTNULL(grad);
-  CHECK_EQ(input.size(), hess->rows());
-  CHECK_EQ(input.size(), hess->cols());
-  CHECK_EQ(input.size(), grad->size());
+  CHECK_NOTNULL(hess);
+  CHECK_EQ(hess->rows(), input.size());
+  CHECK_EQ(hess->cols(), input.size());
+  CHECK_EQ(grad->size(), input.size());
 
-  // Unpack current position and find closest point / segment.
-  const Point2 current_position(input(xidx_), input(yidx_));
-
-  float signed_distance_sq;
+  // Find closest point/segment and whether closest point is an interior point
+  // or a vertex.
   bool is_vertex;
-  bool is_endpoint;
-  LineSegment2 segment(Point2(0.0, 0.0), Point2(1.0, 1.0));
+  LineSegment2 closest_segment(Point2::Zero(), Point2::Ones());
+  float signed_distance_sq;
   const Point2 closest_point =
-      polyline_.ClosestPoint(current_position, &is_vertex, &segment,
-                             &signed_distance_sq, &is_endpoint);
+      polyline_.ClosestPoint(Point2(input(xidx_), input(yidx_)), &is_vertex,
+                             &closest_segment, &signed_distance_sq);
+  const float s = sgn(signed_distance_sq);
 
-  // Sign corresponding to orientation of this constraint and of the signed
-  // distance itself.
-  const float orientation = (oriented_right_) ? 1.0 : -1.0;
-  const float sign = sgn(signed_distance_sq);
+  // Unpack geometry.
+  const float x = input(xidx_);
+  const float y = input(yidx_);
+  float px = closest_segment.FirstPoint().x();
+  float py = closest_segment.FirstPoint().y();
+  float rx = x - px;
+  float ry = y - py;
+  float d_sq = rx * rx + ry * ry;
+  float d = std::sqrt(d_sq);
+  const float ux = closest_segment.UnitDirection().x();
+  const float uy = closest_segment.UnitDirection().y();
+  const float sign = (keep_left_) ? 1.0 : -1.0;
 
-  // Barrier level.
-  const float dx = current_position.x() - closest_point.x();
-  const float dy = current_position.y() - closest_point.y();
-  const float dx2 = dx * dx;
-  const float dy2 = dy * dy;
-  const float level = orientation * (signed_threshold_sq_ - signed_distance_sq);
+  // Compute value of g.
+  const float g = (keep_left_) ? signed_sqrt(signed_distance_sq) - threshold_
+                               : threshold_ - signed_sqrt(signed_distance_sq);
 
-  // Handle cases separately depending on whether or not closest point is
-  // a vertex of the polyline.
-  if (!is_vertex) {
-    const Point2 relative = current_position - segment.FirstPoint();
-    const Point2& unit_direction = segment.UnitDirection();
-    const float cross =
-        relative.x() * unit_direction.y() - relative.y() * unit_direction.x();
-    CHECK_EQ(sgn(cross), sgn(signed_distance_sq));
+  // Compute derivatives of g using symbolic differentiation.
+  float dx = sign * uy;
+  float ddx = 0.0;
+  float dy = -sign * ux;
+  float ddy = 0.0;
+  float dxdy = 0.0;
 
-    const float coeff = 2.0 * orientation * sign / level;
-    const float grad_coeff = coeff * cross;
-    const float weighted_grad_coeff = weight_ * grad_coeff;
-    (*grad)(xidx_) += weighted_grad_coeff * unit_direction.y();
-    (*grad)(yidx_) -= weighted_grad_coeff * unit_direction.x();
+  // Recompute if the nearest point is a vertex of the polyline.
+  if (is_vertex) {
+    px = closest_point.x();
+    py = closest_point.y();
+    rx = x - px;
+    ry = y - py;
+    d_sq = (rx * rx + ry * ry);
+    d = std::sqrt(d_sq);
 
-    const float hess_coeff = weight_ * coeff * (grad_coeff * cross + 1.0);
-    const float hess_xy = hess_coeff * unit_direction.x() * unit_direction.y();
-    (*hess)(xidx_, xidx_) +=
-        hess_coeff * unit_direction.y() * unit_direction.y();
-    (*hess)(yidx_, yidx_) +=
-        hess_coeff * unit_direction.x() * unit_direction.x();
-    (*hess)(xidx_, yidx_) -= hess_xy;
-    (*hess)(yidx_, xidx_) -= hess_xy;
-  } else {
-    // Closest point is a vertex.
-    const float grad_coeff = 2.0 * orientation * sign / level;
-    const float weighted_grad_coeff = weight_ * grad_coeff;
-    (*grad)(xidx_) += weighted_grad_coeff * dx;
-    (*grad)(yidx_) += weighted_grad_coeff * dy;
-
-    (*hess)(xidx_, xidx_) += weighted_grad_coeff * (grad_coeff * dx2 + 1.0);
-    (*hess)(yidx_, yidx_) += weighted_grad_coeff * (grad_coeff * dy2 + 1.0);
-
-    const float hess_xy = weighted_grad_coeff * grad_coeff * dx * dy;
-    (*hess)(xidx_, yidx_) += hess_xy;
-    (*hess)(yidx_, xidx_) += hess_xy;
+    dx = sign * s * rx / d;
+    ddx = sign * s * (d_sq - px * px - x * x + 2 * px * x) / (d_sq * d);
+    dxdy = -sign * s * rx * ry / (d_sq * d);
+    dy = sign * s * ry / d;
+    ddy = sign * s * (d_sq - py * py - y * y + 2 * py * y) / (d_sq * d);
   }
-}  // namespace ilqgames
+
+  // Modify derivatives according to augmented Lagrangian.
+  ModifyDerivatives(t, g, &dx, &ddx, &dy, &ddy, &dxdy);
+
+  // Populate grad and hess.
+  (*grad)(xidx_) += dx;
+  (*grad)(yidx_) += dy;
+
+  (*hess)(xidx_, xidx_) += ddx;
+  (*hess)(xidx_, yidx_) += dxdy;
+  (*hess)(yidx_, xidx_) += dxdy;
+  (*hess)(yidx_, yidx_) += ddy;
+}
 
 }  // namespace ilqgames

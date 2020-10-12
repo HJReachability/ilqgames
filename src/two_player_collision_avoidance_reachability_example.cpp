@@ -63,11 +63,9 @@ DEFINE_double(py0, -5.0, "Initial y-position (m).");
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 2.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
+
+// Control cost weight.
+static constexpr float kOmegaCostWeight = 0.1;
 
 // Initial state.
 static constexpr float kP1InitialHeading = 0.1;  // rad
@@ -91,19 +89,17 @@ static const Dimension kP2XIdx = P1::kNumXDims + P2::kPxIdx;
 static const Dimension kP2YIdx = P1::kNumXDims + P2::kPyIdx;
 static const Dimension kP2HeadingIdx = P1::kNumXDims + P2::kThetaIdx;
 static const Dimension kP2VIdx = P1::kNumXDims + P2::kVIdx;
+
 }  // anonymous namespace
 
-TwoPlayerCollisionAvoidanceReachabilityExample::
-    TwoPlayerCollisionAvoidanceReachabilityExample(const SolverParams& params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(kInterAxleDistance),
-           std::make_shared<P2>(kInterAxleDistance)},
-          kTimeStep));
+void TwoPlayerCollisionAvoidanceReachabilityExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kInterAxleDistance),
+       std::make_shared<P2>(kInterAxleDistance)}));
+}
 
-  // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+void TwoPlayerCollisionAvoidanceReachabilityExample::ConstructInitialState() {
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = FLAGS_px0;
   x0_(kP1YIdx) = FLAGS_py0;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
@@ -112,21 +108,17 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
   x0_(kP2YIdx) = kP2InitialY;
   x0_(kP2HeadingIdx) = kP2InitialHeading;
   x0_(kP2VIdx) = kP2InitialSpeed;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void TwoPlayerCollisionAvoidanceReachabilityExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
+  player_costs_.emplace_back("P1");
+  player_costs_.emplace_back("P2");
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
 
-  const auto control_cost = std::make_shared<QuadraticCost>(
-      params.control_regularization, -1, 0.0, "ControlCost");
+  const auto control_cost =
+      std::make_shared<QuadraticCost>(kOmegaCostWeight, -1, 0.0, "ControlCost");
   p1_cost.AddControlCost(0, control_cost);
   p2_cost.AddControlCost(1, control_cost);
 
@@ -144,9 +136,9 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
 
   // NOTE: Assumes line segments traced by each player at initialization do not
   // intersect.
-  const float nominal_distance =
-      (p1_position(0.5 * kTimeHorizon) - p2_position(0.5 * kTimeHorizon))
-          .norm();
+  const float nominal_distance = (p1_position(0.5 * time::kTimeHorizon) -
+                                  p2_position(0.5 * time::kTimeHorizon))
+                                     .norm();
   const std::shared_ptr<SignedDistanceCost> collision_avoidance_cost(
       new SignedDistanceCost({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
                              nominal_distance, "CollisionAvoidance"));
@@ -156,10 +148,6 @@ TwoPlayerCollisionAvoidanceReachabilityExample::
   // Make sure costs are max-over-time.
   p1_cost.SetMaxOverTime();
   p2_cost.SetMaxOverTime();
-
-  // Set up solver.
-  solver_.reset(
-      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> TwoPlayerCollisionAvoidanceReachabilityExample::Xs(

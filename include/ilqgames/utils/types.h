@@ -47,21 +47,69 @@
 
 #include <math.h>
 #include <algorithm>
+#include <chrono>
+#include <functional>
 #include <iostream>
 #include <limits>
 #include <memory>
 #include <random>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 #include <Eigen/Dense>
 #include <Eigen/Geometry>
 #include <Eigen/StdVector>
 
+namespace ilqgames {
+
+// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
+
+using Eigen::MatrixXf;
+using Eigen::VectorXf;
+
+// --------------------------------- TYPES ---------------------------------- //
+
+using PlayerIndex = unsigned short;
+using Dimension = int;
+using Point2 = Eigen::Vector2f;
+
+// Rename the system clock for easier usage.
+using Clock = std::chrono::system_clock;
+
+#ifdef __APPLE__
+using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
+using Time = float;
+#else
+using PointList2 = std::vector<Point2>;
+using Time = double;
+#endif
+
+template <typename T>
+using PlayerPtrMap = std::unordered_map<PlayerIndex, std::shared_ptr<T>>;
+
+template <typename T>
+using PlayerPtrMultiMap =
+    std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
+
+template <typename T>
+using PlayerMap = std::unordered_map<PlayerIndex, T>;
+
+template <typename T>
+using PlayerMultiMap = std::unordered_multimap<PlayerIndex, T>;
+
+using PlayerDualMap = std::unordered_map<PlayerIndex, float*>;
+
+template <typename T>
+using PtrVector = std::vector<std::shared_ptr<T>>;
+
+using RefVector = std::vector<Eigen::Ref<VectorXf>>;
+
+// Empty struct for setting unused/unimplemented template args.
+struct Empty {};
+
 // ------------------------------- CONSTANTS -------------------------------- //
 
-namespace ilqgames {
 namespace constants {
 #ifdef __APPLE__
 // Acceleration due to gravity (m/s/s).
@@ -91,36 +139,22 @@ static constexpr double kInvalidValue = std::numeric_limits<float>::quiet_NaN();
 #endif
 }  // namespace constants
 
-// --------------------------------- TYPES ---------------------------------- //
+namespace time {
+// Time discretization (s).
+static constexpr Time kTimeStep = 0.1;
 
-using PlayerIndex = unsigned short;
-using Dimension = int;
-using Point2 = Eigen::Vector2f;
+// Time horizon (s).
+static constexpr Time kTimeHorizon = 10.0;
 
-#ifdef __APPLE__
-using PointList2 = std::vector<Point2, Eigen::aligned_allocator<Point2>>;
-using Time = float;
-#else
-using PointList2 = std::vector<Point2>;
-using Time = double;
-#endif
-
-class SinglePlayerDynamicalSystem;
-using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
-
-class SinglePlayerFlatSystem;
-using FlatSubsystemList = std::vector<std::shared_ptr<SinglePlayerFlatSystem>>;
-
-template <typename T>
-using CostMap = std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
-
-// Empty struct for setting unused/unimplemented template args.
-struct Empty {};
+// Number of time steps.
+static constexpr size_t kNumTimeSteps =
+    static_cast<size_t>((kTimeHorizon + constants::kSmallNumber) / kTimeStep);
+}  // namespace time
 
 // ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
 
 template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args) {
+std::unique_ptr<T> make_unique(Args&&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
@@ -139,10 +173,10 @@ inline constexpr T sgn(T x) {
   return sgn(x, std::is_signed<T>());
 }
 
-// ------------------------ THIRD PARTY TYPEDEFS ---------------------------- //
-
-using Eigen::MatrixXf;
-using Eigen::VectorXf;
+template <typename T>
+inline constexpr T signed_sqrt(T x) {
+  return sgn(x) * std::sqrt(std::abs(x));
+}
 
 }  // namespace ilqgames
 

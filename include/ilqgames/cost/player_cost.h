@@ -57,63 +57,49 @@ namespace ilqgames {
 class PlayerCost {
  public:
   ~PlayerCost() {}
+
+  // Provide default values for all constructor values. If num_time_steps is
+  // positive use that to initialize the lambdas.
   explicit PlayerCost(const std::string& name = "",
                       float state_regularization = 0.0,
                       float control_regularization = 0.0)
       : name_(name),
         state_regularization_(state_regularization),
         control_regularization_(control_regularization),
-        are_constraints_on_(true),
-        cost_structure_(SUM) {}
+        cost_structure_(CostStructure::SUM),
+        time_of_extreme_cost_(0) {}
 
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
 
-  // Add new state and control constraints for this player.
+  // Add new state and control constraints. For now, they are only equality
+  // constraints but later they should really be inequality constraints and
+  // there should be some logic for maintaining sets of active constraints.
   void AddStateConstraint(const std::shared_ptr<Constraint>& constraint);
   void AddControlConstraint(PlayerIndex idx,
                             const std::shared_ptr<Constraint>& constraint);
 
-  // Evaluate this cost at the current time, state, and controls, or integrate
-  // over an entire trajectory. Does *not* incorporate cost barriers due to
-  // inequality constraints. The "Offset" here indicates that state costs will
-  // be evaluated at the next time step.
+  // Evaluate this cost at the current time, state, and controls, or
+  // integrate over an entire trajectory. The "Offset" here indicates that
+  // state costs will be evaluated at the next time step.
   float Evaluate(Time t, const VectorXf& x,
                  const std::vector<VectorXf>& us) const;
   float Evaluate(const OperatingPoint& op, Time time_step) const;
+  float Evaluate(const OperatingPoint& op) const;
   float EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
                        const std::vector<VectorXf>& us) const;
 
-  // Quadraticize this cost at the given time, state, and controls.
-  // *Does* account for cost barriers due to inequality constraints.
+  // Quadraticize this cost at the given time, time step, state, and controls.
   QuadraticCostApproximation Quadraticize(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
-  // Return empty cost quadraticization except for constraints.
-  QuadraticCostApproximation QuadraticizeConstraints(
+  // Return empty cost quadraticization except for control costs.
+  QuadraticCostApproximation QuadraticizeControlCosts(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
-  // Turn all constraints either "on" or "off" (in which case they are replaced
-  // with their"equivalent" costs).
-  void TurnConstraintsOn() { are_constraints_on_ = true; }
-  void TurnConstraintsOff() { are_constraints_on_ = false; }
-  bool AreConstraintsOn() const { return are_constraints_on_; }
-
-  // Check whether constraints are satisfied at the given time.
-  bool CheckConstraints(Time t, const VectorXf& x,
-                        const std::vector<VectorXf>& us) const;
-  size_t NumStateConstraints() const { return state_constraints_.size(); }
-  size_t NumControlConstraints() const { return control_constraints_.size(); }
-
-  // Scale all weights associated with all constraint barriers by the given
-  // multiplier, which ought to be less than 1.0. Can also reset all weights
-  // to 1.0.
-  void ScaleConstraintBarrierWeights(float scale = 0.5);
-  void ResetConstraintBarrierWeights();
-
   // Set whether this is a time-additive, max-over-time, or min-over-time cost.
-  // At each specific time, all costs are added.
+  // At each specific time, all costs are accumulated with the given operation.
   enum CostStructure { SUM, MAX, MIN };
   void SetTimeAdditive() { cost_structure_ = SUM; }
   void SetMaxOverTime() { cost_structure_ = MAX; }
@@ -122,16 +108,21 @@ class PlayerCost {
   bool IsMaxOverTime() const { return cost_structure_ == MAX; }
   bool IsMinOverTime() const { return cost_structure_ == MIN; }
 
+  // Keep track of the time of extreme costs.
+  size_t TimeOfExtremeCost() { return time_of_extreme_cost_; }
+  void SetTimeOfExtremeCost(size_t kk) { time_of_extreme_cost_ = kk; }
+
   // Accessors.
-  const std::vector<std::shared_ptr<Cost>>& StateCosts() const {
-    return state_costs_;
-  }
-  const CostMap<Cost>& ControlCosts() const { return control_costs_; }
-  const std::vector<std::shared_ptr<Constraint>>& StateConstraints() const {
+  const PtrVector<Cost>& StateCosts() const { return state_costs_; }
+  const PlayerPtrMultiMap<Cost>& ControlCosts() const { return control_costs_; }
+  const PtrVector<Constraint>& StateConstraints() const {
     return state_constraints_;
   }
-  const CostMap<Constraint>& ControlConstraints() const {
+  const PlayerPtrMultiMap<Constraint>& ControlConstraints() const {
     return control_constraints_;
+  }
+  bool IsConstrained() const {
+    return !state_constraints_.empty() || !control_constraints_.empty();
   }
 
  private:
@@ -139,22 +130,25 @@ class PlayerCost {
   const std::string name_;
 
   // State costs and control costs.
-  std::vector<std::shared_ptr<Cost>> state_costs_;
-  CostMap<Cost> control_costs_;
+  PtrVector<Cost> state_costs_;
+  PlayerPtrMultiMap<Cost> control_costs_;
 
-  // State and control constraints. Control constraints can apply to any
-  // player's control input, though it likely only makes sense to apply them to
-  // this player's input.
-  std::vector<std::shared_ptr<Constraint>> state_constraints_;
-  CostMap<Constraint> control_constraints_;
-  bool are_constraints_on_;
+  // State and control constraints
+  PtrVector<Constraint> state_constraints_;
+  PlayerPtrMultiMap<Constraint> control_constraints_;
 
   // Regularization on costs.
-  const float state_regularization_, control_regularization_;
+  const float state_regularization_;
+  const float control_regularization_;
 
   // Ternary variable whether this objective is time-additive, max-over-time, or
   // min-over-time.
   CostStructure cost_structure_;
+
+  // Keep track of the time of extreme costs. This will depend upon the current
+  // operating point, and it will only be meaningful if the cost structure is an
+  // extremum over time.
+  size_t time_of_extreme_cost_;
 };  //\class PlayerCost
 
 }  // namespace ilqgames

@@ -43,8 +43,8 @@
 #ifndef ILQGAMES_EXAMPLES_ROUNDABOUT_MERGING_EXAMPLE_H
 #define ILQGAMES_EXAMPLES_ROUNDABOUT_MERGING_EXAMPLE_H
 
-#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/dynamics/concatenated_flat_system.h>
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
@@ -54,7 +54,13 @@ namespace ilqgames {
 class FlatRoundaboutMergingExample : public TopDownRenderableProblem {
  public:
   ~FlatRoundaboutMergingExample() {}
-  FlatRoundaboutMergingExample(const SolverParams& params);
+  FlatRoundaboutMergingExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, initial operating point, player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructInitialOperatingPoint();
+  void ConstructPlayerCosts();
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf& xi) const;

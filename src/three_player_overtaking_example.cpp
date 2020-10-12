@@ -76,11 +76,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 10.0; // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0; // m
@@ -185,18 +180,17 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
 } // anonymous namespace
 
-ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
-    const SolverParams &params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
-          kTimeStep));
 
-  // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+void ThreePlayerOvertakingExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+       std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+       std::make_shared<SinglePlayerCar6D>(kInterAxleLength)}));
+}
+
+void ThreePlayerOvertakingExample::ConstructInitialState() {
+  x0_ = VectorXf::Zero(dynamics_->XDim());
+
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
@@ -209,20 +203,17 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   x0_(kP3YIdx) = kP3InitialY;
   x0_(kP3HeadingIdx) = kP3InitialHeading;
   x0_(kP3VIdx) = kP3InitialSpeed;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2"), p3_cost("P3");
 
-  // Orientation cost ...
+  player_costs_.emplace_back("P1");
+  player_costs_.emplace_back("P2");
+  player_costs_.emplace_back("P3");
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
+  auto& p3_cost = player_costs_[2];
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -307,28 +298,6 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p3_cost.AddStateConstraint(p3_max_v_constraint);
   p3_cost.AddStateCost(p3_nominal_v_cost);
 
-  // Curvature costs for P1 and P2.
-  // const auto p1_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP1PhiIdx, 0.0, "Curvature");
-  // p1_cost.AddStateCost(p1_curvature_cost);
-
-  // const auto p2_curvature_cost = std::make_shared<QuadraticCost>(
-  //     kCurvatureCostWeight, kP2PhiIdx, 0.0, "Curvature");
-  // p2_cost.AddStateCost(p2_curvature_cost);
-
-  // // Penalize acceleration for cars.
-  // const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP1AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p1_cost.AddStateCost(p1_a_cost);
-
-  // const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight,
-  // kP2AIdx,
-  //                                                        0.0,
-  //                                                        "Acceleration");
-  // p2_cost.AddStateCost(p2_a_cost);
-
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
@@ -351,36 +320,17 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
-  // Pairwise proximity costs: Player 1.
 
-  const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
-      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-                              kMinProximity, kConstraintOrientedInside,
-                              "ProximityConstraintP2"));
-  const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
-      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
-                              kMinProximity, kConstraintOrientedInside,
-                              "ProximityConstraintP3"));
-  p1_cost.AddStateConstraint(p1p2_proximity_constraint);
-  p1_cost.AddStateConstraint(p1p3_proximity_constraint);
+  // Pairwise proximity costs.
+  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
+      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
+  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
+      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
+                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
+  p1_cost.AddStateCost(p1p2_proximity_cost);
+  p1_cost.AddStateCost(p1p3_proximity_cost);
 
-  // Pairwise proximity costs: Player 2.
-
-  const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
-      new InitialTimeCost(
-          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
-              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP2P1"));
-  p2_cost.AddStateCost(p2p1_initial_proximity_cost);
-  initial_time_costs_.push_back(p2p1_initial_proximity_cost);
-
-  const std::shared_ptr<FinalTimeCost> p2p1_final_proximity_cost(
-      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
-                            kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                            {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP2P1"));
-  p2_cost.AddStateCost(p2p1_final_proximity_cost);
-  final_time_costs_.push_back(p2p1_final_proximity_cost);
 
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
@@ -410,11 +360,10 @@ ThreePlayerOvertakingExample::ThreePlayerOvertakingExample(
   const std::shared_ptr<ProxCost> p3p2_proximity_cost(
       new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                    {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  p3_cost.AddStateCost(p3p2_proximity_cost);
 
-  // Set up solver.
-  solver_.reset(new ILQSolver(dynamics, {p1_cost, p2_cost, p3_cost},
-                              kTimeHorizon, params));
+  // p3_cost.AddStateCost(p3p1_proximity_cost);
+  // p3_cost.AddStateCost(p3p2_proximity_cost);
+
 }
 
 inline std::vector<float>

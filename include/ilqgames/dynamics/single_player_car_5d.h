@@ -68,11 +68,14 @@ class SinglePlayerCar5D : public SinglePlayerDynamicalSystem {
   VectorXf Evaluate(Time t, const VectorXf& x, const VectorXf& u) const;
 
   // Compute a discrete-time Jacobian linearization.
-  void Linearize(Time t, Time time_step, const VectorXf& x, const VectorXf& u,
+  void Linearize(Time t, const VectorXf& x, const VectorXf& u,
                  Eigen::Ref<MatrixXf> A, Eigen::Ref<MatrixXf> B) const;
 
   // Distance metric between two states.
   float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const;
+
+  // Position dimensions.
+  std::vector<Dimension> PositionDimensions() const { return {kPxIdx, kPyIdx}; }
 
   // Constexprs for state indices.
   static const Dimension kNumXDims;
@@ -106,12 +109,12 @@ inline VectorXf SinglePlayerCar5D::Evaluate(Time t, const VectorXf& x,
   return xdot;
 }
 
-inline void SinglePlayerCar5D::Linearize(Time t, Time time_step,
+inline void SinglePlayerCar5D::Linearize(Time t,
                                          const VectorXf& x, const VectorXf& u,
                                          Eigen::Ref<MatrixXf> A,
                                          Eigen::Ref<MatrixXf> B) const {
-  const float ctheta = std::cos(x(kThetaIdx)) * time_step;
-  const float stheta = std::sin(x(kThetaIdx)) * time_step;
+  const float ctheta = std::cos(x(kThetaIdx)) * time::kTimeStep;
+  const float stheta = std::sin(x(kThetaIdx)) * time::kTimeStep;
   const float cphi = std::cos(x(kPhiIdx));
   const float tphi = std::tan(x(kPhiIdx));
 
@@ -122,11 +125,11 @@ inline void SinglePlayerCar5D::Linearize(Time t, Time time_step,
   A(kPyIdx, kVIdx) += stheta;
 
   A(kThetaIdx, kPhiIdx) +=
-      x(kVIdx) * time_step / (inter_axle_distance_ * cphi * cphi);
-  A(kThetaIdx, kVIdx) += tphi * time_step / inter_axle_distance_;
+      x(kVIdx) * time::kTimeStep / (inter_axle_distance_ * cphi * cphi);
+  A(kThetaIdx, kVIdx) += tphi * time::kTimeStep / inter_axle_distance_;
 
-  B(kPhiIdx, kOmegaIdx) = time_step;
-  B(kVIdx, kAIdx) = time_step;
+  B(kPhiIdx, kOmegaIdx) = time::kTimeStep;
+  B(kVIdx, kAIdx) = time::kTimeStep;
 }
 
 inline float SinglePlayerCar5D::DistanceBetween(const VectorXf& x0,

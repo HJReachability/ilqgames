@@ -60,11 +60,6 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;      // s
-static constexpr Time kTimeHorizon = 15.0;  // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 100.0;
@@ -72,8 +67,8 @@ static constexpr float kAttractionCostWeight = 10.0;
 static constexpr float kGoalCostWeight = 10.0;
 
 // Initial state.
-static constexpr float kP1InitialX = 0.0;         // m
-static constexpr float kP1InitialY = -10.0;       // m
+static constexpr float kP1InitialX = 0.0;                // m
+static constexpr float kP1InitialY = -10.0;              // m
 static constexpr float kP1InitialHeading = M_PI - 0.01;  // rad
 
 static constexpr float kP2InitialX = 0.0;               // m
@@ -103,33 +98,28 @@ static const Dimension kP1OmegaIdx = 0;
 static const Dimension kP2OmegaIdx = 0;
 }  // anonymous namespace
 
-DubinsOriginExample::DubinsOriginExample(const SolverParams& params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<P1>(kSpeed), std::make_shared<P2>(kSpeed)},
-          kTimeStep));
+void DubinsOriginExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kSpeed), std::make_shared<P2>(kSpeed)}));
+}
 
+void DubinsOriginExample::ConstructInitialState() {
   // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
   x0_(kP2XIdx) = kP2InitialX;
   x0_(kP2YIdx) = kP2InitialY;
   x0_(kP2HeadingIdx) = kP2InitialHeading;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
-
+void DubinsOriginExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost("P1"), p2_cost("P2");
+  player_costs_.emplace_back("P1");
+  player_costs_.emplace_back("P2");
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
 
   // Attract P2 to P1.
   const std::shared_ptr<QuadraticDifferenceCost> p2_attraction_cost =
@@ -154,10 +144,6 @@ DubinsOriginExample::DubinsOriginExample(const SolverParams& params) {
       kGoalCostWeight, kP2YIdx, kP2GoalY, "GoalY");
   p1_cost.AddStateCost(p1_goalx_cost);
   p1_cost.AddStateCost(p1_goaly_cost);
-
-  // Set up solver.
-  solver_.reset(
-      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> DubinsOriginExample::Xs(const VectorXf& x) const {

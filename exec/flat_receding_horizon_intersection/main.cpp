@@ -45,14 +45,16 @@
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
+#include <ilqgames/solver/augmented_lagrangian_solver.h>
+#include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-#include <stdio.h>
 #include <iostream>
 #include <memory>
+#include <stdio.h>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
@@ -61,8 +63,8 @@
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 10.0, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.5, "L_inf tolerance for convergence.");
+DEFINE_double(convergence_tolerance, 0.01, "KKT squared error tolerance.");
+DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 
 // Adversarial Time.
 DEFINE_double(adversarial_time, 0.0,
@@ -74,11 +76,11 @@ DEFINE_double(adversarial_time, 0.0,
 // common ones: gl3w, glew, glad. You may use another loader/header of your
 // choice (glext, glLoadGen, etc.), or chose to manually implement your own.
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-#include <GL/gl3w.h>  // Initialize with gl3wInit()
+#include <GL/gl3w.h> // Initialize with gl3wInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-#include <GL/glew.h>  // Initialize with glewInit()
+#include <GL/glew.h> // Initialize with glewInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-#include <glad/glad.h>  // Initialize with gladLoadGL()
+#include <glad/glad.h> // Initialize with gladLoadGL()
 #else
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
@@ -86,11 +88,11 @@ DEFINE_double(adversarial_time, 0.0,
 // Include glfw3.h after our OpenGL definitions.
 #include <GLFW/glfw3.h>
 
-static void glfw_error_callback(int error, const char* description) {
+static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   const std::string log_file =
       ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
   google::SetLogDestination(0, log_file.c_str());
@@ -102,43 +104,44 @@ int main(int argc, char** argv) {
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-  params.trust_region_size = FLAGS_trust_region_size;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  // params.adversarial_time = 0.0;
-  params.adversarial_time = FLAGS_adversarial_time;
+
+  params.expected_decrease_fraction = FLAGS_expected_decrease;
 
   auto problem =
-      std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>(params);
+      std::make_shared<ilqgames::ThreePlayerFlatIntersectionExample>();
+  problem->Initialize();
+  ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   // Solve the game in a receding horizon.
-  constexpr ilqgames::Time kFinalTime = 10.0;       // s
-  constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
+  constexpr ilqgames::Time kFinalTime = 10.0;      // s
+  constexpr ilqgames::Time kPlannerRuntime = 0.25; // s
   const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs =
-      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, problem.get());
+      RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &solver);
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(
       new ilqgames::ControlSliders({logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders,
-                                         {problem->Solver().PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
-  if (!glfwInit()) return 1;
+  if (!glfwInit())
+    return 1;
 
     // Decide GL+GLSL versions.
 #if __APPLE__
   // GL 3.2 + GLSL 150.
-  const char* glsl_version = "#version 150";
+  const char *glsl_version = "#version 150";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);  // Required on Mac
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
 #else
   // GL 3.0 + GLSL 130.
-  const char* glsl_version = "#version 130";
+  const char *glsl_version = "#version 130";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
@@ -146,11 +149,12 @@ int main(int argc, char** argv) {
 #endif
 
   // Create window with graphics context
-  GLFWwindow* window = glfwCreateWindow(
+  GLFWwindow *window = glfwCreateWindow(
       1280, 720, "ILQGames: 3-Player Flat Intersection Example", NULL, NULL);
-  if (window == NULL) return 1;
+  if (window == NULL)
+    return 1;
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);  // Enable vsync
+  glfwSwapInterval(1); // Enable vsync
 
   // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
@@ -160,8 +164,8 @@ int main(int argc, char** argv) {
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
   bool err = gladLoadGL() == 0;
 #else
-  bool err = false;  // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
-                     // is likely to requires some form of initialization.
+  bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
+                    // is likely to requires some form of initialization.
 #endif
   if (err) {
     fprintf(stderr, "Failed to initialize OpenGL loader!\n");

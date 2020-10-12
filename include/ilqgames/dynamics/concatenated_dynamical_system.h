@@ -52,10 +52,12 @@
 
 namespace ilqgames {
 
+using SubsystemList = std::vector<std::shared_ptr<SinglePlayerDynamicalSystem>>;
+
 class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
  public:
   ~ConcatenatedDynamicalSystem() {}
-  ConcatenatedDynamicalSystem(const SubsystemList& subsystems, Time time_step);
+  ConcatenatedDynamicalSystem(const SubsystemList& subsystems);
 
   // Compute time derivative of state.
   VectorXf Evaluate(Time t, const VectorXf& x,
@@ -93,6 +95,7 @@ class ConcatenatedDynamicalSystem : public MultiPlayerDynamicalSystem {
   Dimension UDim(PlayerIndex player_idx) const {
     return subsystems_[player_idx]->UDim();
   }
+  std::vector<Dimension> PositionDimensions() const;
 
  private:
   // List of subsystems, each of which controls the affects of a single player.

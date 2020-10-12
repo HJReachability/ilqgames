@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,66 +36,64 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the signed distance to a polyline. Can be oriented either
-// `right` or `left`, i.e., can constrain the signed distance to be either > or
-// < the given threshold, respectively.
+// (Time-invariant) inequality constraint encoding
+//           g(x) = signed_distance(x, polyline) - d <= (or >=) 0
 //
+// NOTE: The `keep_left` argument specifies the sign of the inequality (true
+// corresponds to <=).
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
 #define ILQGAMES_CONSTRAINT_POLYLINE2_SIGNED_DISTANCE_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
-#include <ilqgames/cost/semiquadratic_polyline2_cost.h>
+#include <ilqgames/geometry/line_segment2.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
 class Polyline2SignedDistanceConstraint : public TimeInvariantConstraint {
  public:
-  Polyline2SignedDistanceConstraint(
-      const Polyline2& polyline,
-      const std::pair<Dimension, Dimension>& position_idxs, float threshold,
-      bool oriented_right, const std::string& name = "")
-      : TimeInvariantConstraint(name),
+  ~Polyline2SignedDistanceConstraint() {}
+  Polyline2SignedDistanceConstraint(const Polyline2& polyline,
+                                    const std::pair<Dimension, Dimension>& dims,
+                                    float threshold, bool keep_left,
+                                    const std::string& name = "")
+      : TimeInvariantConstraint(false, name),
         polyline_(polyline),
-        signed_threshold_sq_(sgn(threshold) * threshold * threshold),
-        oriented_right_(oriented_right),
-        xidx_(position_idxs.first),
-        yidx_(position_idxs.second) {
-    // Set equivalent cost pointer.
-    const float new_threshold =
-        (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
-    equivalent_cost_.reset(new SemiquadraticPolyline2Cost(
-        kInitialEquivalentCostWeight, polyline, position_idxs, new_threshold,
-        !oriented_right, name + "/Cost"));
-  }
+        xidx_(dims.first),
+        yidx_(dims.second),
+        threshold_(threshold),
+        keep_left_(keep_left) {}
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const;
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess, VectorXf* grad) const;
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const;
 
  private:
-  // Polyline to compute distances from.
+  // Polyline.
   const Polyline2 polyline_;
 
-  // Threshold for signed squared distance.
-  const float signed_threshold_sq_;
+  // Position dimension indices.
+  const Dimension xidx_;
+  const Dimension yidx_;
 
-  // Orientation.
-  const bool oriented_right_;
+  // Nominal distance threshold.
+  const float threshold_;
 
-  // Position indices.
-  const Dimension xidx_, yidx_;
-};  //\class Polyline2SignedDistanceConstraint
+  // Keep left (or right), i.e., orientation of the inequality.
+  const bool keep_left_;
+};  // namespace Polyline2SignedDistanceConstraint
 
 }  // namespace ilqgames
 

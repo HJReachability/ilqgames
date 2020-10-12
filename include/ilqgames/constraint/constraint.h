@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,13 +36,15 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Base class for all constraints. We assume that all constraints are
-// *inequalities*, which support a check for satisfaction. All constraints must
-// also implement the cost interface corresponding to a barrier function.
-// Further, all constraints also must have a corresponding cost associated to
-// them which, unlike a log barrier which *forces* iterates to remain feasible,
-// merely *encourages* iterates to become feasible. This is useful, e.g., when
-// initial guesses are not feasible.
+// Base class for all explicit (scalar-valued) constraints. These
+// constraints are of the form: g(x) = 0 or g(x) <= 0 for some vector x.
+//
+// In addition to checking for satisfaction (and returning the constraint value
+// g(x)), they also support computing first and second derivatives of the
+// constraint value itself and the square of the constraint value, each scaled
+// by lambda or mu respectively (from the augmented Lagrangian). That is, they
+// compute gradients and Hessians of
+//         L(x, lambda, mu) = lambda * g(x) + mu * g(x) * g(x) / 2
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -62,52 +64,79 @@ class Constraint : public Cost {
  public:
   virtual ~Constraint() {}
 
-  // Set or multiplicatively scale the barrier weight. This will typically
-  // decrease with successive solves in order to improve the approximation of
-  // the barrier-free objective.
-  void ResetBarrierWeight() {
-    weight_ = kInitialBarrierWeight;
-    if (equivalent_cost_.get())
-      equivalent_cost_->SetWeight(kInitialEquivalentCostWeight);
-  }
-  void ScaleBarrierWeight(float scale) {
-    weight_ *= scale;
-    if (equivalent_cost_.get()) equivalent_cost_->ScaleWeight(scale);
-  }
+  // Check if this constraint is satisfied, and optionally return the constraint
+  // value, which equals zero if the constraint is satisfied.
+  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
+    const float value = Evaluate(t, input);
+    if (level) *level = value;
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  virtual bool IsSatisfiedLevel(Time t, const VectorXf& input,
-                                float* level) const = 0;
-  bool IsSatisfied(Time t, const VectorXf& input) const {
-    float level;
-    return IsSatisfiedLevel(t, input, &level);
+    return IsSatisfied(value);
+  }
+  bool IsSatisfied(float level) const {
+    return (is_equality_) ? std::abs(level) <= constants::kSmallNumber
+                          : level <= constants::kSmallNumber;
   }
 
-  // Evaluate the barrier at the current time and input.
-  float Evaluate(Time t, const VectorXf& input) const;
+  // Evaluate this constraint value, i.e., g(x), and the augmented Lagrangian,
+  // i.e., lambda g(x) + mu g(x) g(x) / 2.
+  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
+  float EvaluateAugmentedLagrangian(Time t, const VectorXf& input) const {
+    const float g = Evaluate(t, input);
+    const float lambda = lambdas_[TimeIndex(t)];
+    return lambda * g + 0.5 * Mu(lambda, g) * g * g;
+  }
 
-  // Quadraticize the barrier at the given time and input, and add to the
-  // running sum of gradients and Hessians (if non-null).
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
   virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
                             VectorXf* grad) const = 0;
 
-  // Accessors.
-  const Cost& EquivalentCost() const {
-    CHECK_NOTNULL(equivalent_cost_.get());
-    return *equivalent_cost_;
+  // Accessors and setters.
+  bool IsEquality() const { return is_equality_; }
+  float& Lambda(Time t) { return lambdas_[TimeIndex(t)]; }
+  float Lambda(Time t) const { return lambdas_[TimeIndex(t)]; }
+  void IncrementLambda(Time t, float value) {
+    const size_t kk = TimeIndex(t);
+    const float new_lambda = lambdas_[kk] + mu_ * value;
+    lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
+  }
+  void ScaleLambdas(float scale) {
+    for (auto& lambda : lambdas_) lambda *= scale;
+  }
+  static float& GlobalMu() { return mu_; }
+  static void ScaleMu(float scale) { mu_ *= scale; }
+  float Mu(Time t, const VectorXf& input) const {
+    const float g = Evaluate(t, input);
+    return Mu(Lambda(t), g);
+  }
+  float Mu(float lambda, float g) const {
+    if (!is_equality_ && g <= constants::kSmallNumber &&
+        std::abs(lambda) <= constants::kSmallNumber)
+      return 0.0;
+    return mu_;
   }
 
  protected:
-  explicit Constraint(const std::string& name = "")
-      : Cost(kInitialBarrierWeight, name) {}
+  explicit Constraint(bool is_equality, const std::string& name)
+      : Cost(1.0, name),
+        is_equality_(is_equality),
+        lambdas_(time::kNumTimeSteps, 0.0) {}
 
-  // "Equivalent" well-defined cost to encourage constraint satisfaction, e.g.,
-  // when an initial iterate is infeasible.
-  std::unique_ptr<Cost> equivalent_cost_;
-  static constexpr float kInitialBarrierWeight = 1e2;
-  static constexpr float kInitialEquivalentCostWeight = 1e6;
-  static constexpr float kCostBuffer = 1.0;
+  // Modify derivatives to account for the multipliers and the quadratic term in
+  // the augmented Lagrangian. The inputs are the derivatives of g in the
+  // appropriate variables (assumed to be arbitrary coordinates of the input,
+  // here called x and y).
+  void ModifyDerivatives(Time t, float g, float* dx, float* ddx,
+                         float* dy = nullptr, float* ddy = nullptr,
+                         float* dxdy = nullptr) const;
+
+  // Is this an equality constraint? If not, it is an inequality constraint.
+  bool is_equality_;
+
+  // Multipliers, one per time step. Also a static augmented multiplier for an
+  // augmented Lagrangian.
+  std::vector<float> lambdas_;
+  static float mu_;
 };  //\class Constraint
 
 }  // namespace ilqgames

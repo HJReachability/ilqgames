@@ -41,7 +41,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/cost.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/utils/operating_point.h>
@@ -58,10 +57,11 @@ namespace {
 // Accumulate control costs and constraints into the given quadratic
 // approximation.
 template <typename T, typename F>
-void AccumulateControlCostsBase(const CostMap<T>& costs, Time t,
+void AccumulateControlCostsBase(const PlayerPtrMultiMap<T>& costs, Time t,
                                 const std::vector<VectorXf>& us,
                                 float regularization,
                                 QuadraticCostApproximation* q, F f) {
+  size_t cost_idx = 0;
   for (const auto& pair : costs) {
     const PlayerIndex player = pair.first;
     const auto& cost = pair.second;
@@ -81,10 +81,11 @@ void AccumulateControlCostsBase(const CostMap<T>& costs, Time t,
     }
 
     f(*cost, t, us[player], &(iter->second.hess), &(iter->second.grad));
+    cost_idx++;
   }
 }
 
-void AccumulateControlCosts(const CostMap<Cost>& costs, Time t,
+void AccumulateControlCosts(const PlayerPtrMultiMap<Cost>& costs, Time t,
                             const std::vector<VectorXf>& us,
                             float regularization,
                             QuadraticCostApproximation* q) {
@@ -93,19 +94,16 @@ void AccumulateControlCosts(const CostMap<Cost>& costs, Time t,
   AccumulateControlCostsBase(costs, t, us, regularization, q, f);
 }
 
-void AccumulateControlConstraints(const CostMap<Constraint>& constraints,
-                                  Time t, const std::vector<VectorXf>& us,
-                                  float regularization,
-                                  QuadraticCostApproximation* q,
-                                  bool are_constraints_on) {
-  auto f = [&are_constraints_on](const Constraint& constraint, Time t,
-                                 const VectorXf& u, MatrixXf* hess,
-                                 VectorXf* grad) {
-    if (are_constraints_on) constraint.Quadraticize(t, u, hess, grad);
-    constraint.EquivalentCost().Quadraticize(t, u, hess, grad);
-  };
+void AccumulateControlConstraints(
+    const PlayerPtrMultiMap<Constraint>& constraints, Time t,
+    const std::vector<VectorXf>& us, float regularization,
+    QuadraticCostApproximation* q) {
+  auto f = [](const Constraint& constraint, Time t, const VectorXf& u,
+              MatrixXf* hess,
+              VectorXf* grad) { constraint.Quadraticize(t, u, hess, grad); };
   AccumulateControlCostsBase(constraints, t, us, regularization, q, f);
 }
+
 }  // namespace
 
 void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
@@ -167,6 +165,13 @@ float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
   return cost;
 }
 
+float PlayerCost::Evaluate(const OperatingPoint& op) const {
+  float total_cost = 0.0;
+  for (size_t kk = 0; kk < op.xs.size(); kk++) total_cost += Evaluate(op, kk);
+
+  return total_cost;
+}
+
 float PlayerCost::EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
                                  const std::vector<VectorXf>& us) const {
   float total_cost = 0.0;
@@ -197,83 +202,24 @@ QuadraticCostApproximation PlayerCost::Quadraticize(
   // Accumulate control costs.
   AccumulateControlCosts(control_costs_, t, us, control_regularization_, &q);
 
-  // Accumulate state and control constraint barriers.
-  // NOTE: these are *not* considered when evaluating costs, since the barriers
-  // are only intended to enforce inequality constraints.
-  for (const auto& constraint : state_constraints_) {
-    if (are_constraints_on_)
-      constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
+  // Accumulate state constraints (including augmented Lagrangian terms scaled
+  // by appropriate multipliers).
+  for (const auto& constraint : state_constraints_)
+    constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
 
-    // Add some equivalent cost in to help us stay feasible.
-    constraint->EquivalentCost().Quadraticize(t, x, &q.state.hess,
-                                              &q.state.grad);
-  }
-
-  // Account for control constraints.
+  // Accumulate control constraints.
   AccumulateControlConstraints(control_constraints_, t, us,
-                               control_regularization_, &q,
-                               are_constraints_on_);
+                               control_regularization_, &q);
 
   return q;
 }
 
-bool PlayerCost::CheckConstraints(Time t, const VectorXf& x,
-                                  const std::vector<VectorXf>& us) const {
-  for (const auto& constraint : state_constraints_) {
-    if (!constraint->IsSatisfied(t, x)) {
-      VLOG(2) << name_ << ": failed to satisfy constraint "
-              << constraint->Name();
-      return false;
-    }
-  }
-
-  for (const auto& pair : control_constraints_) {
-    if (!pair.second->IsSatisfied(t, us[pair.first])) {
-      VLOG(2) << name_ + ": Failed to satisfy constraint "
-              << pair.second->Name();
-      return false;
-    }
-  }
-
-  return true;
-}
-
-void PlayerCost::ScaleConstraintBarrierWeights(float scale) {
-  CHECK_LT(scale, 1.0);
-  CHECK_GT(scale, 0.0);
-
-  for (auto& constraint : state_constraints_)
-    constraint->ScaleBarrierWeight(scale);
-
-  for (auto& pair : control_constraints_)
-    pair.second->ScaleBarrierWeight(scale);
-}
-
-void PlayerCost::ResetConstraintBarrierWeights() {
-  for (auto& constraint : state_constraints_) constraint->ResetBarrierWeight();
-  for (auto& pair : control_constraints_) pair.second->ResetBarrierWeight();
-}
-
-QuadraticCostApproximation PlayerCost::QuadraticizeConstraints(
+QuadraticCostApproximation PlayerCost::QuadraticizeControlCosts(
     Time t, const VectorXf& x, const std::vector<VectorXf>& us) const {
   QuadraticCostApproximation q(x.size(), state_regularization_);
 
-  // Accumulate state and control constraint barriers.
-  // NOTE: these are *not* considered when evaluating costs, since the barriers
-  // are only intended to enforce inequality constraints.
-  for (const auto& constraint : state_constraints_) {
-    if (are_constraints_on_)
-      constraint->Quadraticize(t, x, &q.state.hess, &q.state.grad);
-
-    // Add some equivalent cost in to help us stay feasible.
-    constraint->EquivalentCost().Quadraticize(t, x, &q.state.hess,
-                                              &q.state.grad);
-  }
-
-  // Account for control constraints.
-  AccumulateControlConstraints(control_constraints_, t, us,
-                               control_regularization_, &q,
-                               are_constraints_on_);
+  // Accumulate control costs.
+  AccumulateControlCosts(control_costs_, t, us, control_regularization_, &q);
 
   return q;
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,9 +36,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Constraint on the value of a single dimension of the input. This constraint
-// can be oriented either `left` or `right`, i.e., enforcing that the input is <
-// or > the specified threshold, respectively.
+// (Time-invariant) single dimension constraint, i.e., g(x) = (+/-) (x_i - d),
+// where d is a threshold and sign is determined by the `keep_below` argument
+// (positive is true).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -46,45 +46,60 @@
 #define ILQGAMES_CONSTRAINT_SINGLE_DIMENSION_CONSTRAINT_H
 
 #include <ilqgames/constraint/time_invariant_constraint.h>
-#include <ilqgames/cost/semiquadratic_cost.h>
 #include <ilqgames/utils/types.h>
 
+#include <glog/logging.h>
+#include <memory>
 #include <string>
-#include <utility>
 
 namespace ilqgames {
 
 class SingleDimensionConstraint : public TimeInvariantConstraint {
  public:
-  SingleDimensionConstraint(Dimension dimension, float threshold,
-                            bool oriented_right, const std::string& name = "")
-      : TimeInvariantConstraint(name),
-        dimension_(dimension),
+  ~SingleDimensionConstraint() {}
+  SingleDimensionConstraint(Dimension dim, float threshold, bool keep_below,
+                            const std::string& name = "")
+      : TimeInvariantConstraint(false, name),
+        dim_(dim),
         threshold_(threshold),
-        oriented_right_(oriented_right) {
-    // Set equivalent cost pointer.
-    const float new_threshold =
-        (oriented_right) ? threshold + kCostBuffer : threshold - kCostBuffer;
-    CHECK_GE(dimension, 0);
-    equivalent_cost_.reset(
-        new SemiquadraticCost(kInitialEquivalentCostWeight, dimension,
-                              new_threshold, !oriented_right, name + "/Cost"));
+        keep_below_(keep_below) {}
+
+  // Evaluate this constraint value, i.e., g(x).
+  float Evaluate(const VectorXf& input) const {
+    return (keep_below_) ? input(dim_) - threshold_ : threshold_ - input(dim_);
   }
 
-  // Check if this constraint is satisfied, and optionally return the value of a
-  // function whose zero sub-level set corresponds to the feasible set.
-  bool IsSatisfiedLevel(const VectorXf& input, float* level) const;
+  // Quadraticize the constraint value and its square, each scaled by lambda or
+  // mu, respectively (terms in the augmented Lagrangian).
+  void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
+                    VectorXf* grad) const {
+    CHECK_NOTNULL(hess);
+    CHECK_NOTNULL(grad);
+    CHECK_EQ(hess->rows(), input.size());
+    CHECK_EQ(hess->cols(), input.size());
+    CHECK_EQ(grad->size(), input.size());
 
-  // Quadraticize this cost at the given time and input, and add to the running
-  // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+    // Get current lambda.
+    const float lambda = Lambda(t);
+
+    // Compute gradient and Hessian.
+    const float sign = (keep_below_) ? 1.0 : -1.0;
+    const float x = input(dim_);
+    const float g = sign * (x - threshold_);
+
+    float dx = sign;
+    float ddx = 0.0;
+    ModifyDerivatives(t, g, &dx, &ddx);
+
+    (*grad)(dim_) += dx;
+    (*hess)(dim_, dim_) += ddx;
+  }
 
  private:
-  // Dimension, threshold, and orientation.
-  const Dimension dimension_;
+  // Dimension to constrain, threshold value, and sign of constraint.
+  const Dimension dim_;
   const float threshold_;
-  const bool oriented_right_;
+  const bool keep_below_;
 };  //\class SingleDimensionConstraint
 
 }  // namespace ilqgames
