@@ -193,7 +193,6 @@ void FlatRoundaboutMergingExample::ConstructDynamics() {
 
 void FlatRoundaboutMergingExample::ConstructInitialState() {
   VectorXf x0 = VectorXf::Zero(dynamics_->XDim());
-  x0 = VectorXf::Zero(dynamics_->XDim());
   x0(kP1XIdx) = lane1.Segments()[0].FirstPoint().x();
   x0(kP1YIdx) = lane1.Segments()[0].FirstPoint().y();
   x0(kP1HeadingIdx) = lane1.Segments()[0].Heading();
