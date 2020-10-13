@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,57 +36,37 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Polyline2 class for piecewise linear paths in 2D.
+// Roundabout example in which the ego player (P1) sees clones of another
+// player, and costs it incurs due to that other players are weighted averages
+// of those from the clones. Each player is responsible for avoiding collision
+// with the agent in the roundabout is is in conflict with.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GEOMETRY_POLYLINE2_H
-#define ILQGAMES_GEOMETRY_POLYLINE2_H
+#ifndef ILQGAMES_EXAMPLES_ROUNDABOUT_CLONE_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_ROUNDABOUT_CLONE_EXAMPLE_H
 
-#include <ilqgames/geometry/line_segment2.h>
-#include <ilqgames/utils/types.h>
-
-#include <glog/logging.h>
-#include <math.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-class Polyline2 {
+class RoundaboutCloneExample : public TopDownRenderableProblem {
  public:
-  // Construct from a list of points. This list must contain at least 2 points!
-  Polyline2(const PointList2& points);
-  ~Polyline2() {}
+  ~RoundaboutCloneExample() {}
+  RoundaboutCloneExample() : TopDownRenderableProblem() {}
 
-  // Add a new point to the end of the polyline.
-  void AddPoint(const Point2& point);
+  // Construct dynamics, initial state, initial operating point, player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructInitialOperatingPoint();
+  void ConstructPlayerCosts();
 
-  // Compute length.
-  float Length() const { return length_; }
-
-  // Find closest point on this line segment to a given point, and optionally
-  // the line segment that point belongs to (and flag for whether it is a
-  // vertex), and the signed squared distance, where right is positive.
-  Point2 ClosestPoint(const Point2& query, bool* is_vertex = nullptr,
-                      LineSegment2* segment = nullptr,
-                      float* signed_squared_distance = nullptr,
-                      bool* is_endpoint = nullptr) const;
-
-  // Find the point the given distance from the start of the polyline.
-  // Optionally returns whether this is a vertex and the line segment which the
-  // point belongs to, as well as whether this is an endpoint of the polyline
-  // and the heading of the polyline.
-  Point2 PointAt(float route_pos, bool* is_vertex = nullptr,
-                 LineSegment2* segment = nullptr, bool* is_endpoint = nullptr,
-                 float* theta) const;
-
-  // Access line segments.
-  const std::vector<LineSegment2>& Segments() const { return segments_; }
-
- private:
-  std::vector<LineSegment2> segments_;
-  std::vector<float> cumulative_lengths_;
-  float length_;
-};  // struct Polyline2
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class RoundaboutCloneExample
 
 }  // namespace ilqgames
 

@@ -66,7 +66,8 @@ void Polyline2::AddPoint(const Point2& point) {
 }
 
 Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
-                          LineSegment2* segment, bool* is_endpoint) const {
+                          LineSegment2* segment, bool* is_endpoint,
+                          float* theta) const {
   auto upper = std::upper_bound(cumulative_lengths_.begin(),
                                 cumulative_lengths_.end(), route_pos);
   if (upper == cumulative_lengths_.end()) {
@@ -79,6 +80,9 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
   upper--;
   const size_t idx = std::distance(cumulative_lengths_.begin(), upper);
   if (segment) *segment = segments_[idx];
+
+  // Find the heading of the polyline at this point.
+  if (theta) *theta = segments_[idx].Heading();
 
   // Walk along this line segment the remaining distance.
   const float remaining = route_pos - cumulative_lengths_[idx];
