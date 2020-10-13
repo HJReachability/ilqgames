@@ -40,6 +40,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/examples/roundabout_lane_center.h>
 #include <ilqgames/utils/types.h>
 
 #include <glog/logging.h>

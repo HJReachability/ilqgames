@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,66 +36,49 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Utility for plotting different costs for each player over time. Integrates
-// with DearImGui.
+// Roundabout example in which the ego player (P1) sees clones of another
+// player (P3), and costs it incurs due to that other players are weighted
+// averages of those from the clones. Each player is responsible for avoiding
+// collision with the agent in the roundabout is immediately behind. The input
+// is the probability that we are dealing with clone P3a.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_GUI_COST_INSPECTOR_H
-#define ILQGAMES_GUI_COST_INSPECTOR_H
+#ifndef ILQGAMES_EXAMPLES_ROUNDABOUT_CLONE_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_ROUNDABOUT_CLONE_EXAMPLE_H
 
-#include <ilqgames/cost/player_cost.h>
-#include <ilqgames/dynamics/multi_player_flat_system.h>
-#include <ilqgames/gui/control_sliders.h>
-#include <ilqgames/utils/operating_point.h>
-#include <ilqgames/utils/player_cost_cache.h>
-#include <ilqgames/utils/solver_log.h>
-#include <ilqgames/utils/types.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 #include <glog/logging.h>
-#include <imgui/imgui.h>
-#include <string>
-#include <vector>
 
 namespace ilqgames {
 
-class CostInspector {
+class RoundaboutCloneExample : public TopDownRenderableProblem {
  public:
-  ~CostInspector() {}
-
-  // Takes in a sliders and costs for each log.
-  CostInspector(const std::shared_ptr<const ControlSliders>& sliders,
-                const std::vector<std::vector<PlayerCost>>& player_costs)
-      : sliders_(sliders),
-        selected_problem_(0),
-        selected_player_(0),
-        selected_cost_name_("<Please select a cost>") {
-    CHECK_NOTNULL(sliders_.get());
-    CHECK_EQ(player_costs.size(), sliders_->NumProblems());
-
-    player_costs_.resize(sliders_->NumProblems());
-    for (size_t problem_idx = 0; problem_idx < sliders_->NumProblems();
-         problem_idx++) {
-      for (const auto& log : sliders_->LogsForEachProblem()[problem_idx])
-        player_costs_[problem_idx].emplace_back(log, player_costs[problem_idx]);
-    }
+  ~RoundaboutCloneExample() {}
+  RoundaboutCloneExample(float probability_p3a = 0.5)
+      : TopDownRenderableProblem(),
+        kP3aProbability(probability_p3a),
+        kP3bProbability(1.0 - probability_p3a) {
+    CHECK_GE(probability_p3a, 0.0);
+    CHECK_LE(probability_p3a, 1.0);
   }
 
-  // Render the appropriate costs.
-  void Render() const;
+  // Construct dynamics, initial state, initial operating point, player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructInitialOperatingPoint();
+  void ConstructPlayerCosts();
 
- private:
-  // Control sliders.
-  const std::shared_ptr<const ControlSliders> sliders_;
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
 
-  // Player cost cache for each log, for each problem.
-  std::vector<std::vector<PlayerCostCache>> player_costs_;
-
-  // Currently selected problem, player and cost name.
-  mutable size_t selected_problem_;
-  mutable PlayerIndex selected_player_;
-  mutable std::string selected_cost_name_;
-};  // class CostInspector
+  // Probability P3a, P3b.
+  const float kP3aProbability, kP3bProbability;
+};  // class RoundaboutCloneExample
 
 }  // namespace ilqgames
 

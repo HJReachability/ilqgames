@@ -73,10 +73,11 @@ class Polyline2 {
 
   // Find the point the given distance from the start of the polyline.
   // Optionally returns whether this is a vertex and the line segment which the
-  // point belongs to.
+  // point belongs to, as well as whether this is an endpoint of the polyline
+  // and the heading of the polyline.
   Point2 PointAt(float route_pos, bool* is_vertex = nullptr,
-                 LineSegment2* segment = nullptr,
-                 bool* is_endpoint = nullptr) const;
+                 LineSegment2* segment = nullptr, bool* is_endpoint = nullptr,
+                 float* theta = nullptr) const;
 
   // Access line segments.
   const std::vector<LineSegment2>& Segments() const { return segments_; }

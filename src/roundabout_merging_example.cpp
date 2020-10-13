@@ -193,24 +193,23 @@ void RoundaboutMergingExample::ConstructDynamics() {
 }
 
 void RoundaboutMergingExample::ConstructInitialState() {
-  VectorXf x0 = VectorXf::Zero(dynamics_->XDim());
-  x0 = VectorXf::Zero(dynamics_->XDim());
-  x0(kP1XIdx) = lane1.Segments()[0].FirstPoint().x();
-  x0(kP1YIdx) = lane1.Segments()[0].FirstPoint().y();
-  x0(kP1HeadingIdx) = lane1.Segments()[0].Heading();
-  x0(kP1VIdx) = kP1InitialSpeed;
-  x0(kP2XIdx) = lane2.Segments()[0].FirstPoint().x();
-  x0(kP2YIdx) = lane2.Segments()[0].FirstPoint().y();
-  x0(kP2HeadingIdx) = lane2.Segments()[0].Heading();
-  x0(kP2VIdx) = kP2InitialSpeed;
-  x0(kP3XIdx) = lane3.Segments()[0].FirstPoint().x();
-  x0(kP3YIdx) = lane3.Segments()[0].FirstPoint().y();
-  x0(kP3HeadingIdx) = lane3.Segments()[0].Heading();
-  x0(kP3VIdx) = kP3InitialSpeed;
-  x0(kP4XIdx) = lane4.Segments()[0].FirstPoint().x();
-  x0(kP4YIdx) = lane4.Segments()[0].FirstPoint().y();
-  x0(kP4HeadingIdx) = lane4.Segments()[0].Heading();
-  x0(kP4VIdx) = kP4InitialSpeed;
+  x0_ = VectorXf::Zero(dynamics_->XDim());
+  x0_(kP1XIdx) = lane1.Segments()[0].FirstPoint().x();
+  x0_(kP1YIdx) = lane1.Segments()[0].FirstPoint().y();
+  x0_(kP1HeadingIdx) = lane1.Segments()[0].Heading();
+  x0_(kP1VIdx) = kP1InitialSpeed;
+  x0_(kP2XIdx) = lane2.Segments()[0].FirstPoint().x();
+  x0_(kP2YIdx) = lane2.Segments()[0].FirstPoint().y();
+  x0_(kP2HeadingIdx) = lane2.Segments()[0].Heading();
+  x0_(kP2VIdx) = kP2InitialSpeed;
+  x0_(kP3XIdx) = lane3.Segments()[0].FirstPoint().x();
+  x0_(kP3YIdx) = lane3.Segments()[0].FirstPoint().y();
+  x0_(kP3HeadingIdx) = lane3.Segments()[0].Heading();
+  x0_(kP3VIdx) = kP3InitialSpeed;
+  x0_(kP4XIdx) = lane4.Segments()[0].FirstPoint().x();
+  x0_(kP4YIdx) = lane4.Segments()[0].FirstPoint().y();
+  x0_(kP4HeadingIdx) = lane4.Segments()[0].Heading();
+  x0_(kP4VIdx) = kP4InitialSpeed;
 }
 
 void RoundaboutMergingExample::ConstructInitialOperatingPoint() {
