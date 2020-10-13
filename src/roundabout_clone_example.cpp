@@ -300,13 +300,17 @@ void RoundaboutCloneExample::ConstructPlayerCosts() {
   // P1 should also have a "politeness" cost for P3a/b, who is already in the
   // roundabout behind P1.
   const auto p3a_omega_politeness_cost = std::make_shared<QuadraticCost>(
-      kP3aProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
+      kP3aProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0,
+      "Steering (Politeness P3a)");
   const auto p3a_a_politeness_cost = std::make_shared<QuadraticCost>(
-      kP3aProbability * kACostWeight, Dyn::kAIdx, 0.0, "Accel");
+      kP3aProbability * kACostWeight, Dyn::kAIdx, 0.0,
+      "Accel (Politeness P3a)");
   const auto p3b_omega_politeness_cost = std::make_shared<QuadraticCost>(
-      kP3bProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
+      kP3bProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0,
+      "Steering (Politeness P3b)");
   const auto p3b_a_politeness_cost = std::make_shared<QuadraticCost>(
-      kP3bProbability * kACostWeight, Dyn::kAIdx, 0.0, "Accel");
+      kP3bProbability * kACostWeight, Dyn::kAIdx, 0.0,
+      "Accel (Politeness P3b)");
   p1_cost.AddControlCost(2, p3a_omega_politeness_cost);
   p1_cost.AddControlCost(2, p3a_a_politeness_cost);
   p1_cost.AddControlCost(3, p3b_omega_politeness_cost);
