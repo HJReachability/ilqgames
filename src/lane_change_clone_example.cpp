@@ -380,25 +380,26 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
       new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
                               kMinProximity, false, "ProximityP1P2"));
   p1_cost.AddStateConstraint(p1p2_proximity_constraint);
-  p2_cost.AddStateConstraint(p1p2_proximity_constraint);
 
   const std::shared_ptr<ProximityConstraint> p1p3a_proximity_constraint(
       new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3aXIdx, kP3aYIdx},
                               kMinProximity, false, "ProximityP1P3a"));
-  p1_cost.AddStateConstraint(p1p3a_proximity_constraint);
   p3a_cost.AddStateConstraint(p1p3a_proximity_constraint);
 
   const std::shared_ptr<ProximityConstraint> p1p3b_proximity_constraint(
       new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3bXIdx, kP3bYIdx},
                               kMinProximity, false, "ProximityP1P3b"));
-  p1_cost.AddStateConstraint(p1p3b_proximity_constraint);
   p3b_cost.AddStateConstraint(p1p3b_proximity_constraint);
 
   const std::shared_ptr<ProximityConstraint> p2p3a_proximity_constraint(
       new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3aXIdx, kP3aYIdx},
                               kMinProximity, false, "ProximityP2P3a"));
-  p2_cost.AddStateConstraint(p2p3a_proximity_constraint);
   p3a_cost.AddStateConstraint(p2p3a_proximity_constraint);
+
+  const std::shared_ptr<ProximityConstraint> p2p3b_proximity_constraint(
+      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3bXIdx, kP3bYIdx},
+                              kMinProximity, false, "ProximityP2P3b"));
+  p3b_cost.AddStateConstraint(p2p3b_proximity_constraint);
 }
 
 inline std::vector<float> LaneChangeCloneExample::Xs(const VectorXf& x) const {

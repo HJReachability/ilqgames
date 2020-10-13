@@ -78,8 +78,6 @@ static constexpr float kMinProximity = 6.0;
 static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Nominal and max speed.
-static constexpr float kMinV = 1.0;         // m/s
-static constexpr float kMaxV = 8.0;         // m/s
 static constexpr float kP1NominalV = 2.0;   // m/s
 static constexpr float kP2NominalV = 5.0;   // m/s
 static constexpr float kP3aNominalV = 5.0;  // m/s
@@ -125,22 +123,25 @@ static constexpr float kP1WedgeSize = M_PI;
 static constexpr float kP2WedgeSize = M_PI;
 static constexpr float kP3aWedgeSize = M_PI;
 static constexpr float kP3bWedgeSize = 0.5 * M_PI;
-const std::vector<float> angles = {kAngleOffset,
-                                   kAngleOffset + 2.0 * M_PI / 4.0,
-                                   kAngleOffset + 2.0 * 2.0 * M_PI / 4.0,
-                                   kAngleOffset + 3.0 * 2.0 * M_PI / 4.0};
+const std::vector<float> angles = {kAngleOffset, kAngleOffset + 0.5 * M_PI,
+                                   kAngleOffset - 0.5 * M_PI,
+                                   kAngleOffset - 0.5 * M_PI};
 const Polyline2 lane1(RoundaboutLaneCenter(angles[0], angles[0] + kWedgeSize,
-                                           kP1InitialDistanceToRoundabout));
+                                           kInitialDistanceToRoundabout));
 const Polyline2 lane2(RoundaboutLaneCenter(angles[1], angles[1] + kWedgeSize,
-                                           kP2InitialDistanceToRoundabout));
-const Polyline2 lane3(RoundaboutLaneCenter(angles[2], angles[2] + kWedgeSize,
-                                           kP3InitialDistanceToRoundabout));
-const Polyline2 lane4(RoundaboutLaneCenter(angles[3], angles[3] + kWedgeSize,
-                                           kP4InitialDistanceToRoundabout));
+                                           kInitialDistanceToRoundabout));
+const Polyline2 lane3a(RoundaboutLaneCenter(angles[2], angles[2] + kWedgeSize,
+                                            kInitialDistanceToRoundabout));
+const Polyline2 lane3b(RoundaboutLaneCenter(angles[3], angles[3] + kWedgeSize,
+                                            kInitialDistanceToRoundabout));
 
 static const float kP1LanePosition = 0.0;
 static const float kP2LanePosition = kInitialDistanceToRoundabout;
 static const float kP3LanePosition = kInitialDistanceToRoundabout;
+
+// Probability of P3 being "a" or "b".
+static constexpr float kP3aProbability = 0.5;
+static constexpr float kP3bProbability = 1.0 - kP3aProbability;
 
 }  // anonymous namespace
 
@@ -151,26 +152,28 @@ void RoundaboutMergingExample::ConstructDynamics() {
 }
 
 void RoundaboutMergingExample::ConstructInitialState() {
-  VectorXf x0 = VectorXf::Zero(dynamics_->XDim());
+  x0_ = VectorXf::Zero(dynamics_->XDim());
 
-  const Point2 p1_pos = lane1.PointAt(kP1LanePosition, nullptr, nullptr, x0_)
-  x0 = VectorXf::Zero(dynamics_->XDim());
-  x0(kP1XIdx) = lane1.Segments()[0].FirstPoint().x();
-  x0(kP1YIdx) = lane1.Segments()[0].FirstPoint().y();
-  x0(kP1ThetaIdx) = lane1.Segments()[0].Theta();
-  x0(kP1VIdx) = kP1InitialSpeed;
-  x0(kP2XIdx) = lane2.Segments()[0].FirstPoint().x();
-  x0(kP2YIdx) = lane2.Segments()[0].FirstPoint().y();
-  x0(kP2ThetaIdx) = lane2.Segments()[0].Theta();
-  x0(kP2VIdx) = kP2InitialSpeed;
-  x0(kP3XIdx) = lane3.Segments()[0].FirstPoint().x();
-  x0(kP3YIdx) = lane3.Segments()[0].FirstPoint().y();
-  x0(kP3ThetaIdx) = lane3.Segments()[0].Theta();
-  x0(kP3VIdx) = kP3InitialSpeed;
-  x0(kP4XIdx) = lane4.Segments()[0].FirstPoint().x();
-  x0(kP4YIdx) = lane4.Segments()[0].FirstPoint().y();
-  x0(kP4ThetaIdx) = lane4.Segments()[0].Theta();
-  x0(kP4VIdx) = kP4InitialSpeed;
+  const Point2 p1_pos = lane1.PointAt(kP1LanePosition, nullptr, nullptr,
+                                      nullptr, &x0_(kP1ThetaIdx));
+  const Point2 p2_pos = lane2.PointAt(kP2LanePosition, nullptr, nullptr,
+                                      nullptr, &x0_(kP2ThetaIdx));
+  const Point2 p3_pos = lane3.PointAt(kP3LanePosition, nullptr, nullptr,
+                                      nullptr, &x0_(kP3aThetaIdx));
+
+  x0_(kP1XIdx) = p1_pos.x();
+  x0_(kP1YIdx) = p1_pos.y();
+  x0_(kP1VIdx) = kP1InitialSpeed;
+  x0_(kP2XIdx) = p2_pos.x();
+  x0_(kP2YIdx) = p2_pos.y();
+  x0_(kP2VIdx) = kP2InitialSpeed;
+  x0_(kP3aXIdx) = p3_pos.x();
+  x0_(kP3aYIdx) = p3_pos.y();
+  x0_(kP3aVIdx) = kP3InitialSpeed;
+  x0_(kP3bXIdx) = p3_pos.x();
+  x0_(kP3bYIdx) = p3_pos.y();
+  x0_(kP3bThetaIdx) = x0_(kP3aThetaIdx);
+  x0_(kP3bVIdx) = kP3bInitialSpeed;
 }
 
 void RoundaboutMergingExample::ConstructInitialOperatingPoint() {
@@ -190,210 +193,146 @@ void RoundaboutMergingExample::ConstructPlayerCosts() {
   // Set up costs for all players.
   player_costs_.emplace_back("P1");
   player_costs_.emplace_back("P2");
-  player_costs_.emplace_back("P3");
-  player_costs_.emplace_back("P4");
+  player_costs_.emplace_back("P3a");
+  player_costs_.emplace_back("P3b");
   auto& p1_cost = player_costs_[0];
   auto& p2_cost = player_costs_[1];
-  auto& p3_cost = player_costs_[2];
-  auto& p4_cost = player_costs_[3];
+  auto& p3a_cost = player_costs_[2];
+  auto& p3b_cost = player_costs_[3];
 
   // Stay in lanes.
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
-                                 "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p1_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane1,
-                                     {kP1XIdx, kP1YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+                                 "Lane Center"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_constraint_l(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            -kLaneHalfWidth, false,
+                                            "Left Lane Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_constraint_r(
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
+                                            kLaneHalfWidth, true,
+                                            "Right Lane Boundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  p1_cost.AddStateCost(p1_lane_r_cost);
-  p1_cost.AddStateCost(p1_lane_l_cost);
+  p1_cost.AddStateConstraint(p1_lane_constraint_l);
+  p1_cost.AddStateConstraint(p1_lane_constraint_r);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
-                                 "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP2XIdx, kP2YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p2_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane2,
-                                     {kP2XIdx, kP2YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+                                 "Lane Center"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_constraint_l(
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
+                                            -kLaneHalfWidth, false,
+                                            "Left Lane Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_constraint_r(
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
+                                            kLaneHalfWidth, true,
+                                            "Right Lane Boundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  p2_cost.AddStateCost(p2_lane_r_cost);
-  p2_cost.AddStateCost(p2_lane_l_cost);
+  p2_cost.AddStateConstraint(p2_lane_constraint_l);
+  p2_cost.AddStateConstraint(p2_lane_constraint_r);
 
-  const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
-                                 "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
-                                     {kP3XIdx, kP3YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p3_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane3,
-                                     {kP3XIdx, kP3YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
+  const std::shared_ptr<QuadraticPolyline2Cost> p3a_lane_cost(
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane3a, {kP3aXIdx, kP3aYIdx},
+                                 "Lane Center"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3a_lane_constraint_l(new Polyline2SignedDistanceConstraint(
+          lane3a, {kP3AXIdx, kP3AYIdx}, -kLaneHalfWidth, false,
+          "Left Lane Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3a_lane_constraint_r(new Polyline2SignedDistanceConstraint(
+          lane3a, {kP3aXIdx, kP3aYIdx}, kLaneHalfWidth, true,
+          "Right Lane Boundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  p3_cost.AddStateCost(p3_lane_r_cost);
-  p3_cost.AddStateCost(p3_lane_l_cost);
+  p3a_cost.AddStateConstraint(p3a_lane_constraint_l);
+  p3a_cost.AddStateConstraint(p3a_lane_constraint_r);
 
-  const std::shared_ptr<QuadraticPolyline2Cost> p4_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane4, {kP4XIdx, kP4YIdx},
-                                 "LaneCenter"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p4_lane_r_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane4,
-                                     {kP4XIdx, kP4YIdx}, kLaneHalfWidth,
-                                     kOrientedRight, "LaneRightBoundary"));
-  const std::shared_ptr<SemiquadraticPolyline2Cost> p4_lane_l_cost(
-      new SemiquadraticPolyline2Cost(kLaneBoundaryCostWeight, lane4,
-                                     {kP4XIdx, kP4YIdx}, -kLaneHalfWidth,
-                                     !kOrientedRight, "LaneLeftBoundary"));
-  p4_cost.AddStateCost(p4_lane_cost);
-  p4_cost.AddStateCost(p4_lane_r_cost);
-  p4_cost.AddStateCost(p4_lane_l_cost);
+  const std::shared_ptr<QuadraticPolyline2Cost> p3b_lane_cost(
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane3b, {kP3bXIdx, kP3bYIdx},
+                                 "Lane Center"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3b_lane_constraint_l(new Polyline2SignedDistanceConstraint(
+          lane3b, {kP3BXIdx, kP3BYIdx}, -kLaneHalfWidth, false,
+          "Left Lane Boundary"));
+  const std::shared_ptr<Polyline2SignedDistanceConstraint>
+      p3b_lane_constraint_r(new Polyline2SignedDistanceConstraint(
+          lane3b, {kP3bXIdx, kP3bYIdx}, kLaneHalfWidth, true,
+          "Right Lane Boundary"));
+  p3_cost.AddStateCost(p3_lane_cost);
+  p3b_cost.AddStateConstraint(p3b_lane_constraint_l);
+  p3b_cost.AddStateConstraint(p3b_lane_constraint_r);
 
   // Max/min/nominal speed costs.
-  const auto p1_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p1_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  p1_cost.AddStateCost(p1_min_v_cost);
-  p1_cost.AddStateCost(p1_max_v_cost);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
-  const auto p2_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p2_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  p2_cost.AddStateCost(p2_min_v_cost);
-  p2_cost.AddStateCost(p2_max_v_cost);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
-  const auto p3_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p3_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP3VIdx, kP3MaxV, kOrientedRight, "MaxV");
-  const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  p3_cost.AddStateCost(p3_min_v_cost);
-  p3_cost.AddStateCost(p3_max_v_cost);
-  p3_cost.AddStateCost(p3_nominal_v_cost);
+  const auto p3a_nominal_v_cost = std::make_shared<QuadraticCost>(
+      kNominalVCostWeight, kP3aVIdx, kP3aNominalV, "NominalV");
+  p3a_cost.AddStateCost(p3a_nominal_v_cost);
 
-  const auto p4_min_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP4VIdx, kMinV, !kOrientedRight, "MinV");
-  const auto p4_max_v_cost = std::make_shared<SemiquadraticCost>(
-      kMaxVCostWeight, kP4VIdx, kP4MaxV, kOrientedRight, "MaxV");
-  const auto p4_nominal_v_cost = std::make_shared<QuadraticCost>(
-      kNominalVCostWeight, kP4VIdx, kP4NominalV, "NominalV");
-  p4_cost.AddStateCost(p4_min_v_cost);
-  p4_cost.AddStateCost(p4_max_v_cost);
-  p4_cost.AddStateCost(p4_nominal_v_cost);
-
-  // Penalize acceleration.
-  const auto p1_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p1_cost.AddStateCost(p1_a_cost);
-  const auto p2_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p2_cost.AddStateCost(p2_a_cost);
-  const auto p3_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p3_cost.AddStateCost(p3_a_cost);
-  const auto p4_a_cost = std::make_shared<QuadraticCost>(kACostWeight, kP1AIdx,
-                                                         0.0, "Acceleration");
-  p4_cost.AddStateCost(p4_a_cost);
+  const auto p3b_nominal_v_cost = std::make_shared<QuadraticCost>(
+      kNominalVCostWeight, kP3bVIdx, kP3bNominalV, "NominalV");
+  p3b_cost.AddStateCost(p3b_nominal_v_cost);
 
   // Penalize control effort.
-  const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
-  const auto p1_j_cost =
-      std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
-  p1_cost.AddControlCost(0, p1_omega_cost);
-  p1_cost.AddControlCost(0, p1_j_cost);
+  const auto omega_cost = std::make_shared<QuadraticCost>(
+      kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
+  const auto j_cost = std::make_shared<QuadraticCost>(
+      kJerkCostWeight, Dyn::kJerkIdx, 0.0, "Jerk");
+  p1_cost.AddControlCost(0, omega_cost);
+  p1_cost.AddControlCost(0, j_cost);
+  p2_cost.AddControlCost(1, omega_cost);
+  p2_cost.AddControlCost(1, j_cost);
+  p3a_cost.AddControlCost(2, omega_cost);
+  p3a_cost.AddControlCost(2, j_cost);
+  p3b_cost.AddControlCost(3, omega_cost);
+  p3b_cost.AddControlCost(3, j_cost);
 
-  const auto p2_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
-  const auto p2_j_cost =
-      std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
-  p2_cost.AddControlCost(1, p2_omega_cost);
-  p2_cost.AddControlCost(1, p2_j_cost);
+  // P1 should also have a "politeness" cost for P3a/b, who is already in the
+  // roundabout behind P1.
+  const auto p3a_omega_politeness_cost = std::make_shared<QuadraticCost>(
+      kP3aProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
+  const auto p3a_j_politeness_cost = std::make_shared<QuadraticCost>(
+      kP3aProbability * kJerkCostWeight, Dyn::kJerkIdx, 0.0, "Jerk");
+  const auto p3b_omega_politeness_cost = std::make_shared<QuadraticCost>(
+      kP3bProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
+  const auto p3b_j_politeness_cost = std::make_shared<QuadraticCost>(
+      kP3bProbability * kJerkCostWeight, Dyn::kJerkIdx, 0.0, "Jerk");
+  p1_cost.AddControlCost(2, p3a_omega_politeness_cost);
+  p1_cost.AddControlCost(2, p3a_j_politeness_cost);
+  p1_cost.AddControlCost(3, p3b_omega_politeness_cost);
+  p1_cost.AddControlCost(3, p3b_j_politeness_cost);
 
-  const auto p3_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP3OmegaIdx, 0.0, "Steering");
-  const auto p3_j_cost =
-      std::make_shared<QuadraticCost>(kJerkCostWeight, kP3JerkIdx, 0.0, "Jerk");
-  p3_cost.AddControlCost(2, p3_omega_cost);
-  p3_cost.AddControlCost(2, p3_j_cost);
+  // Proximity constraints. The agents in the rear bear collision-avoidance
+  // constraints.
+  const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
+                              kMinProximity, false, "ProximityP1P2"));
+  p1_cost.AddStateConstraint(p1p2_proximity_constraint);
 
-  const auto p4_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP4OmegaIdx, 0.0, "Steering");
-  const auto p4_j_cost =
-      std::make_shared<QuadraticCost>(kJerkCostWeight, kP4JerkIdx, 0.0, "Jerk");
-  p4_cost.AddControlCost(3, p4_omega_cost);
-  p4_cost.AddControlCost(3, p4_j_cost);
+  const std::shared_ptr<ProximityConstraint> p1p3a_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3aXIdx, kP3aYIdx},
+                              kMinProximity, false, "ProximityP1P3a"));
+  p3a_cost.AddStateConstraint(p1p3a_proximity_constraint);
 
-  // Pairwise proximity costs.
-  const std::shared_ptr<ProxCost> p1p2_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p1p3_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  const std::shared_ptr<ProxCost> p1p4_proximity_cost(
-      new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
-                   {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
-  p1_cost.AddStateCost(p1p2_proximity_cost);
-  //  p1_cost.AddStateCost(p1p3_proximity_cost);
-  p1_cost.AddStateCost(p1p4_proximity_cost);
+  const std::shared_ptr<ProximityConstraint> p1p3b_proximity_constraint(
+      new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3bXIdx, kP3bYIdx},
+                              kMinProximity, false, "ProximityP1P3b"));
+  p3b_cost.AddStateConstraint(p1p3b_proximity_constraint);
 
-  const std::shared_ptr<ProxCost> p2p1_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p2p3_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  const std::shared_ptr<ProxCost> p2p4_proximity_cost(
-      new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
-                   {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
-  p2_cost.AddStateCost(p2p1_proximity_cost);
-  p2_cost.AddStateCost(p2p3_proximity_cost);
-  //  p2_cost.AddStateCost(p2p4_proximity_cost);
+  const std::shared_ptr<ProximityConstraint> p2p3a_proximity_constraint(
+      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3aXIdx, kP3aYIdx},
+                              kMinProximity, false, "ProximityP2P3a"));
+  p3a_cost.AddStateConstraint(p2p3a_proximity_constraint);
 
-  const std::shared_ptr<ProxCost> p3p1_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p3p2_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p3p4_proximity_cost(
-      new ProxCost(kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
-                   {kP4XIdx, kP4YIdx}, kMinProximity, "ProximityP4"));
-  //  p3_cost.AddStateCost(p3p1_proximity_cost);
-  p3_cost.AddStateCost(p3p2_proximity_cost);
-  p3_cost.AddStateCost(p3p4_proximity_cost);
-
-  const std::shared_ptr<ProxCost> p4p1_proximity_cost(
-      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
-                   {kP1XIdx, kP1YIdx}, kMinProximity, "ProximityP1"));
-  const std::shared_ptr<ProxCost> p4p2_proximity_cost(
-      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
-                   {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
-  const std::shared_ptr<ProxCost> p4p3_proximity_cost(
-      new ProxCost(kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
-                   {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
-  p4_cost.AddStateCost(p4p1_proximity_cost);
-  //  p4_cost.AddStateCost(p4p2_proximity_cost);
-  p4_cost.AddStateCost(p4p3_proximity_cost);
+  const std::shared_ptr<ProximityConstraint> p2p3b_proximity_constraint(
+      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3bXIdx, kP3bYIdx},
+                              kMinProximity, false, "ProximityP2P3b"));
+  p3b_cost.AddStateConstraint(p2p3b_proximity_constraint);
 }
 
 inline std::vector<float> RoundaboutMergingExample::Xs(
