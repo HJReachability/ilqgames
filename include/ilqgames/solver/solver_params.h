@@ -75,7 +75,6 @@ struct SolverParams {
   float geometric_mu_downscaling = 0.5;
   float geometric_lambda_downscaling = 0.5;
   float constraint_error_tolerance = 1e-1;
-};  // struct SolverParams
 
   // Adersarial time: Pure Cooperative (adversarial_time = 0), or
   // Adversarial-to-Cooperative (adversarial_time != 0)

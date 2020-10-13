@@ -40,6 +40,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <ilqgames/constraint/polyline2_signed_distance_constraint.h>
+#include <ilqgames/constraint/proximity_constraint.h>
+#include <ilqgames/constraint/single_dimension_constraint.h>
 #include <ilqgames/cost/curvature_cost.h>
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/locally_convex_proximity_cost.h>
@@ -95,7 +98,6 @@ static constexpr float kP2ProximityCostWeight = 100.0;
 static constexpr float kP3ProximityCostWeight = 100.0;
 static constexpr float kP4ProximityCostWeight = 100.0;
 using ProxCost = ProximityCost;
-
 static constexpr bool kOrientedRight = true;
 
 // Lane width.
@@ -182,7 +184,7 @@ const Polyline2 lane3(RoundaboutLaneCenter(angles[2], angles[2] + kWedgeSize,
 const Polyline2 lane4(RoundaboutLaneCenter(angles[3], angles[3] + kWedgeSize,
                                            kP4InitialDistanceToRoundabout));
 
-}  // anonymous namespace
+} // anonymous namespace
 
 void FlatRoundaboutMergingExample::ConstructDynamics() {
   dynamics_.reset(
@@ -227,16 +229,17 @@ void FlatRoundaboutMergingExample::ConstructInitialOperatingPoint() {
                        operating_point_.get());
 }
 
-void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
+void FlatRoundaboutMergingExample::ConstructPlayerCosts(
+    const double &adversarial_time) {
   // Set up costs for all players.
   player_costs_.emplace_back("P1");
   player_costs_.emplace_back("P2");
   player_costs_.emplace_back("P3");
   player_costs_.emplace_back("P4");
-  auto& p1_cost = player_costs_[0];
-  auto& p2_cost = player_costs_[1];
-  auto& p3_cost = player_costs_[2];
-  auto& p4_cost = player_costs_[3];
+  auto &p1_cost = player_costs_[0];
+  auto &p2_cost = player_costs_[1];
+  auto &p3_cost = player_costs_[2];
+  auto &p4_cost = player_costs_[3];
 
   // Stay in lanes.
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
@@ -349,7 +352,7 @@ void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          adversarial_time, "InitialProximityCostP1"));
   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
@@ -358,7 +361,7 @@ void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
 
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time, "FinalProximityCostP1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
 
@@ -383,7 +386,7 @@ void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          adversarial_time, "InitialProximityCostP1"));
   p3_cost.AddStateCost(p3p1_initial_proximity_cost);
   initial_time_costs_.push_back(p3p1_initial_proximity_cost);
 
@@ -391,7 +394,7 @@ void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time, "FinalProximityCostP1"));
   p3_cost.AddStateCost(p3p1_final_proximity_cost);
   final_time_costs_.push_back(p3p1_final_proximity_cost);
 
@@ -417,7 +420,7 @@ void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP4ProximityCostWeight, {kP4XIdx, kP4YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          adversarial_time, "InitialProximityCostP1"));
   p4_cost.AddStateCost(p4p1_initial_proximity_cost);
   initial_time_costs_.push_back(p4p1_initial_proximity_cost);
 
@@ -425,7 +428,7 @@ void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time, "FinalProximityCostP1"));
   p4_cost.AddStateCost(p4p1_final_proximity_cost);
   final_time_costs_.push_back(p4p1_final_proximity_cost);
 

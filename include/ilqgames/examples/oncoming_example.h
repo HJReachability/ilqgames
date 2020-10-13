@@ -46,23 +46,22 @@
 
 #include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/solver/top_down_renderable_problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
 class OncomingExample : public TopDownRenderableProblem {
- public:
+public:
   ~OncomingExample() {}
-  OncomingExample(const SolverParams& params);
-
+  OncomingExample(const SolverParams &params);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf& x) const;
-  std::vector<float> Ys(const VectorXf& x) const;
-  std::vector<float> Thetas(const VectorXf& x) const;
-};  // class OncomingExample
+  std::vector<float> Xs(const VectorXf &x) const;
+  std::vector<float> Ys(const VectorXf &x) const;
+  std::vector<float> Thetas(const VectorXf &x) const;
+}; // class OncomingExample
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

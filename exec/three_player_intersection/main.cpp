@@ -71,20 +71,14 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-<<<<<<< HEAD
+
 DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 1.0, "L_infradius for trust region.");
 DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
-=======
-DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
-DEFINE_double(convergence_tolerance, 1.0, "KKT squared error tolerance.");
 DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
->>>>>>> master
 
 // Adversarial Time.
 DEFINE_double(adversarial_time, 0.0,
               "Amount of time other agents are assumed to be adversarial");
-
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -126,6 +120,7 @@ int main(int argc, char **argv) {
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
+  params.adversarial_time = FLAGS_adversarial_time;
 
   params.geometric_mu_scaling = 1.1;
   params.geometric_mu_downscaling = 0.5;
@@ -135,7 +130,6 @@ int main(int argc, char **argv) {
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
   problem->Initialize();
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
-
 
   // Solve the game.
   const auto start = std::chrono::system_clock::now();

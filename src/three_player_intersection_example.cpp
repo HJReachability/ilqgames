@@ -114,7 +114,7 @@ static constexpr float kMinV = 1.0;    // m/s
 
 static constexpr float kP1NominalV = 10.0; // m/s
 static constexpr float kP2NominalV = 10.0; // m/s
-static constexpr float kP3NominalV = 1.5; // m/s
+static constexpr float kP3NominalV = 1.5;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = -2.0;  // m
@@ -198,9 +198,9 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                              kControlRegularization);
   player_costs_.emplace_back("P3", kStateRegularization,
                              kControlRegularization);
-  auto& p1_cost = player_costs_[0];
-  auto& p2_cost = player_costs_[1];
-  auto& p3_cost = player_costs_[2];
+  auto &p1_cost = player_costs_[0];
+  auto &p2_cost = player_costs_[1];
+  auto &p3_cost = player_costs_[2];
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -336,6 +336,7 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p3_cost.AddControlCost(2, p3_a_cost);
 
   // Pairwise proximity costs.
+
   // const std::shared_ptr<ProxCost> p1p2_proximity_cost(
   //     new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
   //                  {kP2XIdx, kP2YIdx}, kMinProximity, "ProximityP2"));
@@ -377,63 +378,54 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p1_cost.AddStateConstraint(p1p2_proximity_constraint);
   p1_cost.AddStateConstraint(p1p3_proximity_constraint);
 
+  const std::shared_ptr<InitialTimeCost> p2p1_initial_proximity_cost(
+      new InitialTimeCost(
+          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
+              kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
+          params.adversarial_time, "InitialProximityCostP1"));
+  p2_cost.AddStateCost(p2p1_initial_proximity_cost);
+  initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
-  const std::shared_ptr<ProximityConstraint> p2p1_proximity_constraint(
-      new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
-                              kMinProximity, !kKeepClose,
-                              "ProximityConstraintP1"));
+  const std::shared_ptr<FinalTimeCost> p2p1_final_proximity_cost(
+      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                            kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
+                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+                        params.adversarial_time, "FinalProximityCostP1"));
+  p2_cost.AddStateCost(p2p1_final_proximity_cost);
+  final_time_costs_.push_back(p2p1_final_proximity_cost);
+
+  // const std::shared_ptr<ProximityConstraint> p2p1_proximity_constraint(
+  //     new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
+  //                             kMinProximity, !kKeepClose,
+  //                             "ProximityConstraintP1"));
+
+  const std::shared_ptr<InitialTimeCost> p3p1_initial_proximity_cost(
+      new InitialTimeCost(
+          std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
+              kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
+          params.adversarial_time, "InitialProximityCostP1"));
+  p3_cost.AddStateCost(p3p1_initial_proximity_cost);
+  initial_time_costs_.push_back(p3p1_initial_proximity_cost);
+
+  const std::shared_ptr<FinalTimeCost> p3p1_final_proximity_cost(
+      new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
+                            kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
+                            {kP1XIdx, kP1YIdx}, kMinProximity)),
+                        params.adversarial_time, "FinalProximityCostP1"));
+  p3_cost.AddStateCost(p3p1_final_proximity_cost);
+  final_time_costs_.push_back(p3p1_final_proximity_cost);
+
   const std::shared_ptr<ProximityConstraint> p2p3_proximity_constraint(
       new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
                               kMinProximity, !kKeepClose,
                               "ProximityConstraintP3"));
-  p2_cost.AddStateConstraint(p2p1_proximity_constraint);
   p2_cost.AddStateConstraint(p2p3_proximity_constraint);
 
-  const std::shared_ptr<ProximityConstraint> p3p1_proximity_constraint(
-      new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx},
-                              kMinProximity, !kKeepClose,
-                              "ProximityConstraintP1"));
   const std::shared_ptr<ProximityConstraint> p3p2_proximity_constraint(
       new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx},
                               kMinProximity, !kKeepClose,
                               "ProximityConstraintP2"));
-  p3_cost.AddStateConstraint(p3p1_proximity_constraint);
   p3_cost.AddStateConstraint(p3p2_proximity_constraint);
-
-
-  // Collision-avoidance constraints.
-  // const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
-  //     new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
-  //                          kMinProximity, kConstraintOrientedInside,
-  //                          "ProximityConstraintP2"));
-  // const std::shared_ptr<ProximityConstraint> p1p3_proximity_constraint(
-  //     new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP3XIdx, kP3YIdx},
-  //                          kMinProximity, kConstraintOrientedInside,
-  //                          "ProximityConstraintP3"));
-  // p1_cost.AddStateConstraint(p1p2_proximity_constraint);
-  // p1_cost.AddStateConstraint(p1p3_proximity_constraint);
-
-  // const std::shared_ptr<ProximityConstraint> p2p1_proximity_constraint(
-  //     new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx},
-  //                          kMinProximity, kConstraintOrientedInside,
-  //                          "ProximityConstraintP1"));
-  // const std::shared_ptr<ProximityConstraint> p2p3_proximity_constraint(
-  //     new ProximityConstraint({kP2XIdx, kP2YIdx}, {kP3XIdx, kP3YIdx},
-  //                          kMinProximity, kConstraintOrientedInside,
-  //                          "ProximityConstraintP3"));
-  // p2_cost.AddStateConstraint(p2p1_proximity_constraint);
-  // p2_cost.AddStateConstraint(p2p3_proximity_constraint);
-
-  // const std::shared_ptr<ProximityConstraint> p3p1_proximity_constraint(
-  //     new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx},
-  //                          kMinProximity, kConstraintOrientedInside,
-  //                          "ProximityConstraintP1"));
-  // const std::shared_ptr<ProximityConstraint> p3p2_proximity_constraint(
-  //     new ProximityConstraint({kP3XIdx, kP3YIdx}, {kP2XIdx, kP2YIdx},
-  //                          kMinProximity, kConstraintOrientedInside,
-  //                          "ProximityConstraintP2"));
-  // p3_cost.AddStateConstraint(p3p1_proximity_constraint);
-  // p3_cost.AddStateConstraint(p3p2_proximity_constraint);
 }
 
 inline std::vector<float>

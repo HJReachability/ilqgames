@@ -100,7 +100,7 @@ static constexpr float kP2NominalVCostWeight = 5.0;
 // static constexpr float kP3NominalVCostWeight = 1.0;
 
 // Newly added, 10-16-2019 20:33 p.m.
-static constexpr float kMinV = 0.0;    // m/s
+static constexpr float kMinV = 0.0; // m/s
 // static constexpr float kP1MaxV = 35.8; // m/s
 // static constexpr float kP2MaxV = 35.8; // m/s
 
@@ -136,7 +136,7 @@ static constexpr float kP1NominalHeading = M_PI_2; // rad
 static constexpr float kP1InitialX = 2.5;   // m
 static constexpr float kP1InitialY = -35.0; // m
 
-static constexpr float kP2InitialX = -2.5;  // m
+static constexpr float kP2InitialX = -2.5; // m
 static constexpr float kP2InitialY = 35.0; // m
 // static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
@@ -175,19 +175,18 @@ static const Dimension kP2AIdx = P1::kNumXDims + P2::kAIdx;
 // = P1::kNumXDims + P2::kNumXDims + P2::kVIdx; static const Dimension kP2AIdx
 // = P1::kNumXDims + P2::kNumXDims + P2::kAIdx;
 
-static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
-static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
-static const Dimension kP3HeadingIdx =
-    P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
-static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
+// static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
+// static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
+// static const Dimension kP3HeadingIdx =
+//     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
+// static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
 
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
 static const Dimension kP1JerkIdx = 1;
 static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
-static const Dimension kP3OmegaIdx = 0;
-static const Dimension kP3JerkIdx = 1;
+
 } // anonymous namespace
 
 OncomingExample::OncomingExample(const SolverParams &params) {

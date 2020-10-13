@@ -119,6 +119,7 @@ int main(int argc, char **argv) {
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
+  params.adversarial_time = FLAGS_adversarial_time;
 
   // Make a solver.
   ilqgames::AugmentedLagrangianSolver solver(problem, params);

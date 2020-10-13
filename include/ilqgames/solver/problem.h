@@ -44,6 +44,9 @@
 #ifndef ILQGAMES_SOLVER_PROBLEM_H
 #define ILQGAMES_SOLVER_PROBLEM_H
 
+#include <ilqgames/cost/final_time_cost.h>
+#include <ilqgames/cost/initial_time_cost.h>
+// #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
@@ -148,7 +151,7 @@ protected:
                                 dynamics_->UDim(ii));
   }
 
-<<<<<<< HEAD
+  // <<<<<<< HEAD
   // Update threshold times of any initial/final time costs, given that
   // the given amount of time has elapsed since they were last updated.
   void UpdateThresholdTimes(Time time_since_last_update);
@@ -156,13 +159,13 @@ protected:
   // Create a new log. This may be overridden by derived classes (e.g., to
   // change the name of the log).
   virtual std::shared_ptr<SolverLog> CreateNewLog() const;
-=======
+  // =======
   // Utility used by SetUpNextRecedingHorizon. Integrate the given state
   // forward, set the new initial state and time, and return the first timestep
   // in the new problem.
   size_t SyncToExistingProblem(const VectorXf &x0, Time t0,
                                Time planner_runtime, OperatingPoint &op);
->>>>>>> master
+  // >>>>>>> master
 
   // // Time horizon (s), time step (s), and number of time steps.
   // const Time time_horizon_;
@@ -182,14 +185,14 @@ protected:
   std::unique_ptr<OperatingPoint> operating_point_;
   std::unique_ptr<std::vector<Strategy>> strategies_;
 
-<<<<<<< HEAD
+  // <<<<<<< HEAD
   // Lists of intial/final time costs.
   std::vector<std::shared_ptr<InitialTimeCost>> initial_time_costs_;
   std::vector<std::shared_ptr<FinalTimeCost>> final_time_costs_;
-=======
+  // =======
   // Has this object been initialized?
   bool initialized_;
->>>>>>> master
+  // >>>>>>> master
 }; // class Problem
 
 } // namespace ilqgames
