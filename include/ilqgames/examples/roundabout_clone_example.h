@@ -37,9 +37,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Roundabout example in which the ego player (P1) sees clones of another
-// player, and costs it incurs due to that other players are weighted averages
-// of those from the clones. Each player is responsible for avoiding collision
-// with the agent in the roundabout is is in conflict with.
+// player (P3), and costs it incurs due to that other players are weighted
+// averages of those from the clones. Each player is responsible for avoiding
+// collision with the agent in the roundabout is immediately behind. The input
+// is the probability that we are dealing with clone P3a.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -49,12 +50,20 @@
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
 
+#include <glog/logging.h>
+
 namespace ilqgames {
 
 class RoundaboutCloneExample : public TopDownRenderableProblem {
  public:
   ~RoundaboutCloneExample() {}
-  RoundaboutCloneExample() : TopDownRenderableProblem() {}
+  RoundaboutCloneExample(float probability_p3a = 0.5)
+      : TopDownRenderableProblem(),
+        kP3aProbability(probability_p3a),
+        kP3bProbability(1.0 - probability_p3a) {
+    CHECK_GE(probability_p3a, 0.0);
+    CHECK_LE(probability_p3a, 1.0);
+  }
 
   // Construct dynamics, initial state, initial operating point, player costs.
   void ConstructDynamics();
@@ -66,6 +75,9 @@ class RoundaboutCloneExample : public TopDownRenderableProblem {
   std::vector<float> Xs(const VectorXf& x) const;
   std::vector<float> Ys(const VectorXf& x) const;
   std::vector<float> Thetas(const VectorXf& x) const;
+
+  // Probability P3a, P3b.
+  const float kP3aProbability, kP3bProbability;
 };  // class RoundaboutCloneExample
 
 }  // namespace ilqgames

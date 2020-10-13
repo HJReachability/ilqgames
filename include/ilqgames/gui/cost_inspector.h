@@ -63,8 +63,7 @@ class CostInspector {
  public:
   ~CostInspector() {}
 
-  // Takes in a log and lists of x/y/heading indices in
-  // the state vector.
+  // Takes in a sliders and costs for each log.
   CostInspector(const std::shared_ptr<const ControlSliders>& sliders,
                 const std::vector<std::vector<PlayerCost>>& player_costs)
       : sliders_(sliders),

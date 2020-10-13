@@ -81,17 +81,16 @@ static constexpr float kMinProximity = 6.0;
 static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Nominal and max speed.
-static constexpr float kP1NominalV = 2.0;   // m/s
+static constexpr float kP1NominalV = 3.0;   // m/s
 static constexpr float kP2NominalV = 5.0;   // m/s
-static constexpr float kP3aNominalV = 5.0;  // m/s
-static constexpr float kP3bNominalV = 6.0;  // m/s
+static constexpr float kP3aNominalV = 7.0;  // m/s
+static constexpr float kP3bNominalV = 2.0;  // m/s
 
 static constexpr float kP1InitialSpeed = 5.0;  // m/s
 static constexpr float kP2InitialSpeed = 5.0;  // m/s
 static constexpr float kP3InitialSpeed = 5.0;  // m/s
 
 // State dimensions.
-static constexpr float kInterAxleDistance = 4.0;  // m
 using Dyn = SinglePlayerUnicycle4D;
 
 static const Dimension kP1XIdx = Dyn::kPxIdx;
@@ -140,13 +139,9 @@ const Polyline2 lane3b(RoundaboutLaneCenter(angles[3],
                                             angles[3] + kP3bWedgeSize,
                                             kInitialDistanceToRoundabout));
 
-static const float kP1LanePosition = 0.0;
-static const float kP2LanePosition = kInitialDistanceToRoundabout;
-static const float kP3LanePosition = kInitialDistanceToRoundabout;
-
-// Probability of P3 being "a" or "b".
-static constexpr float kP3aProbability = 0.5;
-static constexpr float kP3bProbability = 1.0 - kP3aProbability;
+static const float kP1LanePosition = 0.0;                                 // m
+static const float kP2LanePosition = kInitialDistanceToRoundabout + 1.0;  // m
+static const float kP3LanePosition = kInitialDistanceToRoundabout + 1.0;  // m
 
 }  // anonymous namespace
 

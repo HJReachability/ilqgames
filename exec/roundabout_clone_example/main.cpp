@@ -112,44 +112,59 @@ int main(int argc, char** argv) {
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
 
-  auto problem = std::make_shared<ilqgames::RoundaboutCloneExample>();
-  problem->Initialize();
-  ilqgames::AugmentedLagrangianSolver solver(problem, params);
+  // Probabilities of it being P3a.
+  const std::vector<float> p3a_probabilities = {0.1, 0.9};
 
-  // Solve the game.
-  const auto start = std::chrono::system_clock::now();
-  std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
-  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
-  LOG(INFO) << "Solver completed in "
-            << std::chrono::duration<ilqgames::Time>(
-                   std::chrono::system_clock::now() - start)
-                   .count()
-            << " seconds.";
+  // Create all the logs, corresponding problems, and associated player costs.
+  std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>> logs;
+  std::vector<std::shared_ptr<const ilqgames::TopDownRenderableProblem>>
+      problems;
+  std::vector<std::vector<ilqgames::PlayerCost>> player_costs;
+  for (float p : p3a_probabilities) {
+    auto problem = std::make_shared<ilqgames::RoundaboutCloneExample>(p);
+    problem->Initialize();
+    player_costs.push_back(problem->PlayerCosts());
+    ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
-  // Check if solution satisfies sufficient conditions for being a local Nash.
-  problem->OverwriteSolution(log->FinalOperatingPoint(),
-                             log->FinalStrategies());
-  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(*problem);
-  if (is_local_nash)
-    LOG(INFO) << "Solution is a local Nash.";
-  else
-    LOG(INFO) << "Solution may not be a local Nash.";
+    // Solve the game.
+    const auto start = std::chrono::system_clock::now();
+    std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
+    logs.push_back({log});
+    LOG(INFO) << "Solver completed in "
+              << std::chrono::duration<ilqgames::Time>(
+                     std::chrono::system_clock::now() - start)
+                     .count()
+              << " seconds.";
 
-  // Dump the logs and/or exit.
-  if (FLAGS_save) {
-    if (FLAGS_experiment_name == "") {
-      CHECK(log->Save(FLAGS_last_traj));
-    } else {
-      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+    // Check if solution satisfies sufficient conditions for being a local Nash.
+    problem->OverwriteSolution(log->FinalOperatingPoint(),
+                               log->FinalStrategies());
+    problems.push_back(problem);
+    const bool is_local_nash = CheckSufficientLocalNashEquilibrium(*problem);
+    if (is_local_nash)
+      LOG(INFO) << "Solution is a local Nash.";
+    else
+      LOG(INFO) << "Solution may not be a local Nash.";
+
+    // Dump the logs and/or exit.
+    if (FLAGS_save) {
+      if (FLAGS_experiment_name == "") {
+        CHECK(log->Save(FLAGS_last_traj));
+      } else {
+        const std::string name = FLAGS_experiment_name + "_" +
+                                 std::to_string(problem->kP3aProbability);
+        CHECK(log->Save(FLAGS_last_traj, name));
+      }
     }
   }
+
   if (!FLAGS_viz) return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({logs}));
-  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
+      new ilqgames::ControlSliders(logs));
+  ilqgames::TopDownRenderer top_down_renderer(sliders, problems);
+  ilqgames::CostInspector cost_inspector(sliders, player_costs);
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
