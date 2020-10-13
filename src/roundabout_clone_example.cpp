@@ -53,6 +53,7 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
 #include <ilqgames/examples/roundabout_clone_example.h>
+#include <ilqgames/examples/roundabout_lane_center.h>
 #include <ilqgames/geometry/draw_shapes.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
@@ -64,11 +65,13 @@
 #include <memory>
 #include <vector>
 
+namespace ilqgames {
+
 namespace {
 
 // Cost weights.
 static constexpr float kOmegaCostWeight = 50.0;
-static constexpr float kJerkCostWeight = 5.0;
+static constexpr float kACostWeight = 5.0;
 
 static constexpr float kNominalVCostWeight = 1.0;
 static constexpr float kLaneCostWeight = 1.0;
@@ -126,13 +129,15 @@ static constexpr float kP3bWedgeSize = 0.5 * M_PI;
 const std::vector<float> angles = {kAngleOffset, kAngleOffset + 0.5 * M_PI,
                                    kAngleOffset - 0.5 * M_PI,
                                    kAngleOffset - 0.5 * M_PI};
-const Polyline2 lane1(RoundaboutLaneCenter(angles[0], angles[0] + kWedgeSize,
+const Polyline2 lane1(RoundaboutLaneCenter(angles[0], angles[0] + kP1WedgeSize,
                                            kInitialDistanceToRoundabout));
-const Polyline2 lane2(RoundaboutLaneCenter(angles[1], angles[1] + kWedgeSize,
+const Polyline2 lane2(RoundaboutLaneCenter(angles[1], angles[1] + kP2WedgeSize,
                                            kInitialDistanceToRoundabout));
-const Polyline2 lane3a(RoundaboutLaneCenter(angles[2], angles[2] + kWedgeSize,
+const Polyline2 lane3a(RoundaboutLaneCenter(angles[2],
+                                            angles[2] + kP3aWedgeSize,
                                             kInitialDistanceToRoundabout));
-const Polyline2 lane3b(RoundaboutLaneCenter(angles[3], angles[3] + kWedgeSize,
+const Polyline2 lane3b(RoundaboutLaneCenter(angles[3],
+                                            angles[3] + kP3bWedgeSize,
                                             kInitialDistanceToRoundabout));
 
 static const float kP1LanePosition = 0.0;
@@ -145,21 +150,21 @@ static constexpr float kP3bProbability = 1.0 - kP3aProbability;
 
 }  // anonymous namespace
 
-void RoundaboutMergingExample::ConstructDynamics() {
+void RoundaboutCloneExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<Dyn>(), std::make_shared<Dyn>(),
        std::make_shared<Dyn>(), std::make_shared<Dyn>()}));
 }
 
-void RoundaboutMergingExample::ConstructInitialState() {
+void RoundaboutCloneExample::ConstructInitialState() {
   x0_ = VectorXf::Zero(dynamics_->XDim());
 
   const Point2 p1_pos = lane1.PointAt(kP1LanePosition, nullptr, nullptr,
                                       nullptr, &x0_(kP1ThetaIdx));
   const Point2 p2_pos = lane2.PointAt(kP2LanePosition, nullptr, nullptr,
                                       nullptr, &x0_(kP2ThetaIdx));
-  const Point2 p3_pos = lane3.PointAt(kP3LanePosition, nullptr, nullptr,
-                                      nullptr, &x0_(kP3aThetaIdx));
+  const Point2 p3_pos = lane3a.PointAt(kP3LanePosition, nullptr, nullptr,
+                                       nullptr, &x0_(kP3aThetaIdx));
 
   x0_(kP1XIdx) = p1_pos.x();
   x0_(kP1YIdx) = p1_pos.y();
@@ -173,10 +178,10 @@ void RoundaboutMergingExample::ConstructInitialState() {
   x0_(kP3bXIdx) = p3_pos.x();
   x0_(kP3bYIdx) = p3_pos.y();
   x0_(kP3bThetaIdx) = x0_(kP3aThetaIdx);
-  x0_(kP3bVIdx) = kP3bInitialSpeed;
+  x0_(kP3bVIdx) = kP3InitialSpeed;
 }
 
-void RoundaboutMergingExample::ConstructInitialOperatingPoint() {
+void RoundaboutCloneExample::ConstructInitialOperatingPoint() {
   // Initialize operating points to follow these lanes at the nominal speed.
   // InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
   //                      operating_point_.get());
@@ -189,7 +194,7 @@ void RoundaboutMergingExample::ConstructInitialOperatingPoint() {
   Problem::ConstructInitialOperatingPoint();
 }
 
-void RoundaboutMergingExample::ConstructPlayerCosts() {
+void RoundaboutCloneExample::ConstructPlayerCosts() {
   // Set up costs for all players.
   player_costs_.emplace_back("P1");
   player_costs_.emplace_back("P2");
@@ -236,13 +241,13 @@ void RoundaboutMergingExample::ConstructPlayerCosts() {
                                  "Lane Center"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3a_lane_constraint_l(new Polyline2SignedDistanceConstraint(
-          lane3a, {kP3AXIdx, kP3AYIdx}, -kLaneHalfWidth, false,
+          lane3a, {kP3aXIdx, kP3aYIdx}, -kLaneHalfWidth, false,
           "Left Lane Boundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3a_lane_constraint_r(new Polyline2SignedDistanceConstraint(
           lane3a, {kP3aXIdx, kP3aYIdx}, kLaneHalfWidth, true,
           "Right Lane Boundary"));
-  p3_cost.AddStateCost(p3_lane_cost);
+  p3a_cost.AddStateCost(p3a_lane_cost);
   p3a_cost.AddStateConstraint(p3a_lane_constraint_l);
   p3a_cost.AddStateConstraint(p3a_lane_constraint_r);
 
@@ -251,13 +256,13 @@ void RoundaboutMergingExample::ConstructPlayerCosts() {
                                  "Lane Center"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3b_lane_constraint_l(new Polyline2SignedDistanceConstraint(
-          lane3b, {kP3BXIdx, kP3BYIdx}, -kLaneHalfWidth, false,
+          lane3b, {kP3bXIdx, kP3bYIdx}, -kLaneHalfWidth, false,
           "Left Lane Boundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3b_lane_constraint_r(new Polyline2SignedDistanceConstraint(
           lane3b, {kP3bXIdx, kP3bYIdx}, kLaneHalfWidth, true,
           "Right Lane Boundary"));
-  p3_cost.AddStateCost(p3_lane_cost);
+  p3b_cost.AddStateCost(p3b_lane_cost);
   p3b_cost.AddStateConstraint(p3b_lane_constraint_l);
   p3b_cost.AddStateConstraint(p3b_lane_constraint_r);
 
@@ -281,31 +286,31 @@ void RoundaboutMergingExample::ConstructPlayerCosts() {
   // Penalize control effort.
   const auto omega_cost = std::make_shared<QuadraticCost>(
       kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
-  const auto j_cost = std::make_shared<QuadraticCost>(
-      kJerkCostWeight, Dyn::kJerkIdx, 0.0, "Jerk");
+  const auto a_cost =
+      std::make_shared<QuadraticCost>(kACostWeight, Dyn::kAIdx, 0.0, "Accel");
   p1_cost.AddControlCost(0, omega_cost);
-  p1_cost.AddControlCost(0, j_cost);
+  p1_cost.AddControlCost(0, a_cost);
   p2_cost.AddControlCost(1, omega_cost);
-  p2_cost.AddControlCost(1, j_cost);
+  p2_cost.AddControlCost(1, a_cost);
   p3a_cost.AddControlCost(2, omega_cost);
-  p3a_cost.AddControlCost(2, j_cost);
+  p3a_cost.AddControlCost(2, a_cost);
   p3b_cost.AddControlCost(3, omega_cost);
-  p3b_cost.AddControlCost(3, j_cost);
+  p3b_cost.AddControlCost(3, a_cost);
 
   // P1 should also have a "politeness" cost for P3a/b, who is already in the
   // roundabout behind P1.
   const auto p3a_omega_politeness_cost = std::make_shared<QuadraticCost>(
       kP3aProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
-  const auto p3a_j_politeness_cost = std::make_shared<QuadraticCost>(
-      kP3aProbability * kJerkCostWeight, Dyn::kJerkIdx, 0.0, "Jerk");
+  const auto p3a_a_politeness_cost = std::make_shared<QuadraticCost>(
+      kP3aProbability * kACostWeight, Dyn::kAIdx, 0.0, "Accel");
   const auto p3b_omega_politeness_cost = std::make_shared<QuadraticCost>(
       kP3bProbability * kOmegaCostWeight, Dyn::kOmegaIdx, 0.0, "Steering");
-  const auto p3b_j_politeness_cost = std::make_shared<QuadraticCost>(
-      kP3bProbability * kJerkCostWeight, Dyn::kJerkIdx, 0.0, "Jerk");
+  const auto p3b_a_politeness_cost = std::make_shared<QuadraticCost>(
+      kP3bProbability * kACostWeight, Dyn::kAIdx, 0.0, "Accel");
   p1_cost.AddControlCost(2, p3a_omega_politeness_cost);
-  p1_cost.AddControlCost(2, p3a_j_politeness_cost);
+  p1_cost.AddControlCost(2, p3a_a_politeness_cost);
   p1_cost.AddControlCost(3, p3b_omega_politeness_cost);
-  p1_cost.AddControlCost(3, p3b_j_politeness_cost);
+  p1_cost.AddControlCost(3, p3b_a_politeness_cost);
 
   // Proximity constraints. The agents in the rear bear collision-avoidance
   // constraints.
@@ -335,17 +340,15 @@ void RoundaboutMergingExample::ConstructPlayerCosts() {
   p3b_cost.AddStateConstraint(p2p3b_proximity_constraint);
 }
 
-inline std::vector<float> RoundaboutMergingExample::Xs(
-    const VectorXf& x) const {
+inline std::vector<float> RoundaboutCloneExample::Xs(const VectorXf& x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3aXIdx), x(kP3bXIdx)};
 }
 
-inline std::vector<float> RoundaboutMergingExample::Ys(
-    const VectorXf& x) const {
+inline std::vector<float> RoundaboutCloneExample::Ys(const VectorXf& x) const {
   return {x(kP1YIdx), x(kP2YIdx), x(kP3aYIdx), x(kP3bYIdx)};
 }
 
-inline std::vector<float> RoundaboutMergingExample::Thetas(
+inline std::vector<float> RoundaboutCloneExample::Thetas(
     const VectorXf& x) const {
   return {x(kP1ThetaIdx), x(kP2ThetaIdx), x(kP3aThetaIdx), x(kP3bThetaIdx)};
 }

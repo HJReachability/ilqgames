@@ -77,7 +77,7 @@ class Polyline2 {
   // and the heading of the polyline.
   Point2 PointAt(float route_pos, bool* is_vertex = nullptr,
                  LineSegment2* segment = nullptr, bool* is_endpoint = nullptr,
-                 float* theta) const;
+                 float* theta = nullptr) const;
 
   // Access line segments.
   const std::vector<LineSegment2>& Segments() const { return segments_; }
