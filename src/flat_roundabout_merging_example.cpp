@@ -186,6 +186,10 @@ const Polyline2 lane4(RoundaboutLaneCenter(angles[3], angles[3] + kWedgeSize,
 
 } // anonymous namespace
 
+void FlatRoundaboutMergingExample::SetAdversarialTime(double adv_time) {
+  adversarial_time = adv_time;
+}
+
 void FlatRoundaboutMergingExample::ConstructDynamics() {
   dynamics_.reset(
       new ConcatenatedFlatSystem({std::make_shared<P1>(kInterAxleDistance),
@@ -229,8 +233,7 @@ void FlatRoundaboutMergingExample::ConstructInitialOperatingPoint() {
                        operating_point_.get());
 }
 
-void FlatRoundaboutMergingExample::ConstructPlayerCosts(
-    const double &adversarial_time) {
+void FlatRoundaboutMergingExample::ConstructPlayerCosts() {
   // Set up costs for all players.
   player_costs_.emplace_back("P1");
   player_costs_.emplace_back("P2");

@@ -61,7 +61,6 @@
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_car_6d.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
-// #include <ilqgames/examples/three_player_overtaking_example.h>
 #include <ilqgames/examples/highway_merging_example.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
@@ -78,18 +77,22 @@
 namespace ilqgames {
 
 namespace {
-// Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 15.0; // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
+// // Time.
+// static constexpr Time kTimeStep = 0.1;     // s
+// static constexpr Time kTimeHorizon = 15.0; // s
+// static constexpr size_t kNumTimeSteps =
+//     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
+static constexpr float kStateRegularization = 1.0;
+static constexpr float kControlRegularization = 5.0;
+
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
+static constexpr float kMaxOmega = 1.0;
 
 static constexpr float kACostWeight = 5.0;
 static constexpr float kP1NominalVCostWeight = 0.1;
@@ -296,20 +299,38 @@ static const Dimension kP6JerkIdx = 1;
 
 } // anonymous namespace
 
-HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
-          kTimeStep));
+// HighwayMergingExample::HighwayMergingExample(const double adv_time) {
+//   SetAdversarialTime(adv_time);
+// }
 
-  // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+    void HighwayMergingExample::SetAdversarialTime(double adv_time) { adversarial_time = adv_time; }
+
+void HighwayMergingExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kInterAxleLength),
+       std::make_shared<P2>(kInterAxleLength),
+       std::make_shared<P3>(kInterAxleLength),
+       std::make_shared<P4>(kInterAxleLength),
+       std::make_shared<P5>(kInterAxleLength),
+       std::make_shared<P6>(kInterAxleLength)}));
+}
+
+void HighwayMergingExample::ConstructInitialState() {
+  x0_ = VectorXf::Zero(dynamics_->XDim());
+
+  // // Create dynamics.
+  // const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
+  //     new ConcatenatedDynamicalSystem(
+  //         {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+  //          std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+  //          std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+  //          std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+  //          std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
+  //          std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
+  //         kTimeStep));
+
+  // // Set up initial state.
+  // x0_ = VectorXf::Zero(dynamics->XDim());
 
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
@@ -340,18 +361,41 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   x0_(kP6YIdx) = kP6InitialY;
   x0_(kP6HeadingIdx) = kP6InitialHeading;
   x0_(kP6VIdx) = kP6InitialSpeed;
+}
 
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
+// // Set up initial strategies and operating point.
+// strategies_.reset(new std::vector<Strategy>());
+// for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
+//   strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
+//                             dynamics->UDim(ii));
 
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
+// operating_point_.reset(
+//     new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0,
+//     dynamics));
 
+// // Set up costs for all players.
+// PlayerCost p1_cost, p2_cost, p3_cost, p4_cost, p5_cost, p6_cost;
+
+void HighwayMergingExample::ConstructPlayerCosts() {
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost, p3_cost, p4_cost, p5_cost, p6_cost;
+  player_costs_.emplace_back("P1", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P2", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P3", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P4", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P5", kStateRegularization,
+                             kControlRegularization);
+  player_costs_.emplace_back("P6", kStateRegularization,
+                             kControlRegularization);
+  auto &p1_cost = player_costs_[0];
+  auto &p2_cost = player_costs_[1];
+  auto &p3_cost = player_costs_[2];
+  auto &p4_cost = player_costs_[3];
+  auto &p5_cost = player_costs_[4];
+  auto &p6_cost = player_costs_[5];
 
   // Stay in lanes.
 
@@ -366,45 +410,6 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
   const Polyline2 lane3(
       {Point2(kP5InitialX, -1000.0), Point2(kP5InitialX, 1000.0)});
-
-  // for (size_t kk = 0; kk < kNumTimeSteps; kk++) {
-  //   const Point2 p1_route_point =
-  //       lane2.PointAt(kP1InitialY + 1000.0 + kP1InitialSpeed * kk *
-  //       kTimeStep);
-  //   const Point2 p2_route_point =
-  //       lane1.PointAt(kP2InitialSpeed * kk * kTimeStep);
-  //   const Point2 p3_route_point = lane1.PointAt(
-  //       std::sqrt(29) + std::sqrt(41) + kP4InitialSpeed * kk * kTimeStep);
-  //   const Point2 p4_route_point =
-  //       lane2.PointAt(kP3InitialY + 1000.0 + kP3InitialSpeed * kk *
-  //       kTimeStep);
-  //   const Point2 p5_route_point =
-  //       lane3.PointAt(kP5InitialY + 1000.0 + kP5InitialSpeed * kk *
-  //       kTimeStep);
-  //   const Point2 p6_route_point =
-  //       lane3.PointAt(kP6InitialY + 1000.0 + kP6InitialSpeed * kk *
-  //       kTimeStep);
-
-  //   operating_point_->xs[kk](kP1XIdx) = p1_route_point.x();
-  //   operating_point_->xs[kk](kP1YIdx) = p1_route_point.y();
-  //   operating_point_->xs[kk](kP2XIdx) = p2_route_point.x();
-  //   operating_point_->xs[kk](kP2YIdx) = p2_route_point.y();
-  //   operating_point_->xs[kk](kP4XIdx) = p3_route_point.x();
-  //   operating_point_->xs[kk](kP4YIdx) = p3_route_point.y();
-  //   operating_point_->xs[kk](kP3XIdx) = p4_route_point.x();
-  //   operating_point_->xs[kk](kP3YIdx) = p4_route_point.y();
-  //   operating_point_->xs[kk](kP5XIdx) = p5_route_point.x();
-  //   operating_point_->xs[kk](kP5YIdx) = p5_route_point.y();
-  //   operating_point_->xs[kk](kP6XIdx) = p6_route_point.x();
-  //   operating_point_->xs[kk](kP6YIdx) = p6_route_point.y();
-
-  //   operating_point_->xs[kk](kP1VIdx) = 10.0;
-  //   operating_point_->xs[kk](kP2VIdx) = 10.0;
-  //   operating_point_->xs[kk](kP4VIdx) = 10.0;
-  //   operating_point_->xs[kk](kP3VIdx) = 10.0;
-  //   operating_point_->xs[kk](kP5VIdx) = 10.0;
-  //   operating_point_->xs[kk](kP6VIdx) = 10.0;
-  // }
 
   // Player 1:
 
@@ -570,34 +575,6 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p6_cost.AddStateConstraint(p6_max_v_constraint);
   p6_cost.AddStateCost(p6_nominal_v_cost);
 
-  // // To delete below:
-
-  // const auto p3_nominal_v_cost = std::make_shared<QuadraticCost>(
-  //     kP4NominalVCostWeight, kP4VIdx, kP4NominalV, "NominalV");
-  // p3_cost.AddStateCost(p3_nominal_v_cost);
-
-  // const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
-  //     kP2NominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  // p2_cost.AddStateCost(p2_nominal_v_cost);
-
-  // const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
-  //     kP1NominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  // p1_cost.AddStateCost(p1_nominal_v_cost);
-
-  // const auto p4_nominal_v_cost = std::make_shared<QuadraticCost>(
-  //     kP3NominalVCostWeight, kP3VIdx, kP3NominalV, "NominalV");
-  // p4_cost.AddStateCost(p4_nominal_v_cost);
-
-  // const auto p5_nominal_v_cost = std::make_shared<QuadraticCost>(
-  //     kP5NominalVCostWeight, kP5VIdx, kP5NominalV, "NominalV");
-  // p5_cost.AddStateCost(p5_nominal_v_cost);
-
-  // const auto p6_nominal_v_cost = std::make_shared<QuadraticCost>(
-  //     kP6NominalVCostWeight, kP6VIdx, kP6NominalV, "NominalV");
-  // p6_cost.AddStateCost(p6_nominal_v_cost);
-
-  // // To delete above.
-
   // Curvature costs for P3 and P2.
   // const auto p3_curvature_cost = std::make_shared<QuadraticCost>(
   //     kCurvatureCostWeight, kP4PhiIdx, 0.0, "Curvature");
@@ -664,11 +641,13 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p6_cost.AddControlCost(5, p6_omega_cost);
   p6_cost.AddControlCost(5, p6_jerk_cost);
 
-  // Check all p3 <-> p4 swaps (lower case) above !!!
+  // FRANK - Modify below:
 
   // Pairwise proximity costs.
 
   // Pairwise proximity costs: Player 1.
+
+  constexpr bool kKeepClose = true;
 
   const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
       new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
@@ -702,7 +681,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP2P1"));
+          adversarial_time, "InitialProximityCostP2P1"));
   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
@@ -710,7 +689,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP2P1"));
+                        adversarial_time, "FinalProximityCostP2P1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
 
@@ -739,7 +718,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP3P1"));
+          adversarial_time, "InitialProximityCostP3P1"));
   p3_cost.AddStateCost(p3p1_initial_proximity_cost);
   initial_time_costs_.push_back(p3p1_initial_proximity_cost);
 
@@ -747,7 +726,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP3P1"));
+                        adversarial_time, "FinalProximityCostP3P1"));
   p3_cost.AddStateCost(p3p1_final_proximity_cost);
   final_time_costs_.push_back(p3p1_final_proximity_cost);
 
@@ -775,7 +754,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP4ProximityCostWeight, {kP4XIdx, kP4YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP4P1"));
+          adversarial_time, "InitialProximityCostP4P1"));
   p4_cost.AddStateCost(p4p1_initial_proximity_cost);
   initial_time_costs_.push_back(p4p1_initial_proximity_cost);
 
@@ -783,7 +762,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP4P1"));
+                        adversarial_time, "FinalProximityCostP4P1"));
   p4_cost.AddStateCost(p4p1_final_proximity_cost);
   final_time_costs_.push_back(p4p1_final_proximity_cost);
 
@@ -810,7 +789,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP5ProximityCostWeight, {kP5XIdx, kP5YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP5P1"));
+          adversarial_time, "InitialProximityCostP5P1"));
   p5_cost.AddStateCost(p5p1_initial_proximity_cost);
   initial_time_costs_.push_back(p5p1_initial_proximity_cost);
 
@@ -818,7 +797,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP5ProximityCostWeight, {kP5XIdx, kP5YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP5P1"));
+                        adversarial_time, "FinalProximityCostP5P1"));
   p5_cost.AddStateCost(p5p1_final_proximity_cost);
   final_time_costs_.push_back(p5p1_final_proximity_cost);
 
@@ -846,7 +825,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP6ProximityCostWeight, {kP6XIdx, kP6YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP6P1"));
+          adversarial_time, "InitialProximityCostP6P1"));
   p6_cost.AddStateCost(p6p1_initial_proximity_cost);
   initial_time_costs_.push_back(p6p1_initial_proximity_cost);
 
@@ -854,7 +833,7 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP6ProximityCostWeight, {kP6XIdx, kP6YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP6P1"));
+                        adversarial_time, "FinalProximityCostP6P1"));
   p6_cost.AddStateCost(p6p1_final_proximity_cost);
   final_time_costs_.push_back(p6p1_final_proximity_cost);
 
@@ -876,13 +855,8 @@ HighwayMergingExample::HighwayMergingExample(const SolverParams &params) {
   p6_cost.AddStateCost(p6p3_proximity_cost);
   p6_cost.AddStateCost(p6p5_proximity_cost);
 
-  // Set up solver.
-  solver_.reset(new ILQSolver(
-      dynamics, {p1_cost, p2_cost, p3_cost, p4_cost, p5_cost, p6_cost},
-      kTimeHorizon, params));
-
   // std::cout << x0_.transpose() << std::endl;
-}
+} // namespace ilqgames
 
 inline std::vector<float> HighwayMergingExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx),

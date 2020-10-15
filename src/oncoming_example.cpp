@@ -80,16 +80,18 @@ namespace ilqgames {
 
 namespace {
 
-// Time.
-static constexpr Time kTimeStep = 0.1;     // s
-static constexpr Time kTimeHorizon = 15.0; // s
-static constexpr size_t kNumTimeSteps =
-    static_cast<size_t>(kTimeHorizon / kTimeStep);
+// // Time.
+// static constexpr Time kTimeStep = 0.1;     // s
+// static constexpr Time kTimeHorizon = 15.0; // s
+// static constexpr size_t kNumTimeSteps =
+//     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
+static constexpr float kStateRegularization = 1.0;
+static constexpr float kControlRegularization = 5.0;
 
 static constexpr float kOmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
@@ -189,16 +191,19 @@ static const Dimension kP2JerkIdx = 1;
 
 } // anonymous namespace
 
-OncomingExample::OncomingExample(const SolverParams &params) {
-  // Create dynamics.
-  const std::shared_ptr<const ConcatenatedDynamicalSystem> dynamics(
-      new ConcatenatedDynamicalSystem(
-          {std::make_shared<SinglePlayerCar6D>(kInterAxleLength),
-           std::make_shared<SinglePlayerCar6D>(kInterAxleLength)},
-          kTimeStep));
+void OncomingExample::SetAdversarialTime(double adv_time) {
+  adversarial_time = adv_time;
+}
 
+void OncomingExample::ConstructDynamics() {
+  dynamics_.reset(new ConcatenatedDynamicalSystem(
+      {std::make_shared<P1>(kInterAxleLength),
+       std::make_shared<P2>(kInterAxleLength)}));
+}
+
+void OncomingExample::ConstructInitialState() {
   // Set up initial state.
-  x0_ = VectorXf::Zero(dynamics->XDim());
+  x0_ = VectorXf::Zero(dynamics_->XDim());
   x0_(kP1XIdx) = kP1InitialX;
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
@@ -208,48 +213,15 @@ OncomingExample::OncomingExample(const SolverParams &params) {
   x0_(kP2YIdx) = kP2InitialY;
   x0_(kP2HeadingIdx) = kP2InitialHeading;
   x0_(kP2VIdx) = kP2InitialSpeed;
-
-  // if (scenario == "Parallel") {
-  //   x0_(kP2HeadingIdx) = kP2InitialHeading;
-  //   x0_(kP2YIdx) = kP2InitialY;
-  // } else {
-  //   x0_(kP2HeadingIdx) = kP2InitialHeadingAntiparallel;
-  //   x0_(kP2YIdx) = kP2InitialYAntiparallel;
-  // }
-
-  x0_(kP2VIdx) = kP2InitialSpeed;
-
-  // x0_(kP3XIdx) = kP3InitialX;
-  // x0_(kP3YIdx) = kP3InitialY;
-  // x0_(kP3HeadingIdx) = kP3InitialHeading;
-  // x0_(kP3VIdx) = kP3InitialSpeed;
-
-  // Set up initial strategies and operating point.
-  strategies_.reset(new std::vector<Strategy>());
-  for (PlayerIndex ii = 0; ii < dynamics->NumPlayers(); ii++)
-    strategies_->emplace_back(kNumTimeSteps, dynamics->XDim(),
-                              dynamics->UDim(ii));
-
-  operating_point_.reset(
-      new OperatingPoint(kNumTimeSteps, dynamics->NumPlayers(), 0.0, dynamics));
+}
+void OncomingExample::ConstructPlayerCosts() {
 
   // Set up costs for all players.
-  PlayerCost p1_cost, p2_cost;
 
-  // Orientation cost
-  const auto p1_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP1HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP1");
-  // p1_cost.AddStateCost(p1_nominal_orientation_cost);
-  const auto p2_nominal_orientation_cost = std::make_shared<OrientationCost>(
-      kNominalHeadingCostWeight, kP2HeadingIdx, kP1NominalHeading,
-      "NominalHeadingP2");
-  // p2_cost.AddStateCost(p2_nominal_orientation_cost);
-  // const auto p3_nominal_orientation_cost =
-  // std::make_shared<OrientationCost>(
-  //     kNominalHeadingCostWeight, kP3HeadingIdx, kP1NominalHeading,
-  // NominalHeadingP3");
-  // p3_cost.AddStateCost(p3_nominal_orientation_cost);
+  player_costs_.emplace_back("P1");
+  player_costs_.emplace_back("P2");
+  auto &p1_cost = player_costs_[0];
+  auto &p2_cost = player_costs_[1];
 
   // Stay in lanes.
 
@@ -343,7 +315,7 @@ OncomingExample::OncomingExample(const SolverParams &params) {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          adversarial_time, "InitialProximityCostP1"));
   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
@@ -351,13 +323,9 @@ OncomingExample::OncomingExample(const SolverParams &params) {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time, "FinalProximityCostP1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
-
-  // Set up solver.
-  solver_.reset(
-      new ILQSolver(dynamics, {p1_cost, p2_cost}, kTimeHorizon, params));
 }
 
 inline std::vector<float> OncomingExample::Xs(const VectorXf &x) const {

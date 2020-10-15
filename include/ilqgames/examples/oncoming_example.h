@@ -54,13 +54,22 @@ namespace ilqgames {
 class OncomingExample : public TopDownRenderableProblem {
 public:
   ~OncomingExample() {}
-  OncomingExample(const SolverParams &params);
+  OncomingExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
+  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf &x) const;
   std::vector<float> Ys(const VectorXf &x) const;
   std::vector<float> Thetas(const VectorXf &x) const;
-}; // class OncomingExample
+
+private:
+  double adversarial_time;
+}; // class ThreePlayerIntersectionExample
 
 } // namespace ilqgames
 

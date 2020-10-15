@@ -67,16 +67,6 @@ DEFINE_bool(last_traj, false,
             "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
-// Regularization.
-<<<<<<< HEAD:exec/receding_horizon_intersection/main.cpp
-DEFINE_double(regularization, 1.0, "Regularization.");
-
-// Linesearch parameters.
-DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
-DEFINE_double(trust_region_size, 1.0, "L_infradius for trust region.");
-DEFINE_double(convergence_tolerance, 0.5, "L_inf tolerance for convergence.");
-=======
 DEFINE_double(state_regularization, 1.0, "State regularization.");
 DEFINE_double(control_regularization, 1.0, "Control regularization.");
 
@@ -85,7 +75,6 @@ DEFINE_bool(linesearch, true, "Should the solver linesearch?");
 DEFINE_double(initial_alpha_scaling, 0.5, "Initial step size in linesearch.");
 DEFINE_double(convergence_tolerance, 0.01, "KKT squared error tolerance.");
 DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
->>>>>>> master:exec/receding_horizon_example/main.cpp
 
 // Adversarial Time.
 DEFINE_double(adversarial_time, 0.0,
@@ -128,7 +117,8 @@ int main(int argc, char **argv) {
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-
+  params.adversarial_time = FLAGS_adversarial_time;
+  params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.state_regularization = FLAGS_state_regularization;
   params.control_regularization = FLAGS_control_regularization;
 
@@ -141,18 +131,6 @@ int main(int argc, char **argv) {
   constexpr ilqgames::Time kPlannerRuntime = 0.25; // s
   const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
       logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &solver)};
-
-  // Dump the logs and/or exit.
-  if (FLAGS_save) {
-    if (FLAGS_experiment_name == "") {
-      CHECK(SaveLogs(logs.front(), true));
-    } else {
-      CHECK(SaveLogs(logs.front(), true, FLAGS_experiment_name));
-    }
-  }
-
-  if (!FLAGS_viz)
-    return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(

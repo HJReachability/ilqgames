@@ -203,6 +203,10 @@ static const Dimension kP4OmegaIdx = 0;
 static const Dimension kP4AIdx = 1;
 } // anonymous namespace
 
+void FourPlayerIntersectionExample::SetAdversarialTime(double adv_time) {
+  adversarial_time = adv_time;
+}
+
 void FourPlayerIntersectionExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleLength),
@@ -241,8 +245,7 @@ void FourPlayerIntersectionExample::ConstructInitialState() {
 // // Set up costs for all players.
 // PlayerCost p1_cost, p2_cost, p3_cost, p4_cost;
 
-void FourPlayerIntersectionExample::ConstructPlayerCosts(
-    const double &adversarial_time) {
+void FourPlayerIntersectionExample::ConstructPlayerCosts() {
   // Set up costs for all players.
 
   player_costs_.emplace_back("P1", kStateRegularization,

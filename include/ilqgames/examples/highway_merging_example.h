@@ -43,23 +43,34 @@
 #ifndef ILQGAMES_EXAMPLE_HIGHWAY_MERGING_EXAMPLE_H
 #define ILQGAMES_EXAMPLE_HIGHWAY_MERGING_EXAMPLE_H
 
+#include <ilqgames/dynamics/multi_player_flat_system.h>
 #include <ilqgames/solver/problem.h>
-#include <ilqgames/solver/top_down_renderable_problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
 class HighwayMergingExample : public TopDownRenderableProblem {
- public:
+public:
   ~HighwayMergingExample() {}
-  HighwayMergingExample(const SolverParams& params);
+
+  HighwayMergingExample() : TopDownRenderableProblem() {}
+
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
+  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf& x) const;
-  std::vector<float> Ys(const VectorXf& x) const;
-  std::vector<float> Thetas(const VectorXf& x) const;
-};  // class ThreePlayerOvertakingIntersectionExample
+  std::vector<float> Xs(const VectorXf &x) const;
+  std::vector<float> Ys(const VectorXf &x) const;
+  std::vector<float> Thetas(const VectorXf &x) const;
 
-}  // namespace ilqgames
+private:
+  double adversarial_time;
+}; // class ThreePlayerIntersectionExample
+
+} // namespace ilqgames
 
 #endif

@@ -116,8 +116,8 @@ static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
 static constexpr float kP1NominalV = 15.0; // m/s
-static constexpr float kP2NominalV = 5.0; // m/s
-static constexpr float kP3NominalV = 2.0; // m/s
+static constexpr float kP2NominalV = 5.0;  // m/s
+static constexpr float kP3NominalV = 2.0;  // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = 2.5;   // m
@@ -135,7 +135,7 @@ static constexpr float kP3InitialHeading = M_PI_2; // rad
 
 static constexpr float kP1InitialSpeed = 10.0; // m/s
 static constexpr float kP2InitialSpeed = 5.0;  // m/s
-static constexpr float kP3InitialSpeed = 10.0;  // m/s
+static constexpr float kP3InitialSpeed = 10.0; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -180,6 +180,9 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
 } // anonymous namespace
 
+void ThreePlayerOvertakingExample::SetAdversarialTime(double adv_time) {
+  adversarial_time = adv_time;
+}
 
 void ThreePlayerOvertakingExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
@@ -211,9 +214,9 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
   player_costs_.emplace_back("P1");
   player_costs_.emplace_back("P2");
   player_costs_.emplace_back("P3");
-  auto& p1_cost = player_costs_[0];
-  auto& p2_cost = player_costs_[1];
-  auto& p3_cost = player_costs_[2];
+  auto &p1_cost = player_costs_[0];
+  auto &p2_cost = player_costs_[1];
+  auto &p3_cost = player_costs_[2];
 
   // Stay in lanes.
   const Polyline2 lane1(
@@ -320,7 +323,6 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
 
-
   // Pairwise proximity costs.
   const std::shared_ptr<ProxCost> p1p2_proximity_cost(
       new ProxCost(kP1ProximityCostWeight, {kP1XIdx, kP1YIdx},
@@ -330,7 +332,6 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p1_cost.AddStateCost(p1p2_proximity_cost);
   p1_cost.AddStateCost(p1p3_proximity_cost);
-
 
   const std::shared_ptr<ProxCost> p2p3_proximity_cost(
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
@@ -345,7 +346,7 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          adversarial_time, "InitialProximityCostP1"));
   p3_cost.AddStateCost(p3p1_initial_proximity_cost);
   initial_time_costs_.push_back(p3p1_initial_proximity_cost);
 
@@ -353,7 +354,7 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time, "FinalProximityCostP1"));
   p3_cost.AddStateCost(p3p1_final_proximity_cost);
   final_time_costs_.push_back(p3p1_final_proximity_cost);
 
@@ -363,7 +364,6 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
 
   // p3_cost.AddStateCost(p3p1_proximity_cost);
   // p3_cost.AddStateCost(p3p2_proximity_cost);
-
 }
 
 inline std::vector<float>

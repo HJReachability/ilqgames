@@ -60,23 +60,19 @@ public:
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructInitialOperatingPoint();
-  void ConstructPlayerCosts(const double &adversarial_time);
+  void ConstructPlayerCosts();
+  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf &xi) const;
   std::vector<float> Ys(const VectorXf &xi) const;
   std::vector<float> Thetas(const VectorXf &xi) const;
 
-  // Dynamics as shared ptr.
-  std::shared_ptr<const ConcatenatedFlatSystem> Dynamics() const {
-    return dynamics_;
-  }
-
 private:
-  // Dynamics as shared ptr.
-  std::shared_ptr<const ConcatenatedFlatSystem> dynamics_;
-}; // class FlatRoundaboutMergingExample
+  std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
+  double adversarial_time;
+};
 
-} // namespace ilqgames
+}; // namespace ilqgames
 
 #endif

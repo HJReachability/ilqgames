@@ -92,8 +92,6 @@ static constexpr float kNominalVCostWeight = 200.0;
 static constexpr float kLaneCostWeight = 25.0;
 
 static constexpr float kMinProximity = 6.0;
-static constexpr float kP2ProximityCostWeight = 10.0;
-static constexpr float kP3ProximityCostWeight = 10.0;
 
 using ProxCost = ProximityCost;
 static constexpr float kP1ProximityCostWeight = 10.0;
@@ -167,6 +165,10 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
 } // anonymous namespace
 
+void ThreePlayerIntersectionExample::SetAdversarialTime(double adv_time) {
+  adversarial_time = adv_time;
+}
+
 void ThreePlayerIntersectionExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
       {std::make_shared<P1>(kInterAxleLength),
@@ -180,10 +182,12 @@ void ThreePlayerIntersectionExample::ConstructInitialState() {
   x0_(kP1YIdx) = kP1InitialY;
   x0_(kP1HeadingIdx) = kP1InitialHeading;
   x0_(kP1VIdx) = kP1InitialSpeed;
+
   x0_(kP2XIdx) = kP2InitialX;
   x0_(kP2YIdx) = kP2InitialY;
   x0_(kP2HeadingIdx) = kP2InitialHeading;
   x0_(kP2VIdx) = kP2InitialSpeed;
+
   x0_(kP3XIdx) = kP3InitialX;
   x0_(kP3YIdx) = kP3InitialY;
   x0_(kP3HeadingIdx) = kP3InitialHeading;
@@ -225,8 +229,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                                             -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  // p1_cost.AddStateConstraint(p1_lane_r_constraint);
-  // p1_cost.AddStateConstraint(p1_lane_l_constraint);
+  p1_cost.AddStateConstraint(p1_lane_r_constraint);
+  p1_cost.AddStateConstraint(p1_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
@@ -240,8 +244,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                                             -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  // p2_cost.AddStateConstraint(p2_lane_r_constraint);
-  // p2_cost.AddStateConstraint(p2_lane_l_constraint);
+  p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3XIdx, kP3YIdx},
@@ -255,8 +259,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                                             -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  // p3_cost.AddStateConstraint(p3_lane_r_constraint);
-  // p3_cost.AddStateConstraint(p3_lane_l_constraint);
+  p3_cost.AddStateConstraint(p3_lane_r_constraint);
+  p3_cost.AddStateConstraint(p3_lane_l_constraint);
 
   // Max/min/nominal speed costs.
   const auto p1_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
@@ -367,6 +371,7 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   // Collision-avoidance constraints.
 
   constexpr bool kKeepClose = true;
+
   const std::shared_ptr<ProximityConstraint> p1p2_proximity_constraint(
       new ProximityConstraint({kP1XIdx, kP1YIdx}, {kP2XIdx, kP2YIdx},
                               kMinProximity, !kKeepClose,
@@ -382,7 +387,7 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          adversarial_time, "InitialProximityCostP1"));
   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
@@ -390,7 +395,7 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time, "FinalProximityCostP1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
 
@@ -403,7 +408,7 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
-          params.adversarial_time, "InitialProximityCostP1"));
+          adversarial_time, "InitialProximityCostP1"));
   p3_cost.AddStateCost(p3p1_initial_proximity_cost);
   initial_time_costs_.push_back(p3p1_initial_proximity_cost);
 
@@ -411,7 +416,7 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        params.adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time, "FinalProximityCostP1"));
   p3_cost.AddStateCost(p3p1_final_proximity_cost);
   final_time_costs_.push_back(p3p1_final_proximity_cost);
 

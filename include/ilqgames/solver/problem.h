@@ -151,21 +151,19 @@ protected:
                                 dynamics_->UDim(ii));
   }
 
-  // <<<<<<< HEAD
   // Update threshold times of any initial/final time costs, given that
   // the given amount of time has elapsed since they were last updated.
   void UpdateThresholdTimes(Time time_since_last_update);
 
   // Create a new log. This may be overridden by derived classes (e.g., to
   // change the name of the log).
-  virtual std::shared_ptr<SolverLog> CreateNewLog() const;
-  // =======
+  // virtual std::shared_ptr<SolverLog> CreateNewLog() const;
+
   // Utility used by SetUpNextRecedingHorizon. Integrate the given state
   // forward, set the new initial state and time, and return the first timestep
   // in the new problem.
   size_t SyncToExistingProblem(const VectorXf &x0, Time t0,
                                Time planner_runtime, OperatingPoint &op);
-  // >>>>>>> master
 
   // // Time horizon (s), time step (s), and number of time steps.
   // const Time time_horizon_;

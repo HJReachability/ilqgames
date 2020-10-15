@@ -62,12 +62,16 @@ public:
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
-  void ConstructPlayerCosts(const double &adversarial_time);
+  void ConstructPlayerCosts();
+  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf &x) const;
   std::vector<float> Ys(const VectorXf &x) const;
   std::vector<float> Thetas(const VectorXf &x) const;
+
+private:
+  double adversarial_time;
 }; // class ThreePlayerIntersectionExample
 
 } // namespace ilqgames
