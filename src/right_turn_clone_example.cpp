@@ -36,9 +36,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Lane changing example in which the ego player (P1) sees clones of each other
+// Right turning example in which the ego player (P1) sees clones of each other
 // player, and costs it incurs due to other players are weighted averages of
-// those from the clones.
+// those from the clones. (Based off of lane_change_clone_example.cpp)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +51,7 @@
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/dynamics/concatenated_dynamical_system.h>
 #include <ilqgames/dynamics/single_player_unicycle_4d.h>
-#include <ilqgames/examples/lane_change_clone_example.h>
+#include <ilqgames/examples/right_turn_clone_example.h>
 #include <ilqgames/geometry/draw_shapes.h>
 #include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/ilq_solver.h>
@@ -82,29 +82,29 @@ static constexpr float kP3aProbability = 0.25;
 static constexpr float kP3bProbability = 1.0 - kP3aProbability;
 
 // Nominal speed.
-static constexpr float kP1NominalV = 2.0;   // m/s
-static constexpr float kP2NominalV = 2.0;   // m/s
-static constexpr float kP3aNominalV = 2.0;  // m/s
-static constexpr float kP3bNominalV = 12.0; // m/s
+static constexpr float kP1NominalV = 2.0;  // m/s
+static constexpr float kP2NominalV = 2.0;  // m/s
+static constexpr float kP3aNominalV = 2.0; // m/s
+static constexpr float kP3bNominalV = 5.0; // m/s
 
 // Initial state.
-static constexpr float kP1InitialX = 3.0;   // m
+static constexpr float kP1InitialX = 0.0;   // m
 static constexpr float kP1InitialY = -20.0; // m
 
-static constexpr float kP2InitialX = 3.0;  // m
-static constexpr float kP2InitialY = -5.0; // m
+static constexpr float kP2InitialX = 30.0; // m
+static constexpr float kP2InitialY = 5.0;  // m
 
-static constexpr float kP3InitialX = -3.0;  // m
-static constexpr float kP3InitialY = -40.0; // m
+static constexpr float kP3InitialX = -20.0; // m
+static constexpr float kP3InitialY = 0.0;   // m
 
 static constexpr float kP1InitialTheta = M_PI_2; // rad
 static constexpr float kP1InitialV = 2.0;        // m/s
 
-static constexpr float kP2InitialTheta = M_PI_2; // rad
-static constexpr float kP2InitialV = 2.0;        // m/s
+static constexpr float kP3InitialTheta = 0.0; // rad
+static constexpr float kP3InitialV = 2.0;     // m/s
 
-static constexpr float kP3InitialTheta = M_PI_2; // rad
-static constexpr float kP3InitialV = 4.0;        // m/s
+static constexpr float kP2InitialTheta = M_PI; // rad
+static constexpr float kP2InitialV = 4.0;      // m/s
 
 // State dimensions.
 using P1 = SinglePlayerUnicycle4D;
@@ -138,7 +138,7 @@ static const Dimension kP3bVIdx =
 
 } // anonymous namespace
 
-void LaneChangeCloneExample::ConstructDynamics() {
+void RightTurnCloneExample::ConstructDynamics() {
   // Create dynamics. In this case, we have three cars with decoupled unicycle
   // dynamics (they are only coupled through the cost structure of the game).
   // This is expressed in the ConcatenatedDynamicalSystem class. The third
@@ -149,7 +149,7 @@ void LaneChangeCloneExample::ConstructDynamics() {
        std::make_shared<P3>()}));
 }
 
-void LaneChangeCloneExample::ConstructInitialState() {
+void RightTurnCloneExample::ConstructInitialState() {
   // Set up initial state. Initially, this is zero, but then we override
   // individual dimensions to match the desired initial conditions above.
   x0_ = VectorXf::Zero(dynamics_->XDim());
@@ -173,7 +173,7 @@ void LaneChangeCloneExample::ConstructInitialState() {
   x0_(kP3bVIdx) = kP3InitialV;
 }
 
-void LaneChangeCloneExample::ConstructPlayerCosts() {
+void RightTurnCloneExample::ConstructPlayerCosts() {
   // Set up costs for all players. These are containers for holding each
   // player's constituent cost functions and constraints that hold pointwise in
   // time and can apply to either state or control (for *any* player).
@@ -303,50 +303,58 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
   p3b_cost.AddStateCost(p3b_nominal_v_cost);
 
   // Encourage each player to remain near the lane center.
-  const Polyline2 right_lane(
-      {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
-  const Polyline2 left_lane(
-      {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
+
+  const Polyline2 lane1(
+      {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, -6.0),
+       Point2(kP1InitialX + 0.5, -3.0), Point2(kP1InitialX + 1.0, -2.0),
+       Point2(kP1InitialX + 3.0, -0.5), Point2(kP1InitialX + 6.0, 0.0),
+       Point2(1000.0, 0.0)});
+
+  const Polyline2 lane2(
+      {Point2(1000, kP2InitialY), Point2(-1000, kP2InitialY)});
+
+  const Polyline2 lane3(
+      {Point2(-1000, kP3InitialY), Point2(1000, kP3InitialY)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, left_lane, {kP1XIdx, kP1YIdx},
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
   p1_cost.AddStateCost(p1_lane_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, right_lane,
-                                 {kP2XIdx, kP2YIdx}, "LaneCenter"));
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
+                                 "LaneCenter"));
   p2_cost.AddStateCost(p2_lane_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3a_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, left_lane,
-                                 {kP3aXIdx, kP3aYIdx}, "LaneCenter"));
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3aXIdx, kP3aYIdx},
+                                 "LaneCenter"));
   p3a_cost.AddStateCost(p3a_lane_cost);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3b_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, left_lane,
-                                 {kP3bXIdx, kP3bYIdx}, "LaneCenter"));
+      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP3bXIdx, kP3bYIdx},
+                                 "LaneCenter"));
   p3b_cost.AddStateCost(p3b_lane_cost);
 
   // Constrain all cars to stay in their lane (except P1 to stay on the road).
   constexpr float kLaneHalfWidth = 4.0; // m
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_road_constraint_l(
-      new Polyline2SignedDistanceConstraint(left_lane, {kP1XIdx, kP1YIdx},
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
                                             -kLaneHalfWidth, false,
                                             "Left Road Boundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_road_constraint_r(
-      new Polyline2SignedDistanceConstraint(right_lane, {kP1XIdx, kP1YIdx},
+      new Polyline2SignedDistanceConstraint(lane1, {kP1XIdx, kP1YIdx},
                                             kLaneHalfWidth, true,
                                             "Right Road Boundary"));
   p1_cost.AddStateConstraint(p1_road_constraint_l);
   p1_cost.AddStateConstraint(p1_road_constraint_r);
 
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_constraint_l(
-      new Polyline2SignedDistanceConstraint(right_lane, {kP2XIdx, kP2YIdx},
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
                                             -kLaneHalfWidth, false,
                                             "Left Lane Boundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_constraint_r(
-      new Polyline2SignedDistanceConstraint(right_lane, {kP2XIdx, kP2YIdx},
+      new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
                                             kLaneHalfWidth, true,
                                             "Right Lane Boundary"));
   p2_cost.AddStateConstraint(p2_lane_constraint_l);
@@ -354,22 +362,22 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
 
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3a_lane_constraint_l(new Polyline2SignedDistanceConstraint(
-          left_lane, {kP3aXIdx, kP3aYIdx}, -kLaneHalfWidth, false,
+          lane3, {kP3aXIdx, kP3aYIdx}, -kLaneHalfWidth, false,
           "Left Lane Boundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3a_lane_constraint_r(new Polyline2SignedDistanceConstraint(
-          left_lane, {kP3aXIdx, kP3aYIdx}, kLaneHalfWidth, true,
+          lane3, {kP3aXIdx, kP3aYIdx}, kLaneHalfWidth, true,
           "Right Lane Boundary"));
   p3a_cost.AddStateConstraint(p3a_lane_constraint_l);
   p3a_cost.AddStateConstraint(p3a_lane_constraint_r);
 
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3b_lane_constraint_l(new Polyline2SignedDistanceConstraint(
-          left_lane, {kP3bXIdx, kP3bYIdx}, -kLaneHalfWidth, false,
+          lane3, {kP3bXIdx, kP3bYIdx}, -kLaneHalfWidth, false,
           "Left Lane Boundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint>
       p3b_lane_constraint_r(new Polyline2SignedDistanceConstraint(
-          left_lane, {kP3bXIdx, kP3bYIdx}, kLaneHalfWidth, true,
+          lane3, {kP3bXIdx, kP3bYIdx}, kLaneHalfWidth, true,
           "Right Lane Boundary"));
   p3b_cost.AddStateConstraint(p3b_lane_constraint_l);
   p3b_cost.AddStateConstraint(p3b_lane_constraint_r);
@@ -403,16 +411,16 @@ void LaneChangeCloneExample::ConstructPlayerCosts() {
   p3a_cost.AddStateConstraint(p2p3a_proximity_constraint);
 }
 
-inline std::vector<float> LaneChangeCloneExample::Xs(const VectorXf &x) const {
+inline std::vector<float> RightTurnCloneExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3aXIdx), x(kP3bXIdx)};
 }
 
-inline std::vector<float> LaneChangeCloneExample::Ys(const VectorXf &x) const {
+inline std::vector<float> RightTurnCloneExample::Ys(const VectorXf &x) const {
   return {x(kP1YIdx), x(kP2YIdx), x(kP3aYIdx), x(kP3bYIdx)};
 }
 
 inline std::vector<float>
-LaneChangeCloneExample::Thetas(const VectorXf &x) const {
+RightTurnCloneExample::Thetas(const VectorXf &x) const {
   return {x(kP1ThetaIdx), x(kP2ThetaIdx), x(kP3aThetaIdx), x(kP3bThetaIdx)};
 }
 
