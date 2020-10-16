@@ -60,8 +60,6 @@
 
 namespace ilqgames {
 
-using clock = std::chrono::system_clock;
-
 std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     Time final_time, Time planner_runtime, GameSolver* solver) {
   CHECK_NOTNULL(solver);
@@ -71,12 +69,12 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
 
   // Initial run of the solver. Keep track of time in order to know how much to
   // integrate dynamics forward.
-  auto solver_call_time = clock::now();
+  auto solver_call_time = Clock::now();
   bool success = false;
   logs.push_back(solver->Solve(&success));
   CHECK(success);
   Time elapsed_time =
-      std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+      std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
 
   VLOG(1) << "Solved initial problem in " << elapsed_time << " seconds, with "
           << logs.back()->NumIterates() << " iterations.";
@@ -111,10 +109,10 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     // Set up next receding horizon problem and solve.
     solver->GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
 
-    solver_call_time = clock::now();
+    solver_call_time = Clock::now();
     logs.push_back(solver->Solve(&success, planner_runtime));
     elapsed_time =
-        std::chrono::duration<Time>(clock::now() - solver_call_time).count();
+        std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
 
     CHECK_LE(elapsed_time, planner_runtime);
     VLOG(1) << "t = " << t << ": Solved warm-started problem in "

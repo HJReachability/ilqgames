@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2020, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,57 +36,35 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Splice together existing and new solutions to a receding horizon problem.
+// Utility for solving a problem using a receding horizon, simulating dynamics
+// forward at each stage to account for the passage of time and also using
+// defensive driving strategy for the ego but normal strategies for others.
+//
+// This class is intended as a facsimile of a real-time, online receding horizon
+// problem in which short horizon problems are solved asynchronously throughout
+// operation.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLUTION_SPLICER_H
-#define ILQGAMES_SOLVER_SOLUTION_SPLICER_H
+#ifndef ILQGAMES_EXAMPLES_DEFENSIVE_DRIVING_RECEDING_HORIZON_SIMULATOR_H
+#define ILQGAMES_EXAMPLES_DEFENSIVE_DRIVING_RECEDING_HORIZON_SIMULATOR_H
 
-#include <ilqgames/dynamics/multi_player_integrable_system.h>
-#include <ilqgames/utils/operating_point.h>
+#include <ilqgames/solver/game_solver.h>
+#include <ilqgames/solver/solution_splicer.h>
 #include <ilqgames/utils/solver_log.h>
-#include <ilqgames/utils/strategy.h>
-#include <ilqgames/utils/types.h>
 
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-class SolutionSplicer {
- public:
-  ~SolutionSplicer() {}
-  SolutionSplicer(const OperatingPoint& op,
-                  const std::vector<Strategy>& strategies)
-      : strategies_(strategies), operating_point_(op) {}
-  explicit SolutionSplicer(const SolverLog& log)
-      : SolutionSplicer(log.FinalOperatingPoint(), log.FinalStrategies()) {}
-
-  // Splice in a new solution stored in a solver log.
-  void Splice(const SolverLog& log);
-  void Splice(const OperatingPoint& op,
-              const std::vector<Strategy>& strategies);
-
-  // Check if a given time is contained within the current operating point.
-  bool ContainsTime(Time t) const {
-    return (operating_point_.t0 <= t) &&
-           (operating_point_.t0 +
-                operating_point_.xs.size() * time::kTimeStep >=
-            t);
-  }
-
-  // Accessors.
-  const std::vector<Strategy>& CurrentStrategies() const { return strategies_; }
-  const OperatingPoint& CurrentOperatingPoint() const {
-    return operating_point_;
-  }
-
- private:
-  // Converged strategies and operating points for all players.
-  std::vector<Strategy> strategies_;
-  OperatingPoint operating_point_;
-};  // class SolutionSplicer
+// Solve this game following a receding horizon with strategies for all players
+// drawn from defensive or normal problems as above.
+void DefensiveDrivingRecedingHorizonSimulator(
+    Time final_time, Time planner_runtime, GameSolver* defensive,
+    GameSolver* normal,
+    std::vector<std::shared_ptr<const SolverLog>>* defensive_logs,
+    std::vector<std::shared_ptr<const SolverLog>>* normal_logs);
 
 }  // namespace ilqgames
 
