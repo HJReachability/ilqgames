@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
   FLAGS_logtostderr = true;
 
   // Make a problem.
-  auto problem = std::make_shared<ilqgames::FlatRoundaboutMergingExample>();
+  auto problem = std::make_shared<ilqgames::FlatRoundaboutMergingExample>(FLAGS_adversarial_time);
   problem->Initialize();
 
   // Set up the game.
@@ -119,7 +119,6 @@ int main(int argc, char **argv) {
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.adversarial_time = FLAGS_adversarial_time;
 
   // Make a solver.
   ilqgames::AugmentedLagrangianSolver solver(problem, params);

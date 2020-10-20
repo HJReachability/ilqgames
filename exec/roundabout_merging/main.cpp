@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
 
   params.expected_decrease_fraction = FLAGS_expected_decrease;
 
-  auto problem = std::make_shared<ilqgames::RoundaboutMergingExample>();
+  auto problem = std::make_shared<ilqgames::RoundaboutMergingExample>(FLAGS_adversarial_time);
   problem->Initialize();
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 

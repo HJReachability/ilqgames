@@ -180,9 +180,9 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
 } // anonymous namespace
 
-void ThreePlayerOvertakingExample::SetAdversarialTime(double adv_time) {
-  adversarial_time = adv_time;
-}
+//void ThreePlayerOvertakingExample::SetAdversarialTime(double adv_time) {
+//  adversarial_time_ = adv_time;
+//}
 
 void ThreePlayerOvertakingExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
@@ -337,6 +337,8 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p2_cost.AddStateCost(p2p3_proximity_cost);
+    
+    // Player 2 Cost without adversarial time; will fix later.
 
   // Pairwise proximity costs: Player 3.
 
@@ -346,7 +348,7 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
-          adversarial_time, "InitialProximityCostP1"));
+          adversarial_time_, "InitialProximityCostP1"));
   p3_cost.AddStateCost(p3p1_initial_proximity_cost);
   initial_time_costs_.push_back(p3p1_initial_proximity_cost);
 
@@ -354,7 +356,7 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time_, "FinalProximityCostP1"));
   p3_cost.AddStateCost(p3p1_final_proximity_cost);
   final_time_costs_.push_back(p3p1_final_proximity_cost);
 

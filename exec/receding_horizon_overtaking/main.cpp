@@ -121,12 +121,10 @@ int main(int argc, char **argv) {
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.adversarial_time = FLAGS_adversarial_time;
-  params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.state_regularization = FLAGS_state_regularization;
   params.control_regularization = FLAGS_control_regularization;
 
-  auto problem = std::make_shared<ilqgames::ThreePlayerOvertakingExample>();
+  auto problem = std::make_shared<ilqgames::ThreePlayerOvertakingExample>(FLAGS_adversarial_time);
   problem->Initialize();
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 

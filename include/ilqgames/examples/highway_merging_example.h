@@ -54,7 +54,7 @@ class HighwayMergingExample : public TopDownRenderableProblem {
 public:
   ~HighwayMergingExample() {}
 
-  HighwayMergingExample() : TopDownRenderableProblem() {}
+  HighwayMergingExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();

@@ -49,18 +49,20 @@
 namespace ilqgames {
 
 class TopDownRenderableProblem : public Problem {
- public:
+public:
   virtual ~TopDownRenderableProblem() {}
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  virtual std::vector<float> Xs(const VectorXf& x) const = 0;
-  virtual std::vector<float> Ys(const VectorXf& x) const = 0;
-  virtual std::vector<float> Thetas(const VectorXf& x) const = 0;
+  virtual std::vector<float> Xs(const VectorXf &x) const = 0;
+  virtual std::vector<float> Ys(const VectorXf &x) const = 0;
+  virtual std::vector<float> Thetas(const VectorXf &x) const = 0;
 
- protected:
-  TopDownRenderableProblem() : Problem() {}
-};  // class TopDownRenderableProblem
+protected:
+  // TopDownRenderableProblem() : Problem() {}
+  TopDownRenderableProblem(Time adversarial_time = 0.0)
+      : Problem(adversarial_time) {}
+}; // class TopDownRenderableProblem
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

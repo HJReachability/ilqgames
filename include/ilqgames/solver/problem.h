@@ -63,7 +63,7 @@
 namespace ilqgames {
 
 class Problem {
- public:
+public:
   virtual ~Problem() {}
 
   // Initialize this object.
@@ -82,7 +82,7 @@ class Problem {
     operating_point_->t0 = t0;
   }
 
-  void ResetInitialState(const VectorXf& x0) {
+  void ResetInitialState(const VectorXf &x0) {
     CHECK(initialized_);
     x0_ = x0;
   }
@@ -97,43 +97,45 @@ class Problem {
   // 1. new controls are zero
   // 2. new states are those that result from zero control
   // 3. new strategies are also zero
-  virtual void SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
+  virtual void SetUpNextRecedingHorizon(const VectorXf &x0, Time t0,
                                         Time planner_runtime = 0.1);
 
   // Overwrite existing solution with the given operating point and strategies.
   // Truncates to fit in the same memory.
-  virtual void OverwriteSolution(const OperatingPoint& operating_point,
-                                 const std::vector<Strategy>& strategies);
+  virtual void OverwriteSolution(const OperatingPoint &operating_point,
+                                 const std::vector<Strategy> &strategies);
 
   // Accessors.
   bool IsConstrained() const;
   virtual Time InitialTime() const { return operating_point_->t0; }
-  const VectorXf& InitialState() const { return x0_; }
+  const VectorXf &InitialState() const { return x0_; }
   // size_t NumTimeSteps() const { return num_time_steps_; }
   // Time TimeStep() const { return time_step_; }
   // Time TimeHorizon() const { return time_horizon_; }
-  std::vector<PlayerCost>& PlayerCosts() { return player_costs_; }
-  const std::vector<PlayerCost>& PlayerCosts() const { return player_costs_; }
-  const std::shared_ptr<const MultiPlayerIntegrableSystem>& Dynamics() const {
+  std::vector<PlayerCost> &PlayerCosts() { return player_costs_; }
+  const std::vector<PlayerCost> &PlayerCosts() const { return player_costs_; }
+  const std::shared_ptr<const MultiPlayerIntegrableSystem> &Dynamics() const {
     return dynamics_;
   }
-  const MultiPlayerDynamicalSystem& NormalDynamics() const {
+  const MultiPlayerDynamicalSystem &NormalDynamics() const {
     CHECK(!dynamics_->TreatAsLinear());
-    return *static_cast<const MultiPlayerDynamicalSystem*>(dynamics_.get());
+    return *static_cast<const MultiPlayerDynamicalSystem *>(dynamics_.get());
   }
-  const MultiPlayerFlatSystem& FlatDynamics() const {
+  const MultiPlayerFlatSystem &FlatDynamics() const {
     CHECK(dynamics_->TreatAsLinear());
-    return *static_cast<const MultiPlayerFlatSystem*>(dynamics_.get());
+    return *static_cast<const MultiPlayerFlatSystem *>(dynamics_.get());
   }
-  virtual const OperatingPoint& CurrentOperatingPoint() const {
+  virtual const OperatingPoint &CurrentOperatingPoint() const {
     return *operating_point_;
   }
-  virtual const std::vector<Strategy>& CurrentStrategies() const {
+  virtual const std::vector<Strategy> &CurrentStrategies() const {
     return *strategies_;
   }
 
- protected:
-  Problem();
+protected:
+  // Problem();
+  Problem(Time adversarial_time = 0.0)
+      : initialized_(false), adversarial_time_(adversarial_time) {}
 
   // Functions for initialization. By default, operating point and strategies
   // are initialized to zero.
@@ -162,8 +164,8 @@ class Problem {
   // Utility used by SetUpNextRecedingHorizon. Integrate the given state
   // forward, set the new initial state and time, and return the first timestep
   // in the new problem.
-  size_t SyncToExistingProblem(const VectorXf& x0, Time t0,
-                               Time planner_runtime, OperatingPoint& op);
+  size_t SyncToExistingProblem(const VectorXf &x0, Time t0,
+                               Time planner_runtime, OperatingPoint &op);
 
   // // Time horizon (s), time step (s), and number of time steps.
   // const Time time_horizon_;
@@ -183,16 +185,18 @@ class Problem {
   std::unique_ptr<OperatingPoint> operating_point_;
   std::unique_ptr<std::vector<Strategy>> strategies_;
 
-  // <<<<<<< HEAD
   // Lists of intial/final time costs.
   std::vector<std::shared_ptr<InitialTimeCost>> initial_time_costs_;
   std::vector<std::shared_ptr<FinalTimeCost>> final_time_costs_;
-  // =======
+
   // Has this object been initialized?
   bool initialized_;
-  // >>>>>>> master
-};  // class Problem
 
-}  // namespace ilqgames
+  // Adversarial time horizon length in defensive driving.
+  const Time adversarial_time_;
+
+}; // class Problem
+
+} // namespace ilqgames
 
 #endif

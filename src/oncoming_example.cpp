@@ -74,7 +74,7 @@
 #include <vector>
 
 // // Adversarial time.
-// DEFINE_double(adversarial_time, 0.0, "Adversarial time window (s).");
+// DEFINE_double(adversarial_time_, 0.0, "Adversarial time window (s).");
 
 namespace ilqgames {
 
@@ -191,9 +191,9 @@ static const Dimension kP2JerkIdx = 1;
 
 } // anonymous namespace
 
-void OncomingExample::SetAdversarialTime(double adv_time) {
-  adversarial_time = adv_time;
-}
+//void OncomingExample::SetAdversarialTime(double adv_time) {
+//  adversarial_time_ = adv_time;
+//}
 
 void OncomingExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
@@ -315,7 +315,7 @@ void OncomingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          adversarial_time, "InitialProximityCostP1"));
+          adversarial_time_, "InitialProximityCostP1"));
   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
@@ -323,7 +323,7 @@ void OncomingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        adversarial_time, "FinalProximityCostP1"));
+                        adversarial_time_, "FinalProximityCostP1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
 }

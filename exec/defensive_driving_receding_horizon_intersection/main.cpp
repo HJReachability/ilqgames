@@ -113,24 +113,29 @@ int main(int argc, char **argv) {
   FLAGS_logtostderr = true;
 
   // Set up the game.
+
+  // Rename params to defensive_params;
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.adversarial_time = FLAGS_adversarial_time;
-  params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.state_regularization = FLAGS_state_regularization;
   params.control_regularization = FLAGS_control_regularization;
 
-  ilqgames::SolverParams normal_params = params;
-  normal_params.adversarial_time = 0.0;
+  auto defensive_problem =
+      std::make_shared<ilqgames::ThreePlayerIntersectionExample>(
+          FLAGS_adversarial_time);
+  defensive_problem->Initialize();
 
-  auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
-  problem->Initialize();
-  ilqgames::AugmentedLagrangianSolver defensive_solver(problem, params);
-  ilqgames::AugmentedLagrangianSolver normal_solver(problem, normal_params);
+  auto normal_problem =
+      std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  normal_problem->Initialize();
+
+  ilqgames::AugmentedLagrangianSolver defensive_solver(defensive_problem,
+                                                       params);
+  ilqgames::AugmentedLagrangianSolver normal_solver(normal_problem, params);
 
   // FRANK: Unedited below:
 
@@ -159,11 +164,10 @@ int main(int argc, char **argv) {
   // ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
   // ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
 
-  std::shared_ptr<ilqgames::ControlSliders> defensive_sliders(
-      new ilqgames::ControlSliders({defensive_logs}));
-  ilqgames::TopDownRenderer top_down_renderer(defensive_sliders, {problem});
-  ilqgames::CostInspector cost_inspector(defensive_sliders,
-                                         {problem->PlayerCosts()});
+  std::shared_ptr<ilqgames::ControlSliders> sliders(
+      new ilqgames::ControlSliders({defensive_logs, normal_logs}));
+  ilqgames::TopDownRenderer top_down_renderer(sliders, {defensive_problem});
+  ilqgames::CostInspector cost_inspector(sliders, {defensive_problem->PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -238,7 +242,7 @@ int main(int argc, char **argv) {
     ImGui::NewFrame();
 
     // Control sliders.
-    defensive_sliders->Render();
+    sliders->Render();
 
     // Top down view.
     top_down_renderer.Render();

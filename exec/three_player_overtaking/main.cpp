@@ -111,12 +111,11 @@ int main(int argc, char **argv) {
   ilqgames::SolverParams params;
   params.max_backtracking_steps = 100;
   params.linesearch = FLAGS_linesearch;
-
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
 
-  auto problem = std::make_shared<ilqgames::ThreePlayerOvertakingExample>();
+  auto problem = std::make_shared<ilqgames::ThreePlayerOvertakingExample>(FLAGS_adversarial_time);
   problem->Initialize();
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 

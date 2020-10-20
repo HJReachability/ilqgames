@@ -53,13 +53,13 @@ namespace ilqgames {
 class ThreePlayerFlatOvertakingExample : public TopDownRenderableProblem {
 public:
   ~ThreePlayerFlatOvertakingExample() {}
-  ThreePlayerFlatOvertakingExample() : TopDownRenderableProblem() {}
+  ThreePlayerFlatOvertakingExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-  void SetAdversarialTime(double adv_time);
+//  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given linear
   // system state.
@@ -75,7 +75,7 @@ public:
 private:
   // Dynamics as shared ptr.
   std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
-  double adversarial_time;
+//  double adversarial_time;
 }; // class ThreePlayerFlatIntersectionExample
 
 } // namespace ilqgames

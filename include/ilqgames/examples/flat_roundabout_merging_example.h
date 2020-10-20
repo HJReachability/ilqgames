@@ -54,7 +54,7 @@ namespace ilqgames {
 class FlatRoundaboutMergingExample : public TopDownRenderableProblem {
 public:
   ~FlatRoundaboutMergingExample() {}
-  FlatRoundaboutMergingExample() : TopDownRenderableProblem() {}
+  FlatRoundaboutMergingExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
 
   // Construct dynamics, initial state, initial operating point, player costs.
   void ConstructDynamics();

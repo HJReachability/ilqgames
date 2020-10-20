@@ -48,8 +48,8 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <algorithm>
+#include <glog/logging.h>
 #include <memory>
 #include <vector>
 
@@ -59,11 +59,11 @@
 
 namespace ilqgames {
 
-Problem::Problem() : initialized_(false) {}
+// Problem::Problem() : initialized_(false) {}
 
-size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
+size_t Problem::SyncToExistingProblem(const VectorXf &x0, Time t0,
                                       Time planner_runtime,
-                                      OperatingPoint& op) {
+                                      OperatingPoint &op) {
   CHECK(initialized_);
   CHECK_GE(planner_runtime, 0.0);
   CHECK_LE(planner_runtime + t0, operating_point_->t0 + time::kTimeHorizon);
@@ -91,7 +91,7 @@ size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
   op.t0 = t0 + remaining_time_this_step;
   if (remaining_time_this_step <= planner_runtime) {
     const size_t num_steps_to_integrate = static_cast<size_t>(
-        constants::kSmallNumber +  // Add to avoid truncation error.
+        constants::kSmallNumber + // Add to avoid truncation error.
         (planner_runtime - remaining_time_this_step) / time::kTimeStep);
     const size_t last_integration_timestep =
         current_timestep + num_steps_to_integrate;
@@ -104,7 +104,7 @@ size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
   // Find index of nearest state in the existing plan to this state.
   const auto nearest_iter =
       std::min_element(op.xs.begin(), op.xs.end(),
-                       [this, &x](const VectorXf& x1, const VectorXf& x2) {
+                       [this, &x](const VectorXf &x1, const VectorXf &x2) {
                          return dynamics_->DistanceBetween(x, x1) <
                                 dynamics_->DistanceBetween(x, x2);
                        });
@@ -124,7 +124,7 @@ size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
   return first_timestep_in_new_problem;
 }
 
-void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
+void Problem::SetUpNextRecedingHorizon(const VectorXf &x0, Time t0,
                                        Time planner_runtime) {
   CHECK(initialized_);
 
@@ -151,7 +151,7 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
              dynamics_->NumPlayers());
 
     // Set current stategy.
-    for (auto& strategy : *strategies_) {
+    for (auto &strategy : *strategies_) {
       strategy.Ps[kk_new_problem].swap(strategy.Ps[kk]);
       strategy.alphas[kk_new_problem].swap(strategy.alphas[kk]);
     }
@@ -185,22 +185,21 @@ void Problem::SetUpNextRecedingHorizon(const VectorXf& x0, Time t0,
   }
 }
 
-void Problem::OverwriteSolution(const OperatingPoint& operating_point,
-                                const std::vector<Strategy>& strategies) {
+void Problem::OverwriteSolution(const OperatingPoint &operating_point,
+                                const std::vector<Strategy> &strategies) {
   CHECK(initialized_);
 
   *operating_point_ = operating_point;
   *strategies_ = strategies;
 }
 
-
 bool Problem::IsConstrained() const {
-  for (const auto& pc : player_costs_) {
-    if (pc.IsConstrained()) return true;
+  for (const auto &pc : player_costs_) {
+    if (pc.IsConstrained())
+      return true;
   }
 
   return false;
-
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames

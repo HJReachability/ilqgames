@@ -53,13 +53,13 @@ namespace ilqgames {
 class ThreePlayerFlatIntersectionExample : public TopDownRenderableProblem {
 public:
   ~ThreePlayerFlatIntersectionExample() {}
-  ThreePlayerFlatIntersectionExample() : TopDownRenderableProblem() {}
+  ThreePlayerFlatIntersectionExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-  void SetAdversarialTime(double adv_time);
+//  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf &x) const;
@@ -68,7 +68,7 @@ public:
 
 private:
   std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
-  double adversarial_time;
+//  double adversarial_time;
 }; // class ThreePlayerFlatIntersectionExample
 
 }; // namespace ilqgames

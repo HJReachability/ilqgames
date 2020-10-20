@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
   params.geometric_lambda_downscaling = 0.5;
   //  params.open_loop = true;
 
-  auto problem = std::make_shared<ilqgames::OncomingExample>();
+  auto problem = std::make_shared<ilqgames::OncomingExample>(FLAGS_adversarial_time);
   problem->Initialize();
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 

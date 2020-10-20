@@ -78,7 +78,7 @@ struct SolverParams {
 
   // Adersarial time: Pure Cooperative (adversarial_time = 0), or
   // Adversarial-to-Cooperative (adversarial_time != 0)
-  float adversarial_time = 0;
+  // float adversarial_time = 0;
 }; // struct SolverParams
 
 }; // namespace ilqgames
