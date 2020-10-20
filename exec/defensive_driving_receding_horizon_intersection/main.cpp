@@ -40,8 +40,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/examples/receding_horizon_simulator.h>
-// #include <ilqgames/examples/defensive_driving_receding_horizon_simulator.h>
+// #include <ilqgames/examples/receding_horizon_simulator.h>
+#include <ilqgames/examples/defensive_driving_receding_horizon_simulator.h>
 #include <ilqgames/examples/three_player_intersection_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
@@ -124,9 +124,13 @@ int main(int argc, char **argv) {
   params.state_regularization = FLAGS_state_regularization;
   params.control_regularization = FLAGS_control_regularization;
 
+  ilqgames::SolverParams normal_params = params;
+  normal_params.adversarial_time = 0.0;
+
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
   problem->Initialize();
-  ilqgames::AugmentedLagrangianSolver solver(problem, params);
+  ilqgames::AugmentedLagrangianSolver defensive_solver(problem, params);
+  ilqgames::AugmentedLagrangianSolver normal_solver(problem, normal_params);
 
   // FRANK: Unedited below:
 
@@ -138,14 +142,28 @@ int main(int argc, char **argv) {
   //     logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
   //     &solver)};
 
-  const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
-      logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &solver)};
+  std::vector<std::shared_ptr<const ilqgames::SolverLog>> defensive_logs;
+  std::vector<std::shared_ptr<const ilqgames::SolverLog>> normal_logs;
+
+  DefensiveDrivingRecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
+                                           &defensive_solver, &normal_solver,
+                                           &defensive_logs, &normal_logs);
+
+  // const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
+  //     logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime,
+  //     &solver)};
 
   // Create a top-down renderer, control sliders, and cost inspector.
-  std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({logs}));
-  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
-  ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
+  //  std::shared_ptr<ilqgames::ControlSliders> sliders(
+  //     new ilqgames::ControlSliders({logs}));
+  // ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
+  // ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
+
+  std::shared_ptr<ilqgames::ControlSliders> defensive_sliders(
+      new ilqgames::ControlSliders({defensive_logs}));
+  ilqgames::TopDownRenderer top_down_renderer(defensive_sliders, {problem});
+  ilqgames::CostInspector cost_inspector(defensive_sliders,
+                                         {problem->PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
@@ -220,7 +238,7 @@ int main(int argc, char **argv) {
     ImGui::NewFrame();
 
     // Control sliders.
-    sliders->Render();
+    defensive_sliders->Render();
 
     // Top down view.
     top_down_renderer.Render();

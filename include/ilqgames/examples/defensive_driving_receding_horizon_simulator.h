@@ -61,11 +61,11 @@ namespace ilqgames {
 // Solve this game following a receding horizon with strategies for all players
 // drawn from defensive or normal problems as above.
 void DefensiveDrivingRecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, GameSolver* defensive,
-    GameSolver* normal,
-    std::vector<std::shared_ptr<const SolverLog>>* defensive_logs,
-    std::vector<std::shared_ptr<const SolverLog>>* normal_logs);
+    Time final_time, Time planner_runtime, GameSolver *defensive,
+    GameSolver *normal,
+    std::vector<std::shared_ptr<const SolverLog>> *defensive_logs,
+    std::vector<std::shared_ptr<const SolverLog>> *normal_logs);
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

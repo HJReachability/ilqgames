@@ -53,15 +53,16 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <chrono>
+#include <glog/logging.h>
 #include <memory>
 #include <vector>
 
 namespace ilqgames {
 
-std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, GameSolver* solver) {
+std::vector<std::shared_ptr<const SolverLog>>
+RecedingHorizonSimulator(Time final_time, Time planner_runtime,
+                         GameSolver *solver) {
   CHECK_NOTNULL(solver);
 
   // Set up a list of solver logs, one per solver invocation.
@@ -78,7 +79,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
 
   VLOG(1) << "Solved initial problem in " << elapsed_time << " seconds, with "
           << logs.back()->NumIterates() << " iterations.";
-  const auto& dynamics = solver->GetProblem().Dynamics();
+  const auto &dynamics = solver->GetProblem().Dynamics();
 
   // Keep a solution splicer to incorporate new receding horizon solutions.
   SolutionSplicer splicer(*logs.front());
@@ -92,7 +93,7 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
     // Break the loop if it's been long enough.
     // Integrate a little more.
     constexpr Time kExtraTime = 0.25;
-    t += kExtraTime;  // + planner_runtime;
+    t += kExtraTime; // + planner_runtime;
 
     if (t >= final_time ||
         !splicer.ContainsTime(t + planner_runtime + time::kTimeStep))
@@ -120,7 +121,8 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
 
     // Break the loop if it's been long enough.
     t += elapsed_time;
-    if (t >= final_time || !splicer.ContainsTime(t)) break;
+    if (t >= final_time || !splicer.ContainsTime(t))
+      break;
 
     // Integrate dynamics forward to account for solve time.
     x = solver->GetProblem().Dynamics()->Integrate(
@@ -128,10 +130,11 @@ std::vector<std::shared_ptr<const SolverLog>> RecedingHorizonSimulator(
         splicer.CurrentStrategies());
 
     // Add new solution to splicer if it converged.
-    if (logs.back()->WasConverged()) splicer.Splice(*logs.back());
+    if (logs.back()->WasConverged())
+      splicer.Splice(*logs.back());
   }
 
   return logs;
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames

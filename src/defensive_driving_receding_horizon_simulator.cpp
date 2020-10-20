@@ -55,8 +55,8 @@
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
 
-#include <glog/logging.h>
 #include <chrono>
+#include <glog/logging.h>
 #include <memory>
 #include <typeinfo>
 #include <vector>
@@ -64,10 +64,10 @@
 namespace ilqgames {
 
 void DefensiveDrivingRecedingHorizonSimulator(
-    Time final_time, Time planner_runtime, GameSolver* defensive,
-    GameSolver* normal,
-    std::vector<std::shared_ptr<const SolverLog>>* defensive_logs,
-    std::vector<std::shared_ptr<const SolverLog>>* normal_logs) {
+    Time final_time, Time planner_runtime, GameSolver *defensive,
+    GameSolver *normal,
+    std::vector<std::shared_ptr<const SolverLog>> *defensive_logs,
+    std::vector<std::shared_ptr<const SolverLog>> *normal_logs) {
   CHECK_NOTNULL(defensive);
   CHECK_NOTNULL(normal);
   CHECK_NOTNULL(defensive_logs);
@@ -81,8 +81,8 @@ void DefensiveDrivingRecedingHorizonSimulator(
 
   // Unpack dynamics, and ensure that the two problems actually share the same
   // dynamics object type.
-  const auto& dynamics = *defensive->GetProblem().Dynamics();
-  const auto& normal_dynamics = *normal->GetProblem().Dynamics();
+  const auto &dynamics = *defensive->GetProblem().Dynamics();
+  const auto &normal_dynamics = *normal->GetProblem().Dynamics();
   CHECK(typeid(dynamics) == typeid(normal_dynamics));
 
   // Clear out the log arrays for us to save in.
@@ -129,7 +129,7 @@ void DefensiveDrivingRecedingHorizonSimulator(
     // Break the loop if it's been long enough.
     // Integrate a little more.
     constexpr Time kExtraTime = 0.25;
-    t += kExtraTime;  // + planner_runtime;
+    t += kExtraTime; // + planner_runtime;
 
     if (t >= final_time ||
         !splicer.ContainsTime(t + planner_runtime + time::kTimeStep))
@@ -171,7 +171,8 @@ void DefensiveDrivingRecedingHorizonSimulator(
     // Break the loop if it's been long enough.
     elapsed_time = std::max(defensive_elapsed_time, normal_elapsed_time);
     t += elapsed_time;
-    if (t >= final_time || !splicer.ContainsTime(t)) break;
+    if (t >= final_time || !splicer.ContainsTime(t))
+      break;
 
     // Integrate dynamics forward to account for solve time.
     x = dynamics.Integrate(t - elapsed_time, t, x,
@@ -195,4 +196,4 @@ void DefensiveDrivingRecedingHorizonSimulator(
   }
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames

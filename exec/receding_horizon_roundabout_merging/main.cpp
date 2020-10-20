@@ -41,6 +41,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ilqgames/examples/receding_horizon_simulator.h>
+// #include <ilqgames/examples/defensive_driving_receding_horizon_simulator.h>
 #include <ilqgames/examples/roundabout_merging_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
