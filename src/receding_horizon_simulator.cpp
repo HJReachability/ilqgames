@@ -73,7 +73,7 @@ RecedingHorizonSimulator(Time final_time, Time planner_runtime,
   auto solver_call_time = Clock::now();
   bool success = false;
   logs.push_back(solver->Solve(&success));
-  CHECK(success);
+  // CHECK(success);
   Time elapsed_time =
       std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
 
@@ -115,7 +115,7 @@ RecedingHorizonSimulator(Time final_time, Time planner_runtime,
     elapsed_time =
         std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
 
-    CHECK_LE(elapsed_time, planner_runtime);
+    // CHECK_LE(elapsed_time, planner_runtime);
     VLOG(1) << "t = " << t << ": Solved warm-started problem in "
             << elapsed_time << " seconds.";
 

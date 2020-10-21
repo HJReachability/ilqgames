@@ -165,9 +165,10 @@ int main(int argc, char **argv) {
   // ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
 
   std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({defensive_logs, normal_logs}));
+      new ilqgames::ControlSliders({defensive_logs}));
   ilqgames::TopDownRenderer top_down_renderer(sliders, {defensive_problem});
-  ilqgames::CostInspector cost_inspector(sliders, {defensive_problem->PlayerCosts()});
+  ilqgames::CostInspector cost_inspector(sliders,
+                                         {defensive_problem->PlayerCosts()});
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);

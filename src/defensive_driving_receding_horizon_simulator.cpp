@@ -94,7 +94,7 @@ void DefensiveDrivingRecedingHorizonSimulator(
   auto solver_call_time = Clock::now();
   bool success = false;
   defensive_logs->push_back(defensive->Solve(&success));
-  CHECK(success);
+  // CHECK(success);
   Time elapsed_time =
       std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
   VLOG(1) << "Solved initial defensive problem in " << elapsed_time
@@ -103,7 +103,7 @@ void DefensiveDrivingRecedingHorizonSimulator(
 
   solver_call_time = Clock::now();
   normal_logs->push_back(normal->Solve(&success));
-  CHECK(success);
+  // CHECK(success);
   elapsed_time =
       std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
   VLOG(1) << "Solved initial normal problem in " << elapsed_time
@@ -155,7 +155,7 @@ void DefensiveDrivingRecedingHorizonSimulator(
     const Time defensive_elapsed_time =
         std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
 
-    CHECK_LE(defensive_elapsed_time, planner_runtime);
+    // CHECK_LE(defensive_elapsed_time, planner_runtime);
     VLOG(1) << "t = " << t << ": Solved warm-started defensive problem in "
             << defensive_elapsed_time << " seconds.";
 
@@ -164,7 +164,7 @@ void DefensiveDrivingRecedingHorizonSimulator(
     const Time normal_elapsed_time =
         std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
 
-    CHECK_LE(normal_elapsed_time, planner_runtime);
+    // CHECK_LE(normal_elapsed_time, planner_runtime);
     VLOG(1) << "t = " << t << ": Solved warm-started normal problem in "
             << normal_elapsed_time << " seconds.";
 
