@@ -128,26 +128,26 @@ static constexpr bool kConstraintOrientedInside = false;
 static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 5.0; // m/s
-static constexpr float kP2NominalV = 5.0; // m/s
+static constexpr float kP1NominalV = 8.0; // m/s
+static constexpr float kP2NominalV = 8.0; // m/s
 
 // Nominal heading
 static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 2.5;   // m
-static constexpr float kP1InitialY = -35.0; // m
+static constexpr float kP1InitialX = 2.0;   // m
+static constexpr float kP1InitialY = -25.0; // m
 
-static constexpr float kP2InitialX = -2.5; // m
-static constexpr float kP2InitialY = 35.0; // m
+static constexpr float kP2InitialX = -1.5; // m
+static constexpr float kP2InitialY = 25.0; // m
 // static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;              // rad
 static constexpr float kP2InitialHeading = -M_PI_2;             // rad
 static constexpr float kP2InitialHeadingAntiparallel = -M_PI_2; // rad
 
-static constexpr float kP1InitialSpeed = 5.1; // m/s
-static constexpr float kP2InitialSpeed = 5.1; // m/s
+static constexpr float kP1InitialSpeed = 10.1; // m/s
+static constexpr float kP2InitialSpeed = 10.1; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -191,7 +191,7 @@ static const Dimension kP2JerkIdx = 1;
 
 } // anonymous namespace
 
-//void OncomingExample::SetAdversarialTime(double adv_time) {
+// void OncomingExample::SetAdversarialTime(double adv_time) {
 //  adversarial_time_ = adv_time;
 //}
 

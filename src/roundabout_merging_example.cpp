@@ -185,7 +185,7 @@ const Polyline2 lane4(RoundaboutLaneCenter(angles[3], angles[3] + kWedgeSize,
 
 } // anonymous namespace
 
-//void RoundaboutMergingExample::SetAdversarialTime(double adv_time) {
+// void RoundaboutMergingExample::SetAdversarialTime(double adv_time) {
 //  adversarial_time_ = adv_time;
 //}
 

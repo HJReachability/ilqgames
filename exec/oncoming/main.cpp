@@ -81,6 +81,14 @@ DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 DEFINE_double(adversarial_time, 0.0,
               "Amount of time other agents are assumed to be adversarial");
 
+DEFINE_int32(unconstrained_solver_max_iters, 10,
+             "Maximum iterations run by unconstrained solver");
+DEFINE_double(geometric_mu_scaling, 0.1, "geometric mu scaling");
+DEFINE_double(geometric_mu_downscaling, 0.5, "geometric mu downscaling");
+DEFINE_double(geometric_lambda_downscaling, 0.5,
+              "geometric lambda downscaling");
+DEFINE_double(constraint_error_tolerance, 0.1, "constraint error tolerance");
+
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
 // libraries are often used for this purpose! Here we are supporting a few
@@ -121,12 +129,19 @@ int main(int argc, char **argv) {
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.geometric_mu_scaling = 1.1;
-  params.geometric_mu_downscaling = 0.5;
-  params.geometric_lambda_downscaling = 0.5;
+  // params.geometric_mu_scaling = 1.1;
+  // params.geometric_mu_downscaling = 0.5;
+  // params.geometric_lambda_downscaling = 0.5;
   //  params.open_loop = true;
 
-  auto problem = std::make_shared<ilqgames::OncomingExample>(FLAGS_adversarial_time);
+  params.unconstrained_solver_max_iters = FLAGS_unconstrained_solver_max_iters;
+  params.geometric_mu_scaling = FLAGS_geometric_mu_scaling;
+  params.geometric_mu_downscaling = FLAGS_geometric_mu_downscaling;
+  params.geometric_lambda_downscaling = FLAGS_geometric_lambda_downscaling;
+  params.constraint_error_tolerance = FLAGS_constraint_error_tolerance;
+
+  auto problem =
+      std::make_shared<ilqgames::OncomingExample>(FLAGS_adversarial_time);
   problem->Initialize();
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 

@@ -36,13 +36,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Main GUI for three player intersection example, with receding horizon.
+// Main GUI for roundabout merging example, with receding horizon.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 // #include <ilqgames/examples/receding_horizon_simulator.h>
 #include <ilqgames/examples/defensive_driving_receding_horizon_simulator.h>
-#include <ilqgames/examples/three_player_intersection_example.h>
+#include <ilqgames/examples/roundabout_merging_example.h>
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
@@ -138,13 +138,11 @@ int main(int argc, char **argv) {
   params.geometric_lambda_downscaling = FLAGS_geometric_lambda_downscaling;
   params.constraint_error_tolerance = FLAGS_constraint_error_tolerance;
 
-  auto defensive_problem =
-      std::make_shared<ilqgames::ThreePlayerIntersectionExample>(
-          FLAGS_adversarial_time);
+  auto defensive_problem = std::make_shared<ilqgames::RoundaboutMergingExample>(
+      FLAGS_adversarial_time);
   defensive_problem->Initialize();
 
-  auto normal_problem =
-      std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  auto normal_problem = std::make_shared<ilqgames::RoundaboutMergingExample>();
   normal_problem->Initialize();
 
   ilqgames::AugmentedLagrangianSolver defensive_solver(defensive_problem,
@@ -208,7 +206,7 @@ int main(int argc, char **argv) {
 
   // Create window with graphics context
   GLFWwindow *window = glfwCreateWindow(
-      1280, 720, "ILQGames: 3-Player Intersection Example", NULL, NULL);
+      1280, 720, "ILQGames: Roundabout Merging Example", NULL, NULL);
   if (window == NULL)
     return 1;
   glfwMakeContextCurrent(window);

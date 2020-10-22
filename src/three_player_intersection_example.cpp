@@ -80,7 +80,7 @@ static constexpr float kInterAxleLength = 4.0; // m
 
 // Cost weights.
 static constexpr float kStateRegularization = 1.0;
-static constexpr float kControlRegularization = 5.0;
+static constexpr float kControlRegularization = 1.0;
 
 static constexpr float kOmegaCostWeight = 0.1;
 static constexpr float kJerkCostWeight = 0.05;
@@ -102,7 +102,7 @@ static constexpr bool kOrientedRight = true;
 static constexpr bool kBarrierOrientedInside = false;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.5; // m
+static constexpr float kLaneHalfWidth = 2.0; // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0; // m/s
@@ -165,7 +165,7 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
 } // anonymous namespace
 
-//void ThreePlayerIntersectionExample::SetAdversarialTime(double adv_time) {
+// void ThreePlayerIntersectionExample::SetAdversarialTime(double adv_time) {
 //  adversarial_time_ = adv_time;
 //}
 
@@ -205,6 +205,16 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   auto &p1_cost = player_costs_[0];
   auto &p2_cost = player_costs_[1];
   auto &p3_cost = player_costs_[2];
+
+  // // Initial state.
+  // static constexpr float kP1InitialX = -2.0;  // m
+  // static constexpr float kP1InitialY = -20.0; // m
+
+  // static constexpr float kP2InitialX = -10.0; // m
+  // static constexpr float kP2InitialY = 45.0;  // m
+
+  // static constexpr float kP3InitialX = -11.0; // m
+  // static constexpr float kP3InitialY = 16.0;  // m
 
   // Stay in lanes.
   const Polyline2 lane1(
