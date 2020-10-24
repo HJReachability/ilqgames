@@ -89,10 +89,9 @@ static constexpr float kMaxOmega = 1.0;
 static constexpr float kACostWeight = 0.1;
 static constexpr float kNominalVCostWeight = 200.0;
 
-static constexpr float kLaneCostWeight = 25.0;
+static constexpr float kLaneCostWeight = 500.0;
 
 static constexpr float kMinProximity = 6.0;
-
 using ProxCost = ProximityCost;
 static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
@@ -102,7 +101,7 @@ static constexpr bool kOrientedRight = true;
 static constexpr bool kBarrierOrientedInside = false;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.01; // m
+static constexpr float kLaneHalfWidth = 2.0; // m
 
 // Nominal and max speed.
 static constexpr float kP1MaxV = 12.0; // m/s
@@ -110,25 +109,30 @@ static constexpr float kP2MaxV = 12.0; // m/s
 static constexpr float kP3MaxV = 2.0;  // m/s
 static constexpr float kMinV = 1.0;    // m/s
 
-static constexpr float kP1NominalV = 10.0; // m/s
-static constexpr float kP2NominalV = 10.0; // m/s
-static constexpr float kP3NominalV = 1.5;  // m/s
+static constexpr float kP1NominalV =
+    8.0; // m/s (Previously different from master)
+static constexpr float kP2NominalV =
+    5.0; // m/s (Previously different from master)
+static constexpr float kP3NominalV = 1.5; // m/s
 
 // Initial state.
 static constexpr float kP1InitialX = -2.0;  // m
 static constexpr float kP2InitialX = -10.0; // m
 static constexpr float kP3InitialX = -11.0; // m
 
-static constexpr float kP1InitialY = -20.0; // m
-static constexpr float kP2InitialY = 45.0;  // m
-static constexpr float kP3InitialY = 16.0;  // m
+static constexpr float kP1InitialY =
+    -30.0; // m (Previously different from master)
+static constexpr float kP2InitialY = 35.0; // m
+static constexpr float kP3InitialY = 16.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;  // rad
 static constexpr float kP2InitialHeading = -M_PI_2; // rad
 static constexpr float kP3InitialHeading = 0.0;     // rad
 
-static constexpr float kP1InitialSpeed = 2.0;  // m/s
-static constexpr float kP2InitialSpeed = 2.0;  // m/s
+static constexpr float kP1InitialSpeed =
+    4.0; // m/s (Previously different from master)
+static constexpr float kP2InitialSpeed =
+    3.0; // m/s (Previously different from master)
 static constexpr float kP3InitialSpeed = 1.25; // m/s
 
 // State dimensions.
@@ -226,6 +230,17 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
        Point2(1000.0, 12.0)});
   const Polyline2 lane3(
       {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
+
+  // // Stay in lanes.
+  // const Polyline2 lane1(
+  //     {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
+  // const Polyline2 lane2(
+  //     {Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 18.0),
+  //      Point2(kP2InitialX + 0.5, 15.0), Point2(kP2InitialX + 1.0, 14.0),
+  //      Point2(kP2InitialX + 3.0, 12.5), Point2(kP2InitialX + 6.0, 12.0),
+  //      Point2(1000.0, 12.0)});
+  // const Polyline2 lane3(
+  //     {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},

@@ -116,7 +116,7 @@ static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
 static constexpr float kP1NominalV = 15.0; // m/s
-static constexpr float kP2NominalV = 5.0;  // m/s
+static constexpr float kP2NominalV = 15.0; // m/s
 static constexpr float kP3NominalV = 2.0;  // m/s
 
 // Initial state.
@@ -134,7 +134,7 @@ static constexpr float kP2InitialHeading = M_PI_2; // rad
 static constexpr float kP3InitialHeading = M_PI_2; // rad
 
 static constexpr float kP1InitialSpeed = 10.0; // m/s
-static constexpr float kP2InitialSpeed = 5.0;  // m/s
+static constexpr float kP2InitialSpeed = 15.0; // m/s
 static constexpr float kP3InitialSpeed = 10.0; // m/s
 
 // State dimensions.
@@ -180,7 +180,7 @@ static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3JerkIdx = 1;
 } // anonymous namespace
 
-//void ThreePlayerOvertakingExample::SetAdversarialTime(double adv_time) {
+// void ThreePlayerOvertakingExample::SetAdversarialTime(double adv_time) {
 //  adversarial_time_ = adv_time;
 //}
 
@@ -337,8 +337,8 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
       new ProxCost(kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                    {kP3XIdx, kP3YIdx}, kMinProximity, "ProximityP3"));
   p2_cost.AddStateCost(p2p3_proximity_cost);
-    
-    // Player 2 Cost without adversarial time; will fix later.
+
+  // Player 2 Cost without adversarial time; will fix later.
 
   // Pairwise proximity costs: Player 3.
 

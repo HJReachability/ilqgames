@@ -83,7 +83,7 @@ DEFINE_double(adversarial_time, 0.0,
 
 DEFINE_int32(unconstrained_solver_max_iters, 10,
              "Maximum iterations run by unconstrained solver");
-DEFINE_double(geometric_mu_scaling, 0.1, "geometric mu scaling");
+DEFINE_double(geometric_mu_scaling, 1.1, "geometric mu scaling");
 DEFINE_double(geometric_mu_downscaling, 0.5, "geometric mu downscaling");
 DEFINE_double(geometric_lambda_downscaling, 0.5,
               "geometric lambda downscaling");

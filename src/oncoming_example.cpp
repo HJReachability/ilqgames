@@ -136,10 +136,10 @@ static constexpr float kP1NominalHeading = M_PI_2; // rad
 
 // Initial state.
 static constexpr float kP1InitialX = 2.0;   // m
-static constexpr float kP1InitialY = -25.0; // m
+static constexpr float kP1InitialY = -15.0; // m
 
 static constexpr float kP2InitialX = -1.5; // m
-static constexpr float kP2InitialY = 25.0; // m
+static constexpr float kP2InitialY = 15.0; // m
 // static constexpr float kP2InitialYAntiparallel = 55.0; // m
 
 static constexpr float kP1InitialHeading = M_PI_2;              // rad
