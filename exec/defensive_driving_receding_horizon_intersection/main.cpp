@@ -151,8 +151,6 @@ int main(int argc, char **argv) {
                                                        params);
   ilqgames::AugmentedLagrangianSolver normal_solver(normal_problem, params);
 
-  // FRANK: Unedited below:
-
   // Solve the game in a receding horizon (defensive driving).
   constexpr ilqgames::Time kFinalTime = 10.0;      // s
   constexpr ilqgames::Time kPlannerRuntime = 0.25; // s

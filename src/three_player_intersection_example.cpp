@@ -87,7 +87,7 @@ static constexpr float kJerkCostWeight = 0.05;
 static constexpr float kMaxOmega = 1.0;
 
 static constexpr float kACostWeight = 0.1;
-static constexpr float kNominalVCostWeight = 200.0;
+static constexpr float kNominalVCostWeight = 10.0;
 
 static constexpr float kLaneCostWeight = 500.0;
 
@@ -109,10 +109,8 @@ static constexpr float kP2MaxV = 12.0; // m/s
 static constexpr float kP3MaxV = 2.0;  // m/s
 static constexpr float kMinV = 1.0;    // m/s
 
-static constexpr float kP1NominalV =
-    8.0; // m/s (Previously different from master)
-static constexpr float kP2NominalV =
-    5.0; // m/s (Previously different from master)
+static constexpr float kP1NominalV = 8.0; // m/s
+static constexpr float kP2NominalV = 5.0; // m/s
 static constexpr float kP3NominalV = 1.5; // m/s
 
 // Initial state.
@@ -120,19 +118,16 @@ static constexpr float kP1InitialX = -2.0;  // m
 static constexpr float kP2InitialX = -10.0; // m
 static constexpr float kP3InitialX = -11.0; // m
 
-static constexpr float kP1InitialY =
-    -30.0; // m (Previously different from master)
-static constexpr float kP2InitialY = 35.0; // m
-static constexpr float kP3InitialY = 16.0; // m
+static constexpr float kP1InitialY = -30.0; // m
+static constexpr float kP2InitialY = 35.0;  // m
+static constexpr float kP3InitialY = 16.0;  // m
 
 static constexpr float kP1InitialHeading = M_PI_2;  // rad
 static constexpr float kP2InitialHeading = -M_PI_2; // rad
 static constexpr float kP3InitialHeading = 0.0;     // rad
 
-static constexpr float kP1InitialSpeed =
-    4.0; // m/s (Previously different from master)
-static constexpr float kP2InitialSpeed =
-    3.0; // m/s (Previously different from master)
+static constexpr float kP1InitialSpeed = 4.0;  // m/s
+static constexpr float kP2InitialSpeed = 3.0;  // m/s
 static constexpr float kP3InitialSpeed = 1.25; // m/s
 
 // State dimensions.
@@ -224,10 +219,14 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   const Polyline2 lane1(
       {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
   const Polyline2 lane2(
-      {Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 18.0),
-       Point2(kP2InitialX + 0.5, 15.0), Point2(kP2InitialX + 1.0, 14.0),
-       Point2(kP2InitialX + 3.0, 12.5), Point2(kP2InitialX + 6.0, 12.0),
-       Point2(1000.0, 12.0)});
+       {Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 18.0),
+        Point2(kP2InitialX + 0.5, 15.0), Point2(kP2InitialX + 1.0, 14.0),
+        Point2(kP2InitialX + 3.0, 12.5), Point2(kP2InitialX + 6.0, 12.0),
+        Point2(1000.0, 12.0)});
+
+  // const Polyline2 lane2(
+  //     {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
+
   const Polyline2 lane3(
       {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
 
@@ -262,11 +261,11 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
-                                            kLaneHalfWidth, !kOrientedRight,
+                                            -kLaneHalfWidth, kOrientedRight,
                                             "LaneRightBoundary"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_l_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
-                                            -kLaneHalfWidth, kOrientedRight,
+                                            kLaneHalfWidth, !kOrientedRight,
                                             "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
   p2_cost.AddStateConstraint(p2_lane_r_constraint);
@@ -294,8 +293,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kP1VIdx, kP1MaxV, kOrientedRight, "MaxV");
   const auto p1_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP1VIdx, kP1NominalV, "NominalV");
-  // p1_cost.AddStateConstraint(p1_min_v_constraint);
-  // p1_cost.AddStateConstraint(p1_max_v_constraint);
+  p1_cost.AddStateConstraint(p1_min_v_constraint);
+  p1_cost.AddStateConstraint(p1_max_v_constraint);
   p1_cost.AddStateCost(p1_nominal_v_cost);
 
   const auto p2_min_v_constraint = std::make_shared<SingleDimensionConstraint>(
@@ -304,8 +303,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
       kP2VIdx, kP2MaxV, kOrientedRight, "MaxV");
   const auto p2_nominal_v_cost = std::make_shared<QuadraticCost>(
       kNominalVCostWeight, kP2VIdx, kP2NominalV, "NominalV");
-  // p2_cost.AddStateConstraint(p2_min_v_constraint);
-  // p2_cost.AddStateConstraint(p2_max_v_constraint);
+  p2_cost.AddStateConstraint(p2_min_v_constraint);
+  p2_cost.AddStateConstraint(p2_max_v_constraint);
   p2_cost.AddStateCost(p2_nominal_v_cost);
 
   const auto p3_min_v_constraint = std::make_shared<SingleDimensionConstraint>(

@@ -129,10 +129,6 @@ int main(int argc, char **argv) {
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  // params.geometric_mu_scaling = 1.1;
-  // params.geometric_mu_downscaling = 0.5;
-  // params.geometric_lambda_downscaling = 0.5;
-  //  params.open_loop = true;
 
   params.unconstrained_solver_max_iters = FLAGS_unconstrained_solver_max_iters;
   params.geometric_mu_scaling = FLAGS_geometric_mu_scaling;

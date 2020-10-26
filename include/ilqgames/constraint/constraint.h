@@ -61,14 +61,15 @@
 namespace ilqgames {
 
 class Constraint : public Cost {
- public:
+public:
   virtual ~Constraint() {}
 
   // Check if this constraint is satisfied, and optionally return the constraint
   // value, which equals zero if the constraint is satisfied.
-  bool IsSatisfied(Time t, const VectorXf& input, float* level) const {
+  bool IsSatisfied(Time t, const VectorXf &input, float *level) const {
     const float value = Evaluate(t, input);
-    if (level) *level = value;
+    if (level)
+      *level = value;
 
     return IsSatisfied(value);
   }
@@ -79,8 +80,8 @@ class Constraint : public Cost {
 
   // Evaluate this constraint value, i.e., g(x), and the augmented Lagrangian,
   // i.e., lambda g(x) + mu g(x) g(x) / 2.
-  virtual float Evaluate(Time t, const VectorXf& input) const = 0;
-  float EvaluateAugmentedLagrangian(Time t, const VectorXf& input) const {
+  virtual float Evaluate(Time t, const VectorXf &input) const = 0;
+  float EvaluateAugmentedLagrangian(Time t, const VectorXf &input) const {
     const float g = Evaluate(t, input);
     const float lambda = lambdas_[TimeIndex(t)];
     return lambda * g + 0.5 * Mu(lambda, g) * g * g;
@@ -88,47 +89,61 @@ class Constraint : public Cost {
 
   // Quadraticize the constraint value and its square, each scaled by lambda or
   // mu, respectively (terms in the augmented Lagrangian).
-  virtual void Quadraticize(Time t, const VectorXf& input, MatrixXf* hess,
-                            VectorXf* grad) const = 0;
+  virtual void Quadraticize(Time t, const VectorXf &input, MatrixXf *hess,
+                            VectorXf *grad) const = 0;
 
   // Accessors and setters.
   bool IsEquality() const { return is_equality_; }
-  float& Lambda(Time t) { return lambdas_[TimeIndex(t)]; }
-  float Lambda(Time t) const { return lambdas_[TimeIndex(t)]; }
+  float &Lambda(Time t) { return lambdas_[TimeIndex(t)]; }
+  float Lambda(Time t) const {
+    std::cout << lambdas_[TimeIndex(t)];
+    return lambdas_[TimeIndex(t)];
+  }
   void IncrementLambda(Time t, float value) {
     const size_t kk = TimeIndex(t);
     const float new_lambda = lambdas_[kk] + mu_ * value;
     lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
   }
   void ScaleLambdas(float scale) {
-    for (auto& lambda : lambdas_) lambda *= scale;
+    for (auto &lambda : lambdas_)
+      lambda *= scale;
   }
-  static float& GlobalMu() { return mu_; }
-  static void ScaleMu(float scale) { mu_ *= scale; }
-  float Mu(Time t, const VectorXf& input) const {
+  static float &GlobalMu() {
+    std::cout << "Global Mu: " << mu_ << "\n";
+    return mu_;
+  }
+  static void ScaleMu(float scale) {
+    mu_ = std::min(constants::kMaxMu, scale * mu_);
+    // mu_ *= scale;
+    // std::cout << "Scale Mu: " << mu_ << "\n";
+  }
+  float Mu(Time t, const VectorXf &input) const {
     const float g = Evaluate(t, input);
+    std::cout << "Mu: " << Mu(Lambda(t), g) << "\n";
     return Mu(Lambda(t), g);
   }
   float Mu(float lambda, float g) const {
     if (!is_equality_ && g <= constants::kSmallNumber &&
-        std::abs(lambda) <= constants::kSmallNumber)
+        std::abs(lambda) <= constants::kSmallNumber) {
+      std::cout << "Mu: 0.0\n";
       return 0.0;
+    }
+    std::cout << "Mu: " << mu_ << "\n";
     return mu_;
   }
 
- protected:
-  explicit Constraint(bool is_equality, const std::string& name)
-      : Cost(1.0, name),
-        is_equality_(is_equality),
+protected:
+  explicit Constraint(bool is_equality, const std::string &name)
+      : Cost(1.0, name), is_equality_(is_equality),
         lambdas_(time::kNumTimeSteps, 0.0) {}
 
   // Modify derivatives to account for the multipliers and the quadratic term in
   // the augmented Lagrangian. The inputs are the derivatives of g in the
   // appropriate variables (assumed to be arbitrary coordinates of the input,
   // here called x and y).
-  void ModifyDerivatives(Time t, float g, float* dx, float* ddx,
-                         float* dy = nullptr, float* ddy = nullptr,
-                         float* dxdy = nullptr) const;
+  void ModifyDerivatives(Time t, float g, float *dx, float *ddx,
+                         float *dy = nullptr, float *ddy = nullptr,
+                         float *dxdy = nullptr) const;
 
   // Is this an equality constraint? If not, it is an inequality constraint.
   bool is_equality_;
@@ -137,8 +152,8 @@ class Constraint : public Cost {
   // augmented Lagrangian.
   std::vector<float> lambdas_;
   static float mu_;
-};  //\class Constraint
+}; //\class Constraint
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

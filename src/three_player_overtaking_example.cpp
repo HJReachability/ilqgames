@@ -236,8 +236,8 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
                                             -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p1_cost.AddStateCost(p1_lane_cost);
-  p1_cost.AddStateConstraint(p1_lane_r_constraint);
-  p1_cost.AddStateConstraint(p1_lane_l_constraint);
+  // p1_cost.AddStateConstraint(p1_lane_r_constraint);
+  // p1_cost.AddStateConstraint(p1_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
@@ -251,8 +251,8 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
                                             -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p2_cost.AddStateCost(p2_lane_cost);
-  p2_cost.AddStateConstraint(p2_lane_r_constraint);
-  p2_cost.AddStateConstraint(p2_lane_l_constraint);
+  // p2_cost.AddStateConstraint(p2_lane_r_constraint);
+  // p2_cost.AddStateConstraint(p2_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
@@ -266,8 +266,8 @@ void ThreePlayerOvertakingExample::ConstructPlayerCosts() {
                                             -kLaneHalfWidth, kOrientedRight,
                                             "LaneLeftBoundary"));
   p3_cost.AddStateCost(p3_lane_cost);
-  p3_cost.AddStateConstraint(p3_lane_r_constraint);
-  p3_cost.AddStateConstraint(p3_lane_l_constraint);
+  // p3_cost.AddStateConstraint(p3_lane_r_constraint);
+  // p3_cost.AddStateConstraint(p3_lane_l_constraint);
 
   // Max/min/nominal speed costs.
 

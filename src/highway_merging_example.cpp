@@ -303,7 +303,9 @@ static const Dimension kP6JerkIdx = 1;
 //   SetAdversarialTime(adv_time);
 // }
 
-    void HighwayMergingExample::SetAdversarialTime(double adv_time) { adversarial_time = adv_time; }
+// void HighwayMergingExample::SetAdversarialTime(double adv_time) {
+//   adversarial_time_ = adv_time;
+// }
 
 void HighwayMergingExample::ConstructDynamics() {
   dynamics_.reset(new ConcatenatedDynamicalSystem(
@@ -681,7 +683,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP2ProximityCostWeight, {kP2XIdx, kP2YIdx}, {kP1XIdx, kP1YIdx})),
-          adversarial_time, "InitialProximityCostP2P1"));
+          adversarial_time_, "InitialProximityCostP2P1"));
   p2_cost.AddStateCost(p2p1_initial_proximity_cost);
   initial_time_costs_.push_back(p2p1_initial_proximity_cost);
 
@@ -689,7 +691,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP2ProximityCostWeight, {kP2XIdx, kP2YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        adversarial_time, "FinalProximityCostP2P1"));
+                        adversarial_time_, "FinalProximityCostP2P1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
 
@@ -718,7 +720,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP3ProximityCostWeight, {kP3XIdx, kP3YIdx}, {kP1XIdx, kP1YIdx})),
-          adversarial_time, "InitialProximityCostP3P1"));
+          adversarial_time_, "InitialProximityCostP3P1"));
   p3_cost.AddStateCost(p3p1_initial_proximity_cost);
   initial_time_costs_.push_back(p3p1_initial_proximity_cost);
 
@@ -726,7 +728,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP3ProximityCostWeight, {kP3XIdx, kP3YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        adversarial_time, "FinalProximityCostP3P1"));
+                        adversarial_time_, "FinalProximityCostP3P1"));
   p3_cost.AddStateCost(p3p1_final_proximity_cost);
   final_time_costs_.push_back(p3p1_final_proximity_cost);
 
@@ -754,7 +756,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP4ProximityCostWeight, {kP4XIdx, kP4YIdx}, {kP1XIdx, kP1YIdx})),
-          adversarial_time, "InitialProximityCostP4P1"));
+          adversarial_time_, "InitialProximityCostP4P1"));
   p4_cost.AddStateCost(p4p1_initial_proximity_cost);
   initial_time_costs_.push_back(p4p1_initial_proximity_cost);
 
@@ -762,7 +764,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP4ProximityCostWeight, {kP4XIdx, kP4YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        adversarial_time, "FinalProximityCostP4P1"));
+                        adversarial_time_, "FinalProximityCostP4P1"));
   p4_cost.AddStateCost(p4p1_final_proximity_cost);
   final_time_costs_.push_back(p4p1_final_proximity_cost);
 
@@ -789,7 +791,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP5ProximityCostWeight, {kP5XIdx, kP5YIdx}, {kP1XIdx, kP1YIdx})),
-          adversarial_time, "InitialProximityCostP5P1"));
+          adversarial_time_, "InitialProximityCostP5P1"));
   p5_cost.AddStateCost(p5p1_initial_proximity_cost);
   initial_time_costs_.push_back(p5p1_initial_proximity_cost);
 
@@ -797,7 +799,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP5ProximityCostWeight, {kP5XIdx, kP5YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        adversarial_time, "FinalProximityCostP5P1"));
+                        adversarial_time_, "FinalProximityCostP5P1"));
   p5_cost.AddStateCost(p5p1_final_proximity_cost);
   final_time_costs_.push_back(p5p1_final_proximity_cost);
 
@@ -825,7 +827,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new InitialTimeCost(
           std::shared_ptr<QuadraticDifferenceCost>(new QuadraticDifferenceCost(
               kP6ProximityCostWeight, {kP6XIdx, kP6YIdx}, {kP1XIdx, kP1YIdx})),
-          adversarial_time, "InitialProximityCostP6P1"));
+          adversarial_time_, "InitialProximityCostP6P1"));
   p6_cost.AddStateCost(p6p1_initial_proximity_cost);
   initial_time_costs_.push_back(p6p1_initial_proximity_cost);
 
@@ -833,7 +835,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
       new FinalTimeCost(std::shared_ptr<ProxCost>(new ProxCost(
                             kP6ProximityCostWeight, {kP6XIdx, kP6YIdx},
                             {kP1XIdx, kP1YIdx}, kMinProximity)),
-                        adversarial_time, "FinalProximityCostP6P1"));
+                        adversarial_time_, "FinalProximityCostP6P1"));
   p6_cost.AddStateCost(p6p1_final_proximity_cost);
   final_time_costs_.push_back(p6p1_final_proximity_cost);
 
