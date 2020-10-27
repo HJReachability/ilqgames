@@ -136,7 +136,7 @@ static constexpr double kSmallNumber = 1e-4;
 static constexpr double kInfinity = std::numeric_limits<float>::infinity();
 
 // Constant for invalid values.
-static constexpr double kInvalidValue = std::numeric_limits<float>::quiet_NaN();
+static constexpr double kInvalidValue =  std::numeric_limits<float>::quiet_NaN();
 
 // Upper threshold for mu_.
 static constexpr double kMaxMu = 1000.0;
