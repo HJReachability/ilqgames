@@ -54,21 +54,24 @@ class HighwayMergingExample : public TopDownRenderableProblem {
 public:
   ~HighwayMergingExample() {}
 
-  HighwayMergingExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
+  HighwayMergingExample(Time adversarial_time = 0.0)
+      : TopDownRenderableProblem(adversarial_time) {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-//  void SetAdversarialTime(double adv_time);
+  // void ConstructInitialOperatingPoint();
+
+  //  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf &x) const;
   std::vector<float> Ys(const VectorXf &x) const;
   std::vector<float> Thetas(const VectorXf &x) const;
 
-//private:
-//  double adversarial_time;
+  // private:
+  //  double adversarial_time;
 }; // class ThreePlayerIntersectionExample
 
 } // namespace ilqgames

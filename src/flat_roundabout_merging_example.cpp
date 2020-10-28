@@ -222,15 +222,44 @@ void FlatRoundaboutMergingExample::ConstructInitialState() {
 }
 
 void FlatRoundaboutMergingExample::ConstructInitialOperatingPoint() {
-  // Initialize operating points to follow these lanes at the nominal speed.
+
+  // Misusing kP1HeadingIdx, ..., kP4HeadingIdx here. Will not run properly.
+
   InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
-                       operating_point_.get());
+                       kP1HeadingIdx, operating_point_.get());
   InitializeAlongRoute(lane2, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
-                       operating_point_.get());
+                       kP2HeadingIdx, operating_point_.get());
   InitializeAlongRoute(lane3, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
-                       operating_point_.get());
+                       kP3HeadingIdx, operating_point_.get());
   InitializeAlongRoute(lane4, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
-                       operating_point_.get());
+                       kP4HeadingIdx, operating_point_.get());
+
+  // InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
+  //                      {kP1HeadingIdx, kP2HeadingIdx},
+  //                      operating_point_.get());
+  // InitializeAlongRoute(lane2, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
+  //                      {kP2HeadingIdx, kP2HeadingIdx},
+  //                      operating_point_.get());
+  // InitializeAlongRoute(lane3, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
+  //                      {kP3HeadingIdx, kP3HeadingIdx},
+  //                      operating_point_.get());
+  // InitializeAlongRoute(lane4, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
+  //                      {kP4HeadingIdx, kP4HeadingIdx},
+  //                      operating_point_.get());
+
+  // Initialize operating points to follow these lanes at the nominal speed.
+  //  InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed,
+  //                       {kP1XIdx, kP1YIdx, kP1HeadingIdx},
+  //                       operating_point_.get());
+  //  InitializeAlongRoute(lane2, 0.0, kP2InitialSpeed,
+  //                       {kP2XIdx, kP2YIdx, kP2HeadingIdx},
+  //                       operating_point_.get());
+  //  InitializeAlongRoute(lane3, 0.0, kP3InitialSpeed,
+  //                       {kP3XIdx, kP3YIdx, kP3HeadingIdx},
+  //                       operating_point_.get());
+  //  InitializeAlongRoute(lane4, 0.0, kP4InitialSpeed,
+  //                       {kP4XIdx, kP4YIdx, kP4HeadingIdx},
+  //                       operating_point_.get());
 }
 
 void FlatRoundaboutMergingExample::ConstructPlayerCosts() {

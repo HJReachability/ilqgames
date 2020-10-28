@@ -49,6 +49,7 @@
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/utils/check_local_nash_equilibrium.h>
+#include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
@@ -138,6 +139,19 @@ int main(int argc, char **argv) {
   auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>(
       FLAGS_adversarial_time);
   problem->Initialize();
+
+  // Modified below, 10-27-2020:
+
+  // InitializeAlongRoute(*(*problem).lane2_, (*problem).kP2InitialRoutePos_,
+  //                      (*problem).kP2NominalV_, (*problem).kP2PositionDims_,
+  //                      (*problem).operating_point_);
+
+  // InitializeAlongRoute(*(*problem).lane2_, (*problem).kP2InitialRoutePos_,
+  //                      (*problem).kP2NominalV_, (*problem).kP2PositionDims_,
+  //                      &(*problem).CurrentOperatingPoint());
+
+  // Modified above, 10-27-2020.
+
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   // Solve the game.
@@ -162,6 +176,7 @@ int main(int argc, char **argv) {
   // Confirm with numerical check.
   constexpr float kMaxPerturbation = 0.1;
   constexpr bool kOpenLoop = false;
+
   problem->OverwriteSolution(log->FinalOperatingPoint(),
                              log->FinalStrategies());
   const bool is_numerical_nash =

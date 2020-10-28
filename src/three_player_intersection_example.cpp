@@ -117,6 +117,7 @@ static constexpr float kP3NominalV = 2.0;  // m/s
 // Initial state.
 static constexpr float kP1InitialX = -2.0;  // m
 static constexpr float kP2InitialX = -10.0; // m
+
 static constexpr float kP3InitialX = -11.0; // m
 static constexpr float kP1InitialY = -30.0; // m
 static constexpr float kP2InitialY = 45.0;  // m
@@ -126,9 +127,9 @@ static constexpr float kP1InitialHeading = M_PI_2;  // rad
 static constexpr float kP2InitialHeading = -M_PI_2; // rad
 static constexpr float kP3InitialHeading = 0.0;     // rad[<0;81;21M]
 
-static constexpr float kP1InitialSpeed = 8.1;  // m/s
-static constexpr float kP2InitialSpeed = 10.1; // m/s
-static constexpr float kP3InitialSpeed = 2.1;  // m/s
+static constexpr float kP1InitialSpeed = 8.1; // m/s
+static constexpr float kP2InitialSpeed = 5.1; // m/s
+static constexpr float kP3InitialSpeed = 2.1; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -162,6 +163,23 @@ static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
 static const Dimension kP3OmegaIdx = 0;
 static const Dimension kP3AIdx = 1;
+
+// Stay in lanes.
+
+static constexpr float lane1InitialY = -1000.0;
+static constexpr float lane2InitialY = 1000.0;
+static constexpr float lane3InitialX = -1000.0;
+
+const Polyline2 lane1({Point2(kP1InitialX, lane1InitialY),
+                       Point2(kP1InitialX, 1000.0)});
+const Polyline2
+    lane2({Point2(kP2InitialX, lane2InitialY), Point2(kP2InitialX, 18.0),
+           Point2(kP2InitialX + 0.5, 15.0), Point2(kP2InitialX + 1.0, 14.0),
+           Point2(kP2InitialX + 3.0, 12.5), Point2(kP2InitialX + 6.0, 12.0),
+           Point2(1000.0, 12.0)});
+const Polyline2 lane3({Point2(lane3InitialX, kP3InitialY),
+                       Point2(1000.0, kP3InitialY)});
+
 } // anonymous namespace
 
 void ThreePlayerIntersectionExample::ConstructDynamics() {
@@ -198,17 +216,6 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   auto &p2_cost = player_costs_[1];
   auto &p3_cost = player_costs_[2];
 
-  // Stay in lanes.
-  const Polyline2 lane1(
-      {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
-  const Polyline2 lane2(
-      {Point2(kP2InitialX, 1000.0), Point2(kP2InitialX, 18.0),
-       Point2(kP2InitialX + 0.5, 15.0), Point2(kP2InitialX + 1.0, 14.0),
-       Point2(kP2InitialX + 3.0, 12.5), Point2(kP2InitialX + 6.0, 12.0),
-       Point2(1000.0, 12.0)});
-  const Polyline2 lane3(
-      {Point2(-1000.0, kP3InitialY), Point2(1000.0, kP3InitialY)});
-
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
@@ -225,7 +232,7 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p1_cost.AddStateConstraint(p1_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight * 10, lane2,
+      new QuadraticPolyline2Cost(kLaneCostWeight * 100, lane2,
                                  {kP2XIdx, kP2YIdx}, "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
@@ -476,6 +483,83 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   //                          "ProximityConstraintP2"));
   // p3_cost.AddStateConstraint(p3p1_proximity_constraint);
   // p3_cost.AddStateConstraint(p3p2_proximity_constraint);
+}
+
+void ThreePlayerIntersectionExample::ConstructInitialOperatingPoint() {
+
+  // lane1_ = &lane1;
+  // lane2_ = &lane2;
+  // lane3_ = &lane3;
+
+  // kP1NominalV_ = kP1NominalV;
+  // kP2NominalV_ = kP2NominalV;
+  // kP3NominalV_ = kP3NominalV;
+
+  // static const float kP1InitialRoutePos = std::abs(kP1InitialY -
+  // lane1InitialY); static const float kP2InitialRoutePos =
+  // std::abs(kP2InitialY - lane2InitialY); static const float
+  // kP3InitialRoutePos = std::abs(kP3InitialX - lane3InitialX);
+
+  float kP1InitialRoutePos = std::abs(kP1InitialY - lane1InitialY);
+  float kP2InitialRoutePos = std::abs(kP2InitialY - lane2InitialY);
+  float kP3InitialRoutePos = std::abs(kP3InitialX - lane3InitialX);
+
+  // const std::tuple<Dimension, Dimension> kP1PositionDimensions =
+  //     std::make_pair(kP1XIdx, kP1YIdx);
+  // const std::tuple<Dimension, Dimension> kP2PositionDimensions =
+  //     std::make_pair(kP2XIdx, kP2YIdx);
+  // const std::tuple<Dimension, Dimension> kP3PositionDimensions =
+  //     std::make_pair(kP3XIdx, kP3YIdx);
+
+  const std::tuple<Dimension, Dimension> kP1PositionDimensions =
+      std::make_tuple(kP1XIdx, kP1YIdx);
+  const std::tuple<Dimension, Dimension> kP2PositionDimensions =
+      std::make_tuple(kP2XIdx, kP2YIdx);
+  const std::tuple<Dimension, Dimension> kP3PositionDimensions =
+      std::make_tuple(kP3XIdx, kP3YIdx);
+
+  // const std::tuple<Dimension, Dimension> kP1PositionDimensions =
+  //     std::make_tuple(kP1XIdx, kP1YIdx, kP1HeadingIdx);
+  // const std::tuple<Dimension, Dimension> kP2PositionDimensions =
+  //     std::make_tuple(kP2XIdx, kP2YIdx, kP2HeadingIdx);
+  // const std::tuple<Dimension, Dimension> kP3PositionDimensions =
+  //     std::make_tuple(kP3XIdx, kP3YIdx, kP3HeadingIdx);
+
+  operating_point_.reset(
+      new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+
+  // InitializeAlongRoute(lane1, kP1InitialRoutePos, kP1NominalV,
+  //                      {kP1XIdx, kP1YIdx}, {kP1HeadingIdx, kP1HeadingIdx},
+  //                      operating_point_.get());
+
+  // InitializeAlongRoute(lane2, kP2InitialRoutePos, kP2NominalV,
+  //                      {kP2XIdx, kP2YIdx}, {kP2HeadingIdx, kP2HeadingIdx},
+  //                      operating_point_.get());
+
+  // InitializeAlongRoute(lane3, kP3InitialRoutePos, kP3NominalV,
+  //                      {kP3XIdx, kP3YIdx}, {kP3HeadingIdx, kP3HeadingIdx},
+  //                      operating_point_.get());
+
+  InitializeAlongRoute(lane1, kP1InitialRoutePos, kP1NominalV,
+                       {kP1XIdx, kP1YIdx}, kP1HeadingIdx,
+                       operating_point_.get());
+
+  InitializeAlongRoute(lane2, kP2InitialRoutePos, kP2NominalV,
+                       {kP2XIdx, kP2YIdx}, kP2HeadingIdx,
+                       operating_point_.get());
+
+  InitializeAlongRoute(lane3, kP3InitialRoutePos, kP3NominalV,
+                       {kP3XIdx, kP3YIdx}, kP3HeadingIdx,
+                       operating_point_.get());
+
+  // InitializeAlongRoute(lane1, kP1InitialRoutePos, kP1NominalV,
+  //                      kP1PositionDimensions, operating_point_.get());
+
+  // InitializeAlongRoute(lane2, kP2InitialRoutePos, kP2NominalV,
+  //                      kP2PositionDimensions, operating_point_.get());
+
+  // InitializeAlongRoute(lane3, kP3InitialRoutePos, kP3NominalV,
+  //                      kP3PositionDimensions, operating_point_.get());
 }
 
 inline std::vector<float>

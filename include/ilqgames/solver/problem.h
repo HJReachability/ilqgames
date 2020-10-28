@@ -46,7 +46,6 @@
 
 #include <ilqgames/cost/final_time_cost.h>
 #include <ilqgames/cost/initial_time_cost.h>
-// #include <ilqgames/solver/game_solver.h>
 #include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_dynamical_system.h>
 #include <ilqgames/dynamics/multi_player_flat_system.h>
@@ -131,6 +130,10 @@ public:
   virtual const std::vector<Strategy> &CurrentStrategies() const {
     return *strategies_;
   }
+
+//    // Strategies and operating points for all players.
+//    std::unique_ptr<OperatingPoint> operating_point_;
+//    std::unique_ptr<std::vector<Strategy>> strategies_;
 
 protected:
   // Problem();

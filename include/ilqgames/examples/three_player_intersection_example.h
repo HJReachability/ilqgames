@@ -44,6 +44,7 @@
 #define ILQGAMES_EXAMPLES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
 #include <ilqgames/dynamics/multi_player_flat_system.h>
+#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
@@ -53,21 +54,43 @@ namespace ilqgames {
 class ThreePlayerIntersectionExample : public TopDownRenderableProblem {
 public:
   ~ThreePlayerIntersectionExample() {}
-  ThreePlayerIntersectionExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
+  ThreePlayerIntersectionExample(Time adversarial_time = 0.0)
+      : TopDownRenderableProblem(adversarial_time) {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-//  void SetAdversarialTime(double adv_time);
+  void ConstructInitialOperatingPoint();
+  //  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
   std::vector<float> Xs(const VectorXf &x) const;
   std::vector<float> Ys(const VectorXf &x) const;
   std::vector<float> Thetas(const VectorXf &x) const;
 
-//private:
-//  double adversarial_time;
+  // private:
+  // For initializing along the route: Pass in lanes, initial route position (x0
+  // is already in the parent class, problem.h), nominal speeds, and position
+  // dimensions.
+
+  // const Polyline2 *lane1_;
+  // const Polyline2 *lane2_;
+  // const Polyline2 *lane3_;
+
+  // float kP1NominalV_ = 0.0;
+  // float kP2NominalV_ = 0.0;
+  // float kP3NominalV_ = 0.0;
+
+  // float kP1InitialRoutePos_ = 0.0;
+  // float kP2InitialRoutePos_ = 0.0;
+  // float kP3InitialRoutePos_ = 0.0;
+
+  // std::tuple<Dimension, Dimension, Dimension> kP1PositionDims_;
+  // std::tuple<Dimension, Dimension, Dimension> kP2PositionDims_;
+  // std::tuple<Dimension, Dimension, Dimension> kP3PositionDims_;
+
+  //  double adversarial_time;
 }; // class ThreePlayerIntersectionExample
 
 } // namespace ilqgames

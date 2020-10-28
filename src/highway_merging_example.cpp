@@ -860,6 +860,29 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   // std::cout << x0_.transpose() << std::endl;
 } // namespace ilqgames
 
+// void HighwayMergingExample::ConstructInitialOperatingPoint() {
+//   operating_point_.reset(
+//       new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+
+//   InitializeAlongRoute(lane1, kP1InitialRoutePos_, kP1InitialSpeed,
+//                        {kP1XIdx, kP1YIdx}, operating_point_.get());
+
+//   InitializeAlongRoute(lane2, kP2InitialRoutePos_, kP2InitialSpeed,
+//                        {kP2XIdx, kP2YIdx}, operating_point_.get());
+
+//   InitializeAlongRoute(lane3, kP3InitialRoutePos_, kP3InitialSpeed,
+//                        {kP3XIdx, kP3YIdx}, operating_point_.get());
+
+//   InitializeAlongRoute(lane4, kP1InitialRoutePos_, kP4InitialSpeed,
+//                        {kP4XIdx, kP4YIdx}, operating_point_.get());
+
+//   InitializeAlongRoute(lane5, kP2InitialRoutePos_, kP5InitialSpeed,
+//                        {kP5XIdx, kP5YIdx}, operating_point_.get());
+
+//   InitializeAlongRoute(lane6, kP3InitialRoutePos_, kP6InitialSpeed,
+//                        {kP6XIdx, kP6YIdx}, operating_point_.get());
+// }
+
 inline std::vector<float> HighwayMergingExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx),
           x(kP4XIdx), x(kP5XIdx), x(kP6XIdx)};
