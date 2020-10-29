@@ -33,7 +33,6 @@
  * Please contact the author(s) of this library if you have any questions.
  * Authors: David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
  */
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Three player intersection example. Ordering is given by the following:
@@ -97,7 +96,7 @@ static constexpr float kP3NominalVCostWeight = 100.0;
 
 // static constexpr float kP2PhiCostWeight = 1.0;
 static constexpr float kP1PhiCostWeight = 0.0;
-static constexpr float kP2PhiCostWeight = 10.0;
+static constexpr float kP2PhiCostWeight = 20.0;
 
 static constexpr float kP1LaneCostWeight = 25.0;
 static constexpr float kP2LaneCostWeight = 2500.0;
@@ -136,10 +135,10 @@ static constexpr float kP3InitialY = 16.0;  // m
 
 static constexpr float kP1InitialHeading = M_PI_2;  // rad
 static constexpr float kP2InitialHeading = -M_PI_2; // rad
-static constexpr float kP3InitialHeading = 0.0;     // rad[<0;81;21M]
+static constexpr float kP3InitialHeading = 0.0;     // rad
 
 static constexpr float kP1InitialSpeed = 8.1; // m/s
-static constexpr float kP2InitialSpeed = 5.1; // m/s
+static constexpr float kP2InitialSpeed = 8.1; // m/s // Also works with 8.1
 static constexpr float kP3InitialSpeed = 2.1; // m/s
 
 // State dimensions.

@@ -103,6 +103,7 @@ public:
     const size_t kk = TimeIndex(t);
     const float new_lambda = lambdas_[kk] + mu_ * value;
     lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
+      std::cout << "IncrementLambda(t, value): " << lambdas_[kk] << " (Time: " << kk << ")\n";
   }
   void ScaleLambdas(float scale) {
     for (auto &lambda : lambdas_)
@@ -114,21 +115,21 @@ public:
   }
   static void ScaleMu(float scale) {
     mu_ = std::min(constants::kMaxMu, scale * mu_);
-    // mu_ *= scale;
-    // std::cout << "Scale Mu: " << mu_ << "\n";
+     mu_ *= scale;
+//     std::cout << "Scale Mu: " << mu_ << "\n";
   }
   float Mu(Time t, const VectorXf &input) const {
     const float g = Evaluate(t, input);
-    std::cout << "Mu: " << Mu(Lambda(t), g) << "\n";
+    std::cout << "Mu(Lambda(t), g): " << Mu(Lambda(t), g) << "\n";
     return Mu(Lambda(t), g);
   }
   float Mu(float lambda, float g) const {
     if (!is_equality_ && g <= constants::kSmallNumber &&
         std::abs(lambda) <= constants::kSmallNumber) {
-      std::cout << "Mu: 0.0\n";
+      std::cout << "float Mu(lambda, g): 0.0\n";
       return 0.0;
     }
-    std::cout << "Mu: " << mu_ << "\n";
+      std::cout << "float Mu(lambda, g): Mu: " << mu_ << "\n";
     return mu_;
   }
 
