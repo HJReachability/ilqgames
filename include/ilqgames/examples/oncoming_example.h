@@ -60,6 +60,7 @@ public:
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
+  void ConstructInitialOperatingPoint();
 //  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.

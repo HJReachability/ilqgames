@@ -73,7 +73,7 @@ using Eigen::VectorXf;
 using PlayerIndex = unsigned short;
 using Dimension = int;
 using Point2 = Eigen::Vector2f;
-
+    
 // Rename the system clock for easier usage.
 using Clock = std::chrono::system_clock;
 

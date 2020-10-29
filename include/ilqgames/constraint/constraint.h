@@ -96,7 +96,7 @@ public:
   bool IsEquality() const { return is_equality_; }
   float &Lambda(Time t) { return lambdas_[TimeIndex(t)]; }
   float Lambda(Time t) const {
-    std::cout << lambdas_[TimeIndex(t)];
+      std::cout << "lambdas_[TimeIndex(t)]: " << lambdas_[TimeIndex(t)] << "\n";
     return lambdas_[TimeIndex(t)];
   }
   void IncrementLambda(Time t, float value) {

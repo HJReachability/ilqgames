@@ -65,6 +65,7 @@
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -188,6 +189,15 @@ static const Dimension kP1OmegaIdx = 0;
 static const Dimension kP1JerkIdx = 1;
 static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
+    
+    // Lanes.
+    static constexpr float lane1InitialY = -1000.0;
+    static constexpr float lane2InitialY = -1000.0;
+    
+    const Polyline2 lane1(
+                          {Point2(kP1InitialX, lane1InitialY), Point2(kP1InitialX, 1000.0)});
+    const Polyline2 lane2(
+                          {Point2(kP2InitialX, lane2InitialY), Point2(kP2InitialX, 1000.0)});
 
 } // anonymous namespace
 
@@ -224,11 +234,6 @@ void OncomingExample::ConstructPlayerCosts() {
   auto &p2_cost = player_costs_[1];
 
   // Stay in lanes.
-
-  const Polyline2 lane1(
-      {Point2(kP1InitialX, -1000.0), Point2(kP1InitialX, 1000.0)});
-  const Polyline2 lane2(
-      {Point2(kP2InitialX, -1000.0), Point2(kP2InitialX, 1000.0)});
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
       new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP1XIdx, kP1YIdx},
@@ -327,6 +332,28 @@ void OncomingExample::ConstructPlayerCosts() {
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
 }
+    
+    void OncomingExample::ConstructInitialOperatingPoint()
+    {
+        float kP1InitialRoutePos = std::abs(kP1InitialY - lane1InitialY);
+        float kP2InitialRoutePos = std::abs(kP2InitialY - lane2InitialY);
+        
+        const std::tuple<Dimension, Dimension> kP1PositionDimensions =
+        std::make_tuple(kP1XIdx, kP1YIdx);
+        const std::tuple<Dimension, Dimension> kP2PositionDimensions =
+        std::make_tuple(kP2XIdx, kP2YIdx);
+        
+        operating_point_.reset(
+                               new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+        
+        InitializeAlongRoute(lane1, kP1InitialRoutePos, kP1NominalV,
+                             {kP1XIdx, kP1YIdx}, kP1HeadingIdx,
+                             operating_point_.get());
+        
+        InitializeAlongRoute(lane2, kP2InitialRoutePos, kP2NominalV,
+                             {kP2XIdx, kP2YIdx}, kP2HeadingIdx,
+                             operating_point_.get());
+    }
 
 inline std::vector<float> OncomingExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx)};

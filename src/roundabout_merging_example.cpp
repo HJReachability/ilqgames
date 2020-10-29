@@ -218,15 +218,19 @@ void RoundaboutMergingExample::ConstructInitialState() {
 }
 
 void RoundaboutMergingExample::ConstructInitialOperatingPoint() {
+    
+    operating_point_.reset(
+                           new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+
   // Initialize operating points to follow these lanes at the nominal speed.
-  // InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx},
-  //                      operating_point_.get());
-  // InitializeAlongRoute(lane2, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx},
-  //                      operating_point_.get());
-  // InitializeAlongRoute(lane3, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx},
-  //                      operating_point_.get());
-  // InitializeAlongRoute(lane4, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx},
-  //                      operating_point_.get());
+   InitializeAlongRoute(lane1, 0.0, kP1InitialSpeed, {kP1XIdx, kP1YIdx}, kP1HeadingIdx,
+                        operating_point_.get());
+   InitializeAlongRoute(lane2, 0.0, kP2InitialSpeed, {kP2XIdx, kP2YIdx}, kP2HeadingIdx,
+                        operating_point_.get());
+   InitializeAlongRoute(lane3, 0.0, kP3InitialSpeed, {kP3XIdx, kP3YIdx}, kP3HeadingIdx,
+                        operating_point_.get());
+   InitializeAlongRoute(lane4, 0.0, kP4InitialSpeed, {kP4XIdx, kP4YIdx}, kP4HeadingIdx,
+                        operating_point_.get());
   Problem::ConstructInitialOperatingPoint();
 }
 
@@ -490,6 +494,36 @@ void RoundaboutMergingExample::ConstructPlayerCosts() {
   p4_cost.AddStateCost(p4p2_proximity_cost);
   p4_cost.AddStateCost(p4p3_proximity_cost);
 }
+    
+//    void RoundaboutMergingExample::ConstructInitialOperatingPoint() {
+//
+////        float kP1InitialRoutePos = std::abs(kP1InitialY - lane1InitialY);
+////        float kP2InitialRoutePos = std::abs(kP2InitialY - lane2InitialY);
+////        float kP3InitialRoutePos = std::abs(kP3InitialX - lane3InitialX);
+////        float kP4InitialRoutePos = std::abs(kP4InitialX - lane4InitialX);
+//
+//        float kP1InitialRoutePos = 0.0;
+//        float kP2InitialRoutePos = 0.0;
+//        float kP3InitialRoutePos = 0.0;
+//        float kP4InitialRoutePos = 0.0;
+//
+//        operating_point_.reset(
+//                               new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+//
+//        InitializeAlongRoute(lane1, kP1InitialRoutePos, kP1NominalV,
+//                             {kP1XIdx, kP1YIdx}, kP1HeadingIdx,
+//                             operating_point_.get());
+//        InitializeAlongRoute(lane2, kP2InitialRoutePos, kP2NominalV,
+//                             {kP2XIdx, kP2YIdx}, kP2HeadingIdx,
+//                             operating_point_.get());
+//        InitializeAlongRoute(lane3, kP3InitialRoutePos, kP3NominalV,
+//                             {kP3XIdx, kP3YIdx}, kP3HeadingIdx,
+//                             operating_point_.get());
+//        InitializeAlongRoute(lane4, kP4InitialRoutePos, kP4NominalV,
+//                             {kP4XIdx, kP4YIdx}, kP4HeadingIdx,
+//                             operating_point_.get());
+//
+//    }
 
 inline std::vector<float>
 RoundaboutMergingExample::Xs(const VectorXf &x) const {
