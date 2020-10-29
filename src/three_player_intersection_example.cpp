@@ -72,6 +72,9 @@
 #include <memory>
 #include <vector>
 
+// Uses initial alpha scaling = 2.0, other parameters are default. May be
+// non-ideal.
+
 namespace ilqgames {
 
 namespace {
@@ -91,10 +94,10 @@ static constexpr float kACostWeight = 0.1;
 static constexpr float kP1NominalVCostWeight = 100.0;
 static constexpr float kP2NominalVCostWeight = 100.0;
 static constexpr float kP3NominalVCostWeight = 100.0;
-    
-    //static constexpr float kPhiCostWeight = 1.0;
+
+// static constexpr float kP2PhiCostWeight = 1.0;
 static constexpr float kP1PhiCostWeight = 0.0;
-static constexpr float kP2PhiCostWeight = 0.0;
+static constexpr float kP2PhiCostWeight = 10.0;
 
 static constexpr float kP1LaneCostWeight = 25.0;
 static constexpr float kP2LaneCostWeight = 2500.0;
@@ -242,8 +245,8 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p1_cost.AddStateConstraint(p1_lane_l_constraint);
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
-      new QuadraticPolyline2Cost(kP2LaneCostWeight, lane2,
-                                 {kP2XIdx, kP2YIdx}, "LaneCenter"));
+      new QuadraticPolyline2Cost(kP2LaneCostWeight, lane2, {kP2XIdx, kP2YIdx},
+                                 "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP2XIdx, kP2YIdx},
                                             kLaneHalfWidth, !kOrientedRight,
@@ -301,17 +304,16 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   // p3_cost.AddStateConstraint(p3_min_v_constraint);
   // p3_cost.AddStateConstraint(p3_max_v_constraint);
   p3_cost.AddStateCost(p3_nominal_v_cost);
-    
-    // Front wheel angle costs.
-    
-    const auto p1_phi_cost = std::make_shared<QuadraticCost>(
-                                                             kP1PhiCostWeight, kP1PhiIdx, 0.0, "Front wheel angle");
-    p1_cost.AddStateCost(p1_phi_cost);
-    
-    const auto p2_phi_cost = std::make_shared<QuadraticCost>(
-                                                             kP2PhiCostWeight, kP2PhiIdx, 0.0, "Front wheel angle");
-    p2_cost.AddStateCost(p2_phi_cost);
 
+  // Front wheel angle costs.
+
+  const auto p1_phi_cost = std::make_shared<QuadraticCost>(
+      kP1PhiCostWeight, kP1PhiIdx, 0.0, "Front wheel angle");
+  p1_cost.AddStateCost(p1_phi_cost);
+
+  const auto p2_phi_cost = std::make_shared<QuadraticCost>(
+      kP2PhiCostWeight * 100, kP2PhiIdx, 0.0, "Front wheel angle");
+  p2_cost.AddStateCost(p2_phi_cost);
 
   // Penalize control effort.
   const auto p1_omega_max_constraint =
@@ -358,7 +360,6 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   // p3_cost.AddControlConstraint(2, p3_omega_min_constraint);
   p3_cost.AddControlCost(2, p3_omega_cost);
   p3_cost.AddControlCost(2, p3_a_cost);
-
 
   // Pairwise proximity costs.
   // const std::shared_ptr<ProxCost> p1p2_proximity_cost(
