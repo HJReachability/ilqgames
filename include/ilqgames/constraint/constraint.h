@@ -103,14 +103,14 @@ public:
     const size_t kk = TimeIndex(t);
     const float new_lambda = lambdas_[kk] + mu_ * value;
     lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
-      std::cout << "IncrementLambda(t, value): " << lambdas_[kk] << " (Time: " << kk << ")\n";
+//      std::cout << "IncrementLambda(t, value): " << lambdas_[kk] << " (Time: " << kk << ")\n";
   }
   void ScaleLambdas(float scale) {
     for (auto &lambda : lambdas_)
       lambda *= scale;
   }
   static float &GlobalMu() {
-    std::cout << "Global Mu: " << mu_ << "\n";
+//    std::cout << "Global Mu: " << mu_ << "\n";
     return mu_;
   }
   static void ScaleMu(float scale) {
@@ -120,7 +120,7 @@ public:
   }
   float Mu(Time t, const VectorXf &input) const {
     const float g = Evaluate(t, input);
-    std::cout << "Mu(Lambda(t), g): " << Mu(Lambda(t), g) << "\n";
+//    std::cout << "Mu(Lambda(t), g): " << Mu(Lambda(t), g) << "\n";
     return Mu(Lambda(t), g);
   }
   float Mu(float lambda, float g) const {

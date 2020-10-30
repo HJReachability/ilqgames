@@ -105,7 +105,7 @@ static constexpr float kP2NominalVCostWeight = 5.0;
 // Newly added, 10-16-2019 20:33 p.m.
 static constexpr float kMinV = 0.0; // m/s
 // static constexpr float kP1MaxV = 35.8; // m/s
-// static constexpr float kP2MaxV = 35.8; // m/s
+// static constexpr float kP2MaxV = 35.8; //
 
 static constexpr float kP1MaxV = 10.0; // m/s
 static constexpr float kP2MaxV = 10.0; // m/s
@@ -120,7 +120,8 @@ static constexpr float kP2ProximityCostWeight = 1000.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kNominalHeadingCostWeight = 50.0;
+static constexpr float kP1HeadingCostWeight = 50.0;
+static constexpr float kP2HeadingCostWeight = 500.0;
 
 static constexpr bool kOrientedRight = true;
 static constexpr bool kConstraintOrientedInside = false;
@@ -133,10 +134,11 @@ static constexpr float kP1NominalV = 8.0; // m/s
 static constexpr float kP2NominalV = 8.0; // m/s
 
 // Nominal heading
-static constexpr float kP1NominalHeading = M_PI_2; // rad
+static constexpr float kP1NominalHeading = M_PI_2;  // rad
+static constexpr float kP2NominalHeading = -M_PI_2; // rad
 
 // Initial state.
-static constexpr float kP1InitialX = 2.0;   // m
+static constexpr float kP1InitialX = 1.5;   // m
 static constexpr float kP1InitialY = -15.0; // m
 
 static constexpr float kP2InitialX = -1.5; // m
@@ -189,15 +191,15 @@ static const Dimension kP1OmegaIdx = 0;
 static const Dimension kP1JerkIdx = 1;
 static const Dimension kP2OmegaIdx = 0;
 static const Dimension kP2JerkIdx = 1;
-    
-    // Lanes.
-    static constexpr float lane1InitialY = -1000.0;
-    static constexpr float lane2InitialY = -1000.0;
-    
-    const Polyline2 lane1(
-                          {Point2(kP1InitialX, lane1InitialY), Point2(kP1InitialX, 1000.0)});
-    const Polyline2 lane2(
-                          {Point2(kP2InitialX, lane2InitialY), Point2(kP2InitialX, 1000.0)});
+
+// Lanes.
+static constexpr float lane1InitialY = -1000.0;
+static constexpr float lane2InitialY = -1000.0;
+
+const Polyline2 lane1({Point2(kP1InitialX, lane1InitialY),
+                       Point2(kP1InitialX, 1000.0)});
+const Polyline2 lane2({Point2(kP2InitialX, 1000.0),
+                       Point2(kP2InitialX, lane2InitialY)});
 
 } // anonymous namespace
 
@@ -331,29 +333,38 @@ void OncomingExample::ConstructPlayerCosts() {
                         adversarial_time_, "FinalProximityCostP1"));
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
-}
     
-    void OncomingExample::ConstructInitialOperatingPoint()
-    {
-        float kP1InitialRoutePos = std::abs(kP1InitialY - lane1InitialY);
-        float kP2InitialRoutePos = std::abs(kP2InitialY - lane2InitialY);
-        
-        const std::tuple<Dimension, Dimension> kP1PositionDimensions =
-        std::make_tuple(kP1XIdx, kP1YIdx);
-        const std::tuple<Dimension, Dimension> kP2PositionDimensions =
-        std::make_tuple(kP2XIdx, kP2YIdx);
-        
-        operating_point_.reset(
-                               new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
-        
-        InitializeAlongRoute(lane1, kP1InitialRoutePos, kP1NominalV,
-                             {kP1XIdx, kP1YIdx}, kP1HeadingIdx,
-                             operating_point_.get());
-        
-        InitializeAlongRoute(lane2, kP2InitialRoutePos, kP2NominalV,
-                             {kP2XIdx, kP2YIdx}, kP2HeadingIdx,
-                             operating_point_.get());
-    }
+        // Heading cost.
+    
+//    const auto p1_heading_cost = std::make_shared<QuadraticCost>(
+//                                                                 kP1HeadingCostWeight, kP1HeadingIdx, kP2NominalHeading, "Heading");
+//    p1_cost.AddStateCost(p1_heading_cost);
+
+    const auto p2_heading_cost = std::make_shared<QuadraticCost>(
+                                                                 kP2HeadingCostWeight, kP2HeadingIdx, kP2NominalHeading, "Heading");
+    p2_cost.AddStateCost(p2_heading_cost);
+}
+
+void OncomingExample::ConstructInitialOperatingPoint() {
+  float kP1InitialRoutePos = std::abs(kP1InitialY - lane1InitialY);
+  float kP2InitialRoutePos = std::abs(kP2InitialY - lane2InitialY);
+
+  const std::tuple<Dimension, Dimension> kP1PositionDimensions =
+      std::make_tuple(kP1XIdx, kP1YIdx);
+  const std::tuple<Dimension, Dimension> kP2PositionDimensions =
+      std::make_tuple(kP2XIdx, kP2YIdx);
+
+  operating_point_.reset(
+      new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+
+  InitializeAlongRoute(lane1, kP1InitialRoutePos, kP1NominalV,
+                       {kP1XIdx, kP1YIdx}, kP1HeadingIdx,
+                       operating_point_.get());
+
+  InitializeAlongRoute(lane2, kP2InitialRoutePos, kP2NominalV,
+                       {kP2XIdx, kP2YIdx}, kP2HeadingIdx,
+                       operating_point_.get());
+}
 
 inline std::vector<float> OncomingExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx)};

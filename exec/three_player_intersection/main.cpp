@@ -140,6 +140,18 @@ int main(int argc, char **argv) {
       FLAGS_adversarial_time);
   problem->Initialize();
 
+  // Modified below, 10-27-2020:
+
+  // InitializeAlongRoute(*(*problem).lane2_, (*problem).kP2InitialRoutePos_,
+  //                      (*problem).kP2NominalV_, (*problem).kP2PositionDims_,
+  //                      (*problem).operating_point_);
+
+  // InitializeAlongRoute(*(*problem).lane2_, (*problem).kP2InitialRoutePos_,
+  //                      (*problem).kP2NominalV_, (*problem).kP2PositionDims_,
+  //                      &(*problem).CurrentOperatingPoint());
+
+  // Modified above, 10-27-2020.
+
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
   // Solve the game.

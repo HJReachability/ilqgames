@@ -96,7 +96,8 @@ static constexpr float kP3NominalVCostWeight = 100.0;
 
 // static constexpr float kP2PhiCostWeight = 1.0;
 static constexpr float kP1PhiCostWeight = 0.0;
-static constexpr float kP2PhiCostWeight = 20.0;
+static constexpr float kP2PhiCostWeight = 2000.0;
+static constexpr float kP3PhiCostWeight = 0.0;
 
 static constexpr float kP1LaneCostWeight = 25.0;
 static constexpr float kP2LaneCostWeight = 2500.0;
@@ -107,6 +108,9 @@ using ProxCost = ProximityCost;
 static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
+
+static constexpr float kP1HeadingCostWeight = 10.0;
+static constexpr float kP3HeadingCostWeight = 1000.0;
 
 static constexpr bool kOrientedRight = true;
 static constexpr bool kBarrierOrientedInside = false;
@@ -120,7 +124,7 @@ static constexpr float kP2MaxV = 10.0; // m/s
 static constexpr float kP3MaxV = 3.0;  // m/s
 static constexpr float kMinV = 1.0;    // m/s
 
-static constexpr float kP1NominalV = 10.0; // m/s
+static constexpr float kP1NominalV = 8.0; // m/s
 static constexpr float kP2NominalV = 9.0;  // m/s
 static constexpr float kP3NominalV = 2.0;  // m/s
 
@@ -135,11 +139,11 @@ static constexpr float kP3InitialY = 16.0;  // m
 
 static constexpr float kP1InitialHeading = M_PI_2;  // rad
 static constexpr float kP2InitialHeading = -M_PI_2; // rad
-static constexpr float kP3InitialHeading = 0.0;     // rad
+static constexpr float kP3InitialHeading = 0.01;     // rad
 
 static constexpr float kP1InitialSpeed = 8.1; // m/s
-static constexpr float kP2InitialSpeed = 8.1; // m/s // Also works with 8.1
-static constexpr float kP3InitialSpeed = 2.1; // m/s
+static constexpr float kP2InitialSpeed = 8.1;  // m/s // Also works with 8.1
+static constexpr float kP3InitialSpeed = 2.1;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -164,7 +168,9 @@ static const Dimension kP3XIdx = P1::kNumXDims + P2::kNumXDims + P3::kPxIdx;
 static const Dimension kP3YIdx = P1::kNumXDims + P2::kNumXDims + P3::kPyIdx;
 static const Dimension kP3HeadingIdx =
     P1::kNumXDims + P2::kNumXDims + P3::kThetaIdx;
+//static const Dimension kP3PhiIdx = P1::kNumXDims + P2::kNumXDims + P3::kPhiIdx;
 static const Dimension kP3VIdx = P1::kNumXDims + P2::kNumXDims + P3::kVIdx;
+//    static const Dimension kP3AIdx = P1::kNumXDims + P2::kNumXDims + P3::kAIdx;
 
 // Control dimensions.
 static const Dimension kP1OmegaIdx = 0;
@@ -311,8 +317,22 @@ void ThreePlayerIntersectionExample::ConstructPlayerCosts() {
   p1_cost.AddStateCost(p1_phi_cost);
 
   const auto p2_phi_cost = std::make_shared<QuadraticCost>(
-      kP2PhiCostWeight * 100, kP2PhiIdx, 0.0, "Front wheel angle");
+      kP2PhiCostWeight, kP2PhiIdx, 0.0, "Front wheel angle");
   p2_cost.AddStateCost(p2_phi_cost);
+    
+    // Heading cost.
+    
+  const auto p1_heading_cost = std::make_shared<QuadraticCost>(
+                                                             kP1HeadingCostWeight, kP1HeadingIdx, 0.0, "Heading");
+    p1_cost.AddStateCost(p1_heading_cost);
+    
+  const auto p3_heading_cost = std::make_shared<QuadraticCost>(
+                                                             kP3HeadingCostWeight, kP3HeadingIdx, 0.0, "Heading");
+    p3_cost.AddStateCost(p3_heading_cost);
+    
+//    const auto p3_phi_cost = std::make_shared<QuadraticCost>(
+//                                                             kP3PhiCostWeight, kP3PhiIdx, 0.0, "Front wheel angle");
+//    p3_cost.AddStateCost(p3_phi_cost);
 
   // Penalize control effort.
   const auto p1_omega_max_constraint =
