@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
     else
       LOG(INFO) << "Solution is not a numerical Nash.";
 
-    problem_00->OverwriteSolution(log_10->FinalOperatingPoint(),
+    problem_10->OverwriteSolution(log_10->FinalOperatingPoint(),
                                   log_10->FinalStrategies());
     const bool is_numerical_nash_10 = NumericalCheckLocalNashEquilibrium(
         *problem_10, kMaxPerturbation, kOpenLoop);
@@ -278,8 +278,6 @@ int main(int argc, char **argv) {
     }
     if (!FLAGS_viz)
       return 0;
-
-    // Modify below:
 
     // Create a top-down renderer, control sliders, and cost inspector.
     std::shared_ptr<ilqgames::ControlSliders> sliders(
