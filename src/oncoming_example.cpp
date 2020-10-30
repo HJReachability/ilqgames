@@ -81,11 +81,11 @@ namespace ilqgames {
 
 namespace {
 
-// // Time.
-// static constexpr Time kTimeStep = 0.1;     // s
-// static constexpr Time kTimeHorizon = 15.0; // s
-// static constexpr size_t kNumTimeSteps =
-//     static_cast<size_t>(kTimeHorizon / kTimeStep);
+ // Time.
+ static constexpr Time kTimeStep = 0.1;     // s
+ static constexpr Time kTimeHorizon = 20.0; // s
+ static constexpr size_t kNumTimeSteps =
+     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
 static constexpr float kInterAxleLength = 4.0; // m
@@ -94,7 +94,8 @@ static constexpr float kInterAxleLength = 4.0; // m
 static constexpr float kStateRegularization = 1.0;
 static constexpr float kControlRegularization = 5.0;
 
-static constexpr float kOmegaCostWeight = 50.0;
+static constexpr float kP1OmegaCostWeight = 50.0;
+static constexpr float kP2OmegaCostWeight = 50.0;
 static constexpr float kJerkCostWeight = 50.0;
 
 static constexpr float kACostWeight = 50.0;
@@ -120,8 +121,12 @@ static constexpr float kP2ProximityCostWeight = 1000.0;
 using ProxCost = ProximityCost;
 
 // Heading weight
-static constexpr float kP1HeadingCostWeight = 50.0;
+static constexpr float kP1HeadingCostWeight = 0.0;
 static constexpr float kP2HeadingCostWeight = 500.0;
+    
+// Front wheel angle weight
+static constexpr float kP1PhiCostWeight = 0.0;
+static constexpr float kP2PhiCostWeight = 500.0;
 
 static constexpr bool kOrientedRight = true;
 static constexpr bool kConstraintOrientedInside = false;
@@ -130,8 +135,8 @@ static constexpr bool kConstraintOrientedInside = false;
 static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 8.0; // m/s
-static constexpr float kP2NominalV = 8.0; // m/s
+static constexpr float kP1NominalV = 5.0; // m/s
+static constexpr float kP2NominalV = 5.0; // m/s
 
 // Nominal heading
 static constexpr float kP1NominalHeading = M_PI_2;  // rad
@@ -291,14 +296,14 @@ void OncomingExample::ConstructPlayerCosts() {
 
   // Penalize control effort.
   const auto p1_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
+      kP1OmegaCostWeight, kP1OmegaIdx, 0.0, "Steering");
   const auto p1_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP1JerkIdx, 0.0, "Jerk");
   p1_cost.AddControlCost(0, p1_omega_cost);
   p1_cost.AddControlCost(0, p1_jerk_cost);
 
   const auto p2_omega_cost = std::make_shared<QuadraticCost>(
-      kOmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
+      kP2OmegaCostWeight, kP2OmegaIdx, 0.0, "Steering");
   const auto p2_jerk_cost =
       std::make_shared<QuadraticCost>(kJerkCostWeight, kP2JerkIdx, 0.0, "Jerk");
   p2_cost.AddControlCost(1, p2_omega_cost);
@@ -334,8 +339,18 @@ void OncomingExample::ConstructPlayerCosts() {
   p2_cost.AddStateCost(p2p1_final_proximity_cost);
   final_time_costs_.push_back(p2p1_final_proximity_cost);
     
-        // Heading cost.
+    // Front wheel angle costs.
     
+    const auto p1_phi_cost = std::make_shared<QuadraticCost>(
+                                                             kP1PhiCostWeight, kP1PhiIdx, 0.0, "Front wheel angle");
+    p1_cost.AddStateCost(p1_phi_cost);
+    
+    const auto p2_phi_cost = std::make_shared<QuadraticCost>(
+                                                             kP2PhiCostWeight, kP2PhiIdx, 0.0, "Front wheel angle");
+    p2_cost.AddStateCost(p2_phi_cost);
+    
+        // Heading cost.
+
 //    const auto p1_heading_cost = std::make_shared<QuadraticCost>(
 //                                                                 kP1HeadingCostWeight, kP1HeadingIdx, kP2NominalHeading, "Heading");
 //    p1_cost.AddStateCost(p1_heading_cost);
