@@ -115,7 +115,7 @@ static constexpr float kP1ProximityCostWeight = 10.0;
 static constexpr float kP2ProximityCostWeight = 10.0;
 static constexpr float kP3ProximityCostWeight = 10.0;
 
-static constexpr float kP1HeadingCostWeight = 10.0;
+static constexpr float kP1HeadingCostWeight = 100.0;
 static constexpr float kP3HeadingCostWeight = 1000.0;
 
 static constexpr bool kOrientedRight = true;
