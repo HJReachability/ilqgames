@@ -89,6 +89,10 @@ DEFINE_double(geometric_lambda_downscaling, 0.5,
               "geometric lambda downscaling");
 DEFINE_double(constraint_error_tolerance, 0.1, "constraint error tolerance");
 
+DEFINE_bool(multi_traj, false,
+            "Should the GUI print out trajectories corresponding to multiple "
+            "adversarial times, at once?");
+
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
 // libraries are often used for this purpose! Here we are supporting a few
@@ -140,13 +144,15 @@ int main(int argc, char **argv) {
   params.geometric_lambda_downscaling = FLAGS_geometric_lambda_downscaling;
   params.constraint_error_tolerance = FLAGS_constraint_error_tolerance;
 
+if(FLAGS_multi_traj)
+{
     // Create problem_00, problem_05, problem_10, with adversarial_time = 0.0,
     // 0.5, 1.0, respectively.
     
-  auto problem_00 =
-      std::make_shared<ilqgames::OncomingExample>(0.0);
-  problem_00->Initialize();
-  ilqgames::AugmentedLagrangianSolver solver_00(problem_00, params);
+    auto problem_00 =
+    std::make_shared<ilqgames::OncomingExample>(0.0);
+    problem_00->Initialize();
+    ilqgames::AugmentedLagrangianSolver solver_00(problem_00, params);
     
     auto problem_05 =
     std::make_shared<ilqgames::OncomingExample>(0.5);
@@ -157,16 +163,16 @@ int main(int argc, char **argv) {
     std::make_shared<ilqgames::OncomingExample>(1.0);
     problem_10->Initialize();
     ilqgames::AugmentedLagrangianSolver solver_10(problem_10, params);
-
-  // Solve the game.
-  const auto start_00 = std::chrono::system_clock::now();
-  std::shared_ptr<const ilqgames::SolverLog> log_00 = solver_00.Solve();
-  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_00 = {log_00};
-  LOG(INFO) << "Solver completed in "
-            << std::chrono::duration<ilqgames::Time>(
-                   std::chrono::system_clock::now() - start_00)
-                   .count()
-            << " seconds.";
+    
+    // Solve the game.
+    const auto start_00 = std::chrono::system_clock::now();
+    std::shared_ptr<const ilqgames::SolverLog> log_00 = solver_00.Solve();
+    const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_00 = {log_00};
+    LOG(INFO) << "Solver completed in "
+    << std::chrono::duration<ilqgames::Time>(
+                                             std::chrono::system_clock::now() - start_00)
+    .count()
+    << " seconds.";
     
     const auto start_05 = std::chrono::system_clock::now();
     std::shared_ptr<const ilqgames::SolverLog> log_05 = solver_05.Solve();
@@ -187,15 +193,15 @@ int main(int argc, char **argv) {
                                              std::chrono::system_clock::now() - start_10)
     .count()
     << " seconds.";
-
-  // Check if solution satisfies sufficient conditions for being a local Nash.
-  problem_00->OverwriteSolution(log_00->FinalOperatingPoint(),
-                             log_00->FinalStrategies());
-  const bool is_local_nash_00 = CheckSufficientLocalNashEquilibrium(*problem_00);
-  if (is_local_nash_00)
-    LOG(INFO) << "Solution is a local Nash.";
-  else
-    LOG(INFO) << "Solution may not be a local Nash.";
+    
+    // Check if solution satisfies sufficient conditions for being a local Nash.
+    problem_00->OverwriteSolution(log_00->FinalOperatingPoint(),
+                                  log_00->FinalStrategies());
+    const bool is_local_nash_00 = CheckSufficientLocalNashEquilibrium(*problem_00);
+    if (is_local_nash_00)
+        LOG(INFO) << "Solution is a local Nash.";
+    else
+        LOG(INFO) << "Solution may not be a local Nash.";
     
     problem_05->OverwriteSolution(log_05->FinalOperatingPoint(),
                                   log_05->FinalStrategies());
@@ -214,19 +220,19 @@ int main(int argc, char **argv) {
         LOG(INFO) << "Solution is a local Nash.";
     else
         LOG(INFO) << "Solution may not be a local Nash.";
-
-  // Confirm with numerical check.
-  constexpr float kMaxPerturbation = 0.1;
-  constexpr bool kOpenLoop = false;
     
-  problem_00->OverwriteSolution(log_00->FinalOperatingPoint(),
-                             log_00->FinalStrategies());
-  const bool is_numerical_nash_00 =
-      NumericalCheckLocalNashEquilibrium(*problem_00, kMaxPerturbation, kOpenLoop);
-  if (is_numerical_nash_00)
-    LOG(INFO) << "Solution is a numerical Nash.";
-  else
-    LOG(INFO) << "Solution is not a numerical Nash.";
+    // Confirm with numerical check.
+    constexpr float kMaxPerturbation = 0.1;
+    constexpr bool kOpenLoop = false;
+    
+    problem_00->OverwriteSolution(log_00->FinalOperatingPoint(),
+                                  log_00->FinalStrategies());
+    const bool is_numerical_nash_00 =
+    NumericalCheckLocalNashEquilibrium(*problem_00, kMaxPerturbation, kOpenLoop);
+    if (is_numerical_nash_00)
+        LOG(INFO) << "Solution is a numerical Nash.";
+    else
+        LOG(INFO) << "Solution is not a numerical Nash.";
     
     problem_05->OverwriteSolution(log_05->FinalOperatingPoint(),
                                   log_05->FinalStrategies());
@@ -245,17 +251,17 @@ int main(int argc, char **argv) {
         LOG(INFO) << "Solution is a numerical Nash.";
     else
         LOG(INFO) << "Solution is not a numerical Nash.";
-
-  // Dump the logs and/or exit.
-  if (FLAGS_save) {
-    if (FLAGS_experiment_name == "") {
-      CHECK(log_00->Save(FLAGS_last_traj));
-    } else {
-      CHECK(log_00->Save(FLAGS_last_traj, FLAGS_experiment_name));
+    
+    // Dump the logs and/or exit.
+    if (FLAGS_save) {
+        if (FLAGS_experiment_name == "") {
+            CHECK(log_00->Save(FLAGS_last_traj));
+        } else {
+            CHECK(log_00->Save(FLAGS_last_traj, FLAGS_experiment_name));
+        }
     }
-  }
-  if (!FLAGS_viz)
-    return 0;
+    if (!FLAGS_viz)
+        return 0;
     
     if (FLAGS_save) {
         if (FLAGS_experiment_name == "") {
@@ -276,116 +282,280 @@ int main(int argc, char **argv) {
     }
     if (!FLAGS_viz)
         return 0;
-
-
-  // Create a top-down renderer, control sliders, and cost inspector.
-  std::shared_ptr<ilqgames::ControlSliders> sliders(
-      new ilqgames::ControlSliders({logs_00, logs_05, logs_10}));
-  ilqgames::TopDownRenderer top_down_renderer(sliders, {problem_00, problem_05, problem_10});
-  ilqgames::CostInspector cost_inspector(sliders, {problem_00->PlayerCosts(), problem_05->PlayerCosts(), problem_10->PlayerCosts()});
-
-  // Setup window
-  glfwSetErrorCallback(glfw_error_callback);
-  if (!glfwInit())
-    return 1;
-
+    
+    
+    // Create a top-down renderer, control sliders, and cost inspector.
+    std::shared_ptr<ilqgames::ControlSliders> sliders(
+                                                      new ilqgames::ControlSliders({logs_00, logs_05, logs_10}));
+    ilqgames::TopDownRenderer top_down_renderer(sliders, {problem_00, problem_05, problem_10});
+    ilqgames::CostInspector cost_inspector(sliders, {problem_00->PlayerCosts(), problem_05->PlayerCosts(), problem_10->PlayerCosts()});
+    
+    // Setup window
+    glfwSetErrorCallback(glfw_error_callback);
+    if (!glfwInit())
+        return 1;
+    
     // Decide GL+GLSL versions.
 #if __APPLE__
-  // GL 3.2 + GLSL 150.
-  const char *glsl_version = "#version 150";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
+    // GL 3.2 + GLSL 150.
+    const char *glsl_version = "#version 150";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
 #else
-  // GL 3.0 + GLSL 130.
-  const char *glsl_version = "#version 130";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
-  // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
+    // GL 3.0 + GLSL 130.
+    const char *glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
+    // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
 #endif
-
-  // Create window with graphics context
-  GLFWwindow *window =
-      glfwCreateWindow(1280, 720, "ILQGames: Oncoming Example", NULL, NULL);
-  if (window == NULL)
-    return 1;
-  glfwMakeContextCurrent(window);
-  glfwSwapInterval(1); // Enable vsync
-
-  // Initialize OpenGL loader
+    
+    // Create window with graphics context
+    GLFWwindow *window =
+    glfwCreateWindow(1280, 720, "ILQGames: Oncoming Example", NULL, NULL);
+    if (window == NULL)
+        return 1;
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Enable vsync
+    
+    // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-  bool err = gl3wInit() != 0;
+    bool err = gl3wInit() != 0;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-  bool err = glewInit() != GLEW_OK;
+    bool err = glewInit() != GLEW_OK;
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-  bool err = gladLoadGL() == 0;
+    bool err = gladLoadGL() == 0;
 #else
-  bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
-                    // is likely to requires some form of initialization.
+    bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
+    // is likely to requires some form of initialization.
 #endif
-  if (err) {
-    fprintf(stderr, "Failed to initialize OpenGL loader!\n");
-    return 1;
-  }
-
-  // Setup Dear ImGui context.
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-
-  // Setup Dear ImGui style.
-  ImGui::StyleColorsDark();
-  // ImGui::StyleColorsClassic();
-
-  // Background color.
-  const ImVec4 clear_color =
-      ImVec4(213.0 / 255.0, 216.0 / 255.0, 226.0 / 255.0, 1.0f);
-
-  // Setup Platform/Renderer bindings
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init(glsl_version);
-
-  // Main loop
-  while (!glfwWindowShouldClose(window)) {
-    // Poll and handle events (inputs, window resize, etc.).
-    glfwPollEvents();
-
-    // Start the Dear ImGui frame.
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-
-    // Control sliders.
-    sliders->Render();
-
-    // Top down view.
-    top_down_renderer.Render();
-
-    // Cost inspector.
-    cost_inspector.Render();
-
-    // Rendering
-    ImGui::Render();
-    int display_w, display_h;
+    if (err) {
+        fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+        return 1;
+    }
+    
+    // Setup Dear ImGui context.
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    
+    // Setup Dear ImGui style.
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsClassic();
+    
+    // Background color.
+    const ImVec4 clear_color =
+    ImVec4(213.0 / 255.0, 216.0 / 255.0, 226.0 / 255.0, 1.0f);
+    
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    
+    // Main loop
+    while (!glfwWindowShouldClose(window)) {
+        // Poll and handle events (inputs, window resize, etc.).
+        glfwPollEvents();
+        
+        // Start the Dear ImGui frame.
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        
+        // Control sliders.
+        sliders->Render();
+        
+        // Top down view.
+        top_down_renderer.Render();
+        
+        // Cost inspector.
+        cost_inspector.Render();
+        
+        // Rendering
+        ImGui::Render();
+        int display_w, display_h;
+        glfwMakeContextCurrent(window);
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
+        glfwMakeContextCurrent(window);
+        glfwSwapBuffers(window);
+    }
+    
+    
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    
+    return 0;
+        
+}
+else {
+    auto problem =
+    std::make_shared<ilqgames::OncomingExample>(FLAGS_adversarial_time);
+    problem->Initialize();
+    ilqgames::AugmentedLagrangianSolver solver(problem, params);
+    
+    // Solve the game.
+    const auto start = std::chrono::system_clock::now();
+    std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
+    const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
+    LOG(INFO) << "Solver completed in "
+    << std::chrono::duration<ilqgames::Time>(
+                                             std::chrono::system_clock::now() - start)
+    .count()
+    << " seconds.";
+    
+    // Check if solution satisfies sufficient conditions for being a local Nash.
+    problem->OverwriteSolution(log->FinalOperatingPoint(),
+                               log->FinalStrategies());
+    const bool is_local_nash = CheckSufficientLocalNashEquilibrium(*problem);
+    if (is_local_nash)
+        LOG(INFO) << "Solution is a local Nash.";
+    else
+        LOG(INFO) << "Solution may not be a local Nash.";
+    
+    // Confirm with numerical check.
+    constexpr float kMaxPerturbation = 0.1;
+    constexpr bool kOpenLoop = false;
+    problem->OverwriteSolution(log->FinalOperatingPoint(),
+                               log->FinalStrategies());
+    const bool is_numerical_nash =
+    NumericalCheckLocalNashEquilibrium(*problem, kMaxPerturbation, kOpenLoop);
+    if (is_numerical_nash)
+        LOG(INFO) << "Solution is a numerical Nash.";
+    else
+        LOG(INFO) << "Solution is not a numerical Nash.";
+    
+    // Dump the logs and/or exit.
+    if (FLAGS_save) {
+        if (FLAGS_experiment_name == "") {
+            CHECK(log->Save(FLAGS_last_traj));
+        } else {
+            CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+        }
+    }
+    if (!FLAGS_viz)
+        return 0;
+    
+    // Create a top-down renderer, control sliders, and cost inspector.
+    std::shared_ptr<ilqgames::ControlSliders> sliders(
+                                                      new ilqgames::ControlSliders({logs}));
+    ilqgames::TopDownRenderer top_down_renderer(sliders, {problem});
+    ilqgames::CostInspector cost_inspector(sliders, {problem->PlayerCosts()});
+    
+    // Setup window
+    glfwSetErrorCallback(glfw_error_callback);
+    if (!glfwInit())
+        return 1;
+    
+    // Decide GL+GLSL versions.
+#if __APPLE__
+    // GL 3.2 + GLSL 150.
+    const char *glsl_version = "#version 150";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
+#else
+    // GL 3.0 + GLSL 130.
+    const char *glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
+    // only glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // 3.0+ only
+#endif
+    
+    // Create window with graphics context
+    GLFWwindow *window =
+    glfwCreateWindow(1280, 720, "ILQGames: Oncoming Example", NULL, NULL);
+    if (window == NULL)
+        return 1;
     glfwMakeContextCurrent(window);
-    glfwGetFramebufferSize(window, &display_w, &display_h);
-    glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    glfwSwapInterval(1); // Enable vsync
+    
+    // Initialize OpenGL loader
+#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
+    bool err = gl3wInit() != 0;
+#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
+    bool err = glewInit() != GLEW_OK;
+#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
+    bool err = gladLoadGL() == 0;
+#else
+    bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
+    // is likely to requires some form of initialization.
+#endif
+    if (err) {
+        fprintf(stderr, "Failed to initialize OpenGL loader!\n");
+        return 1;
+    }
+    
+    // Setup Dear ImGui context.
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    
+    // Setup Dear ImGui style.
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsClassic();
+    
+    // Background color.
+    const ImVec4 clear_color =
+    ImVec4(213.0 / 255.0, 216.0 / 255.0, 226.0 / 255.0, 1.0f);
+    
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+    
+    // Main loop
+    while (!glfwWindowShouldClose(window)) {
+        // Poll and handle events (inputs, window resize, etc.).
+        glfwPollEvents();
+        
+        // Start the Dear ImGui frame.
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        
+        // Control sliders.
+        sliders->Render();
+        
+        // Top down view.
+        top_down_renderer.Render();
+        
+        // Cost inspector.
+        cost_inspector.Render();
+        
+        // Rendering
+        ImGui::Render();
+        int display_w, display_h;
+        glfwMakeContextCurrent(window);
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        
+        glfwMakeContextCurrent(window);
+        glfwSwapBuffers(window);
+    }
+    
+    // Cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    
+    return 0;
 
-    glfwMakeContextCurrent(window);
-    glfwSwapBuffers(window);
-  }
+}
 
-  // Cleanup
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
-
-  glfwDestroyWindow(window);
-  glfwTerminate();
-
-  return 0;
 }

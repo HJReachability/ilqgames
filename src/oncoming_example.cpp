@@ -122,11 +122,11 @@ using ProxCost = ProximityCost;
 
 // Heading weight
 static constexpr float kP1HeadingCostWeight = 0.0;
-static constexpr float kP2HeadingCostWeight = 500.0;
+static constexpr float kP2HeadingCostWeight = 0.0;
     
 // Front wheel angle weight
 static constexpr float kP1PhiCostWeight = 0.0;
-static constexpr float kP2PhiCostWeight = 500.0;
+static constexpr float kP2PhiCostWeight = 0.0;
 
 static constexpr bool kOrientedRight = true;
 static constexpr bool kConstraintOrientedInside = false;
