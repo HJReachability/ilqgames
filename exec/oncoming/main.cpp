@@ -160,7 +160,7 @@ int main(int argc, char **argv) {
     problem_10->Initialize();
     ilqgames::AugmentedLagrangianSolver solver_10(problem_10, params);
 
-    // Solve the game.
+    // Solve the game. (Repeat for each of the three problem).
     const auto start_00 = std::chrono::system_clock::now();
     std::shared_ptr<const ilqgames::SolverLog> log_00 = solver_00.Solve();
     const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_00 = {
