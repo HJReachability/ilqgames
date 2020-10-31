@@ -132,7 +132,7 @@ static constexpr bool kOrientedRight = true;
 static constexpr bool kConstraintOrientedInside = false;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 3.5; // m
+static constexpr float kLaneHalfWidth = 2.5; // m
 
 // Nominal speed.
 static constexpr float kP1NominalV = 3.0; // m/s
