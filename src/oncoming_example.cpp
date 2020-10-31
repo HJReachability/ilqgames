@@ -115,8 +115,8 @@ static constexpr float kLaneCostWeight = 10.0;
 static constexpr float kLaneBoundaryCostWeight = 5.0;
 
 static constexpr float kMinProximity = 5.0;
-static constexpr float kP1ProximityCostWeight = 300.0;
-static constexpr float kP2ProximityCostWeight = 1000.0;
+static constexpr float kP1ProximityCostWeight = 100000.0;
+static constexpr float kP2ProximityCostWeight = 100.0;
 // static constexpr float kP3ProximityCostWeight = 100.0;
 using ProxCost = ProximityCost;
 
@@ -132,11 +132,11 @@ static constexpr bool kOrientedRight = true;
 static constexpr bool kConstraintOrientedInside = false;
 
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.5; // m
+static constexpr float kLaneHalfWidth = 3.5; // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 5.0; // m/s
-static constexpr float kP2NominalV = 5.0; // m/s
+static constexpr float kP1NominalV = 3.0; // m/s
+static constexpr float kP2NominalV = 3.0; // m/s
 
 // Nominal heading
 static constexpr float kP1NominalHeading = M_PI_2;  // rad
@@ -154,8 +154,8 @@ static constexpr float kP1InitialHeading = M_PI_2;              // rad
 static constexpr float kP2InitialHeading = -M_PI_2;             // rad
 static constexpr float kP2InitialHeadingAntiparallel = -M_PI_2; // rad
 
-static constexpr float kP1InitialSpeed = 10.1; // m/s
-static constexpr float kP2InitialSpeed = 10.1; // m/s
+static constexpr float kP1InitialSpeed = 3.1; // m/s
+static constexpr float kP2InitialSpeed = 3.1; // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
