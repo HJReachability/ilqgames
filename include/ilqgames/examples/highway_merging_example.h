@@ -61,7 +61,7 @@ public:
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-  // void ConstructInitialOperatingPoint();
+  void ConstructInitialOperatingPoint();
 
   //  void SetAdversarialTime(double adv_time);
 

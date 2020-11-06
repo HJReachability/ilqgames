@@ -145,20 +145,20 @@ int main(int argc, char **argv) {
   params.constraint_error_tolerance = FLAGS_constraint_error_tolerance;
 
   if (FLAGS_multi_traj) {
-    // Create problem_00, problem_05, problem_10, with adversarial_time = 0.0,
+    // Create problem_00, problem_25, problem_50, with adversarial_time = 0.0,
     // 0.5, 1.0, respectively.
 
     auto problem_00 = std::make_shared<ilqgames::OncomingExample>(0.0);
     problem_00->Initialize();
     ilqgames::AugmentedLagrangianSolver solver_00(problem_00, params);
 
-    auto problem_05 = std::make_shared<ilqgames::OncomingExample>(0.5);
-    problem_05->Initialize();
-    ilqgames::AugmentedLagrangianSolver solver_05(problem_05, params);
+    auto problem_25 = std::make_shared<ilqgames::OncomingExample>(2.5);
+    problem_25->Initialize();
+    ilqgames::AugmentedLagrangianSolver solver_25(problem_25, params);
 
-    auto problem_10 = std::make_shared<ilqgames::OncomingExample>(1.0);
-    problem_10->Initialize();
-    ilqgames::AugmentedLagrangianSolver solver_10(problem_10, params);
+    auto problem_50 = std::make_shared<ilqgames::OncomingExample>(5.0);
+    problem_50->Initialize();
+    ilqgames::AugmentedLagrangianSolver solver_50(problem_50, params);
 
     // Solve the game. (Repeat for each of the three problem).
     const auto start_00 = std::chrono::system_clock::now();
@@ -171,23 +171,23 @@ int main(int argc, char **argv) {
                      .count()
               << " seconds.";
 
-    const auto start_05 = std::chrono::system_clock::now();
-    std::shared_ptr<const ilqgames::SolverLog> log_05 = solver_05.Solve();
-    const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_05 = {
-        log_05};
+    const auto start_25 = std::chrono::system_clock::now();
+    std::shared_ptr<const ilqgames::SolverLog> log_25 = solver_25.Solve();
+    const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_25 = {
+        log_25};
     LOG(INFO) << "Solver completed in "
               << std::chrono::duration<ilqgames::Time>(
-                     std::chrono::system_clock::now() - start_05)
+                     std::chrono::system_clock::now() - start_25)
                      .count()
               << " seconds.";
 
-    const auto start_10 = std::chrono::system_clock::now();
-    std::shared_ptr<const ilqgames::SolverLog> log_10 = solver_10.Solve();
-    const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_10 = {
-        log_10};
+    const auto start_50 = std::chrono::system_clock::now();
+    std::shared_ptr<const ilqgames::SolverLog> log_50 = solver_50.Solve();
+    const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs_50 = {
+        log_50};
     LOG(INFO) << "Solver completed in "
               << std::chrono::duration<ilqgames::Time>(
-                     std::chrono::system_clock::now() - start_10)
+                     std::chrono::system_clock::now() - start_50)
                      .count()
               << " seconds.";
 
@@ -201,20 +201,20 @@ int main(int argc, char **argv) {
     else
       LOG(INFO) << "Solution may not be a local Nash.";
 
-    problem_05->OverwriteSolution(log_05->FinalOperatingPoint(),
-                                  log_05->FinalStrategies());
-    const bool is_local_nash_05 =
-        CheckSufficientLocalNashEquilibrium(*problem_05);
-    if (is_local_nash_05)
+    problem_25->OverwriteSolution(log_25->FinalOperatingPoint(),
+                                  log_25->FinalStrategies());
+    const bool is_local_nash_25 =
+        CheckSufficientLocalNashEquilibrium(*problem_25);
+    if (is_local_nash_25)
       LOG(INFO) << "Solution is a local Nash.";
     else
       LOG(INFO) << "Solution may not be a local Nash.";
 
-    problem_10->OverwriteSolution(log_10->FinalOperatingPoint(),
-                                  log_10->FinalStrategies());
-    const bool is_local_nash_10 =
-        CheckSufficientLocalNashEquilibrium(*problem_10);
-    if (is_local_nash_10)
+    problem_50->OverwriteSolution(log_50->FinalOperatingPoint(),
+                                  log_50->FinalStrategies());
+    const bool is_local_nash_50 =
+        CheckSufficientLocalNashEquilibrium(*problem_50);
+    if (is_local_nash_50)
       LOG(INFO) << "Solution is a local Nash.";
     else
       LOG(INFO) << "Solution may not be a local Nash.";
@@ -232,20 +232,20 @@ int main(int argc, char **argv) {
     else
       LOG(INFO) << "Solution is not a numerical Nash.";
 
-    problem_05->OverwriteSolution(log_05->FinalOperatingPoint(),
-                                  log_05->FinalStrategies());
-    const bool is_numerical_nash_05 = NumericalCheckLocalNashEquilibrium(
-        *problem_05, kMaxPerturbation, kOpenLoop);
-    if (is_numerical_nash_05)
+    problem_25->OverwriteSolution(log_25->FinalOperatingPoint(),
+                                  log_25->FinalStrategies());
+    const bool is_numerical_nash_25 = NumericalCheckLocalNashEquilibrium(
+        *problem_25, kMaxPerturbation, kOpenLoop);
+    if (is_numerical_nash_25)
       LOG(INFO) << "Solution is a numerical Nash.";
     else
       LOG(INFO) << "Solution is not a numerical Nash.";
 
-    problem_10->OverwriteSolution(log_10->FinalOperatingPoint(),
-                                  log_10->FinalStrategies());
-    const bool is_numerical_nash_10 = NumericalCheckLocalNashEquilibrium(
-        *problem_10, kMaxPerturbation, kOpenLoop);
-    if (is_numerical_nash_10)
+    problem_50->OverwriteSolution(log_50->FinalOperatingPoint(),
+                                  log_50->FinalStrategies());
+    const bool is_numerical_nash_50 = NumericalCheckLocalNashEquilibrium(
+        *problem_50, kMaxPerturbation, kOpenLoop);
+    if (is_numerical_nash_50)
       LOG(INFO) << "Solution is a numerical Nash.";
     else
       LOG(INFO) << "Solution is not a numerical Nash.";
@@ -263,9 +263,9 @@ int main(int argc, char **argv) {
 
     if (FLAGS_save) {
       if (FLAGS_experiment_name == "") {
-        CHECK(log_05->Save(FLAGS_last_traj));
+        CHECK(log_25->Save(FLAGS_last_traj));
       } else {
-        CHECK(log_05->Save(FLAGS_last_traj, FLAGS_experiment_name));
+        CHECK(log_25->Save(FLAGS_last_traj, FLAGS_experiment_name));
       }
     }
     if (!FLAGS_viz)
@@ -273,9 +273,9 @@ int main(int argc, char **argv) {
 
     if (FLAGS_save) {
       if (FLAGS_experiment_name == "") {
-        CHECK(log_10->Save(FLAGS_last_traj));
+        CHECK(log_50->Save(FLAGS_last_traj));
       } else {
-        CHECK(log_10->Save(FLAGS_last_traj, FLAGS_experiment_name));
+        CHECK(log_50->Save(FLAGS_last_traj, FLAGS_experiment_name));
       }
     }
     if (!FLAGS_viz)
@@ -283,12 +283,12 @@ int main(int argc, char **argv) {
 
     // Create a top-down renderer, control sliders, and cost inspector.
     std::shared_ptr<ilqgames::ControlSliders> sliders(
-        new ilqgames::ControlSliders({logs_00, logs_05, logs_10}));
+        new ilqgames::ControlSliders({logs_00, logs_25, logs_50}));
     ilqgames::TopDownRenderer top_down_renderer(
-        sliders, {problem_00, problem_05, problem_10});
+        sliders, {problem_00, problem_25, problem_50});
     ilqgames::CostInspector cost_inspector(
-        sliders, {problem_00->PlayerCosts(), problem_05->PlayerCosts(),
-                  problem_10->PlayerCosts()});
+        sliders, {problem_00->PlayerCosts(), problem_25->PlayerCosts(),
+                  problem_50->PlayerCosts()});
 
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);

@@ -73,9 +73,9 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool *success,
                                                             Time max_runtime) {
   if (success)
     *success = true;
-  std::cout << "ALS::Solve, mu scaling: " << params_.geometric_mu_scaling
-            << "\n";
-  std::cout << "ALS::Solve, mu: " << Constraint::GlobalMu() << "\n";
+//  std::cout << "ALS::Solve, mu scaling: " << params_.geometric_mu_scaling
+//            << "\n";
+//  std::cout << "ALS::Solve, mu: " << Constraint::GlobalMu() << "\n";
 
   // Create new log.
   std::shared_ptr<SolverLog> log = CreateNewLog();

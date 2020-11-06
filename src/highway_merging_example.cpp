@@ -66,6 +66,7 @@
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/initialize_along_route.h>
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/strategy.h>
 #include <ilqgames/utils/types.h>
@@ -111,14 +112,13 @@ static constexpr float kP3MaxV = 35.8; // m/s
 static constexpr float kP5MaxV = 35.8; // m/s
 static constexpr float kP6MaxV = 35.8; // m/s
 
-// static constexpr float kLaneCostWeight = 25.0;
-// static constexpr float kLaneBoundaryCostWeight = 100.0;
-
-static constexpr float kLaneCostWeight = 2.0;
+static constexpr float kP1LaneCostWeight = 2.0;
+static constexpr float kP2LaneCostWeight = 2.0 * 1000;
+static constexpr float kP3LaneCostWeight = 2.0;
+static constexpr float kP4LaneCostWeight = 2.0 * 1000;
+static constexpr float kP5LaneCostWeight = 2.0;
+static constexpr float kP6LaneCostWeight = 2.0;
 static constexpr float kLaneBoundaryCostWeight = 100.0;
-
-// static constexpr float kLaneCostWeight = 0.0;
-// static constexpr float kLaneBoundaryCostWeight = 0.0;
 
 static constexpr float kMinProximity = 4.75;
 static constexpr float kP1ProximityCostWeight = 10.0;
@@ -297,6 +297,21 @@ static const Dimension kP5JerkIdx = 1;
 static const Dimension kP6OmegaIdx = 0;
 static const Dimension kP6JerkIdx = 1;
 
+    
+    // Definition of lanes.
+    
+    const Polyline2 lane1({Point2(kP2InitialX + 0.1, kP2InitialY),
+        Point2(kP2InitialX - 2.0, kP2InitialY + 5.0),
+        Point2(kP4InitialX + 0.1, kP4InitialY),
+        Point2(kP4InitialX - 1.0, kP4InitialY + 5.0),
+        Point2(kP4InitialX - 2.0, kP4InitialY + 10.0),
+        Point2(kP3InitialX + 0.1, kP3InitialY),
+        Point2(kP3InitialX, 1000.0)});
+    const Polyline2 lane2(
+                          {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
+    const Polyline2 lane3(
+                          {Point2(kP5InitialX, -1000.0), Point2(kP5InitialX, 1000.0)});
+    
 } // anonymous namespace
 
 // HighwayMergingExample::HighwayMergingExample(const double adv_time) {
@@ -363,6 +378,7 @@ void HighwayMergingExample::ConstructInitialState() {
   x0_(kP6YIdx) = kP6InitialY;
   x0_(kP6HeadingIdx) = kP6InitialHeading;
   x0_(kP6VIdx) = kP6InitialSpeed;
+
 }
 
 // // Set up initial strategies and operating point.
@@ -401,22 +417,10 @@ void HighwayMergingExample::ConstructPlayerCosts() {
 
   // Stay in lanes.
 
-  const Polyline2 lane1({Point2(kP2InitialX, kP2InitialY),
-                         Point2(kP2InitialX - 2.0, kP2InitialY + 5.0),
-                         Point2(kP4InitialX, kP4InitialY),
-                         Point2(kP4InitialX - 1.0, kP4InitialY + 5.0),
-                         Point2(kP4InitialX - 2.0, kP4InitialY + 10.0),
-                         Point2(kP3InitialX, kP3InitialY),
-                         Point2(kP3InitialX, 1000.0)});
-  const Polyline2 lane2(
-      {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
-  const Polyline2 lane3(
-      {Point2(kP5InitialX, -1000.0), Point2(kP5InitialX, 1000.0)});
-
   // Player 1:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p1_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP1XIdx, kP1YIdx},
+      new QuadraticPolyline2Cost(kP1LaneCostWeight, lane2, {kP1XIdx, kP1YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p1_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP1XIdx, kP1YIdx},
@@ -433,7 +437,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   // Player 2:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p2_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
+      new QuadraticPolyline2Cost(kP2LaneCostWeight, lane1, {kP2XIdx, kP2YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p2_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane1, {kP2XIdx, kP2YIdx},
@@ -450,7 +454,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   // Player 3:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p3_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
+      new QuadraticPolyline2Cost(kP3LaneCostWeight, lane2, {kP3XIdx, kP3YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p3_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane2, {kP3XIdx, kP3YIdx},
@@ -467,7 +471,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   // Player 4:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p4_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane1, {kP4XIdx, kP4YIdx},
+      new QuadraticPolyline2Cost(kP4LaneCostWeight, lane1, {kP4XIdx, kP4YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p4_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane1, {kP4XIdx, kP4YIdx},
@@ -484,7 +488,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   // Player 5:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p5_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP5XIdx, kP5YIdx},
+      new QuadraticPolyline2Cost(kP4LaneCostWeight, lane3, {kP5XIdx, kP5YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p5_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane3, {kP5XIdx, kP5YIdx},
@@ -501,7 +505,7 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   // Player 6:
 
   const std::shared_ptr<QuadraticPolyline2Cost> p6_lane_cost(
-      new QuadraticPolyline2Cost(kLaneCostWeight, lane3, {kP6XIdx, kP6YIdx},
+      new QuadraticPolyline2Cost(kP6LaneCostWeight, lane3, {kP6XIdx, kP6YIdx},
                                  "LaneCenter"));
   const std::shared_ptr<Polyline2SignedDistanceConstraint> p6_lane_r_constraint(
       new Polyline2SignedDistanceConstraint(lane3, {kP6XIdx, kP6YIdx},
@@ -859,29 +863,65 @@ void HighwayMergingExample::ConstructPlayerCosts() {
 
   // std::cout << x0_.transpose() << std::endl;
 } // namespace ilqgames
+    
+//    // Definition of lanes.
+//
+//    const Polyline2 lane1({Point2(kP2InitialX + 0.1, kP2InitialY),
+//        Point2(kP2InitialX - 2.0, kP2InitialY + 5.0),
+//        Point2(kP4InitialX + 0.1, kP4InitialY),
+//        Point2(kP4InitialX - 1.0, kP4InitialY + 5.0),
+//        Point2(kP4InitialX - 2.0, kP4InitialY + 10.0),
+//        Point2(kP3InitialX + 0.1, kP3InitialY),
+//        Point2(kP3InitialX, 1000.0)});
+//    const Polyline2 lane2(
+//                          {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
+//    const Polyline2 lane3(
+//                          {Point2(kP5InitialX, -1000.0), Point2(kP5InitialX, 1000.0)});
+    
+//    static constexpr float kP1InitialX = 0.0;   // m
+//    static constexpr float kP1InitialY = -20.0; // m
+//    static constexpr float kP2InitialX = 9.0;   // m
+//    static constexpr float kP2InitialY = -10.0; // m
+//    static constexpr float kP3InitialX = 0.0;   // m
+//    static constexpr float kP3InitialY = 15.0;  // m
+//    static constexpr float kP4InitialX = 6.0;   // m
+//    static constexpr float kP4InitialY = 0.0;   // m
+//    static constexpr float kP5InitialX = -5.0;  // m
+//    static constexpr float kP5InitialY = 15.0;  // m
+//    static constexpr float kP6InitialX = -5.0;  // m
+//    static constexpr float kP6InitialY = -25.0; // m
 
-// void HighwayMergingExample::ConstructInitialOperatingPoint() {
-//   operating_point_.reset(
-//       new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+ void HighwayMergingExample::ConstructInitialOperatingPoint() {
+   operating_point_.reset(
+       new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
+     
+     Point2 kP4DistanceToLane1Node = Point2(kP4InitialX, kP4InitialX) - Point2(kP2InitialX - 2.0, kP2InitialY + 5.0);
+     
+       float kP1InitialRoutePos = std::abs(kP1InitialY + 1000.0);
+       float kP2InitialRoutePos = 0.0;
+       float kP3InitialRoutePos = std::abs(kP3InitialY + 1000.0);
+       float kP4InitialRoutePos = kP4DistanceToLane1Node.norm() + std::sqrt(29);
+       float kP5InitialRoutePos = std::abs(kP5InitialY + 1000.0);
+       float kP6InitialRoutePos = std::abs(kP6InitialY + 1000.0);
+    
+   InitializeAlongRoute(lane2, kP1InitialRoutePos, kP1NominalV,
+                        {kP1XIdx, kP1YIdx}, kP1HeadingIdx, operating_point_.get());
 
-//   InitializeAlongRoute(lane1, kP1InitialRoutePos_, kP1InitialSpeed,
-//                        {kP1XIdx, kP1YIdx}, operating_point_.get());
+   InitializeAlongRoute(lane1, kP2InitialRoutePos, kP2NominalV,
+                        {kP2XIdx, kP2YIdx}, kP2HeadingIdx, operating_point_.get());
 
-//   InitializeAlongRoute(lane2, kP2InitialRoutePos_, kP2InitialSpeed,
-//                        {kP2XIdx, kP2YIdx}, operating_point_.get());
+   InitializeAlongRoute(lane2, kP3InitialRoutePos, kP3NominalV,
+                        {kP3XIdx, kP3YIdx}, kP3HeadingIdx, operating_point_.get());
 
-//   InitializeAlongRoute(lane3, kP3InitialRoutePos_, kP3InitialSpeed,
-//                        {kP3XIdx, kP3YIdx}, operating_point_.get());
+   InitializeAlongRoute(lane1, kP4InitialRoutePos, kP4NominalV,
+                        {kP4XIdx, kP4YIdx}, kP4HeadingIdx, operating_point_.get());
 
-//   InitializeAlongRoute(lane4, kP1InitialRoutePos_, kP4InitialSpeed,
-//                        {kP4XIdx, kP4YIdx}, operating_point_.get());
+   InitializeAlongRoute(lane3, kP5InitialRoutePos, kP5NominalV,
+                        {kP5XIdx, kP5YIdx}, kP5HeadingIdx, operating_point_.get());
 
-//   InitializeAlongRoute(lane5, kP2InitialRoutePos_, kP5InitialSpeed,
-//                        {kP5XIdx, kP5YIdx}, operating_point_.get());
-
-//   InitializeAlongRoute(lane6, kP3InitialRoutePos_, kP6InitialSpeed,
-//                        {kP6XIdx, kP6YIdx}, operating_point_.get());
-// }
+   InitializeAlongRoute(lane3, kP6InitialRoutePos, kP6NominalV,
+                        {kP6XIdx, kP6YIdx}, kP6HeadingIdx, operating_point_.get());
+ }
 
 inline std::vector<float> HighwayMergingExample::Xs(const VectorXf &x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx),

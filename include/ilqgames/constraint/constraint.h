@@ -96,7 +96,7 @@ public:
   bool IsEquality() const { return is_equality_; }
   float &Lambda(Time t) { return lambdas_[TimeIndex(t)]; }
   float Lambda(Time t) const {
-      std::cout << "lambdas_[TimeIndex(t)]: " << lambdas_[TimeIndex(t)] << "\n";
+//      std::cout << "lambdas_[TimeIndex(t)]: " << lambdas_[TimeIndex(t)] << "\n";
     return lambdas_[TimeIndex(t)];
   }
   void IncrementLambda(Time t, float value) {
@@ -126,10 +126,10 @@ public:
   float Mu(float lambda, float g) const {
     if (!is_equality_ && g <= constants::kSmallNumber &&
         std::abs(lambda) <= constants::kSmallNumber) {
-      std::cout << "float Mu(lambda, g): 0.0\n";
+//      std::cout << "float Mu(lambda, g): 0.0\n";
       return 0.0;
     }
-      std::cout << "float Mu(lambda, g): Mu: " << mu_ << "\n";
+//      std::cout << "float Mu(lambda, g): Mu: " << mu_ << "\n";
     return mu_;
   }
 

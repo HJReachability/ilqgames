@@ -131,7 +131,7 @@ static constexpr float kP3MaxV = 3.0;  // m/s
 static constexpr float kMinV = 1.0;    // m/s
 
 static constexpr float kP1NominalV = 8.0; // m/s
-static constexpr float kP2NominalV = 9.0;  // m/s
+static constexpr float kP2NominalV = 8.95;  // m/s
 static constexpr float kP3NominalV = 2.0;  // m/s
 
 // Initial state.
