@@ -102,7 +102,13 @@ static constexpr float kP3NominalVCostWeight = 0.1;
 static constexpr float kP4NominalVCostWeight = 0.1;
 static constexpr float kP5NominalVCostWeight = 0.1;
 static constexpr float kP6NominalVCostWeight = 0.1;
-
+    
+static constexpr float kP2PhiCostWeight = 0.0;
+static constexpr float kP2HeadingCostWeight = 0.0;
+    
+static constexpr float kP4PhiCostWeight = 0.0;
+static constexpr float kP4HeadingCostWeight = 0.0;
+    
 // Newly added, 05-23-2020 19:18 p.m.
 static constexpr float kMinV = 0.0;    // m/s
 static constexpr float kP1MaxV = 35.8; // m/s
@@ -112,13 +118,12 @@ static constexpr float kP3MaxV = 35.8; // m/s
 static constexpr float kP5MaxV = 35.8; // m/s
 static constexpr float kP6MaxV = 35.8; // m/s
 
-static constexpr float kP1LaneCostWeight = 2.0;
+static constexpr float kP1LaneCostWeight = 2.0 * 1000;
 static constexpr float kP2LaneCostWeight = 2.0 * 1000;
 static constexpr float kP3LaneCostWeight = 2.0;
 static constexpr float kP4LaneCostWeight = 2.0 * 1000;
 static constexpr float kP5LaneCostWeight = 2.0;
 static constexpr float kP6LaneCostWeight = 2.0;
-static constexpr float kLaneBoundaryCostWeight = 100.0;
 
 static constexpr float kMinProximity = 4.75;
 static constexpr float kP1ProximityCostWeight = 10.0;
@@ -300,13 +305,13 @@ static const Dimension kP6JerkIdx = 1;
     
     // Definition of lanes.
     
-    const Polyline2 lane1({Point2(kP2InitialX + 0.1, kP2InitialY),
+    const Polyline2 lane1({Point2(kP2InitialX + 0.01, kP2InitialY),
         Point2(kP2InitialX - 2.0, kP2InitialY + 5.0),
-        Point2(kP4InitialX + 0.1, kP4InitialY),
+        Point2(kP4InitialX + 0.01, kP4InitialY),
         Point2(kP4InitialX - 1.0, kP4InitialY + 5.0),
         Point2(kP4InitialX - 2.0, kP4InitialY + 10.0),
-        Point2(kP3InitialX + 0.1, kP3InitialY),
-        Point2(kP3InitialX, 1000.0)});
+        Point2(kP3InitialX + 0.01, kP3InitialY),
+        Point2(kP3InitialX + 0.02, 1000.0)});
     const Polyline2 lane2(
                           {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
     const Polyline2 lane3(
@@ -602,6 +607,29 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   //                                                        0.0,
   //                                                        "Acceleration");
   // p2_cost.AddStateCost(p2_a_cost);
+    
+    
+    // Front wheel angle costs.
+    
+    const auto p2_phi_cost = std::make_shared<QuadraticCost>(
+                                                             kP2PhiCostWeight, kP2PhiIdx, 0.0, "Front wheel angle");
+    p2_cost.AddStateCost(p2_phi_cost);
+    
+    const auto p4_phi_cost = std::make_shared<QuadraticCost>(
+                                                             kP4PhiCostWeight, kP4PhiIdx, 0.0, "Front wheel angle");
+    p4_cost.AddStateCost(p4_phi_cost);
+    
+    
+    // Heading cost.
+    
+    const auto p2_heading_cost = std::make_shared<QuadraticCost>(
+                                                                 kP2HeadingCostWeight, kP2HeadingIdx, 0.0, "Heading");
+    p2_cost.AddStateCost(p2_heading_cost);
+    
+    const auto p4_heading_cost = std::make_shared<QuadraticCost>(
+                                                                 kP4HeadingCostWeight, kP4HeadingIdx, 0.0, "Heading");
+    p4_cost.AddStateCost(p4_heading_cost);
+    
 
   // Penalize control effort.
 
