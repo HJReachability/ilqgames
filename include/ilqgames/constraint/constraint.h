@@ -120,7 +120,7 @@ class Constraint : public Cost {
   explicit Constraint(bool is_equality, const std::string& name)
       : Cost(1.0, name),
         is_equality_(is_equality),
-        lambdas_(time::kNumTimeSteps, 0.0) {}
+        lambdas_(time::kNumTimeSteps, constants::kDefaultLambda) {}
 
   // Modify derivatives to account for the multipliers and the quadratic term in
   // the augmented Lagrangian. The inputs are the derivatives of g in the
