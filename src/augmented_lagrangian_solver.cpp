@@ -73,6 +73,10 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
                                                             Time max_runtime) {
   if (success) *success = true;
 
+  // Cache initial problem solution so we can restore it at the end.
+  const auto& initial_op = problem_->CurrentOperatingPoint();
+  const auto& initial_strategies = problem_->CurrentStrategies();
+
   // Create new log.
   std::shared_ptr<SolverLog> log = CreateNewLog();
 
@@ -186,9 +190,21 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     if (success) *success = false;
   }
 
-  // Update problem solution to make sure we get the final log output.
-  problem_->OverwriteSolution(log->FinalOperatingPoint(),
-                              log->FinalStrategies());
+  // Maybe restore initial solution to this problem.
+  if (params_.reset_problem)
+    problem_->OverwriteSolution(initial_op, initial_strategies);
+
+  // Reset all multipliers.
+  if (params_.reset_lambdas) {
+    for (auto& pc : problem_->PlayerCosts()) {
+      for (const auto& constraint : pc.StateConstraints())
+        constraint->ScaleLambdas(constants::kDefaultLambda);
+      for (const auto& pair : pc.ControlConstraints())
+        pair.second->ScaleLambdas(constants::kDefaultLambda);
+    }
+  }
+
+  if (params_.reset_mu) Constraint::GlobalMu() = constants::kDefaultMu;
 
   return log;
 }

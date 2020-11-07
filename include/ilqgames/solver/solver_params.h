@@ -75,6 +75,12 @@ struct SolverParams {
   float geometric_mu_downscaling = 0.5;
   float geometric_lambda_downscaling = 0.5;
   float constraint_error_tolerance = 1e-1;
+
+  // Should the solver reset problem/constraint params to their initial values.
+  // NOTE: defaults to true.
+  bool reset_problem = true;
+  bool reset_lambdas = true;
+  bool reset_mu = true;
 };  // struct SolverParams
 
 }  // namespace ilqgames
