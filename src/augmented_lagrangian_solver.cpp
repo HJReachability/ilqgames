@@ -196,12 +196,12 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
   // Reset all multipliers.
   for (auto& pc : problem_->PlayerCosts()) {
     for (const auto& constraint : pc.StateConstraints())
-      constraint->Lambda() = 0.0;
+      constraint->ScaleLambdas(0.0);
     for (const auto& pair : pc.ControlConstraints())
-      pair.second->Lambda() = 0.0;
+      pair.second->ScaleLambdas(0.0);
   }
 
-  Constraint::GlobalMu() = 1.0;
+  Constraint::GlobalMu() = 10.0;
 
   // Update problem solution to make sure we get the final log output.
   // problem_->OverwriteSolution(log->FinalOperatingPoint(),
