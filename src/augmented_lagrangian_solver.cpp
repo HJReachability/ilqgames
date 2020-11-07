@@ -73,6 +73,10 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
                                                             Time max_runtime) {
   if (success) *success = true;
 
+  // Cache initial problem solution so we can restore it at the end.
+  const auto& initial_op = problem_->CurrentOperatingPoint();
+  const auto& initial_strategies = problem_->CurrentStrategies();
+
   // Create new log.
   std::shared_ptr<SolverLog> log = CreateNewLog();
 
@@ -186,9 +190,12 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     if (success) *success = false;
   }
 
+  // Restore initial solution to this problem.
+  problem_->OverwriteSolution(initial_op, initial_strategies);
+
   // Update problem solution to make sure we get the final log output.
-  problem_->OverwriteSolution(log->FinalOperatingPoint(),
-                              log->FinalStrategies());
+  // problem_->OverwriteSolution(log->FinalOperatingPoint(),
+  //                             log->FinalStrategies());
 
   return log;
 }
