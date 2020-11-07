@@ -85,7 +85,7 @@ namespace {
 //     static_cast<size_t>(kTimeHorizon / kTimeStep);
 
 // Car inter-axle distance.
-static constexpr float kInterAxleLength = 4.0; // m
+static constexpr float kInterAxleLength = 4.0;  // m
 
 // Cost weights.
 static constexpr float kStateRegularization = 1.0;
@@ -102,21 +102,21 @@ static constexpr float kP3NominalVCostWeight = 0.1;
 static constexpr float kP4NominalVCostWeight = 0.1;
 static constexpr float kP5NominalVCostWeight = 0.1;
 static constexpr float kP6NominalVCostWeight = 0.1;
-    
+
 static constexpr float kP2PhiCostWeight = 0.0;
 static constexpr float kP2HeadingCostWeight = 0.0;
-    
+
 static constexpr float kP4PhiCostWeight = 0.0;
 static constexpr float kP4HeadingCostWeight = 0.0;
-    
+
 // Newly added, 05-23-2020 19:18 p.m.
-static constexpr float kMinV = 0.0;    // m/s
-static constexpr float kP1MaxV = 35.8; // m/s
-static constexpr float kP2MaxV = 35.8; // m/s
-static constexpr float kP4MaxV = 35.8; // m/s
-static constexpr float kP3MaxV = 35.8; // m/s
-static constexpr float kP5MaxV = 35.8; // m/s
-static constexpr float kP6MaxV = 35.8; // m/s
+static constexpr float kMinV = 0.0;     // m/s
+static constexpr float kP1MaxV = 35.8;  // m/s
+static constexpr float kP2MaxV = 35.8;  // m/s
+static constexpr float kP4MaxV = 35.8;  // m/s
+static constexpr float kP3MaxV = 35.8;  // m/s
+static constexpr float kP5MaxV = 35.8;  // m/s
+static constexpr float kP6MaxV = 35.8;  // m/s
 
 static constexpr float kP1LaneCostWeight = 2.0 * 1000;
 static constexpr float kP2LaneCostWeight = 2.0 * 1000;
@@ -149,15 +149,15 @@ static constexpr float kNominalHeadingCostWeight = 10.0;
 static constexpr bool kOrientedRight = true;
 static constexpr bool kConstraintOrientedInside = false;
 // Lane width.
-static constexpr float kLaneHalfWidth = 2.5; // m
+static constexpr float kLaneHalfWidth = 2.5;  // m
 
 // Nominal speed.
-static constexpr float kP1NominalV = 5.0; // m/s
-static constexpr float kP2NominalV = 5.0; // m/s
-static constexpr float kP3NominalV = 5.0; // m/s
-static constexpr float kP4NominalV = 5.0; // m/s
-static constexpr float kP5NominalV = 5.0; // m/s
-static constexpr float kP6NominalV = 5.0; // m/s
+static constexpr float kP1NominalV = 5.0;  // m/s
+static constexpr float kP2NominalV = 5.0;  // m/s
+static constexpr float kP3NominalV = 5.0;  // m/s
+static constexpr float kP4NominalV = 5.0;  // m/s
+static constexpr float kP5NominalV = 5.0;  // m/s
+static constexpr float kP6NominalV = 5.0;  // m/s
 
 // Initial state.
 
@@ -174,39 +174,39 @@ static constexpr float kP6NominalV = 5.0; // m/s
 // static constexpr float kP6InitialX = -5.0;  // m
 // static constexpr float kP6InitialY = -20.0; // m
 
-static constexpr float kP1InitialX = 0.0;   // m
-static constexpr float kP1InitialY = -20.0; // m
-static constexpr float kP2InitialX = 9.0;   // m
-static constexpr float kP2InitialY = -10.0; // m
-static constexpr float kP3InitialX = 0.0;   // m
-static constexpr float kP3InitialY = 15.0;  // m
-static constexpr float kP4InitialX = 6.0;   // m
-static constexpr float kP4InitialY = 0.0;   // m
-static constexpr float kP5InitialX = -5.0;  // m
-static constexpr float kP5InitialY = 15.0;  // m
-static constexpr float kP6InitialX = -5.0;  // m
-static constexpr float kP6InitialY = -25.0; // m
+static constexpr float kP1InitialX = 0.0;    // m
+static constexpr float kP1InitialY = -20.0;  // m
+static constexpr float kP2InitialX = 9.0;    // m
+static constexpr float kP2InitialY = -10.0;  // m
+static constexpr float kP3InitialX = 0.0;    // m
+static constexpr float kP3InitialY = 15.0;   // m
+static constexpr float kP4InitialX = 6.0;    // m
+static constexpr float kP4InitialY = 0.0;    // m
+static constexpr float kP5InitialX = -5.0;   // m
+static constexpr float kP5InitialY = 15.0;   // m
+static constexpr float kP6InitialX = -5.0;   // m
+static constexpr float kP6InitialY = -25.0;  // m
 
-static constexpr float kP1InitialHeading = M_PI_2;       // rad
-static constexpr float kP2InitialHeading = M_PI * 2 / 3; // rad
-static constexpr float kP3InitialHeading = M_PI_2;       // rad
-static constexpr float kP4InitialHeading = M_PI * 2 / 3; // rad
-static constexpr float kP5InitialHeading = M_PI_2;       // rad
-static constexpr float kP6InitialHeading = M_PI_2;       // rad
+static constexpr float kP1InitialHeading = M_PI_2;        // rad
+static constexpr float kP2InitialHeading = M_PI * 2 / 3;  // rad
+static constexpr float kP3InitialHeading = M_PI_2;        // rad
+static constexpr float kP4InitialHeading = M_PI * 2 / 3;  // rad
+static constexpr float kP5InitialHeading = M_PI_2;        // rad
+static constexpr float kP6InitialHeading = M_PI_2;        // rad
 
-static constexpr float kP1InitialSpeed = 3.0; // m/s
-static constexpr float kP2InitialSpeed = 0.1; // m/s
-static constexpr float kP3InitialSpeed = 1.0; // m/s
-static constexpr float kP4InitialSpeed = 0.1; // m/s
-static constexpr float kP5InitialSpeed = 1.0; // m/s
-static constexpr float kP6InitialSpeed = 3.0; // m/s
+static constexpr float kP1InitialSpeed = 3.0;  // m/s
+static constexpr float kP2InitialSpeed = 0.1;  // m/s
+static constexpr float kP3InitialSpeed = 1.0;  // m/s
+static constexpr float kP4InitialSpeed = 0.1;  // m/s
+static constexpr float kP5InitialSpeed = 1.0;  // m/s
+static constexpr float kP6InitialSpeed = 3.0;  // m/s
 
-static constexpr float kP1InitialAcceleration = -0.45; // m/s
-static constexpr float kP2InitialAcceleration = -0.45; // m/s
-static constexpr float kP3InitialAcceleration = -0.45; // m/s
-static constexpr float kP4InitialAcceleration = -0.45; // m/s
-static constexpr float kP5InitialAcceleration = -0.45; // m/s
-static constexpr float kP6InitialAcceleration = -0.45; // m/s
+static constexpr float kP1InitialAcceleration = -0.45;  // m/s
+static constexpr float kP2InitialAcceleration = -0.45;  // m/s
+static constexpr float kP3InitialAcceleration = -0.45;  // m/s
+static constexpr float kP4InitialAcceleration = -0.45;  // m/s
+static constexpr float kP5InitialAcceleration = -0.45;  // m/s
+static constexpr float kP6InitialAcceleration = -0.45;  // m/s
 
 // State dimensions.
 using P1 = SinglePlayerCar6D;
@@ -302,22 +302,21 @@ static const Dimension kP5JerkIdx = 1;
 static const Dimension kP6OmegaIdx = 0;
 static const Dimension kP6JerkIdx = 1;
 
-    
-    // Definition of lanes.
-    
-    const Polyline2 lane1({Point2(kP2InitialX + 0.01, kP2InitialY),
-        Point2(kP2InitialX - 2.0, kP2InitialY + 5.0),
-        Point2(kP4InitialX + 0.01, kP4InitialY),
-        Point2(kP4InitialX - 1.0, kP4InitialY + 5.0),
-        Point2(kP4InitialX - 2.0, kP4InitialY + 10.0),
-        Point2(kP3InitialX + 0.01, kP3InitialY),
-        Point2(kP3InitialX + 0.02, 1000.0)});
-    const Polyline2 lane2(
-                          {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
-    const Polyline2 lane3(
-                          {Point2(kP5InitialX, -1000.0), Point2(kP5InitialX, 1000.0)});
-    
-} // anonymous namespace
+// Definition of lanes.
+
+const Polyline2 lane1({Point2(kP2InitialX + 0.01, kP2InitialY),
+                       Point2(kP2InitialX - 2.0, kP2InitialY + 5.0),
+                       Point2(kP4InitialX + 0.01, kP4InitialY),
+                       Point2(kP4InitialX - 1.0, kP4InitialY + 5.0),
+                       Point2(kP4InitialX - 2.0, kP4InitialY + 10.0),
+                       Point2(kP3InitialX + 0.01, kP3InitialY),
+                       Point2(kP3InitialX + 0.02, 1000.0)});
+const Polyline2 lane2({Point2(kP3InitialX, -1000.0),
+                       Point2(kP3InitialX, 1000.0)});
+const Polyline2 lane3({Point2(kP5InitialX, -1000.0),
+                       Point2(kP5InitialX, 1000.0)});
+
+}  // anonymous namespace
 
 // HighwayMergingExample::HighwayMergingExample(const double adv_time) {
 //   SetAdversarialTime(adv_time);
@@ -383,7 +382,6 @@ void HighwayMergingExample::ConstructInitialState() {
   x0_(kP6YIdx) = kP6InitialY;
   x0_(kP6HeadingIdx) = kP6InitialHeading;
   x0_(kP6VIdx) = kP6InitialSpeed;
-
 }
 
 // // Set up initial strategies and operating point.
@@ -413,12 +411,12 @@ void HighwayMergingExample::ConstructPlayerCosts() {
                              kControlRegularization);
   player_costs_.emplace_back("P6", kStateRegularization,
                              kControlRegularization);
-  auto &p1_cost = player_costs_[0];
-  auto &p2_cost = player_costs_[1];
-  auto &p3_cost = player_costs_[2];
-  auto &p4_cost = player_costs_[3];
-  auto &p5_cost = player_costs_[4];
-  auto &p6_cost = player_costs_[5];
+  auto& p1_cost = player_costs_[0];
+  auto& p2_cost = player_costs_[1];
+  auto& p3_cost = player_costs_[2];
+  auto& p4_cost = player_costs_[3];
+  auto& p5_cost = player_costs_[4];
+  auto& p6_cost = player_costs_[5];
 
   // Stay in lanes.
 
@@ -607,29 +605,26 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   //                                                        0.0,
   //                                                        "Acceleration");
   // p2_cost.AddStateCost(p2_a_cost);
-    
-    
-    // Front wheel angle costs.
-    
-    const auto p2_phi_cost = std::make_shared<QuadraticCost>(
-                                                             kP2PhiCostWeight, kP2PhiIdx, 0.0, "Front wheel angle");
-    p2_cost.AddStateCost(p2_phi_cost);
-    
-    const auto p4_phi_cost = std::make_shared<QuadraticCost>(
-                                                             kP4PhiCostWeight, kP4PhiIdx, 0.0, "Front wheel angle");
-    p4_cost.AddStateCost(p4_phi_cost);
-    
-    
-    // Heading cost.
-    
-    const auto p2_heading_cost = std::make_shared<QuadraticCost>(
-                                                                 kP2HeadingCostWeight, kP2HeadingIdx, 0.0, "Heading");
-    p2_cost.AddStateCost(p2_heading_cost);
-    
-    const auto p4_heading_cost = std::make_shared<QuadraticCost>(
-                                                                 kP4HeadingCostWeight, kP4HeadingIdx, 0.0, "Heading");
-    p4_cost.AddStateCost(p4_heading_cost);
-    
+
+  // Front wheel angle costs.
+
+  const auto p2_phi_cost = std::make_shared<QuadraticCost>(
+      kP2PhiCostWeight, kP2PhiIdx, 0.0, "Front wheel angle");
+  p2_cost.AddStateCost(p2_phi_cost);
+
+  const auto p4_phi_cost = std::make_shared<QuadraticCost>(
+      kP4PhiCostWeight, kP4PhiIdx, 0.0, "Front wheel angle");
+  p4_cost.AddStateCost(p4_phi_cost);
+
+  // Heading cost.
+
+  const auto p2_heading_cost = std::make_shared<QuadraticCost>(
+      kP2HeadingCostWeight, kP2HeadingIdx, 0.0, "Heading");
+  p2_cost.AddStateCost(p2_heading_cost);
+
+  const auto p4_heading_cost = std::make_shared<QuadraticCost>(
+      kP4HeadingCostWeight, kP4HeadingIdx, 0.0, "Heading");
+  p4_cost.AddStateCost(p4_heading_cost);
 
   // Penalize control effort.
 
@@ -890,8 +885,8 @@ void HighwayMergingExample::ConstructPlayerCosts() {
   p6_cost.AddStateCost(p6p5_proximity_cost);
 
   // std::cout << x0_.transpose() << std::endl;
-} // namespace ilqgames
-    
+}
+
 //    // Definition of lanes.
 //
 //    const Polyline2 lane1({Point2(kP2InitialX + 0.1, kP2InitialY),
@@ -902,10 +897,12 @@ void HighwayMergingExample::ConstructPlayerCosts() {
 //        Point2(kP3InitialX + 0.1, kP3InitialY),
 //        Point2(kP3InitialX, 1000.0)});
 //    const Polyline2 lane2(
-//                          {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX, 1000.0)});
+//                          {Point2(kP3InitialX, -1000.0), Point2(kP3InitialX,
+//                          1000.0)});
 //    const Polyline2 lane3(
-//                          {Point2(kP5InitialX, -1000.0), Point2(kP5InitialX, 1000.0)});
-    
+//                          {Point2(kP5InitialX, -1000.0), Point2(kP5InitialX,
+//                          1000.0)});
+
 //    static constexpr float kP1InitialX = 0.0;   // m
 //    static constexpr float kP1InitialY = -20.0; // m
 //    static constexpr float kP2InitialX = 9.0;   // m
@@ -919,52 +916,59 @@ void HighwayMergingExample::ConstructPlayerCosts() {
 //    static constexpr float kP6InitialX = -5.0;  // m
 //    static constexpr float kP6InitialY = -25.0; // m
 
- void HighwayMergingExample::ConstructInitialOperatingPoint() {
-   operating_point_.reset(
-       new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
-     
-     Point2 kP4DistanceToLane1Node = Point2(kP4InitialX, kP4InitialX) - Point2(kP2InitialX - 2.0, kP2InitialY + 5.0);
-     
-       float kP1InitialRoutePos = std::abs(kP1InitialY + 1000.0);
-       float kP2InitialRoutePos = 0.0;
-       float kP3InitialRoutePos = std::abs(kP3InitialY + 1000.0);
-       float kP4InitialRoutePos = kP4DistanceToLane1Node.norm() + std::sqrt(29);
-       float kP5InitialRoutePos = std::abs(kP5InitialY + 1000.0);
-       float kP6InitialRoutePos = std::abs(kP6InitialY + 1000.0);
-    
-   InitializeAlongRoute(lane2, kP1InitialRoutePos, kP1NominalV,
-                        {kP1XIdx, kP1YIdx}, kP1HeadingIdx, operating_point_.get());
+void HighwayMergingExample::ConstructInitialOperatingPoint() {
+  operating_point_.reset(
+      new OperatingPoint(time::kNumTimeSteps, 0.0, dynamics_));
 
-   InitializeAlongRoute(lane1, kP2InitialRoutePos, kP2NominalV,
-                        {kP2XIdx, kP2YIdx}, kP2HeadingIdx, operating_point_.get());
+  Point2 kP4DistanceToLane1Node = Point2(kP4InitialX, kP4InitialX) -
+                                  Point2(kP2InitialX - 2.0, kP2InitialY + 5.0);
 
-   InitializeAlongRoute(lane2, kP3InitialRoutePos, kP3NominalV,
-                        {kP3XIdx, kP3YIdx}, kP3HeadingIdx, operating_point_.get());
+  float kP1InitialRoutePos = std::abs(kP1InitialY + 1000.0);
+  float kP2InitialRoutePos = 0.0;
+  float kP3InitialRoutePos = std::abs(kP3InitialY + 1000.0);
+  float kP4InitialRoutePos = kP4DistanceToLane1Node.norm() + std::sqrt(29);
+  float kP5InitialRoutePos = std::abs(kP5InitialY + 1000.0);
+  float kP6InitialRoutePos = std::abs(kP6InitialY + 1000.0);
 
-   InitializeAlongRoute(lane1, kP4InitialRoutePos, kP4NominalV,
-                        {kP4XIdx, kP4YIdx}, kP4HeadingIdx, operating_point_.get());
+  InitializeAlongRoute(lane2, kP1InitialRoutePos, kP1NominalV,
+                       {kP1XIdx, kP1YIdx}, kP1HeadingIdx,
+                       operating_point_.get());
 
-   InitializeAlongRoute(lane3, kP5InitialRoutePos, kP5NominalV,
-                        {kP5XIdx, kP5YIdx}, kP5HeadingIdx, operating_point_.get());
+  InitializeAlongRoute(lane1, kP2InitialRoutePos, kP2NominalV,
+                       {kP2XIdx, kP2YIdx}, kP2HeadingIdx,
+                       operating_point_.get());
 
-   InitializeAlongRoute(lane3, kP6InitialRoutePos, kP6NominalV,
-                        {kP6XIdx, kP6YIdx}, kP6HeadingIdx, operating_point_.get());
- }
+  InitializeAlongRoute(lane2, kP3InitialRoutePos, kP3NominalV,
+                       {kP3XIdx, kP3YIdx}, kP3HeadingIdx,
+                       operating_point_.get());
 
-inline std::vector<float> HighwayMergingExample::Xs(const VectorXf &x) const {
+  InitializeAlongRoute(lane1, kP4InitialRoutePos, kP4NominalV,
+                       {kP4XIdx, kP4YIdx}, kP4HeadingIdx,
+                       operating_point_.get());
+
+  InitializeAlongRoute(lane3, kP5InitialRoutePos, kP5NominalV,
+                       {kP5XIdx, kP5YIdx}, kP5HeadingIdx,
+                       operating_point_.get());
+
+  InitializeAlongRoute(lane3, kP6InitialRoutePos, kP6NominalV,
+                       {kP6XIdx, kP6YIdx}, kP6HeadingIdx,
+                       operating_point_.get());
+}
+
+inline std::vector<float> HighwayMergingExample::Xs(const VectorXf& x) const {
   return {x(kP1XIdx), x(kP2XIdx), x(kP3XIdx),
           x(kP4XIdx), x(kP5XIdx), x(kP6XIdx)};
 }
 
-inline std::vector<float> HighwayMergingExample::Ys(const VectorXf &x) const {
+inline std::vector<float> HighwayMergingExample::Ys(const VectorXf& x) const {
   return {x(kP1YIdx), x(kP2YIdx), x(kP3YIdx),
           x(kP4YIdx), x(kP5YIdx), x(kP6YIdx)};
 }
 
-inline std::vector<float>
-HighwayMergingExample::Thetas(const VectorXf &x) const {
+inline std::vector<float> HighwayMergingExample::Thetas(
+    const VectorXf& x) const {
   return {x(kP1HeadingIdx), x(kP2HeadingIdx), x(kP3HeadingIdx),
           x(kP4HeadingIdx), x(kP5HeadingIdx), x(kP6HeadingIdx)};
 }
 
-} // namespace ilqgames
+}  // namespace ilqgames
