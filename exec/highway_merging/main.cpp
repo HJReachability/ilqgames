@@ -165,7 +165,7 @@ int main(int argc, char** argv) {
     auto problem_20 =
         std::make_shared<ilqgames::HighwayMergingExample>(FLAGS_Tadv_3);
     problem_20->Initialize();
-    ilqgames::AugmentedLagrangianSolver solver_20(problem_20, params);
+    ilqgames::ILQSolver solver_20(problem_20, params);
 
     // Solve the game.
     const auto start_00 = std::chrono::system_clock::now();
