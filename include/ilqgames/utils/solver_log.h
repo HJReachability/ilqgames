@@ -164,7 +164,8 @@ class SolverLog : private Uncopyable {
   // Get index corresponding to the time step immediately before the given time.
   size_t TimeToIndex(Time t) const {
     return static_cast<size_t>(
-        std::max(constants::kSmallNumber, t - InitialTime()) / time::kTimeStep);
+        std::max<Time>(constants::kSmallNumber, t - InitialTime()) /
+        time::kTimeStep);
   }
 
   // Get time stamp corresponding to a particular index.
