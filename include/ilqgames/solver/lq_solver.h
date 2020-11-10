@@ -49,8 +49,8 @@
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
 
-#include <vector>
 #include <glog/logging.h>
+#include <vector>
 
 namespace ilqgames {
 
@@ -60,11 +60,13 @@ class LQSolver {
 
   // Solve underlying LQ game to a Nash equilibrium. This will differ in derived
   // classes depending on the information structure of the game.
+  // Optionally return delta xs and costates.
   virtual std::vector<Strategy> Solve(
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
           quadraticization,
-      const VectorXf& x0) = 0;
+      const VectorXf& x0, std::vector<VectorXf>* delta_xs = nullptr,
+      std::vector<std::vector<VectorXf>>* costates = nullptr) = 0;
 
  protected:
   LQSolver(const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,

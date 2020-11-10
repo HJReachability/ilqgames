@@ -95,12 +95,17 @@ class LQFeedbackSolver : public LQSolver {
       cumulative_udim += dynamics_->UDim(ii);
     }
 
-    // Initialize Zs and zetas for each player.
-    Zs_.resize(dynamics_->NumPlayers());
-    zetas_.resize(dynamics_->NumPlayers());
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      Zs_[ii].resize(dynamics_->XDim(), dynamics_->XDim());
-      zetas_[ii].resize(dynamics_->XDim());
+    // Initialize Zs and zetas for each time and player. Note that we need to
+    // store over all time to compute optimal costates if desired.
+    Zs_.resize(num_time_steps_);
+    zetas_.resize(num_time_steps_);
+    for (size_t kk = 0; kk < num_time_steps_; kk++) {
+      Zs_[kk].resize(dynamics_->NumPlayers());
+      zetas_[kk].resize(dynamics_->NumPlayers());
+      for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+        Zs_[kk][ii].resize(dynamics_->XDim(), dynamics_->XDim());
+        zetas_[kk][ii].resize(dynamics_->XDim());
+      }
     }
 
     // Preallocate memory for intermediate variables F, beta.
@@ -109,17 +114,21 @@ class LQFeedbackSolver : public LQSolver {
   }
 
   // Solve underlying LQ game to a feedback Nash equilibrium.
+  // Optionally return delta xs and costates.
   std::vector<Strategy> Solve(
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
           quadraticization,
-      const VectorXf& x0) {
-    return Solve(linearization, quadraticization);
+      const VectorXf& x0, std::vector<VectorXf>* delta_xs = nullptr,
+      std::vector<std::vector<VectorXf>>* costates = nullptr) {
+    return Solve(linearization, quadraticization, delta_xs, costates);
   }
   std::vector<Strategy> Solve(
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
-          quadraticization);
+          quadraticization,
+      std::vector<VectorXf>* delta_xs = nullptr,
+      std::vector<std::vector<VectorXf>>* costates = nullptr);
 
  private:
   // Quadratic/linear components of value function at the current time step in
@@ -132,9 +141,9 @@ class LQFeedbackSolver : public LQSolver {
   std::vector<Eigen::Ref<MatrixXf>> Ps_;
   std::vector<Eigen::Ref<VectorXf>> alphas_;
 
-  // Initialize Zs and zetas for each player.
-  std::vector<MatrixXf> Zs_;
-  std::vector<VectorXf> zetas_;
+  // Initialize Zs and zetas for each time and player.
+  std::vector<std::vector<MatrixXf>> Zs_;
+  std::vector<std::vector<VectorXf>> zetas_;
 
   // Preallocate memory for intermediate variables F, beta.
   MatrixXf F_;

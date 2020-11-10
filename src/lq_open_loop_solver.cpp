@@ -74,7 +74,8 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization,
-    const VectorXf& x0) {
+    const VectorXf& x0, std::vector<VectorXf>* delta_xs,
+    std::vector<std::vector<VectorXf>>* costates) {
   CHECK_EQ(linearization.size(), num_time_steps_);
   CHECK_EQ(quadraticization.size(), num_time_steps_);
 

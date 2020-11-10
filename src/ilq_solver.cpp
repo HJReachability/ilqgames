@@ -292,6 +292,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   //  std::endl;
 
   // Precompute expected decrease before we do anything else.
+  // HACK! Setting all the extra terms to zero.
   std::vector<VectorXf> delta_xs(time::kNumTimeSteps,
                                  VectorXf::Zero(problem_->Dynamics()->XDim()));
   std::vector<VectorXf> zero_costates(problem_->Dynamics()->NumPlayers());
@@ -300,7 +301,8 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   std::vector<std::vector<VectorXf>> costates(time::kNumTimeSteps,
                                               zero_costates);
 
-  expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
+  //  expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
+  expected_decrease_ = 0.0;
 
   // Every computation of the merit function will overwrite the current cost
   // quadraticization, so first swap it with the previous one so we retain a
@@ -371,7 +373,9 @@ float ILQSolver::ExpectedDecrease(
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
       const auto& costate = costates[kk][ii];
-      const auto& neg_ui = strategies[ii].alphas[kk];
+      const auto& neg_ui =
+          strategies[ii].alphas[kk];  // NOTE: could also evaluate strategy on
+                                      // delta state to be more precise.
 
       // Handle control contribution.
       expected_decrease -=

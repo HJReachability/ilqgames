@@ -71,9 +71,25 @@ namespace ilqgames {
 std::vector<Strategy> LQFeedbackSolver::Solve(
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
-        quadraticization) {
+        quadraticization,
+    std::vector<VectorXf>* delta_xs,
+    std::vector<std::vector<VectorXf>>* costates) {
   CHECK_EQ(linearization.size(), num_time_steps_);
   CHECK_EQ(quadraticization.size(), num_time_steps_);
+
+  // Make sure delta_xs and costates are the right size.
+  if (delta_xs) CHECK_NOTNULL(costates);
+  if (costates) CHECK_NOTNULL(delta_xs);
+  if (delta_xs) {
+    delta_xs->resize(num_time_steps_);
+    costates->resize(num_time_steps_);
+    for (size_t kk = 0; kk < num_time_steps_; kk++) {
+      (*delta_xs)[kk].resize(dynamics_->XDim());
+      (*costates)[kk].resize(dynamics_->NumPlayers());
+      for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+        (*costates)[kk][ii].resize(dynamics_->XDim());
+    }
+  }
 
   // List of player-indexed strategies (each of which is a time-indexed
   // affine state error-feedback controller).
@@ -84,8 +100,8 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
 
   // Initialize Zs and zetas at the final time.
   for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-    Zs_[ii] = quadraticization.back()[ii].state.hess;
-    zetas_[ii] = quadraticization.back()[ii].state.grad;
+    Zs_[num_time_steps_ - 1][ii] = quadraticization.back()[ii].state.hess;
+    zetas_[num_time_steps_ - 1][ii] = quadraticization.back()[ii].state.grad;
   }
 
   // Work backward in time and solve the dynamic program.
@@ -104,11 +120,12 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
       // // Check Nash existence condition (sufficient, not necessary).
       // Eigen::LLT<MatrixXf> llt(quad[ii].control.find(ii)->second.hess +
-      //                          lin.Bs[ii].transpose() * Zs_[ii] * lin.Bs[ii]);
+      //                          lin.Bs[ii].transpose() * Zs_[ii] *
+      //                          lin.Bs[ii]);
       // CHECK(llt.info() != Eigen::NumericalIssue);
 
       // Intermediate variable to store B[ii]' * Z[ii].
-      const MatrixXf BiZi = lin.Bs[ii].transpose() * Zs_[ii];
+      const MatrixXf BiZi = lin.Bs[ii].transpose() * Zs_[kk + 1][ii];
 
       Dimension cumulative_udim_col = 0;
       for (PlayerIndex jj = 0; jj < dynamics_->NumPlayers(); jj++) {
@@ -136,7 +153,8 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
           BiZi * lin.A;
       Y_.col(dynamics_->XDim())
           .segment(cumulative_udim_row, dynamics_->UDim(ii)) =
-          lin.Bs[ii].transpose() * zetas_[ii] + quad[ii].control.at(ii).grad;
+          lin.Bs[ii].transpose() * zetas_[kk + 1][ii] +
+          quad[ii].control.at(ii).grad;
 
       // Increment cumulative_udim_row.
       cumulative_udim_row += dynamics_->UDim(ii);
@@ -162,18 +180,20 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
 
     // Update Zs and zetas.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      zetas_[ii] = (F_.transpose() * (zetas_[ii] + Zs_[ii] * beta_) +
-                    quad[ii].state.grad)
-                       .eval();
-      Zs_[ii] = (F_.transpose() * Zs_[ii] * F_ + quad[ii].state.hess).eval();
+      zetas_[kk][ii] =
+          (F_.transpose() * (zetas_[kk + 1][ii] + Zs_[kk + 1][ii] * beta_) +
+           quad[ii].state.grad)
+              .eval();
+      Zs_[kk][ii] =
+          (F_.transpose() * Zs_[kk + 1][ii] * F_ + quad[ii].state.hess).eval();
 
       // Add terms for nonzero Rijs.
       for (const auto& Rij_entry : quad[ii].control) {
         const PlayerIndex jj = Rij_entry.first;
         const MatrixXf& Rij = Rij_entry.second.hess;
         const VectorXf& rij = Rij_entry.second.grad;
-        zetas_[ii] += Ps_[jj].transpose() * (Rij * alphas_[jj] - rij);
-        Zs_[ii] += Ps_[jj].transpose() * Rij * Ps_[jj];
+        zetas_[kk][ii] += Ps_[jj].transpose() * (Rij * alphas_[jj] - rij);
+        Zs_[kk][ii] += Ps_[jj].transpose() * Rij * Ps_[jj];
       }
     }
   }
