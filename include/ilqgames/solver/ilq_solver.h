@@ -72,8 +72,7 @@ class ILQSolver : public GameSolver {
         linearization_(time::kNumTimeSteps),
         cost_quadraticization_(time::kNumTimeSteps),
         last_merit_function_value_(constants::kInfinity),
-        expected_linear_decrease_(constants::kInfinity),
-        expected_quadratic_decrease_(constants::kInfinity) {
+        expected_decrease_(constants::kInfinity) {
     // Set up LQ solver.
     if (params_.open_loop)
       lq_solver_.reset(
