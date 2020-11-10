@@ -300,33 +300,28 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   std::vector<std::vector<VectorXf>> costates(time::kNumTimeSteps,
                                               zero_costates);
 
-  std::cout << "yo" << std::endl;
-  //  expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
-  expected_decrease_ = 0.0;
-  std::cout << "yo" << std::endl;
+  expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
+
   // Every computation of the merit function will overwrite the current cost
   // quadraticization, so first swap it with the previous one so we retain a
   // copy.
   last_cost_quadraticization_.swap(cost_quadraticization_);
-  std::cout << "yo" << std::endl;
+
   // Initially scale alphas by a fixed amount to avoid unnecessary
   // backtracking.
   // NOTE: use adaptive initialization here based on history.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
-  std::cout << "yo" << std::endl;
+
   // Compute next operating point and keep track of whether it satisfies the
   // Armijo condition.
   const OperatingPoint last_operating_point(*current_operating_point);
-  std::cout << "last op" << std::endl;
   float current_stepsize = params_.initial_alpha_scaling;
   CurrentOperatingPoint(last_operating_point, *strategies,
                         current_operating_point);
-  std::cout << "current op" << std::endl;
   if (!params_.linesearch) return true;
 
   // Keep reducing alphas until we satisfy the Armijo condition.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
-    std::cout << "yo" << std::endl;
     // Compute merit function value.
     const float current_merit_function_value =
         MeritFunction(*current_operating_point);
@@ -369,26 +364,19 @@ float ILQSolver::ExpectedDecrease(
   for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
     const auto& lin = linearization_[kk];
 
-    std::cout << "kk = " << kk << std::endl;
-
     // Separate x expected decrease per step at each time (saves computation).
     const size_t xdim = problem_->Dynamics()->XDim();
     VectorXf expected_decrease_x = VectorXf::Zero(xdim);
 
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
-      std::cout << "ii = " << ii << std::endl;
       const auto& quad = cost_quadraticization_[kk][ii];
       const auto& costate = costates[kk][ii];
       const auto& neg_ui = strategies[ii].alphas[kk];
-
-      std::cout << "1" << std::endl;
 
       // Handle control contribution.
       expected_decrease -=
           neg_ui.transpose() * quad.control.at(ii).hess *
           (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
-
-      std::cout << "2" << std::endl;
 
       // Handle costate contribution (control). Keep this unmultiplied by
       // costate for efficiency.
@@ -396,43 +384,30 @@ float ILQSolver::ExpectedDecrease(
           -lin.Bs[ii] *
           (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
 
-      std::cout << "almost there" << std::endl;
-
       if (kk > 0) {
-        std::cout << "in here" << std::endl;
         // Handle state and costate (state) contributions. Doesn't exist at t0.
         // Handle final time separately from intermediate time steps.
         const auto& last_costate = costates[kk - 1][ii];
 
-        if (kk < time::kNumTimeSteps - 1) {
-          const VectorXf kx =
-              quad.state.grad + last_costate - lin.A.transpose() * costate;
-          expected_decrease_x += quad.state.hess * kx;
+        VectorXf kx = quad.state.grad + last_costate;
+        if (kk == time::kNumTimeSteps - 1)
+          expected_decrease_costate += kx;
+        else {
+          kx -= lin.A.transpose() * costate;
           expected_decrease_costate +=
               (MatrixXf::Identity(xdim, xdim) - lin.A) * kx;
-        } else {
-          const VectorXf kx = quad.state.grad + last_costate;
-          expected_decrease_x += quad.state.hess * kx;
-          expected_decrease_costate += kx;
         }
-      }
 
-      std::cout << "outta here" << std::endl;
+        expected_decrease_x += quad.state.hess * kx;
+      }
 
       // Update expected decrease from costate.
       expected_decrease += costate.transpose() * expected_decrease_costate;
-
-      std::cout << "about to go to next ii" << std::endl;
     }
-
-    std::cout << "about done iterating thru players this kk" << std::endl;
 
     // Update expected decrease from x.
     expected_decrease += delta_xs[kk].transpose() * expected_decrease_x;
-    std::cout << "done with this kk" << std::endl;
   }
-
-  std::cout << "done" << std::endl;
 
   return expected_decrease;
 }
