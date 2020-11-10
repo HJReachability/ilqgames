@@ -293,10 +293,16 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   //  std::endl;
 
   // Precompute expected decrease before we do anything else.
-  SetExpectedDecrease(*strategies);
+  expected_decrease_ = ExpectedDecrease();
+
+  // Every computation of the merit function will overwrite the current cost
+  // quadraticization, so first swap it with the previous one so we retain a
+  // copy.
+  last_cost_quadraticization_.swap(cost_quadraticization_);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary
   // backtracking.
+  // NOTE: use adaptive initialization here based on history.
   ScaleAlphas(params_.initial_alpha_scaling, strategies);
 
   // Compute next operating point and keep track of whether it satisfies the
@@ -332,7 +338,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   // Output a warning. Solver should revert to last valid operating point.
   VLOG(1) << "Exceeded maximum number of backtracking steps.";
   return false;
-}  // namespace ilqgames
+}
 
 bool ILQSolver::CheckArmijoCondition(float current_merit_function_value,
                                      float current_stepsize) const {
@@ -342,43 +348,87 @@ bool ILQSolver::CheckArmijoCondition(float current_merit_function_value,
       (expected_linear_decrease_ +
        current_stepsize * expected_quadratic_decrease_);
 
-  // std::cout << "expected: " << total_expected_decrease << "\n"
-  //           << "actual: "
-  //           << last_kkt_squared_error_ - *current_kkt_squared_error
-  //           << std::endl;
-
   return (last_merit_function_value_ - current_merit_function_value >=
           scaled_expected_decrease);
 }
 
-void ILQSolver::SetExpectedDecrease(
-    const std::vector<Strategy>& current_strategies) {
-  // Compute both linear and quadratic terms from
-  // https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf (55), but summed for
-  // all players.
-  expected_linear_decrease_ = 0.0;
-  expected_quadratic_decrease_ = 0.0;
+float ILQSolver::ExpectedDecrease(
+    const std::vector<Strategy>& strategies,
+    const std::vector<VectorXf>& delta_xs,
+    const std::vector<std::vector<VectorXf>>& costates) {
+  float expected_decrease = 0.0;
   for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const auto& lin = linearization_[kk];
+
+    // Separate x expected decrease per step at each time (saves computation).
+    const size_t xdim = problem_->Dynamics()->XDim());
+    VectorXf expected_decrease_x = VectorXf::Zero(xdim);
+
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
-      const auto& alpha = current_strategies[ii].alphas[kk];
+      const auto& costate = costates[kk][ii];
+      const auto& ui = -strategies[ii].alphas[kk];
 
-      for (const auto& entry : quad.control) {
-        expected_linear_decrease_ -= entry.second.grad.transpose() * alpha;
-        expected_quadratic_decrease_ +=
-            0.5 * alpha.transpose() * entry.second.hess * alpha;
+      // Handle control contribution.
+      expected_decrease =
+          ui.transpose() * quad.control.at(ii).hess *
+          (quad.control.at(ii).grad - lin.Bs[kk].transpose() * costate);
+
+      // Handle costate contribution (control). Keep this unmultiplied by
+      // costate for efficiency.
+      VectorXf expected_decrease_costate =
+          -lin.Bs[ii] *
+          (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
+
+      if (kk > 0) {
+        // Handle state contribution. Doesn't exist at t0. Handle final time
+        // separately from intermediate time steps.
+        const auto& last_costate = costates[kk - 1][ii];
+
+        const VectorXf kx =
+            (kk < time::kNumTimeSteps - 1)
+                ? (quad.state.grad + last_costate - lin.A.transpose() * costate)
+                : (quad.state.grad + last_costate);
+        expected_decrease_x += quad.state.hess * kx;
+
+        // Handle costate contribution (state).
+        if (kk < time::kNumTimeSteps - 1)
+          expected_decrease_costate +=
+              (MatrixXf::Identity(xdim, xdim) - lin.A) * kx;
+        else
+          expected_decrease_costate += kx;
       }
+
+      // Update expected decrease from costate.
+      expected_decrease += costate.transpose() * expected_decrease_costate;
     }
+
+    // Update expected decrease from x.
+    expected_decrease += delta_xs[kk].transpose() * expected_decrease_x;
   }
 }
 
 float ILQSolver::MeritFunction(const OperatingPoint& current_op) {
-  // Accumulate total cost for all players as the merit function.
-  float total_cost = 0.0;
-  for (const auto& pc : problem_->PlayerCosts())
-    total_cost += pc.Evaluate(current_op);
+  // First, quadraticize cost and linearize dynamics around this operating
+  // point.
+  ComputeCostQuadraticization(current_op, &cost_quadraticization_);
 
-  return total_cost;
+  // Now, accumulate cost gradients (presuming that this operating point is
+  // dynamically feasible so dynamic constraints are all zero).
+  float merit = 0.0;
+  for (size_t kk = 0; kk < cost_quadraticization_.size(); kk++) {
+    for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
+      const auto& quad = cost_quadraticization_[kk][ii];
+      merit += quad.control.at(ii).grad.squaredNorm();
+
+      if (kk > 0) {
+        // Don't accumulate state derivs at t0 since x0 can't change.
+        merit += quad.state.grad.squaredNorm();
+      }
+    }
+  }
+
+  return 0.5 * merit;
 }
 
 void ILQSolver::ComputeLinearization(

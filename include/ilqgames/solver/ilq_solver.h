@@ -137,13 +137,20 @@ class ILQSolver : public GameSolver {
   bool CheckArmijoCondition(float current_merit_function_value,
                             float current_stepsize) const;
 
-  // Compute current merit function value. In the process, update the
-  // quadraticization.
-  virtual float MeritFunction(const OperatingPoint& current_op);
+  // Compute current merit function value. Note that to compute the merit
+  // function at the given operating point we have to compute a full cost
+  // quadraticization there. To do so efficiently, this will overwrite the
+  // current cost quadraticization (and presume it has already been used to
+  // compute the expected decrease from the last iterate).
+  float MeritFunction(const OperatingPoint& current_op);
 
-  // Compute expected decrease.
-  virtual void SetExpectedDecrease(
-      const std::vector<Strategy>& current_strategies);
+  // Compute expected decrease based on current cost quadraticization,
+  // (player-indexed) strategies, and (time-indexed) lists of delta states and
+  // (also player-indexed) costates.
+  float ExpectedDecrease(
+      const std::vector<Strategy>& strategies,
+      const std::vector<VectorXf>& delta_xs,
+      const std::vector<std::vector<VectorXf>>& costates) const;
 
   // Compute the current operating point based on the current set of
   // strategies and the last operating point.
@@ -176,13 +183,9 @@ class ILQSolver : public GameSolver {
   // Core LQ Solver.
   std::unique_ptr<LQSolver> lq_solver_;
 
-  // Last merit function value and expected decreases (unmultiplied by step
-  // size). Expected decreases are computed following
-  // https://bjack205.github.io/papers/AL_iLQR_Tutorial.pdf but for the sum of
-  // all players' costs.
+  // Last merit function value and expected decreases (per step length).
   float last_merit_function_value_;
-  float expected_linear_decrease_;
-  float expected_quadratic_decrease_;
+  float expected_decrease_;
 };  // class ILQSolver
 
 }  // namespace ilqgames
