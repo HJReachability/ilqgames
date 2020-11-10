@@ -112,7 +112,7 @@ class LQFeedbackSolver : public LQSolver {
     F_.resize(dynamics_->XDim(), dynamics_->XDim());
     beta_.resize(dynamics_->XDim());
   }
-
+j
   // Solve underlying LQ game to a feedback Nash equilibrium.
   // Optionally return delta xs and costates.
   std::vector<Strategy> Solve(
