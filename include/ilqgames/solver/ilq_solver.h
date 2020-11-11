@@ -112,7 +112,9 @@ class ILQSolver : public GameSolver {
  protected:
   // Modify LQ strategies to improve convergence properties.
   // This function performs an Armijo linesearch and returns true if successful.
-  bool ModifyLQStrategies(std::vector<Strategy>* strategies,
+  bool ModifyLQStrategies(const std::vector<VectorXf>& delta_xs,
+                          const std::vector<std::vector<VectorXf>>& costates,
+                          std::vector<Strategy>* strategies,
                           OperatingPoint* current_operating_point,
                           bool* has_converged);
 

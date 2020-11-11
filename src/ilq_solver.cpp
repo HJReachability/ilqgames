@@ -115,6 +115,10 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   // will happen inside the linesearch every time we compute the merit function.
   ComputeCostQuadraticization(current_operating_point, &cost_quadraticization_);
 
+  // Maintain delta_xs and costates for linesearch.
+  std::vector<VectorXf> delta_xs;
+  std::vector<std::vector<VectorXf>> costates;
+
   // Main loop with timer for anytime execution.
   while (num_iterations < params_.max_solver_iters && !has_converged &&
          elapsed < max_runtime - timer_.RuntimeUpperBound()) {
@@ -133,12 +137,13 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
       ComputeLinearization(current_operating_point, &linearization_);
 
     // Solve LQ game.
-    current_strategies = lq_solver_->Solve(
-        linearization_, cost_quadraticization_, problem_->InitialState());
+    current_strategies =
+        lq_solver_->Solve(linearization_, cost_quadraticization_,
+                          problem_->InitialState(), &delta_xs, &costates);
 
     // Modify this LQ solution.
-    if (!ModifyLQStrategies(&current_strategies, &current_operating_point,
-                            &has_converged)) {
+    if (!ModifyLQStrategies(delta_xs, costates, &current_strategies,
+                            &current_operating_point, &has_converged)) {
       // Maybe emit warning if exiting early.
       VLOG(1) << "Solver exited due to linesearch failure.";
 
@@ -280,9 +285,11 @@ float ILQSolver::StateDistance(const VectorXf& x1, const VectorXf& x2,
   return total_distance(x1, x2);
 }
 
-bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
-                                   OperatingPoint* current_operating_point,
-                                   bool* has_converged) {
+bool ILQSolver::ModifyLQStrategies(
+    const std::vector<VectorXf>& delta_xs,
+    const std::vector<std::vector<VectorXf>>& costates,
+    std::vector<Strategy>* strategies, OperatingPoint* current_operating_point,
+    bool* has_converged) {
   CHECK_NOTNULL(strategies);
   CHECK_NOTNULL(current_operating_point);
   CHECK_NOTNULL(has_converged);
@@ -292,17 +299,7 @@ bool ILQSolver::ModifyLQStrategies(std::vector<Strategy>* strategies,
   //  std::endl;
 
   // Precompute expected decrease before we do anything else.
-  // HACK! Setting all the extra terms to zero.
-  std::vector<VectorXf> delta_xs(time::kNumTimeSteps,
-                                 VectorXf::Zero(problem_->Dynamics()->XDim()));
-  std::vector<VectorXf> zero_costates(problem_->Dynamics()->NumPlayers());
-  for (PlayerIndex ii = 0; ii < zero_costates.size(); ii++)
-    zero_costates[ii] = VectorXf::Zero(problem_->Dynamics()->UDim(ii));
-  std::vector<std::vector<VectorXf>> costates(time::kNumTimeSteps,
-                                              zero_costates);
-
-  //  expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
-  expected_decrease_ = 0.0;
+  expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
 
   // Every computation of the merit function will overwrite the current cost
   // quadraticization, so first swap it with the previous one so we retain a
@@ -354,6 +351,10 @@ bool ILQSolver::CheckArmijoCondition(float current_merit_function_value,
   const float scaled_expected_decrease = params_.expected_decrease_fraction *
                                          current_stepsize * expected_decrease_;
 
+  // std::cout << "Improvement = "
+  //           << last_merit_function_value_ - current_merit_function_value
+  //           << ", expected = " << scaled_expected_decrease << std::endl;
+
   return (last_merit_function_value_ - current_merit_function_value >=
           scaled_expected_decrease);
 }
@@ -374,8 +375,8 @@ float ILQSolver::ExpectedDecrease(
       const auto& quad = cost_quadraticization_[kk][ii];
       const auto& costate = costates[kk][ii];
       const auto& neg_ui =
-          strategies[ii].alphas[kk];  // NOTE: could also evaluate strategy on
-                                      // delta state to be more precise.
+          strategies[ii].alphas[kk];  // NOTE: could also evaluate delta u on
+                                      // delta x to be more precise.
 
       // Handle control contribution.
       expected_decrease -=
@@ -406,11 +407,11 @@ float ILQSolver::ExpectedDecrease(
       }
 
       // Update expected decrease from costate.
-      expected_decrease += costate.transpose() * expected_decrease_costate;
+      //expected_decrease += costate.transpose() * expected_decrease_costate;
     }
 
     // Update expected decrease from x.
-    expected_decrease += delta_xs[kk].transpose() * expected_decrease_x;
+    //expected_decrease += delta_xs[kk].transpose() * expected_decrease_x;
   }
 
   return expected_decrease;

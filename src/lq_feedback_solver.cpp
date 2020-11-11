@@ -72,7 +72,7 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization,
-    std::vector<VectorXf>* delta_xs,
+    const VectorXf& x0, std::vector<VectorXf>* delta_xs,
     std::vector<std::vector<VectorXf>>* costates) {
   CHECK_EQ(linearization.size(), num_time_steps_);
   CHECK_EQ(quadraticization.size(), num_time_steps_);
@@ -201,10 +201,14 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
   // Maybe compute delta_xs and costates forward in time.
   VectorXf x_star = x0;
   VectorXf last_x_star;
-  for (size_t kk = 0; kk < num_time_steps_ - 1; kk++) {
+  for (size_t kk = 0; kk < num_time_steps_; kk++) {
     (*delta_xs)[kk] = x_star;
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-      (*costates)[kk][ii] = Zs_[kk + 1][ii] * x_star + zetas_[kk + 1][ii];
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      if (kk < num_time_steps_ - 1)
+        (*costates)[kk][ii] = Zs_[kk + 1][ii] * x_star + zetas_[kk + 1][ii];
+      else
+        (*costates)[kk][ii].setZero();
+    }
 
     // Unpack linearization at this time step.
     const auto& lin = linearization[kk];
