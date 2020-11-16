@@ -383,28 +383,28 @@ float ILQSolver::ExpectedDecrease(
           neg_ui.transpose() * quad.control.at(ii).hess *
           (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
 
-      // Handle costate contribution (control). Keep this unmultiplied by
-      // costate for efficiency.
-      VectorXf expected_decrease_costate =
-          -lin.Bs[ii] *
-          (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
+      // // Handle costate contribution (control). Keep this unmultiplied by
+      // // costate for efficiency.
+      // VectorXf expected_decrease_costate =
+      //     -lin.Bs[ii] *
+      //     (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
 
-      if (kk > 0) {
-        // Handle state and costate (state) contributions. Doesn't exist at t0.
-        // Handle final time separately from intermediate time steps.
-        const auto& last_costate = costates[kk - 1][ii];
+      // if (kk > 0) {
+      //   // Handle state and costate (state) contributions. Doesn't exist at t0.
+      //   // Handle final time separately from intermediate time steps.
+      //   const auto& last_costate = costates[kk - 1][ii];
 
-        VectorXf kx = quad.state.grad + last_costate;
-        if (kk == time::kNumTimeSteps - 1)
-          expected_decrease_costate += kx;
-        else {
-          kx -= lin.A.transpose() * costate;
-          expected_decrease_costate +=
-              (MatrixXf::Identity(xdim, xdim) - lin.A) * kx;
-        }
+      //   VectorXf kx = quad.state.grad + last_costate;
+      //   if (kk == time::kNumTimeSteps - 1)
+      //     expected_decrease_costate += kx;
+      //   else {
+      //     kx -= lin.A.transpose() * costate;
+      //     expected_decrease_costate +=
+      //         (MatrixXf::Identity(xdim, xdim) - lin.A) * kx;
+      //   }
 
-        expected_decrease_x += quad.state.hess * kx;
-      }
+      //   expected_decrease_x += quad.state.hess * kx;
+      // }
 
       // Update expected decrease from costate.
       //expected_decrease += costate.transpose() * expected_decrease_costate;

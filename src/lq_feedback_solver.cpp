@@ -202,12 +202,14 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
   VectorXf x_star = x0;
   VectorXf last_x_star;
   for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    (*delta_xs)[kk] = x_star;
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      if (kk < num_time_steps_ - 1)
-        (*costates)[kk][ii] = Zs_[kk + 1][ii] * x_star + zetas_[kk + 1][ii];
-      else
-        (*costates)[kk][ii].setZero();
+    if (delta_xs) {
+      (*delta_xs)[kk] = x_star;
+      for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+        if (kk < num_time_steps_ - 1)
+          (*costates)[kk][ii] = Zs_[kk + 1][ii] * x_star + zetas_[kk + 1][ii];
+        else
+          (*costates)[kk][ii].setZero();
+      }
     }
 
     // Unpack linearization at this time step.
