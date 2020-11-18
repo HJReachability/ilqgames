@@ -24,7 +24,7 @@ std\+::vector$<$ \hyperlink{structilqgames_1_1_linear_dynamics_approximation}{Li
 \subsection*{Protected Member Functions}
 \begin{DoxyCompactItemize}
 \item 
-bool {\bfseries Modify\+L\+Q\+Strategies} (std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged)\hypertarget{classilqgames_1_1_i_l_q_solver_ac2d4f1fda81dec233cc881d0092fe37a}{}\label{classilqgames_1_1_i_l_q_solver_ac2d4f1fda81dec233cc881d0092fe37a}
+bool {\bfseries Modify\+L\+Q\+Strategies} (const std\+::vector$<$ Vector\+Xf $>$ \&delta\+\_\+xs, const std\+::vector$<$ std\+::vector$<$ Vector\+Xf $>$$>$ \&costates, std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ $\ast$strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point, bool $\ast$has\+\_\+converged)\hypertarget{classilqgames_1_1_i_l_q_solver_a165c731a7ef832bd988972414fc071b4}{}\label{classilqgames_1_1_i_l_q_solver_a165c731a7ef832bd988972414fc071b4}
 
 \item 
 float {\bfseries State\+Distance} (const Vector\+Xf \&x1, const Vector\+Xf \&x2, const std\+::vector$<$ Dimension $>$ \&dims) const \hypertarget{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}{}\label{classilqgames_1_1_i_l_q_solver_aee7f2cfccde0664200d62f92ed5e0606}
@@ -39,10 +39,10 @@ void {\bfseries Total\+Costs} (const \hyperlink{structilqgames_1_1_operating_poi
 bool {\bfseries Check\+Armijo\+Condition} (float current\+\_\+merit\+\_\+function\+\_\+value, float current\+\_\+stepsize) const \hypertarget{classilqgames_1_1_i_l_q_solver_a588b7fa207a616ccb30cde5d41ddad6b}{}\label{classilqgames_1_1_i_l_q_solver_a588b7fa207a616ccb30cde5d41ddad6b}
 
 \item 
-virtual float {\bfseries Merit\+Function} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op)\hypertarget{classilqgames_1_1_i_l_q_solver_af7c6030e72d5d886f55dbf5792206016}{}\label{classilqgames_1_1_i_l_q_solver_af7c6030e72d5d886f55dbf5792206016}
+float {\bfseries Merit\+Function} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&current\+\_\+op)\hypertarget{classilqgames_1_1_i_l_q_solver_af7c6030e72d5d886f55dbf5792206016}{}\label{classilqgames_1_1_i_l_q_solver_af7c6030e72d5d886f55dbf5792206016}
 
 \item 
-virtual void {\bfseries Set\+Expected\+Decrease} (const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies)\hypertarget{classilqgames_1_1_i_l_q_solver_a9c2be65e67cdbeaa908655af49e28a6e}{}\label{classilqgames_1_1_i_l_q_solver_a9c2be65e67cdbeaa908655af49e28a6e}
+float {\bfseries Expected\+Decrease} (const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&strategies, const std\+::vector$<$ Vector\+Xf $>$ \&delta\+\_\+xs, const std\+::vector$<$ std\+::vector$<$ Vector\+Xf $>$$>$ \&costates) const \hypertarget{classilqgames_1_1_i_l_q_solver_a3616e04e66f092884d04aa3f544799af}{}\label{classilqgames_1_1_i_l_q_solver_a3616e04e66f092884d04aa3f544799af}
 
 \item 
 void {\bfseries Current\+Operating\+Point} (const \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} \&last\+\_\+operating\+\_\+point, const std\+::vector$<$ \hyperlink{structilqgames_1_1_strategy}{Strategy} $>$ \&current\+\_\+strategies, \hyperlink{structilqgames_1_1_operating_point}{Operating\+Point} $\ast$current\+\_\+operating\+\_\+point) const \hypertarget{classilqgames_1_1_i_l_q_solver_ae0145c002de655fd2b012d2142cacb6a}{}\label{classilqgames_1_1_i_l_q_solver_ae0145c002de655fd2b012d2142cacb6a}
@@ -75,10 +75,7 @@ std\+::unique\+\_\+ptr$<$ \hyperlink{classilqgames_1_1_l_q_solver}{L\+Q\+Solver}
 float {\bfseries last\+\_\+merit\+\_\+function\+\_\+value\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_a41e4e2648d28a5b2000f6fb24336a7f9}{}\label{classilqgames_1_1_i_l_q_solver_a41e4e2648d28a5b2000f6fb24336a7f9}
 
 \item 
-float {\bfseries expected\+\_\+linear\+\_\+decrease\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_ae90016435471a1f237f87db731d7bbf1}{}\label{classilqgames_1_1_i_l_q_solver_ae90016435471a1f237f87db731d7bbf1}
-
-\item 
-float {\bfseries expected\+\_\+quadratic\+\_\+decrease\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_abebd5254abd151949a603ce33dc59a14}{}\label{classilqgames_1_1_i_l_q_solver_abebd5254abd151949a603ce33dc59a14}
+float {\bfseries expected\+\_\+decrease\+\_\+}\hypertarget{classilqgames_1_1_i_l_q_solver_a8911cc96f54b18573199db7ab4e2d86c}{}\label{classilqgames_1_1_i_l_q_solver_a8911cc96f54b18573199db7ab4e2d86c}
 
 \end{DoxyCompactItemize}
 

@@ -126,9 +126,9 @@ std::vector&lt; <a class="el" href="structilqgames_1_1_linear_dynamics_approxima
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-methods"></a>
 Protected Member Functions</h2></td></tr>
-<tr class="memitem:ac2d4f1fda81dec233cc881d0092fe37a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2d4f1fda81dec233cc881d0092fe37a"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>ModifyLQStrategies</b> (std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged)</td></tr>
-<tr class="separator:ac2d4f1fda81dec233cc881d0092fe37a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a165c731a7ef832bd988972414fc071b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a165c731a7ef832bd988972414fc071b4"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>ModifyLQStrategies</b> (const std::vector&lt; VectorXf &gt; &amp;delta_xs, const std::vector&lt; std::vector&lt; VectorXf &gt;&gt; &amp;costates, std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; *strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point, bool *has_converged)</td></tr>
+<tr class="separator:a165c731a7ef832bd988972414fc071b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aee7f2cfccde0664200d62f92ed5e0606"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee7f2cfccde0664200d62f92ed5e0606"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>StateDistance</b> (const VectorXf &amp;x1, const VectorXf &amp;x2, const std::vector&lt; Dimension &gt; &amp;dims) const </td></tr>
 <tr class="separator:aee7f2cfccde0664200d62f92ed5e0606"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -142,11 +142,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>TotalCosts</b> (const
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>CheckArmijoCondition</b> (float current_merit_function_value, float current_stepsize) const </td></tr>
 <tr class="separator:a588b7fa207a616ccb30cde5d41ddad6b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7c6030e72d5d886f55dbf5792206016"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af7c6030e72d5d886f55dbf5792206016"></a>
-virtual float&#160;</td><td class="memItemRight" valign="bottom"><b>MeritFunction</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;current_op)</td></tr>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>MeritFunction</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;current_op)</td></tr>
 <tr class="separator:af7c6030e72d5d886f55dbf5792206016"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c2be65e67cdbeaa908655af49e28a6e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c2be65e67cdbeaa908655af49e28a6e"></a>
-virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>SetExpectedDecrease</b> (const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;current_strategies)</td></tr>
-<tr class="separator:a9c2be65e67cdbeaa908655af49e28a6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3616e04e66f092884d04aa3f544799af"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3616e04e66f092884d04aa3f544799af"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>ExpectedDecrease</b> (const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;strategies, const std::vector&lt; VectorXf &gt; &amp;delta_xs, const std::vector&lt; std::vector&lt; VectorXf &gt;&gt; &amp;costates) const </td></tr>
+<tr class="separator:a3616e04e66f092884d04aa3f544799af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae0145c002de655fd2b012d2142cacb6a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae0145c002de655fd2b012d2142cacb6a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>CurrentOperatingPoint</b> (const <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> &amp;last_operating_point, const std::vector&lt; <a class="el" href="structilqgames_1_1_strategy.html">Strategy</a> &gt; &amp;current_strategies, <a class="el" href="structilqgames_1_1_operating_point.html">OperatingPoint</a> *current_operating_point) const </td></tr>
 <tr class="separator:ae0145c002de655fd2b012d2142cacb6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -184,12 +184,9 @@ std::unique_ptr&lt; <a class="el" href="classilqgames_1_1_l_q_solver.html">LQSol
 <tr class="memitem:a41e4e2648d28a5b2000f6fb24336a7f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a41e4e2648d28a5b2000f6fb24336a7f9"></a>
 float&#160;</td><td class="memItemRight" valign="bottom"><b>last_merit_function_value_</b></td></tr>
 <tr class="separator:a41e4e2648d28a5b2000f6fb24336a7f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae90016435471a1f237f87db731d7bbf1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae90016435471a1f237f87db731d7bbf1"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>expected_linear_decrease_</b></td></tr>
-<tr class="separator:ae90016435471a1f237f87db731d7bbf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abebd5254abd151949a603ce33dc59a14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abebd5254abd151949a603ce33dc59a14"></a>
-float&#160;</td><td class="memItemRight" valign="bottom"><b>expected_quadratic_decrease_</b></td></tr>
-<tr class="separator:abebd5254abd151949a603ce33dc59a14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8911cc96f54b18573199db7ab4e2d86c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8911cc96f54b18573199db7ab4e2d86c"></a>
+float&#160;</td><td class="memItemRight" valign="bottom"><b>expected_decrease_</b></td></tr>
+<tr class="separator:a8911cc96f54b18573199db7ab4e2d86c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pro_attribs_classilqgames_1_1_game_solver"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classilqgames_1_1_game_solver')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classilqgames_1_1_game_solver.html">ilqgames::GameSolver</a></td></tr>
 <tr class="memitem:a3c1d8f6d4d9142d6bca23623391ca2c3 inherit pro_attribs_classilqgames_1_1_game_solver"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3c1d8f6d4d9142d6bca23623391ca2c3"></a>
 const std::shared_ptr&lt; <a class="el" href="classilqgames_1_1_problem.html">Problem</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>problem_</b></td></tr>

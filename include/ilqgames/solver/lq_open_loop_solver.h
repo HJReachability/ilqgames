@@ -111,11 +111,13 @@ class LQOpenLoopSolver : public LQSolver {
   }
 
   // Solve underlying LQ game to a open-loop Nash equilibrium.
+  // Optionally return delta xs and costates.
   std::vector<Strategy> Solve(
       const std::vector<LinearDynamicsApproximation>& linearization,
       const std::vector<std::vector<QuadraticCostApproximation>>&
           quadraticization,
-      const VectorXf& x0);
+      const VectorXf& x0, std::vector<VectorXf>* delta_xs = nullptr,
+      std::vector<std::vector<VectorXf>>* costates = nullptr);
 
  private:
   // Initialize Ms and ms.

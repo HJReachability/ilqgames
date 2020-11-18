@@ -74,9 +74,24 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     const std::vector<LinearDynamicsApproximation>& linearization,
     const std::vector<std::vector<QuadraticCostApproximation>>&
         quadraticization,
-    const VectorXf& x0) {
+    const VectorXf& x0, std::vector<VectorXf>* delta_xs,
+    std::vector<std::vector<VectorXf>>* costates) {
   CHECK_EQ(linearization.size(), num_time_steps_);
   CHECK_EQ(quadraticization.size(), num_time_steps_);
+
+  // Make sure delta_xs and costates are the right size.
+  if (delta_xs) CHECK_NOTNULL(costates);
+  if (costates) CHECK_NOTNULL(delta_xs);
+  if (delta_xs) {
+    delta_xs->resize(num_time_steps_);
+    costates->resize(num_time_steps_);
+    for (size_t kk = 0; kk < num_time_steps_; kk++) {
+      (*delta_xs)[kk].resize(dynamics_->XDim());
+      (*costates)[kk].resize(dynamics_->NumPlayers());
+      for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+        (*costates)[kk][ii].resize(dynamics_->XDim());
+    }
+  }
 
   // List of player-indexed strategies (each of which is a time-indexed
   // affine state error-feedback controller). Since this is an open-loop
@@ -139,6 +154,9 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
   VectorXf x_star = x0;
   VectorXf last_x_star;
   for (size_t kk = 0; kk < num_time_steps_ - 1; kk++) {
+    // Maybe set delta_x.
+    if (delta_xs) (*delta_xs)[kk] = x_star;
+
     // Unpack linearization at this time step.
     const auto& lin = linearization[kk];
 
@@ -148,10 +166,14 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
                                            intermediate_terms_[kk]);
 
     // Compute optimal u and store (sign flipped) in alpha.
+    // Also maybe compute costates.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
+      const VectorXf intermediate_term =
+          Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii];
       strategies[ii].alphas[kk] =
-          warped_Bs_[kk][ii] * (Ms_[kk + 1][ii] * x_star + ms_[kk + 1][ii]) +
-          warped_rs_[kk][ii];
+          warped_Bs_[kk][ii] * intermediate_term + warped_rs_[kk][ii];
+
+      if (costates) (*costates)[kk][ii] = lin.A.transpose() * intermediate_term;
     }
 
     // Check dynamic feasibility.
@@ -162,7 +184,14 @@ std::vector<Strategy> LQOpenLoopSolver::Solve(
     // CHECK_LE((x_star - check_x).cwiseAbs().maxCoeff(), 1e-1);
   }
 
+  // Set delta_x and costate for last time step.
+  if (delta_xs) {
+    delta_xs->back() = x_star;
+    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+      costates->back()[ii].setZero();
+  }
+
   return strategies;
-}  // namespace ilqgames
+}
 
 }  // namespace ilqgames
