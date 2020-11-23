@@ -96,47 +96,47 @@ public:
   bool IsEquality() const { return is_equality_; }
   float &Lambda(Time t) { return lambdas_[TimeIndex(t)]; }
   float Lambda(Time t) const {
-//      std::cout << "lambdas_[TimeIndex(t)]: " << lambdas_[TimeIndex(t)] << "\n";
+    //      std::cout << "lambdas_[TimeIndex(t)]: " << lambdas_[TimeIndex(t)] <<
+    //      "\n";
     return lambdas_[TimeIndex(t)];
   }
   void IncrementLambda(Time t, float value) {
     const size_t kk = TimeIndex(t);
     const float new_lambda = lambdas_[kk] + mu_ * value;
     lambdas_[kk] = (is_equality_) ? new_lambda : std::max(0.0f, new_lambda);
-//      std::cout << "IncrementLambda(t, value): " << lambdas_[kk] << " (Time: " << kk << ")\n";
+    //      std::cout << "IncrementLambda(t, value): " << lambdas_[kk] << "
+    //      (Time: " << kk << ")\n";
   }
   void ScaleLambdas(float scale) {
     for (auto &lambda : lambdas_)
       lambda *= scale;
   }
   static float &GlobalMu() {
-//    std::cout << "Global Mu: " << mu_ << "\n";
+    //    std::cout << "Global Mu: " << mu_ << "\n";
     return mu_;
   }
   static void ScaleMu(float scale) {
-    mu_ = std::min(constants::kMaxMu, scale * mu_);
-     mu_ *= scale;
-//     std::cout << "Scale Mu: " << mu_ << "\n";
+    mu_ *= scale;
+    //     std::cout << "Scale Mu: " << mu_ << "\n";
   }
   float Mu(Time t, const VectorXf &input) const {
     const float g = Evaluate(t, input);
-//    std::cout << "Mu(Lambda(t), g): " << Mu(Lambda(t), g) << "\n";
     return Mu(Lambda(t), g);
   }
   float Mu(float lambda, float g) const {
     if (!is_equality_ && g <= constants::kSmallNumber &&
         std::abs(lambda) <= constants::kSmallNumber) {
-//      std::cout << "float Mu(lambda, g): 0.0\n";
+
       return 0.0;
     }
-//      std::cout << "float Mu(lambda, g): Mu: " << mu_ << "\n";
+    //      std::cout << "float Mu(lambda, g): Mu: " << mu_ << "\n";
     return mu_;
   }
 
 protected:
   explicit Constraint(bool is_equality, const std::string &name)
       : Cost(1.0, name), is_equality_(is_equality),
-        lambdas_(time::kNumTimeSteps, 0.0) {}
+        lambdas_(time::kNumTimeSteps, constants::kDefaultLambda) {}
 
   // Modify derivatives to account for the multipliers and the quadratic term in
   // the augmented Lagrangian. The inputs are the derivatives of g in the

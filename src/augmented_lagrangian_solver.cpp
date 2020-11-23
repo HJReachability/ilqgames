@@ -190,22 +190,21 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
     if (success) *success = false;
   }
 
-  // Restore initial solution to this problem.
-  problem_->OverwriteSolution(initial_op, initial_strategies);
+  // Maybe restore initial solution to this problem.
+  if (params_.reset_problem)
+    problem_->OverwriteSolution(initial_op, initial_strategies);
 
   // Reset all multipliers.
-  for (auto& pc : problem_->PlayerCosts()) {
-    for (const auto& constraint : pc.StateConstraints())
-      constraint->ScaleLambdas(0.0);
-    for (const auto& pair : pc.ControlConstraints())
-      pair.second->ScaleLambdas(0.0);
+  if (params_.reset_lambdas) {
+    for (auto& pc : problem_->PlayerCosts()) {
+      for (const auto& constraint : pc.StateConstraints())
+        constraint->ScaleLambdas(constants::kDefaultLambda);
+      for (const auto& pair : pc.ControlConstraints())
+        pair.second->ScaleLambdas(constants::kDefaultLambda);
+    }
   }
 
-  Constraint::GlobalMu() = 10.0;
-
-  // Update problem solution to make sure we get the final log output.
-  // problem_->OverwriteSolution(log->FinalOperatingPoint(),
-  //                             log->FinalStrategies());
+  if (params_.reset_mu) Constraint::GlobalMu() = constants::kDefaultMu;
 
   return log;
 }

@@ -76,11 +76,16 @@ struct SolverParams {
   float geometric_lambda_downscaling = 0.5;
   float constraint_error_tolerance = 1e-1;
 
-  // Adersarial time: Pure Cooperative (adversarial_time = 0), or
-  // Adversarial-to-Cooperative (adversarial_time != 0)
-  // float adversarial_time = 0;
+  // Should the solver reset problem/constraint params to their initial values.
+  // NOTE: defaults to true.
+  bool reset_problem = true;
+  bool reset_lambdas = true;
+  bool reset_mu = true;
 }; // struct SolverParams
 
+// Adersarial time: Pure Cooperative (adversarial_time = 0), or
+// Adversarial-to-Cooperative (adversarial_time != 0)
+// float adversarial_time = 0;
 }; // namespace ilqgames
 
 #endif
