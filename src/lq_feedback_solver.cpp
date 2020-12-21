@@ -199,27 +199,27 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
   }
 
   // Maybe compute delta_xs and costates forward in time.
-  VectorXf x_star = x0;
-  VectorXf last_x_star;
-  for (size_t kk = 0; kk < num_time_steps_; kk++) {
-    if (delta_xs) {
+  if (delta_xs) {
+    VectorXf x_star = x0;
+    VectorXf last_x_star;
+    for (size_t kk = 0; kk < num_time_steps_; kk++) {
       (*delta_xs)[kk] = x_star;
       for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
         if (kk < num_time_steps_ - 1)
-          (*costates)[kk][ii] = Zs_[kk + 1][ii] * x_star + zetas_[kk + 1][ii];
+          (*costates)[kk][ii] = -Zs_[kk + 1][ii] * x_star - zetas_[kk + 1][ii];
         else
           (*costates)[kk][ii].setZero();
       }
+
+      // Unpack linearization at this time step.
+      const auto& lin = linearization[kk];
+
+      // Compute optimal x.
+      last_x_star = x_star;
+      x_star = lin.A * last_x_star;
+      for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
+        x_star -= lin.Bs[ii] * strategies[ii].alphas[kk];
     }
-
-    // Unpack linearization at this time step.
-    const auto& lin = linearization[kk];
-
-    // Compute optimal x.
-    last_x_star = x_star;
-    x_star = lin.A * last_x_star;
-    for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++)
-      x_star -= lin.Bs[ii] * strategies[ii].alphas[kk];
   }
 
   return strategies;
