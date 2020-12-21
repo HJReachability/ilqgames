@@ -137,9 +137,10 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
       ComputeLinearization(current_operating_point, &linearization_);
 
     // Solve LQ game.
-    current_strategies =
-        lq_solver_->Solve(linearization_, cost_quadraticization_,
-                          problem_->InitialState(), &delta_xs, &costates);
+    current_strategies = lq_solver_->Solve(
+        linearization_, cost_quadraticization_,
+        problem_->InitialState() - current_operating_point.xs.front(),
+        &delta_xs, &costates);
 
     // Modify this LQ solution.
     if (!ModifyLQStrategies(delta_xs, costates, &current_strategies,
@@ -390,7 +391,8 @@ float ILQSolver::ExpectedDecrease(
       //     (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
 
       // if (kk > 0) {
-      //   // Handle state and costate (state) contributions. Doesn't exist at t0.
+      //   // Handle state and costate (state) contributions. Doesn't exist at
+      //   t0.
       //   // Handle final time separately from intermediate time steps.
       //   const auto& last_costate = costates[kk - 1][ii];
 
@@ -407,11 +409,11 @@ float ILQSolver::ExpectedDecrease(
       // }
 
       // Update expected decrease from costate.
-      //expected_decrease += costate.transpose() * expected_decrease_costate;
+      // expected_decrease += costate.transpose() * expected_decrease_costate;
     }
 
     // Update expected decrease from x.
-    //expected_decrease += delta_xs[kk].transpose() * expected_decrease_x;
+    // expected_decrease += delta_xs[kk].transpose() * expected_decrease_x;
   }
 
   return expected_decrease;
