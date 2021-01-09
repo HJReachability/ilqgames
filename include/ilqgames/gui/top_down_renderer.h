@@ -56,28 +56,26 @@
 namespace ilqgames {
 
 class TopDownRenderer {
- public:
+public:
   ~TopDownRenderer() {}
 
   // Takes in a log and lists of x/y/heading indices in the state vector.
   TopDownRenderer(
-      const std::shared_ptr<const ControlSliders>& sliders,
-      const std::vector<std::shared_ptr<const TopDownRenderableProblem>>&
-          problems)
-      : sliders_(sliders),
-        problems_(problems),
-        center_delta_(0.0, 0.0),
-        last_mouse_position_(0.0, 0.0),
-        pixel_to_meter_ratio_(5.0) {
+      const std::shared_ptr<const ControlSliders> &sliders,
+      const std::vector<std::shared_ptr<const TopDownRenderableProblem>>
+          &problems)
+      : sliders_(sliders), problems_(problems), center_delta_(0.0, 0.0),
+        last_mouse_position_(0.0, 0.0), pixel_to_meter_ratio_(5.0) {
     CHECK_NOTNULL(sliders_.get());
     CHECK_EQ(problems_.size(), sliders_->NumProblems());
-    for (const auto& problem : problems_) CHECK_NOTNULL(problem.get());
+    for (const auto &problem : problems_)
+      CHECK_NOTNULL(problem.get());
   }
 
   // Render the log in a top-down view.
   void Render();
 
- private:
+private:
   // Convert between positions/headings in Cartesian coordinates and window
   // coordinates.
   float CurrentZoomLevel() const;
@@ -85,7 +83,7 @@ class TopDownRenderer {
   float PixelsToLength(float p) const { return p / CurrentZoomLevel(); }
   float HeadingToWindowCoordinates(float heading) const { return -heading; }
   ImVec2 PositionToWindowCoordinates(float x, float y) const;
-  Point2 WindowCoordinatesToPosition(const ImVec2& coords) const;
+  Point2 WindowCoordinatesToPosition(const ImVec2 &coords) const;
   ImVec2 WindowCenter() const;
 
   // Control sliders.
@@ -103,8 +101,8 @@ class TopDownRenderer {
 
   // Zoom level. This will be the pixel-to-meter ratio.
   float pixel_to_meter_ratio_;
-};  // class TopDownRenderer
+}; // class TopDownRenderer
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

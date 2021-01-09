@@ -66,12 +66,14 @@ struct Strategy {
     for (size_t ii = 0; ii < horizon; ii++) {
       Ps[ii] = MatrixXf::Zero(udim, xdim);
       alphas[ii] = VectorXf::Zero(udim);
+      // Ps[ii] = 0.01 * MatrixXf::Random(udim, xdim);
+      // alphas[ii] = 0.01 * VectorXf::Random(udim);
     }
   }
 
   // Operator for computing control given time index and delta x.
-  VectorXf operator()(size_t time_index, const VectorXf& delta_x,
-                      const VectorXf& u_ref) const {
+  VectorXf operator()(size_t time_index, const VectorXf &delta_x,
+                      const VectorXf &u_ref) const {
     return u_ref - Ps[time_index] * delta_x - alphas[time_index];
   }
 
@@ -82,8 +84,8 @@ struct Strategy {
 
     return horizon * (Ps.front().size() + alphas.front().size());
   }
-};  // struct Strategy
+}; // struct Strategy
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

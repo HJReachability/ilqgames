@@ -84,14 +84,6 @@ class MultiPlayerIntegrableSystem {
   // return true here.
   virtual bool TreatAsLinear() const { return false; }
 
-  // Stitch between two states of the system. By default, just takes the
-  // first one but concatenated systems, e.g., can interpret the first one
-  // as best for ego and the second as best for other players.
-  virtual VectorXf Stitch(const VectorXf& x_ego,
-                          const VectorXf& x_others) const {
-    return x_ego;
-  }
-
   // Integrate using single step Euler or not, see below for more extensive
   // description.
   static void IntegrateUsingEuler() { integrate_using_euler_ = true; }
@@ -113,6 +105,19 @@ class MultiPlayerIntegrableSystem {
   virtual float DistanceBetween(const VectorXf& x0, const VectorXf& x1) const {
     return (x0 - x1).squaredNorm();
   }
+
+  // Stitch between two states of the system.
+  // NOTE: by default, does nothing. Derived classes can override.
+  virtual VectorXf Stitch(const VectorXf& x_ego,
+                          const VectorXf& x_others) const {
+    return x_ego;
+  }
+
+  // Stitch operating point and strategies.
+  OperatingPoint Stitch(const OperatingPoint& ego,
+                        const OperatingPoint& others) const;
+  std::vector<Strategy> Stitch(const std::vector<Strategy>& ego,
+                               const std::vector<Strategy>& others) const;
 
  protected:
   MultiPlayerIntegrableSystem(Dimension xdim) : xdim_(xdim) {}

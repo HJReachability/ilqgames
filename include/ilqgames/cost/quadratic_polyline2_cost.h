@@ -53,34 +53,32 @@
 namespace ilqgames {
 
 class QuadraticPolyline2Cost : public TimeInvariantCost {
- public:
+public:
   // Construct from a multiplicative weight and the input dimensions
   // corresponding to (x, y)-position.
-  QuadraticPolyline2Cost(float weight, const Polyline2& polyline,
-                         const std::pair<Dimension, Dimension>& position_idxs,
-                         const std::string& name = "")
-      : TimeInvariantCost(weight, name),
-        polyline_(polyline),
-        xidx_(position_idxs.first),
-        yidx_(position_idxs.second) {}
+  QuadraticPolyline2Cost(float weight, const Polyline2 &polyline,
+                         const std::pair<Dimension, Dimension> &position_idxs,
+                         const std::string &name = "")
+      : TimeInvariantCost(weight, name), polyline_(polyline),
+        xidx_(position_idxs.first), yidx_(position_idxs.second) {}
 
   // Evaluate this cost at the current input.
-  float Evaluate(const VectorXf& input) const;
+  float Evaluate(const VectorXf &input) const;
 
   // Quadraticize this cost at the given input, and add to the running
   // sum of gradients and Hessians.
-  void Quadraticize(const VectorXf& input, MatrixXf* hess,
-                    VectorXf* grad) const;
+  void Quadraticize(const VectorXf &input, MatrixXf *hess,
+                    VectorXf *grad) const;
 
- private:
+private:
   // Polyline to compute distances from.
   const Polyline2 polyline_;
 
   // Dimensions of input corresponding to (x, y)-position.
   const Dimension xidx_;
   const Dimension yidx_;
-};  //\class QuadraticPolyline2Cost
+}; //\class QuadraticPolyline2Cost
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

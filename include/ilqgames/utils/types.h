@@ -45,12 +45,12 @@
 
 // ------------------------------- INCLUDES -------------------------------- //
 
-#include <math.h>
 #include <algorithm>
 #include <chrono>
 #include <functional>
 #include <iostream>
 #include <limits>
+#include <math.h>
 #include <memory>
 #include <random>
 #include <string>
@@ -92,16 +92,14 @@ template <typename T>
 using PlayerPtrMultiMap =
     std::unordered_multimap<PlayerIndex, std::shared_ptr<T>>;
 
-template <typename T>
-using PlayerMap = std::unordered_map<PlayerIndex, T>;
+template <typename T> using PlayerMap = std::unordered_map<PlayerIndex, T>;
 
 template <typename T>
 using PlayerMultiMap = std::unordered_multimap<PlayerIndex, T>;
 
-using PlayerDualMap = std::unordered_map<PlayerIndex, float*>;
+using PlayerDualMap = std::unordered_map<PlayerIndex, float *>;
 
-template <typename T>
-using PtrVector = std::vector<std::shared_ptr<T>>;
+template <typename T> using PtrVector = std::vector<std::shared_ptr<T>>;
 
 using RefVector = std::vector<Eigen::Ref<VectorXf>>;
 
@@ -128,7 +126,7 @@ static constexpr float kInvalidValue = std::numeric_limits<float>::quiet_NaN();
 static constexpr float kDefaultLambda = 0.0;
 static constexpr float kDefaultMu = 10.0;
 
-}  // namespace constants
+} // namespace constants
 
 namespace time {
 // Time discretization (s).
@@ -140,35 +138,31 @@ static constexpr Time kTimeHorizon = 10.0;
 // Number of time steps.
 static constexpr size_t kNumTimeSteps =
     static_cast<size_t>((kTimeHorizon + constants::kSmallNumber) / kTimeStep);
-}  // namespace time
+} // namespace time
 
 // ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
 
 template <typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
+std::unique_ptr<T> make_unique(Args &&... args) {
   return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
-template <typename T>
-inline constexpr T sgn(T x, std::false_type is_signed) {
+template <typename T> inline constexpr T sgn(T x, std::false_type is_signed) {
   return T(0) < x;
 }
 
-template <typename T>
-inline constexpr T sgn(T x, std::true_type is_signed) {
+template <typename T> inline constexpr T sgn(T x, std::true_type is_signed) {
   return (T(0) < x) - (x < T(0));
 }
 
-template <typename T>
-inline constexpr T sgn(T x) {
+template <typename T> inline constexpr T sgn(T x) {
   return sgn(x, std::is_signed<T>());
 }
 
-template <typename T>
-inline constexpr T signed_sqrt(T x) {
+template <typename T> inline constexpr T signed_sqrt(T x) {
   return sgn(x) * std::sqrt(std::abs(x));
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames
 
 #endif

@@ -52,31 +52,27 @@
 namespace ilqgames {
 
 class FlatRoundaboutMergingExample : public TopDownRenderableProblem {
- public:
+public:
   ~FlatRoundaboutMergingExample() {}
-  FlatRoundaboutMergingExample() : TopDownRenderableProblem() {}
+  FlatRoundaboutMergingExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
 
   // Construct dynamics, initial state, initial operating point, player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructInitialOperatingPoint();
   void ConstructPlayerCosts();
+  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf& xi) const;
-  std::vector<float> Ys(const VectorXf& xi) const;
-  std::vector<float> Thetas(const VectorXf& xi) const;
+  std::vector<float> Xs(const VectorXf &xi) const;
+  std::vector<float> Ys(const VectorXf &xi) const;
+  std::vector<float> Thetas(const VectorXf &xi) const;
 
-  // Dynamics as shared ptr.
-  std::shared_ptr<const ConcatenatedFlatSystem> Dynamics() const {
-    return dynamics_;
-  }
+private:
+  std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
+  double adversarial_time;
+};
 
- private:
-  // Dynamics as shared ptr.
-  std::shared_ptr<const ConcatenatedFlatSystem> dynamics_;
-};  // class FlatRoundaboutMergingExample
-
-}  // namespace ilqgames
+}; // namespace ilqgames
 
 #endif
