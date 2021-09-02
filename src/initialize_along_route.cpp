@@ -52,10 +52,11 @@
 
 namespace ilqgames {
 
-void InitializeAlongRoute(const Polyline2& route, float initial_route_pos,
+void InitializeAlongRoute(const Polyline2 &route, float initial_route_pos,
                           float nominal_speed,
-                          const std::pair<Dimension, Dimension>& position_dims,
-                          OperatingPoint* operating_point) {
+                          const std::pair<Dimension, Dimension> &position_dims,
+                          const Dimension &heading_dim,
+                          OperatingPoint *operating_point) {
   CHECK_NOTNULL(operating_point);
   CHECK(!operating_point->xs.empty());
   CHECK_GT(operating_point->xs[0].size(), 0);
@@ -66,10 +67,13 @@ void InitializeAlongRoute(const Polyline2& route, float initial_route_pos,
                                                     static_cast<Time>(kk) *
                                                     time::kTimeStep;
 
-    const Point2 route_pt = route.PointAt(route_pos);
+    LineSegment2 segment({0.0, 0.0}, {1.0, 0.0});
+    const Point2 route_pt =
+        route.PointAt(route_pos, nullptr, &segment, nullptr);
     operating_point->xs[kk](position_dims.first) = route_pt.x();
     operating_point->xs[kk](position_dims.second) = route_pt.y();
+    operating_point->xs[kk](heading_dim) = segment.Heading();
   }
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames

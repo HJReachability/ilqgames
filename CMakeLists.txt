@@ -17,7 +17,7 @@ include(cmake/Utils.cmake)
 include(cmake/Dependencies.cmake)
 
 # Check for C++17 features and enable.
-ilqgames_enable_cpp17()
+ilqgames_enable_cpp17() 
 
 # Set compiler constants.
 add_definitions(-DILQGAMES_LOG_DIR="${CMAKE_SOURCE_DIR}/logs")

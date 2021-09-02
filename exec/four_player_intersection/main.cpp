@@ -36,46 +36,51 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Main GUI for three player intersection example.
+// Originally: Main GUI for three player intersection example.
+//
+// Now: Main GUI for four player intersection example.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <ilqgames/examples/receding_horizon_simulator.h>
-#include <ilqgames/examples/three_player_intersection_example.h>
+// #include <ilqgames/examples/three_player_intersection_example.h>
+#include <ilqgames/examples/four_player_intersection_example.h> // NEW
 #include <ilqgames/gui/control_sliders.h>
 #include <ilqgames/gui/cost_inspector.h>
 #include <ilqgames/gui/top_down_renderer.h>
 #include <ilqgames/solver/augmented_lagrangian_solver.h>
 #include <ilqgames/solver/ilq_solver.h>
 #include <ilqgames/solver/problem.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/utils/check_local_nash_equilibrium.h>
 #include <ilqgames/utils/solver_log.h>
 
 #include <gflags/gflags.h>
 #include <glog/logging.h>
-#include <stdio.h>
 #include <iostream>
 #include <memory>
+#include <stdio.h>
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <imgui/imgui_impl_opengl3.h>
 
 // Optional log saving and visualization.
+DEFINE_bool(open_loop, false, "Use open loop (vs. feedback) solver.");
 DEFINE_bool(save, false, "Optionally save solver logs to disk.");
 DEFINE_bool(viz, true, "Visualize results in a GUI.");
 DEFINE_bool(last_traj, false,
             "Should the solver only dump the last trajectory?");
 DEFINE_string(experiment_name, "", "Name for the experiment.");
 
-// Regularization.
-DEFINE_double(state_regularization, 1.0, "State regularization.");
-DEFINE_double(control_regularization, 1.0, "Control regularization.");
-
 // Linesearch parameters.
 DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-DEFINE_double(initial_alpha_scaling, 0.5, "Initial step size in linesearch.");
-DEFINE_double(convergence_tolerance, 0.01, "KKT squared error tolerance.");
+DEFINE_double(initial_alpha_scaling, 0.75, "Initial step size in linesearch.");
+DEFINE_double(convergence_tolerance, 0.1, "L_inf tolerance for convergence.");
 DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
+
+// Adversarial Time.
+DEFINE_double(adversarial_time, 0.0,
+              "Amount of time other agents are assumed to be adversarial");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
 // file and requires individual function pointers to be loaded manually. Helper
@@ -83,11 +88,11 @@ DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 // common ones: gl3w, glew, glad. You may use another loader/header of your
 // choice (glext, glLoadGen, etc.), or chose to manually implement your own.
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
-#include <GL/gl3w.h>  // Initialize with gl3wInit()
+#include <GL/gl3w.h> // Initialize with gl3wInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-#include <GL/glew.h>  // Initialize with glewInit()
+#include <GL/glew.h> // Initialize with glewInit()
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-#include <glad/glad.h>  // Initialize with gladLoadGL()
+#include <glad/glad.h> // Initialize with gladLoadGL()
 #else
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
@@ -95,13 +100,13 @@ DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 // Include glfw3.h after our OpenGL definitions.
 #include <GLFW/glfw3.h>
 
-static void glfw_error_callback(int error, const char* description) {
+static void glfw_error_callback(int error, const char *description) {
   fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   const std::string log_file =
-      ILQGAMES_LOG_DIR + std::string("/receding_horizon_example.log");
+      ILQGAMES_LOG_DIR + std::string("/four_player_intersection.log"); // NEW
   google::SetLogDestination(0, log_file.c_str());
   google::InitGoogleLogging(argv[0]);
   gflags::ParseCommandLineFlags(&argc, &argv, true);
@@ -109,23 +114,64 @@ int main(int argc, char** argv) {
 
   // Set up the game.
   ilqgames::SolverParams params;
+  params.open_loop = FLAGS_open_loop;
   params.max_backtracking_steps = 100;
+  params.max_solver_iters = 100;
+  params.unconstrained_solver_max_iters = 10;
   params.linesearch = FLAGS_linesearch;
   params.expected_decrease_fraction = FLAGS_expected_decrease;
   params.initial_alpha_scaling = FLAGS_initial_alpha_scaling;
   params.convergence_tolerance = FLAGS_convergence_tolerance;
-  params.state_regularization = FLAGS_state_regularization;
-  params.control_regularization = FLAGS_control_regularization;
+  params.geometric_mu_scaling = 1.1;
+  params.geometric_mu_downscaling = 0.5;
+  params.geometric_lambda_downscaling = 0.5;
+  //  params.open_loop = true;
 
-  auto problem = std::make_shared<ilqgames::ThreePlayerIntersectionExample>();
+  auto problem = std::make_shared<ilqgames::FourPlayerIntersectionExample>();
   problem->Initialize();
   ilqgames::AugmentedLagrangianSolver solver(problem, params);
 
-  // Solve the game in a receding horizon.
-  constexpr ilqgames::Time kFinalTime = 10.0;       // s
-  constexpr ilqgames::Time kPlannerRuntime = 0.25;  // s
-  const std::vector<std::vector<std::shared_ptr<const ilqgames::SolverLog>>>
-      logs = {RecedingHorizonSimulator(kFinalTime, kPlannerRuntime, &solver)};
+  // Solve the game.
+  const auto start = std::chrono::system_clock::now();
+  std::shared_ptr<const ilqgames::SolverLog> log = solver.Solve();
+  const std::vector<std::shared_ptr<const ilqgames::SolverLog>> logs = {log};
+  LOG(INFO) << "Solver completed in "
+            << std::chrono::duration<ilqgames::Time>(
+                   std::chrono::system_clock::now() - start)
+                   .count()
+            << " seconds.";
+
+  // Check if solution satisfies sufficient conditions for being a local Nash.
+  problem->OverwriteSolution(log->FinalOperatingPoint(),
+                             log->FinalStrategies());
+  const bool is_local_nash = CheckSufficientLocalNashEquilibrium(*problem);
+  if (is_local_nash)
+    LOG(INFO) << "Solution is a local Nash.";
+  else
+    LOG(INFO) << "Solution may not be a local Nash.";
+
+  // Confirm with numerical check.
+  constexpr float kMaxPerturbation = 0.1;
+  constexpr bool kOpenLoop = false;
+  problem->OverwriteSolution(log->FinalOperatingPoint(),
+                             log->FinalStrategies());
+  const bool is_numerical_nash =
+      NumericalCheckLocalNashEquilibrium(*problem, kMaxPerturbation, kOpenLoop);
+  if (is_numerical_nash)
+    LOG(INFO) << "Solution is a numerical Nash.";
+  else
+    LOG(INFO) << "Solution is not a numerical Nash.";
+
+  // Dump the logs and/or exit.
+  if (FLAGS_save) {
+    if (FLAGS_experiment_name == "") {
+      CHECK(log->Save(FLAGS_last_traj));
+    } else {
+      CHECK(log->Save(FLAGS_last_traj, FLAGS_experiment_name));
+    }
+  }
+  if (!FLAGS_viz)
+    return 0;
 
   // Create a top-down renderer, control sliders, and cost inspector.
   std::shared_ptr<ilqgames::ControlSliders> sliders(
@@ -135,19 +181,20 @@ int main(int argc, char** argv) {
 
   // Setup window
   glfwSetErrorCallback(glfw_error_callback);
-  if (!glfwInit()) return 1;
+  if (!glfwInit())
+    return 1;
 
     // Decide GL+GLSL versions.
 #if __APPLE__
   // GL 3.2 + GLSL 150.
-  const char* glsl_version = "#version 150";
+  const char *glsl_version = "#version 150";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);  // Required on Mac
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
 #else
   // GL 3.0 + GLSL 130.
-  const char* glsl_version = "#version 130";
+  const char *glsl_version = "#version 130";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+
@@ -155,11 +202,12 @@ int main(int argc, char** argv) {
 #endif
 
   // Create window with graphics context
-  GLFWwindow* window = glfwCreateWindow(
-      1280, 720, "ILQGames: 3-Player Intersection Example", NULL, NULL);
-  if (window == NULL) return 1;
+  GLFWwindow *window = glfwCreateWindow(
+      1280, 720, "ILQGames: 4-Player Intersection Example", NULL, NULL);
+  if (window == NULL)
+    return 1;
   glfwMakeContextCurrent(window);
-  glfwSwapInterval(1);  // Enable vsync
+  glfwSwapInterval(1); // Enable vsync
 
   // Initialize OpenGL loader
 #if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
@@ -169,8 +217,8 @@ int main(int argc, char** argv) {
 #elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
   bool err = gladLoadGL() == 0;
 #else
-  bool err = false;  // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
-                     // is likely to requires some form of initialization.
+  bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader
+                    // is likely to requires some form of initialization.
 #endif
   if (err) {
     fprintf(stderr, "Failed to initialize OpenGL loader!\n");

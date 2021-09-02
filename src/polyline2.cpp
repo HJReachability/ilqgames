@@ -48,7 +48,7 @@
 
 namespace ilqgames {
 
-Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
+Polyline2::Polyline2(const PointList2 &points) : length_(0.0) {
   CHECK_GT(points.size(), 1);
   cumulative_lengths_.push_back(length_);
 
@@ -60,13 +60,13 @@ Polyline2::Polyline2(const PointList2& points) : length_(0.0) {
   }
 }
 
-void Polyline2::AddPoint(const Point2& point) {
+void Polyline2::AddPoint(const Point2 &point) {
   segments_.emplace_back(segments_.back().SecondPoint(), point);
   length_ += segments_.back().Length();
 }
 
-Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
-                          LineSegment2* segment, bool* is_endpoint) const {
+Point2 Polyline2::PointAt(float route_pos, bool *is_vertex,
+                          LineSegment2 *segment, bool *is_endpoint) const {
   auto upper = std::upper_bound(cumulative_lengths_.begin(),
                                 cumulative_lengths_.end(), route_pos);
   if (upper == cumulative_lengths_.end()) {
@@ -78,7 +78,8 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
   // Find the index of the line segment which contains this route position.
   upper--;
   const size_t idx = std::distance(cumulative_lengths_.begin(), upper);
-  if (segment) *segment = segments_[idx];
+  if (segment)
+    *segment = segments_[idx];
 
   // Walk along this line segment the remaining distance.
   const float remaining = route_pos - cumulative_lengths_[idx];
@@ -102,10 +103,13 @@ Point2 Polyline2::PointAt(float route_pos, bool* is_vertex,
   return return_point;
 }
 
-Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
-                               LineSegment2* segment,
-                               float* signed_squared_distance,
-                               bool* is_endpoint) const {
+Point2 Polyline2::ClosestPoint(const Point2 &query, bool *is_vertex,
+                               LineSegment2 *segment,
+                               float *signed_squared_distance,
+                               bool *is_endpoint) const {
+
+  // std::cout << "\n\nsgn(0.0):" << sgn(0.0) << "\n\n";
+
   // Walk along each line segment and remember which was closest.
   float closest_signed_squared_distance = constants::kInfinity;
   Point2 closest_point;
@@ -114,9 +118,36 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
   int segment_idx = 0;
   int segment_counter = 0;
   bool is_segment_endpoint;
-  for (const auto& s : segments_) {
+
+  // if (segments_.size() != 1) {
+  //   std::cout << "\n\nPolyline2::ClosestPoint:\n";
+  //   std::cout << "Number of segments in polyline: " << segments_.size() << "\n";
+  //   // std::cout << "current_point: " << current_point;
+  //   // std::cout << "\n";
+
+  //   std::cout << "Polyline2::ClosestPoint: Begin for loop:\n";
+  // }
+
+  for (const auto &s : segments_) {
+
+//    if (segments_.size() != 1)
+//      std::cout << "segment_counter: " << segment_counter << "\n";
+
     const Point2 current_point = s.ClosestPoint(
         query, &is_segment_endpoint, &current_signed_squared_distance);
+
+    // if (segments_.size() != 1) {
+    //   std::cout
+    //       << "\n-----------CALLING LINE_SEGMENT CLOSEST POINT----------\n";
+    //   std::cout << "query_point: " << query << "\n";
+    //   std::cout << "current_point: " << current_point << "\n";
+    //   std::cout << "current_signed_squared_distance: "
+    //             << current_signed_squared_distance << "\n";
+    //   std::cout
+    //       << "------FINISHED CALLING LINE_SEGMENT CLOSEST POINT------\n\n";
+    //   std::cout << "closest_signed_squared_distance: "
+    //             << closest_signed_squared_distance << "\n";
+    // }
 
     if (std::abs(current_signed_squared_distance) <
         std::abs(closest_signed_squared_distance)) {
@@ -142,18 +173,43 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
             (current_signed_squared_distance <= 0.0 && !shortcut.Side(query)));
       }
 
+      // if (segments_.size() != 1) {
+      //   std::cout << "closest_signed_squared_distance (old): "
+      //             << closest_signed_squared_distance << "\n";
+      //   // std::cout << "current_point(new): " << current_point << "\n";
+      //   std::cout << "closest_point (old): " << closest_point << "\n";
+      // }
+
       closest_signed_squared_distance = current_signed_squared_distance;
       closest_point = current_point;
 
-      if (is_vertex) *is_vertex = is_segment_endpoint;
+      // if (segments_.size() != 1) {
+      //   std::cout << "closest_signed_squared_distance (new): "
+      //             << closest_signed_squared_distance << "\n";
+      //   // std::cout << "current_point(new): " << current_point << "\n";
+      //   std::cout << "closest_point (new): " << closest_point << "\n";
+      // }
+
+      if (is_vertex)
+        *is_vertex = is_segment_endpoint;
       segment_idx = segment_counter;
     }
 
+
+    // if (segments_.size() != 1)
+    //   std::cout << "segment_counter, before increment: " << segment_counter
+    //             << "\n";
+
     segment_counter++;
+
+    // if (segments_.size() != 1)
+    //   std::cout << "segment_counter, after increment: " << segment_counter
+    //             << "\n";
   }
 
   // Maybe set segment.
-  if (segment) *segment = segments_[segment_idx];
+  if (segment)
+    *segment = segments_[segment_idx];
 
   // Maybe set signed_squared_distance.
   if (signed_squared_distance)
@@ -161,16 +217,23 @@ Point2 Polyline2::ClosestPoint(const Point2& query, bool* is_vertex,
 
   // Check if the closest point occurs at an endpoint for the polyline.
   if (is_endpoint) {
-    auto is_same_point = [](const Point2& p1, const Point2& p2) {
+    auto is_same_point = [](const Point2 &p1, const Point2 &p2) {
       return (p1 - p2).squaredNorm() < constants::kSmallNumber;
-    };  // is_same_point
+    }; // is_same_point
 
     *is_endpoint =
         is_same_point(closest_point, segments_.front().FirstPoint()) ||
         is_same_point(closest_point, segments_.back().SecondPoint());
   }
 
-  return closest_point;
-}  // namespace ilqgames
+  // if (segments_.size() != 1) {
+  //   std::cout << "closest_signed_squared_distance: "
+  //             << closest_signed_squared_distance << "\n";
+  //   std::cout << "closest_point: " << closest_point << "\n";
+  //   std::cout << "End of Polyline2::ClosestPoint\n\n\n";
+  // }
 
-}  // namespace ilqgames
+  return closest_point;
+} // namespace ilqgames
+
+} // namespace ilqgames
