@@ -73,6 +73,10 @@ class PlayerCost {
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
 
+  // For reach-avoid problems, two sets of state costs.
+  void SetTargetStateCost(const std::shared_ptr<ExtremeValueCost>& cost);
+  void SetFailureStateCost(const std::shared_ptr<ExtremeValueCost>& cost);
+
   // Add new state and control constraints. For now, they are only equality
   // constraints but later they should really be inequality constraints and
   // there should be some logic for maintaining sets of active constraints.
@@ -85,6 +89,8 @@ class PlayerCost {
   // state costs will be evaluated at the next time step.
   float Evaluate(Time t, const VectorXf& x,
                  const std::vector<VectorXf>& us) const;
+  float EvaluateTargetCost(Time t, const VectorXf& x) const;
+  float EvaluateFailureCost(Time t, const VectorXf& x) const;
   float Evaluate(const OperatingPoint& op, Time time_step) const;
   float Evaluate(const OperatingPoint& op) const;
   float EvaluateOffset(Time t, Time next_t, const VectorXf& next_x,
@@ -98,23 +104,33 @@ class PlayerCost {
   QuadraticCostApproximation QuadraticizeControlCosts(
       Time t, const VectorXf& x, const std::vector<VectorXf>& us) const;
 
-  // Set whether this is a time-additive, max-over-time, or min-over-time cost.
-  // At each specific time, all costs are accumulated with the given operation.
-  enum CostStructure { SUM, MAX, MIN };
+  // Set whether this is a time-additive, max/min-over-time, or reach-avoid
+  // problem. At each specific time, all costs are accumulated with the given
+  // operation.
+  enum CostStructure { SUM, MAX, MIN, REACH_AVOID };
   void SetTimeAdditive() { cost_structure_ = SUM; }
   void SetMaxOverTime() { cost_structure_ = MAX; }
   void SetMinOverTime() { cost_structure_ = MIN; }
   bool IsTimeAdditive() const { return cost_structure_ == SUM; }
   bool IsMaxOverTime() const { return cost_structure_ == MAX; }
   bool IsMinOverTime() const { return cost_structure_ == MIN; }
+  bool IsReachAvoid() const { return cost_structure_ == REACH_AVOID; }
 
-  // Keep track of the time of extreme costs.
+  // Keep track of the time of extreme and critical costs. (Critical costs are
+  // used in reach-avoid problems and are those times for each player for which
+  // that player's value function does not depend upon the future.)
   size_t TimeOfExtremeCost() { return time_of_extreme_cost_; }
   void SetTimeOfExtremeCost(size_t kk) { time_of_extreme_cost_ = kk; }
 
   // Accessors.
   const PtrVector<Cost>& StateCosts() const { return state_costs_; }
   const PlayerPtrMultiMap<Cost>& ControlCosts() const { return control_costs_; }
+  const PtrVector<Cost>& TargetStateCosts() const {
+    return target_state_costs_;
+  }
+  const PtrVector<Cost>& FailureStateCosts() const {
+    return failure_state_costs_;
+  }
   const PtrVector<Constraint>& StateConstraints() const {
     return state_constraints_;
   }
@@ -132,6 +148,10 @@ class PlayerCost {
   // State costs and control costs.
   PtrVector<Cost> state_costs_;
   PlayerPtrMultiMap<Cost> control_costs_;
+
+  // Reach-avoid-specific target/failure costs.
+  std::shared_ptr<ExtremeValueCost> target_state_cost_;
+  std::shared_ptr<ExtremeValueCost> failure_state_cost_;
 
   // State and control constraints
   PtrVector<Constraint> state_constraints_;

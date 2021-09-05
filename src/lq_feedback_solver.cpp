@@ -69,17 +69,19 @@
 namespace ilqgames {
 
 std::vector<Strategy> LQFeedbackSolver::Solve(
-    const std::vector<LinearDynamicsApproximation>& linearization,
-    const std::vector<std::vector<QuadraticCostApproximation>>&
-        quadraticization,
-    const VectorXf& x0, std::vector<VectorXf>* delta_xs,
-    std::vector<std::vector<VectorXf>>* costates) {
+    const std::vector<LinearDynamicsApproximation> &linearization,
+    const std::vector<std::vector<QuadraticCostApproximation>>
+        &quadraticization,
+    const VectorXf &x0, std::vector<VectorXf> *delta_xs,
+    std::vector<std::vector<VectorXf>> *costates) {
   CHECK_EQ(linearization.size(), num_time_steps_);
   CHECK_EQ(quadraticization.size(), num_time_steps_);
 
   // Make sure delta_xs and costates are the right size.
-  if (delta_xs) CHECK_NOTNULL(costates);
-  if (costates) CHECK_NOTNULL(delta_xs);
+  if (delta_xs)
+    CHECK_NOTNULL(costates);
+  if (costates)
+    CHECK_NOTNULL(delta_xs);
   if (delta_xs) {
     delta_xs->resize(num_time_steps_);
     costates->resize(num_time_steps_);
@@ -109,8 +111,8 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
   // entry as a terminal cost as in Basar and Olsder, ch. 6.
   for (int kk = num_time_steps_ - 2; kk >= 0; kk--) {
     // Unpack linearization and quadraticization at this time step.
-    const auto& lin = linearization[kk];
-    const auto& quad = quadraticization[kk];
+    const auto &lin = linearization[kk];
+    const auto &quad = quadraticization[kk];
 
     // Populate coupling matrix S for linear matrix equation to determine X (Ps
     // and alphas).
@@ -180,20 +182,28 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
 
     // Update Zs and zetas.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      zetas_[kk][ii] =
-          (F_.transpose() * (zetas_[kk + 1][ii] + Zs_[kk + 1][ii] * beta_) +
-           quad[ii].state.grad)
-              .eval();
-      Zs_[kk][ii] =
-          (F_.transpose() * Zs_[kk + 1][ii] * F_ + quad[ii].state.hess).eval();
+      if (!time_consistent_reach_avoid_ || (*critical_times_)[kk][ii]) {
+        zetas_[kk][ii] =
+            (F_.transpose() * (zetas_[kk + 1][ii] + Zs_[kk + 1][ii] * beta_) +
+             quad[ii].state.grad)
+                .eval();
+        Zs_[kk][ii] =
+            (F_.transpose() * Zs_[kk + 1][ii] * F_ + quad[ii].state.hess)
+                .eval();
 
-      // Add terms for nonzero Rijs.
-      for (const auto& Rij_entry : quad[ii].control) {
-        const PlayerIndex jj = Rij_entry.first;
-        const MatrixXf& Rij = Rij_entry.second.hess;
-        const VectorXf& rij = Rij_entry.second.grad;
-        zetas_[kk][ii] += Ps_[jj].transpose() * (Rij * alphas_[jj] - rij);
-        Zs_[kk][ii] += Ps_[jj].transpose() * Rij * Ps_[jj];
+        // Add terms for nonzero Rijs.
+        for (const auto &Rij_entry : quad[ii].control) {
+          const PlayerIndex jj = Rij_entry.first;
+          const MatrixXf &Rij = Rij_entry.second.hess;
+          const VectorXf &rij = Rij_entry.second.grad;
+          zetas_[kk][ii] += Ps_[jj].transpose() * (Rij * alphas_[jj] - rij);
+          Zs_[kk][ii] += Ps_[jj].transpose() * Rij * Ps_[jj];
+        }
+      } else {
+        // Time-consistent reachability backup and this player doesn't care
+        // about later times.
+        zetas_[kk][ii] = quad[ii].state.grad;
+        Zs_[kk][ii] = quad[ii].state.hess;
       }
     }
   }
@@ -212,7 +222,7 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
       }
 
       // Unpack linearization at this time step.
-      const auto& lin = linearization[kk];
+      const auto &lin = linearization[kk];
 
       // Compute optimal x.
       last_x_star = x_star;
@@ -225,4 +235,4 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
   return strategies;
 }
 
-}  // namespace ilqgames
+} // namespace ilqgames

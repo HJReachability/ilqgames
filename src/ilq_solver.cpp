@@ -222,28 +222,37 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
   // Initialize appropriately.
   if (total_costs->size() != problem_->PlayerCosts().size())
     total_costs->resize(problem_->PlayerCosts().size());
+  if (problem_->PlayerCosts()[ii].IsReachAvoid()) {
+    critical_times_.resize(
+        time::kNumTimeSteps,
+        std::vector<CriticalTimeType>(problem_->PlayerCosts().size()));
+  }
+
   for (PlayerIndex ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
     if (problem_->PlayerCosts()[ii].IsTimeAdditive())
       (*total_costs)[ii] = 0.0;
     else if (problem_->PlayerCosts()[ii].IsMaxOverTime())
       (*total_costs)[ii] = -constants::kInfinity;
+    else if (problem_->PlayerCosts()[ii].IsMinOverTime())
+      (*total_costs)[ii] = constants::kInfinity;
     else
       (*total_costs)[ii] = constants::kInfinity;
   }
 
-  // Accumulate costs.
-  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+  // Accumulate costs backward in time since that's needed for non-additive
+  // time-consistent solutions.
+  for (int kk = time::kNumTimeSteps - 1; kk >= 0; kk--) {
     const Time t = RelativeTimeTracker::RelativeTime(kk);
 
     for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
       const float current_cost = problem_->PlayerCosts()[ii].Evaluate(
           t, current_op.xs[kk], current_op.us[kk]);
 
-      if (problem_->PlayerCosts()[ii].IsTimeAdditive())
+      if (problem_->PlayerCosts()[ii].IsTimeAdditive()) {
         (*total_costs)[ii] += problem_->PlayerCosts()[ii].Evaluate(
             t, current_op.xs[kk], current_op.us[kk]);
-      else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
-               current_cost > (*total_costs)[ii]) {
+      } else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
+                 current_cost > (*total_costs)[ii]) {
         (*total_costs)[ii] = current_cost;
         problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
       } else if (problem_->PlayerCosts()[ii].IsMinOverTime()) {
@@ -251,6 +260,8 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
           (*total_costs)[ii] = current_cost;
           problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
         }
+      } else if (problem_->PlayerCosts()[ii].IsReachAvoid()) {
+        // TODO! Pick up tomorrow.
       }
     }
   }
@@ -318,6 +329,7 @@ bool ILQSolver::ModifyLQStrategies(
   float current_stepsize = params_.initial_alpha_scaling;
   CurrentOperatingPoint(last_operating_point, *strategies,
                         current_operating_point);
+
   if (!params_.linesearch) return true;
 
   // Keep reducing alphas until we satisfy the Armijo condition.

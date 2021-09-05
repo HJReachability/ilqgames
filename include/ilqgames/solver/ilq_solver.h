@@ -187,6 +187,12 @@ class ILQSolver : public GameSolver {
   // Last merit function value and expected decreases (per step length).
   float last_merit_function_value_;
   float expected_decrease_;
+
+  // Boolean flags for which time steps are "critical" for each player. Critical
+  // times are those for which that player's value function does not depend upon
+  // the future.
+  enum CriticalTimeType { NOT_CRITICAL, CRITICAL_TARGET, CRITICAL_FAILURE };
+  std::vector<std::vector<CriticalTimeType>> critical_times_;
 };  // class ILQSolver
 
 }  // namespace ilqgames

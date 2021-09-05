@@ -110,6 +110,14 @@ void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
   state_costs_.emplace_back(cost);
 }
 
+void PlayerCost::AddTargetStateCost(const std::shared_ptr<Cost>& cost) {
+  state_costs_.emplace_back(cost);
+}
+
+void PlayerCost::AddFailureStateCost(const std::shared_ptr<Cost>& cost) {
+  state_costs_.emplace_back(cost);
+}
+
 void PlayerCost::AddControlCost(PlayerIndex idx,
                                 const std::shared_ptr<Cost>& cost) {
   control_costs_.emplace(idx, cost);
@@ -143,13 +151,24 @@ float PlayerCost::Evaluate(Time t, const VectorXf& x,
   return total_cost;
 }
 
+float PlayerCost::EvaluateTargetCost(Time t, const VectorXf& x) const {
+  return (target_state_cost_) ? target_state_cost_->Evaluate(t, x)
+                              : constants::kInfinity;
+}
+
+float PlayerCost::EvaluateFailureCost(Time t, const VectorXf& x) const {
+  return (failure_state_cost_) ? failure_state_cost_->Evaluate(t, x)
+                               : -constants::kInfinity;
+}
+
 float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
   float cost = 0.0;
-  if (IsMinOverTime())
-    cost = constants::kInfinity;
-  else if (IsMaxOverTime())
+  if (IsMaxOverTime())
     cost = -constants::kInfinity;
+  else if (IsMinOverTime() || IsReachAvoid())
+    cost = constants::kInfinity;
 
+  float reach_avoid_running_worst_failure_cost = -constants::kInfinity;
   for (size_t kk = 0; kk < op.xs.size(); kk++) {
     const Time t = op.t0 + time_step * static_cast<float>(kk);
     const float instantaneous_cost = Evaluate(t, op.xs[kk], op.us[kk]);
@@ -158,8 +177,15 @@ float PlayerCost::Evaluate(const OperatingPoint& op, Time time_step) const {
       cost += instantaneous_cost;
     else if (IsMinOverTime())
       cost = std::min(cost, instantaneous_cost);
-    else
+    else if (IsMaxOverTime())
       cost = std::max(cost, instantaneous_cost);
+    else {
+      reach_avoid_running_worst_failure_cost =
+          std::max(reach_avoid_running_worst_failure_cost,
+                   EvaluateFailureCost(t, op.xs[kk]));
+      cost = std::min(cost, std::max(reach_avoid_running_worst_failure_cost,
+                                     EvaluateTargetCost(t, op.xs[kk])));
+    }
   }
 
   return cost;

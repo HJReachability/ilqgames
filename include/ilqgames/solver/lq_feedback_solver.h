@@ -72,8 +72,12 @@ class LQFeedbackSolver : public LQSolver {
   ~LQFeedbackSolver() {}
   LQFeedbackSolver(
       const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-      size_t num_time_steps)
-      : LQSolver(dynamics, num_time_steps) {
+      size_t num_time_steps,
+      bool time_consistent_reach_avoid = false,
+      const std::vector<std::vector<bool>>* critical_times = nullptr)
+      : LQSolver(dynamics, num_time_steps),
+        time_consistent_reach_avoid_(time_consistent_reach_avoid),
+        critical_times_(critical_times) {
     // Cache the total number of control dimensions, since this is inefficient
     // to compute.
     const Dimension total_udim = dynamics_->TotalUDim();
@@ -140,6 +144,12 @@ class LQFeedbackSolver : public LQSolver {
   // Preallocate memory for intermediate variables F, beta.
   MatrixXf F_;
   VectorXf beta_;
+
+  // Flag for whether this is the time-consistent reach-avoid case,
+  // along with list of whether each time index is critical for time-consistent
+  // backup.
+  const bool time_consistent_reach_avoid_;
+  const std::vector<std::vector<bool>>* critical_times_;
 };  // LQFeedbackSolver
 
 }  // namespace ilqgames
