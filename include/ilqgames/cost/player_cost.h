@@ -46,6 +46,7 @@
 
 #include <ilqgames/constraint/constraint.h>
 #include <ilqgames/cost/cost.h>
+#include <ilqgames/cost/extreme_value_cost.h>
 #include <ilqgames/utils/operating_point.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/types.h>
@@ -119,17 +120,17 @@ class PlayerCost {
   // Keep track of the time of extreme and critical costs. (Critical costs are
   // used in reach-avoid problems and are those times for each player for which
   // that player's value function does not depend upon the future.)
-  size_t TimeOfExtremeCost() { return time_of_extreme_cost_; }
+  size_t TimeOfExtremeCost() const { return time_of_extreme_cost_; }
   void SetTimeOfExtremeCost(size_t kk) { time_of_extreme_cost_ = kk; }
 
   // Accessors.
   const PtrVector<Cost>& StateCosts() const { return state_costs_; }
   const PlayerPtrMultiMap<Cost>& ControlCosts() const { return control_costs_; }
-  const PtrVector<Cost>& TargetStateCosts() const {
-    return target_state_costs_;
+  const std::shared_ptr<ExtremeValueCost>& TargetStateCost() const {
+    return target_state_cost_;
   }
-  const PtrVector<Cost>& FailureStateCosts() const {
-    return failure_state_costs_;
+  const std::shared_ptr<ExtremeValueCost>& FailureStateCost() const {
+    return failure_state_cost_;
   }
   const PtrVector<Constraint>& StateConstraints() const {
     return state_constraints_;

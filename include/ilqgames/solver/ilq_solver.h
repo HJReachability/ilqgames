@@ -131,7 +131,7 @@ class ILQSolver : public GameSolver {
 
   // Compute overall costs and set times of extreme costs.
   void TotalCosts(const OperatingPoint& current_op,
-                  std::vector<float>* total_costs) const;
+                  std::vector<float>* total_costs);
 
   // Armijo condition check. Returns true if the new operating point satisfies
   // the Armijo condition, and also returns current merit function value.

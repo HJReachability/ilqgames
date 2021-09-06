@@ -69,6 +69,12 @@ class Problem {
     ConstructInitialState();
     ConstructInitialOperatingPoint();
     ConstructInitialStrategies();
+
+    // Check if any player costs are reach-avoid.
+    any_reach_avoid_objectives_ = false;
+    for (const auto& cost : player_costs_)
+      any_reach_avoid_objectives_ |= cost.IsReachAvoid();
+
     initialized_ = true;
   }
 
@@ -128,8 +134,18 @@ class Problem {
     return *strategies_;
   }
 
- protected:
-  Problem();
+  // Does any player have a reach-avoid objective?
+  bool AnyReachAvoidObjectives() const {
+    return any_reach_avoid_objectives_;
+  }
+//    // Strategies and operating points for all players.
+//    std::unique_ptr<OperatingPoint> operating_point_;
+//    std::unique_ptr<std::vector<Strategy>> strategies_;
+
+protected:
+  // Problem();
+  Problem(Time adversarial_time = 0.0)
+      : initialized_(false), adversarial_time_(adversarial_time) {}
 
   // Functions for initialization. By default, operating point and strategies
   // are initialized to zero.
@@ -163,6 +179,9 @@ class Problem {
 
   // Player costs. These will not change during operation of this solver.
   std::vector<PlayerCost> player_costs_;
+
+  // Are any of these costs reach-avoid?
+  bool any_reach_avoid_objectives_;
 
   // Initial condition.
   VectorXf x0_;

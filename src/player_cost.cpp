@@ -110,12 +110,14 @@ void PlayerCost::AddStateCost(const std::shared_ptr<Cost>& cost) {
   state_costs_.emplace_back(cost);
 }
 
-void PlayerCost::AddTargetStateCost(const std::shared_ptr<Cost>& cost) {
-  state_costs_.emplace_back(cost);
+void PlayerCost::SetTargetStateCost(
+    const std::shared_ptr<ExtremeValueCost>& cost) {
+  target_state_cost_ = cost;
 }
 
-void PlayerCost::AddFailureStateCost(const std::shared_ptr<Cost>& cost) {
-  state_costs_.emplace_back(cost);
+void PlayerCost::SetFailureStateCost(
+    const std::shared_ptr<ExtremeValueCost>& cost) {
+  failure_state_cost_ = cost;
 }
 
 void PlayerCost::AddControlCost(PlayerIndex idx,

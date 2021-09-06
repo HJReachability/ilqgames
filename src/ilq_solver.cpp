@@ -218,11 +218,12 @@ void ILQSolver::CurrentOperatingPoint(
 // }
 
 void ILQSolver::TotalCosts(const OperatingPoint& current_op,
-                           std::vector<float>* total_costs) const {
+                           std::vector<float>* total_costs) {
   // Initialize appropriately.
   if (total_costs->size() != problem_->PlayerCosts().size())
     total_costs->resize(problem_->PlayerCosts().size());
-  if (problem_->PlayerCosts()[ii].IsReachAvoid()) {
+
+  if (problem_->AnyReachAvoidObjectives()) {
     critical_times_.resize(
         time::kNumTimeSteps,
         std::vector<CriticalTimeType>(problem_->PlayerCosts().size()));
@@ -261,7 +262,21 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
           problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
         }
       } else if (problem_->PlayerCosts()[ii].IsReachAvoid()) {
-        // TODO! Pick up tomorrow.
+        // Backward-time reach-avoid computation of cost + critical times.
+        const float target = problem_->PlayerCosts()[ii].EvaluateTargetCost(
+            t, current_op.xs[kk]);
+        const float failure = problem_->PlayerCosts()[ii].EvaluateFailureCost(
+            t, current_op.xs[kk]);
+        (*total_costs)[ii] =
+            std::max(std::min((*total_costs)[ii], target), failure);
+
+        // Find arg extremum.
+        if ((*total_costs)[ii] == target)
+          critical_times_[kk][ii] = CRITICAL_TARGET;
+        else if ((*total_costs)[ii] == failure)
+          critical_times_[kk][ii] = CRITICAL_FAILURE;
+        else
+          critical_times_[kk][ii] = NOT_CRITICAL;
       }
     }
   }
@@ -501,10 +516,27 @@ void ILQSolver::ComputeCostQuadraticization(
       const PlayerCost& cost = problem_->PlayerCosts()[ii];
 
       if (cost.IsTimeAdditive() ||
-          problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
+          ((cost.IsMinOverTime() || cost.IsMaxOverTime()) &&
+           cost.TimeOfExtremeCost() == kk))
         (*q)[kk][ii] = cost.Quadraticize(t, x, us);
-      else
+      else {
+        // Extremum over time cost but not at extreme cost, or in reach-avoid
+        // mode. In these cases, always quadraticize control and state costs
+        // separately.
         (*q)[kk][ii] = cost.QuadraticizeControlCosts(t, x, us);
+
+        if (cost.IsReachAvoid()) {
+          if (critical_times_[kk][ii] == CRITICAL_TARGET) {
+            LOG_ASSERT(cost.TargetStateCost()) << "Need a target function.";
+            cost.TargetStateCost()->Quadraticize(
+                t, x, &((*q)[kk][ii].state.hess), &((*q)[kk][ii].state.grad));
+          } else if (critical_times_[kk][ii] == CRITICAL_FAILURE) {
+            LOG_ASSERT(cost.FailureStateCost()) << "Need a failure function.";
+            cost.FailureStateCost()->Quadraticize(
+                t, x, &((*q)[kk][ii].state.hess), &((*q)[kk][ii].state.grad));
+          }
+        }
+      }
     }
   }
 }
