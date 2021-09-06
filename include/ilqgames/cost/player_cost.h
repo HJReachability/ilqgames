@@ -112,6 +112,7 @@ class PlayerCost {
   void SetTimeAdditive() { cost_structure_ = SUM; }
   void SetMaxOverTime() { cost_structure_ = MAX; }
   void SetMinOverTime() { cost_structure_ = MIN; }
+  void SetReachAvoid() { cost_structure_ = REACH_AVOID; }
   bool IsTimeAdditive() const { return cost_structure_ == SUM; }
   bool IsMaxOverTime() const { return cost_structure_ == MAX; }
   bool IsMinOverTime() const { return cost_structure_ == MIN; }
