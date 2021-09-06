@@ -103,6 +103,8 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   CurrentOperatingPoint(last_operating_point, current_strategies,
                         &current_operating_point);
 
+  //  InitializeAlongRoute(params_.current_operating_point);
+
   // Compute total costs.
   TotalCosts(current_operating_point, &total_costs);
 
@@ -345,13 +347,21 @@ bool ILQSolver::ModifyLQStrategies(
   CurrentOperatingPoint(last_operating_point, *strategies,
                         current_operating_point);
 
-  if (!params_.linesearch) return true;
+  // Compute merit function since this sets next quadraticization.
+  float current_merit_function_value = MeritFunction(*current_operating_point);
+  std::cout << current_merit_function_value << std::endl;
+
+  if (!params_.linesearch) {
+    *has_converged = HasConverged(current_merit_function_value);
+    last_merit_function_value_ = current_merit_function_value;
+    return true;
+  }
 
   // Keep reducing alphas until we satisfy the Armijo condition.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
     // Compute merit function value.
-    const float current_merit_function_value =
-        MeritFunction(*current_operating_point);
+    if (ii > 0)
+      current_merit_function_value = MeritFunction(*current_operating_point);
 
     // Check Armijo condition.
     if (CheckArmijoCondition(current_merit_function_value, current_stepsize)) {

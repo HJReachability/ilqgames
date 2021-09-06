@@ -51,7 +51,7 @@ struct SolverParams {
   // Consider a solution converged once max elementwise difference is below this
   // tolerance or solver has exceeded a maximum number of iterations.
   float convergence_tolerance = 1e-1;
-  size_t max_solver_iters = 1000;
+  size_t max_solver_iters = 20;
 
   // Linesearch parameters. If flag is set 'true', then applied initial alpha
   // scaling to all strategies and backs off geometrically at the given rate for
@@ -70,7 +70,7 @@ struct SolverParams {
   float control_regularization = 0.0;
 
   // Augmented Lagrangian parameters.
-  size_t unconstrained_solver_max_iters = 10;
+  size_t unconstrained_solver_max_iters = 1000;
   float geometric_mu_scaling = 1.1;
   float geometric_mu_downscaling = 0.5;
   float geometric_lambda_downscaling = 0.5;

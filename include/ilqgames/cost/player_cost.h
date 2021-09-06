@@ -70,6 +70,10 @@ class PlayerCost {
         cost_structure_(CostStructure::SUM),
         time_of_extreme_cost_(0) {}
 
+  // Reset regularizations.
+  void ResetStateRegularization(float reg) { state_regularization_ = reg; }
+  void ResetControlRegularization(float reg) { control_regularization_ = reg; }
+
   // Add new state and control costs for this player.
   void AddStateCost(const std::shared_ptr<Cost>& cost);
   void AddControlCost(PlayerIndex idx, const std::shared_ptr<Cost>& cost);
@@ -125,7 +129,13 @@ class PlayerCost {
   void SetTimeOfExtremeCost(size_t kk) { time_of_extreme_cost_ = kk; }
 
   // Accessors.
-  const PtrVector<Cost>& StateCosts() const { return state_costs_; }
+  PtrVector<Cost> StateCosts() const {
+    PtrVector<Cost> all;
+    all.insert(all.end(), state_costs_.begin(), state_costs_.end());
+    all.push_back(target_state_cost_);
+    all.push_back(failure_state_cost_);
+    return all;
+  }
   const PlayerPtrMultiMap<Cost>& ControlCosts() const { return control_costs_; }
   const std::shared_ptr<ExtremeValueCost>& TargetStateCost() const {
     return target_state_cost_;
@@ -160,8 +170,8 @@ class PlayerCost {
   PlayerPtrMultiMap<Constraint> control_constraints_;
 
   // Regularization on costs.
-  const float state_regularization_;
-  const float control_regularization_;
+  float state_regularization_;
+  float control_regularization_;
 
   // Ternary variable whether this objective is time-additive, max-over-time, or
   // min-over-time.

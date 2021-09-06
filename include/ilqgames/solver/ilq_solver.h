@@ -88,10 +88,17 @@ class ILQSolver : public GameSolver {
     // Prepopulate quadraticization.
     for (auto& quads : cost_quadraticization_)
       quads.resize(problem_->Dynamics()->NumPlayers(),
-                   QuadraticCostApproximation(problem_->Dynamics()->XDim()));
+                   QuadraticCostApproximation(problem_->Dynamics()->XDim(),
+                                              params.state_regularization));
 
     // Set last quadraticization to current, to start.
     last_cost_quadraticization_ = cost_quadraticization_;
+
+    // Set player cost regularizations.
+    for (auto& cost : problem->PlayerCosts()) {
+      cost.ResetStateRegularization(params.state_regularization);
+      cost.ResetControlRegularization(params.control_regularization);
+    }
   }
 
   // Solve this game. Returns true if converged.
@@ -125,7 +132,8 @@ class ILQSolver : public GameSolver {
 
   // Check if solver has converged.
   virtual bool HasConverged(float current_merit_function_value) const {
-    return (last_merit_function_value_ - current_merit_function_value) <
+    std::cout << "tol: " << params_.convergence_tolerance << std::endl << std::flush;
+    return std::abs(last_merit_function_value_ - current_merit_function_value) <
            params_.convergence_tolerance;
   }
 

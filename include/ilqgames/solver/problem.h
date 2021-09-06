@@ -138,7 +138,8 @@ class Problem {
   bool AnyReachAvoidObjectives() const {
     return any_reach_avoid_objectives_;
   }
-//    // Strategies and operating points for all players.
+
+  //    // Strategies and operating points for all players.
 //    std::unique_ptr<OperatingPoint> operating_point_;
 //    std::unique_ptr<std::vector<Strategy>> strategies_;
 

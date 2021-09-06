@@ -73,7 +73,7 @@ namespace {
 
 // Target/failure radii.
 static constexpr float kTargetRadius = 2.0;   // m
-static constexpr float kFailureRadius = 2.0;  // m
+static constexpr float kFailureRadius = 10.0;  // m
 
 // Input cost weight.
 static constexpr float kControlCostWeight = 0.1;
@@ -82,11 +82,11 @@ static constexpr float kControlCostWeight = 0.1;
 static constexpr float kInterAxleDistance = 4.0;  // m
 
 // Target position.
-static constexpr float kP1TargetX = 15.0;
+static constexpr float kP1TargetX = 50.0;
 static constexpr float kP1TargetY = 0.0;
 
 // Obstacle position.
-static constexpr float kP1FailureX = 10.0;
+static constexpr float kP1FailureX = 25.0;
 static constexpr float kP1FailureY = 0.0;
 
 // State dimensions.
@@ -148,10 +148,10 @@ void OnePlayerReachAvoidExample::ConstructPlayerCosts() {
 
   // Failure cost.
   const Polyline2 failure =
-      DrawCircle(Point2(kP1TargetX, kP1TargetY), kTargetRadius, 10);
+      DrawCircle(Point2(kP1FailureX, kP1FailureY), kFailureRadius, 10);
   const std::shared_ptr<Polyline2SignedDistanceCost> p1_failure_cost(
       new Polyline2SignedDistanceCost(failure, {kP1XIdx, kP1YIdx}, 0.0, false));
-  p1_cost.SetTargetStateCost(std::shared_ptr<ExtremeValueCost>(
+  p1_cost.SetFailureStateCost(std::shared_ptr<ExtremeValueCost>(
       new ExtremeValueCost({p1_failure_cost}, false, "Failure")));
 
   // Make sure costs are reach-avoid.
