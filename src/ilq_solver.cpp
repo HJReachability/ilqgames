@@ -159,6 +159,7 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
     // Compute total costs and check if we've converged.
     TotalCosts(current_operating_point, &total_costs);
+    last_total_costs_ = total_costs;
 
     // Record loop runtime.
     elapsed += timer_.Toc();
