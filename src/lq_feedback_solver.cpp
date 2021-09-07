@@ -180,7 +180,7 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
 
     // Update Zs and zetas.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      if (!time_consistent_reach_avoid_ ||
+      if (!player_costs_ || !(*player_costs_)[ii].IsReachAvoid() ||
           (*critical_times_)[kk][ii] == CriticalTimeType::NOT_CRITICAL) {
         zetas_[kk][ii] =
             (F_.transpose() * (zetas_[kk + 1][ii] + Zs_[kk + 1][ii] * beta_) +

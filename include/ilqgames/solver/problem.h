@@ -135,15 +135,13 @@ class Problem {
   }
 
   // Does any player have a reach-avoid objective?
-  bool AnyReachAvoidObjectives() const {
-    return any_reach_avoid_objectives_;
-  }
+  bool AnyReachAvoidObjectives() const { return any_reach_avoid_objectives_; }
 
   //    // Strategies and operating points for all players.
-//    std::unique_ptr<OperatingPoint> operating_point_;
-//    std::unique_ptr<std::vector<Strategy>> strategies_;
+  //    std::unique_ptr<OperatingPoint> operating_point_;
+  //    std::unique_ptr<std::vector<Strategy>> strategies_;
 
-protected:
+ protected:
   // Problem();
   Problem(Time adversarial_time = 0.0)
       : initialized_(false), adversarial_time_(adversarial_time) {}

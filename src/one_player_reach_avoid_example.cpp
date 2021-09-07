@@ -65,7 +65,7 @@
 DEFINE_double(px0, 0.0, "Initial x-position (m).");
 DEFINE_double(py0, 0.0, "Initial y-position (m).");
 DEFINE_double(theta0, 0.1, "Initial heading (rad).");
-DEFINE_double(v0, 3.0, "Initial speed (m/s).");
+DEFINE_double(v0, 10.0, "Initial speed (m/s).");
 
 namespace ilqgames {
 

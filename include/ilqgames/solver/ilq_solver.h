@@ -78,9 +78,9 @@ class ILQSolver : public GameSolver {
       lq_solver_.reset(
           new LQOpenLoopSolver(problem_->Dynamics(), time::kNumTimeSteps));
     else {
-      // HACK! Assuming reach-avoid!
-      lq_solver_.reset(new LQFeedbackSolver(
-          problem_->Dynamics(), time::kNumTimeSteps, true, &critical_times_));
+      lq_solver_.reset(
+          new LQFeedbackSolver(problem_->Dynamics(), time::kNumTimeSteps,
+                               &problem->PlayerCosts(), &critical_times_));
     }
 
     // If this system is flat then compute the linearization once, now.

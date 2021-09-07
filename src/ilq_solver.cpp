@@ -367,7 +367,7 @@ bool ILQSolver::ModifyLQStrategies(
 
   // Compute merit function since this sets next quadraticization.
   float current_merit_function_value = MeritFunction(*current_operating_point);
-  std::cout << current_merit_function_value << std::endl;
+  //  std::cout << current_merit_function_value << std::endl;
 
   if (!params_.linesearch) {
     *has_converged = HasConverged(current_merit_function_value, total_costs);
@@ -557,17 +557,16 @@ void ILQSolver::ComputeCostQuadraticization(
 
         if (cost.IsReachAvoid()) {
           if (critical_times_[kk][ii] == CRITICAL_TARGET) {
-            std::cout << "Time: " << kk
-                      << ". Target is active... getting quadraticized."
-                      << std::endl;
-
+            // std::cout << "Time: " << kk
+            //           << ". Target is active... getting quadraticized."
+            //           << std::endl;
             CHECK_NOTNULL(cost.TargetStateCost().get());
             cost.TargetStateCost()->Quadraticize(
                 t, x, &((*q)[kk][ii].state.hess), &((*q)[kk][ii].state.grad));
           } else if (critical_times_[kk][ii] == CRITICAL_FAILURE) {
-            std::cout << "Time: " << kk
-                      << ". Failure is active... getting quadraticized."
-                      << std::endl;
+            // std::cout << "Time: " << kk
+            //           << ". Failure is active... getting quadraticized."
+            //           << std::endl;
             CHECK_NOTNULL(cost.FailureStateCost().get());
 
             cost.FailureStateCost()->Quadraticize(

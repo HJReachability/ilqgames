@@ -57,6 +57,7 @@
 #ifndef ILQGAMES_SOLVER_LQ_FEEDBACK_SOLVER_H
 #define ILQGAMES_SOLVER_LQ_FEEDBACK_SOLVER_H
 
+#include <ilqgames/cost/player_cost.h>
 #include <ilqgames/dynamics/multi_player_integrable_system.h>
 #include <ilqgames/solver/lq_solver.h>
 #include <ilqgames/utils/linear_dynamics_approximation.h>
@@ -73,11 +74,12 @@ class LQFeedbackSolver : public LQSolver {
   ~LQFeedbackSolver() {}
   LQFeedbackSolver(
       const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-      size_t num_time_steps, bool time_consistent_reach_avoid = false,
+      size_t num_time_steps,
+      const std::vector<PlayerCost>* player_costs = nullptr,
       const std::vector<std::vector<CriticalTimeType>>* critical_times =
           nullptr)
       : LQSolver(dynamics, num_time_steps),
-        time_consistent_reach_avoid_(time_consistent_reach_avoid),
+        player_costs_(player_costs),
         critical_times_(critical_times) {
     // Cache the total number of control dimensions, since this is inefficient
     // to compute.
@@ -146,10 +148,10 @@ class LQFeedbackSolver : public LQSolver {
   MatrixXf F_;
   VectorXf beta_;
 
-  // Flag for whether this is the time-consistent reach-avoid case,
+  // Players' cost functions (used to check objective structure),
   // along with list of whether each time index is critical for time-consistent
   // backup.
-  const bool time_consistent_reach_avoid_;
+  const std::vector<PlayerCost>* player_costs_;
   const std::vector<std::vector<CriticalTimeType>>* critical_times_;
 };  // LQFeedbackSolver
 
