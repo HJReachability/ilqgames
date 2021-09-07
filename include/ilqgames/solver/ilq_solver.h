@@ -77,9 +77,11 @@ class ILQSolver : public GameSolver {
     if (params_.open_loop)
       lq_solver_.reset(
           new LQOpenLoopSolver(problem_->Dynamics(), time::kNumTimeSteps));
-    else
-      lq_solver_.reset(
-          new LQFeedbackSolver(problem_->Dynamics(), time::kNumTimeSteps));
+    else {
+      // HACK! Assuming reach-avoid!
+      lq_solver_.reset(new LQFeedbackSolver(
+          problem_->Dynamics(), time::kNumTimeSteps, true, &critical_times_));
+    }
 
     // If this system is flat then compute the linearization once, now.
     if (problem_->Dynamics()->TreatAsLinear())
@@ -131,10 +133,19 @@ class ILQSolver : public GameSolver {
                       const std::vector<Dimension>& dims) const;
 
   // Check if solver has converged.
-  virtual bool HasConverged(float current_merit_function_value) const {
-    std::cout << "tol: " << params_.convergence_tolerance << std::endl << std::flush;
-    return std::abs(last_merit_function_value_ - current_merit_function_value) <
-           params_.convergence_tolerance;
+  virtual bool HasConverged(
+      float current_merit_function_value,
+      const std::vector<float>& current_total_costs) const {
+    // NOTE: accounting for both total costs for all players and merit function.
+    float total_cost_diff = 0.0;
+    for (size_t ii = 0; ii < current_total_costs.size(); ii++)
+      total_cost_diff +=
+          std::abs(current_total_costs[ii] - last_total_costs_[ii]);
+
+    return (std::abs(last_merit_function_value_ -
+                     current_merit_function_value) <
+            params_.convergence_tolerance) &&
+           (total_cost_diff < params_.convergence_tolerance);
   }
 
   // Compute overall costs and set times of extreme costs.
@@ -196,10 +207,12 @@ class ILQSolver : public GameSolver {
   float last_merit_function_value_;
   float expected_decrease_;
 
+  // Last value of total costs.
+  std::vector<float> last_total_costs_;
+
   // Boolean flags for which time steps are "critical" for each player. Critical
   // times are those for which that player's value function does not depend upon
   // the future.
-  enum CriticalTimeType { NOT_CRITICAL, CRITICAL_TARGET, CRITICAL_FAILURE };
   std::vector<std::vector<CriticalTimeType>> critical_times_;
 };  // class ILQSolver
 

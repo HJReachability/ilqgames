@@ -62,6 +62,7 @@
 #include <ilqgames/utils/linear_dynamics_approximation.h>
 #include <ilqgames/utils/quadratic_cost_approximation.h>
 #include <ilqgames/utils/strategy.h>
+#include <ilqgames/utils/types.h>
 
 #include <vector>
 
@@ -72,9 +73,9 @@ class LQFeedbackSolver : public LQSolver {
   ~LQFeedbackSolver() {}
   LQFeedbackSolver(
       const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-      size_t num_time_steps,
-      bool time_consistent_reach_avoid = false,
-      const std::vector<std::vector<bool>>* critical_times = nullptr)
+      size_t num_time_steps, bool time_consistent_reach_avoid = false,
+      const std::vector<std::vector<CriticalTimeType>>* critical_times =
+          nullptr)
       : LQSolver(dynamics, num_time_steps),
         time_consistent_reach_avoid_(time_consistent_reach_avoid),
         critical_times_(critical_times) {
@@ -149,7 +150,7 @@ class LQFeedbackSolver : public LQSolver {
   // along with list of whether each time index is critical for time-consistent
   // backup.
   const bool time_consistent_reach_avoid_;
-  const std::vector<std::vector<bool>>* critical_times_;
+  const std::vector<std::vector<CriticalTimeType>>* critical_times_;
 };  // LQFeedbackSolver
 
 }  // namespace ilqgames

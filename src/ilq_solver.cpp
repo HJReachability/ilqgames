@@ -107,6 +107,7 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
   // Compute total costs.
   TotalCosts(current_operating_point, &total_costs);
+  last_total_costs_ = total_costs;
 
   // Log current iterate.
   Time elapsed = 0.0;
@@ -166,6 +167,12 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     log->AddSolverIterate(current_operating_point, current_strategies,
                           total_costs, elapsed, has_converged);
   }
+
+  // // DEBUG.
+  // for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+  //   std::cout << "time: " << kk << ", critical: " << critical_times_[kk][0]
+  //             << std::endl;
+  // }
 
   // Handle success flag.
   if (success) *success = true;
@@ -244,6 +251,7 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
 
   // Accumulate costs backward in time since that's needed for non-additive
   // time-consistent solutions.
+  // std::cout << "----------------------------------------" << std::endl;
   for (int kk = time::kNumTimeSteps - 1; kk >= 0; kk--) {
     const Time t = RelativeTimeTracker::RelativeTime(kk);
 
@@ -265,12 +273,17 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
         }
       } else if (problem_->PlayerCosts()[ii].IsReachAvoid()) {
         // Backward-time reach-avoid computation of cost + critical times.
+        // NOTE: ignoring control costs.
         const float target = problem_->PlayerCosts()[ii].EvaluateTargetCost(
             t, current_op.xs[kk]);
         const float failure = problem_->PlayerCosts()[ii].EvaluateFailureCost(
             t, current_op.xs[kk]);
         (*total_costs)[ii] =
             std::max(std::min((*total_costs)[ii], target), failure);
+
+        // std::cout << "time: " << kk << ", target = " << target
+        //           << ", failure = " << failure
+        //           << ", total = " << (*total_costs)[ii] << std::endl;
 
         // Find arg extremum.
         if ((*total_costs)[ii] == target)
@@ -347,12 +360,16 @@ bool ILQSolver::ModifyLQStrategies(
   CurrentOperatingPoint(last_operating_point, *strategies,
                         current_operating_point);
 
+  // Compute total costs.
+  std::vector<float> total_costs;
+  TotalCosts(*current_operating_point, &total_costs);
+
   // Compute merit function since this sets next quadraticization.
   float current_merit_function_value = MeritFunction(*current_operating_point);
   std::cout << current_merit_function_value << std::endl;
 
   if (!params_.linesearch) {
-    *has_converged = HasConverged(current_merit_function_value);
+    *has_converged = HasConverged(current_merit_function_value, total_costs);
     last_merit_function_value_ = current_merit_function_value;
     return true;
   }
@@ -360,13 +377,15 @@ bool ILQSolver::ModifyLQStrategies(
   // Keep reducing alphas until we satisfy the Armijo condition.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
     // Compute merit function value.
-    if (ii > 0)
+    if (ii > 0) {
       current_merit_function_value = MeritFunction(*current_operating_point);
+      TotalCosts(*current_operating_point, &total_costs);
+    }
 
     // Check Armijo condition.
     if (CheckArmijoCondition(current_merit_function_value, current_stepsize)) {
       // Success! Update cached terms and check convergence.
-      *has_converged = HasConverged(current_merit_function_value);
+      *has_converged = HasConverged(current_merit_function_value, total_costs);
       last_merit_function_value_ = current_merit_function_value;
       return true;
     }
@@ -537,11 +556,19 @@ void ILQSolver::ComputeCostQuadraticization(
 
         if (cost.IsReachAvoid()) {
           if (critical_times_[kk][ii] == CRITICAL_TARGET) {
-            LOG_ASSERT(cost.TargetStateCost()) << "Need a target function.";
+            std::cout << "Time: " << kk
+                      << ". Target is active... getting quadraticized."
+                      << std::endl;
+
+            CHECK_NOTNULL(cost.TargetStateCost().get());
             cost.TargetStateCost()->Quadraticize(
                 t, x, &((*q)[kk][ii].state.hess), &((*q)[kk][ii].state.grad));
           } else if (critical_times_[kk][ii] == CRITICAL_FAILURE) {
-            LOG_ASSERT(cost.FailureStateCost()) << "Need a failure function.";
+            std::cout << "Time: " << kk
+                      << ". Failure is active... getting quadraticized."
+                      << std::endl;
+            CHECK_NOTNULL(cost.FailureStateCost().get());
+
             cost.FailureStateCost()->Quadraticize(
                 t, x, &((*q)[kk][ii].state.hess), &((*q)[kk][ii].state.grad));
           }

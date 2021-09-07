@@ -73,10 +73,10 @@ namespace {
 
 // Target/failure radii.
 static constexpr float kTargetRadius = 2.0;   // m
-static constexpr float kFailureRadius = 10.0;  // m
+static constexpr float kFailureRadius = 3.0;  // m
 
 // Input cost weight.
-static constexpr float kControlCostWeight = 0.1;
+static constexpr float kControlCostWeight = 1e-4;
 
 // Speed.
 static constexpr float kInterAxleDistance = 4.0;  // m
