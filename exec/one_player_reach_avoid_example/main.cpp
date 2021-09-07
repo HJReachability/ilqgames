@@ -71,12 +71,12 @@ DEFINE_string(experiment_name, "", "Name for the experiment.");
 
 // Regularization.
 DEFINE_double(state_regularization, 1.0, "State regularization.");
-DEFINE_double(control_regularization, 1.0, "Control regularization.");
+DEFINE_double(control_regularization, 2.0, "Control regularization.");
 
 // Linesearch parameters.
-DEFINE_bool(linesearch, true, "Should the solver linesearch?");
-DEFINE_double(initial_alpha_scaling, 0.1, "Initial step size in linesearch.");
-DEFINE_double(convergence_tolerance, 0.01, "KKT squared error tolerance.");
+DEFINE_bool(linesearch, false, "Should the solver linesearch?");
+DEFINE_double(initial_alpha_scaling, 1.0, "Initial step size in linesearch.");
+DEFINE_double(convergence_tolerance, 1e-3, "KKT squared error tolerance.");
 DEFINE_double(expected_decrease, 0.1, "KKT sq err expected decrease per iter.");
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header
