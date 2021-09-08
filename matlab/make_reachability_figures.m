@@ -337,7 +337,7 @@ function [t0, xs, V1] = unpack_log(experiment_name, iter)
 
   log_folder = "../logs/";
   cd(char(log_folder + experiment_name + "/" + iter));
-  dirs = dir; 
+  dirs = dir;
   last_iterate = dirs(end).name;
   cd('../../../matlab');
 

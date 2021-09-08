@@ -57,16 +57,10 @@ namespace ilqgames {
 class SolutionSplicer {
  public:
   ~SolutionSplicer() {}
-  SolutionSplicer(const OperatingPoint& op,
-                  const std::vector<Strategy>& strategies)
-      : strategies_(strategies), operating_point_(op) {}
-  explicit SolutionSplicer(const SolverLog& log)
-      : SolutionSplicer(log.FinalOperatingPoint(), log.FinalStrategies()) {}
+  explicit SolutionSplicer(const SolverLog& log);
 
   // Splice in a new solution stored in a solver log.
   void Splice(const SolverLog& log);
-  void Splice(const OperatingPoint& op,
-              const std::vector<Strategy>& strategies);
 
   // Check if a given time is contained within the current operating point.
   bool ContainsTime(Time t) const {

@@ -51,26 +51,31 @@
 namespace ilqgames {
 
 class ThreePlayerFlatIntersectionExample : public TopDownRenderableProblem {
-public:
+ public:
   ~ThreePlayerFlatIntersectionExample() {}
-  ThreePlayerFlatIntersectionExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
+  ThreePlayerFlatIntersectionExample() : TopDownRenderableProblem() {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-//  void SetAdversarialTime(double adv_time);
 
-  // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf &x) const;
-  std::vector<float> Ys(const VectorXf &x) const;
-  std::vector<float> Thetas(const VectorXf &x) const;
+  // Unpack x, y, heading (for each player, potentially) from a given linear
+  // system state.
+  std::vector<float> Xs(const VectorXf& xi) const;
+  std::vector<float> Ys(const VectorXf& xi) const;
+  std::vector<float> Thetas(const VectorXf& xi) const;
 
-private:
+  // Dynamics as shared ptr.
+  std::shared_ptr<const MultiPlayerFlatSystem> Dynamics() const {
+    return dynamics_;
+  }
+
+ private:
+  // Dynamics as shared ptr.
   std::shared_ptr<const MultiPlayerFlatSystem> dynamics_;
-//  double adversarial_time;
-}; // class ThreePlayerFlatIntersectionExample
+};  // class ThreePlayerFlatIntersectionExample
 
-}; // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

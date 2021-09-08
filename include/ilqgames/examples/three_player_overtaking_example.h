@@ -50,26 +50,21 @@
 namespace ilqgames {
 
 class ThreePlayerOvertakingExample : public TopDownRenderableProblem {
-public:
+ public:
   ~ThreePlayerOvertakingExample() {}
-  ThreePlayerOvertakingExample(Time adversarial_time = 0.0)
-      : TopDownRenderableProblem(adversarial_time) {}
+  ThreePlayerOvertakingExample() : TopDownRenderableProblem() {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-  //  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf &x) const;
-  std::vector<float> Ys(const VectorXf &x) const;
-  std::vector<float> Thetas(const VectorXf &x) const;
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class ThreePlayerOvertakingIntersectionExample
 
-  // private:
-  //  double adversarial_time;
-}; // class ThreePlayerOvertakingIntersectionExample
-
-} // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

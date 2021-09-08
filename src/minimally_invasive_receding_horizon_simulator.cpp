@@ -63,6 +63,8 @@
 
 namespace ilqgames {
 
+using clock = std::chrono::system_clock;
+
 std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
     Time final_time, Time planner_runtime, GameSolver* original,
     GameSolver* safety,
@@ -92,21 +94,21 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
   // Initial run of the solver. Keep track of time in order to know how much to
   // integrate dynamics forward. Ensure that both solvers succeed at the first
   // invocation.
-  auto solver_call_time = Clock::now();
+  auto solver_call_time = clock::now();
   bool success = false;
   original_logs->push_back(original->Solve(&success));
   CHECK(success);
   Time elapsed_time =
-      std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
+      std::chrono::duration<Time>(clock::now() - solver_call_time).count();
   VLOG(1) << "Solved initial original problem in " << elapsed_time
           << " seconds, with " << original_logs->back()->NumIterates()
           << " iterations.";
 
-  solver_call_time = Clock::now();
+  solver_call_time = clock::now();
   safety_logs->push_back(safety->Solve(&success));
   CHECK(success);
   elapsed_time =
-      std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
+      std::chrono::duration<Time>(clock::now() - solver_call_time).count();
   VLOG(1) << "Solved initial safety problem in " << elapsed_time
           << " seconds, with " << safety_logs->back()->NumIterates()
           << " iterations.";
@@ -128,7 +130,8 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
     t += kExtraTime;  // + planner_runtime;
 
     if (t >= final_time ||
-        !splicer.ContainsTime(t + planner_runtime + time::kTimeStep))
+        !splicer.ContainsTime(t + planner_runtime +
+                              time::kTimeStep))
       break;
 
     x = dynamics.Integrate(t - kExtraTime, t, x,
@@ -158,19 +161,19 @@ std::vector<ActiveProblem> MinimallyInvasiveRecedingHorizonSimulator(
     original->GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
     safety->GetProblem().SetUpNextRecedingHorizon(x, t, planner_runtime);
 
-    solver_call_time = Clock::now();
+    solver_call_time = clock::now();
     original_logs->push_back(original->Solve(&success, planner_runtime));
     const Time original_elapsed_time =
-        std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
+        std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
     CHECK_LE(original_elapsed_time, planner_runtime);
     VLOG(1) << "t = " << t << ": Solved warm-started original problem in "
             << original_elapsed_time << " seconds.";
 
-    solver_call_time = Clock::now();
+    solver_call_time = clock::now();
     safety_logs->push_back(safety->Solve(&success, planner_runtime));
     const Time safety_elapsed_time =
-        std::chrono::duration<Time>(Clock::now() - solver_call_time).count();
+        std::chrono::duration<Time>(clock::now() - solver_call_time).count();
 
     CHECK_LE(safety_elapsed_time, planner_runtime);
     VLOG(1) << "t = " << t << ": Solved warm-started safety problem in "

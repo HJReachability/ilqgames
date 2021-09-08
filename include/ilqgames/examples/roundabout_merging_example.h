@@ -50,26 +50,22 @@
 namespace ilqgames {
 
 class RoundaboutMergingExample : public TopDownRenderableProblem {
-public:
+ public:
   ~RoundaboutMergingExample() {}
-  RoundaboutMergingExample(Time adversarial_time = 0.0) : TopDownRenderableProblem(adversarial_time) {}
+  RoundaboutMergingExample() : TopDownRenderableProblem() {}
 
   // Construct dynamics, initial state, initial operating point, player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructInitialOperatingPoint();
   void ConstructPlayerCosts();
-//  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf &x) const;
-  std::vector<float> Ys(const VectorXf &x) const;
-  std::vector<float> Thetas(const VectorXf &x) const;
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class RoundaboutMergingExample
 
-//private:
-//  double adversarial_time;
-}; // class RoundaboutMergingExample
-
-} // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

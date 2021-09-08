@@ -45,7 +45,7 @@
 
 namespace ilqgames {
 
-bool LineSegment2::Side(const Point2 &query) const {
+bool LineSegment2::Side(const Point2& query) const {
   const Point2 relative_query = query - p1_;
   const float cross_product = relative_query.x() * unit_direction_.y() -
                               unit_direction_.x() * relative_query.y();
@@ -53,8 +53,8 @@ bool LineSegment2::Side(const Point2 &query) const {
   return cross_product > 0.0;
 }
 
-Point2 LineSegment2::ClosestPoint(const Point2 &query, bool *is_endpoint,
-                                  float *signed_squared_distance) const {
+Point2 LineSegment2::ClosestPoint(const Point2& query, bool* is_endpoint,
+                                  float* signed_squared_distance) const {
   // Find query relative to p1.
   const Point2 relative_query = query - p1_;
 
@@ -67,42 +67,9 @@ Point2 LineSegment2::ClosestPoint(const Point2 &query, bool *is_endpoint,
 
   // Determine closest point. This will either be an endpoint or the interior of
   // the segment.
-
-  // First, if cross_product_sign = 0.0, then query lies on the infinite line
-  // containing this line segment. Note that dot_product_2 < dot_product.
-
-//  if (cross_product == 0.0) {
-//    const Point2 relative_query_2 = query - p2_;
-//    const float dot_product_2 = relative_query_2.dot(unit_direction_);
-//    if (dot_product <= 0.0) {
-//      // Query point lies directly behind this line segment, so closest point is
-//      // p1.
-//      if (signed_squared_distance) {
-//        *signed_squared_distance = relative_query.squaredNorm();
-//      }
-//      return p1_;
-//    } else if (dot_product > 0.0 && dot_product_2 < 0.0) {
-//      // Query point lies inside this line segment, so closest point is
-//      // the query point itself.
-//      if (signed_squared_distance) {
-//        *signed_squared_distance = 0.001;
-//      }
-//      return query;
-//    } else if (dot_product_2 >= 0.0) {
-//      // Query point lies directly behind this line segment, so closest point is
-//      // p1.
-//      if (signed_squared_distance) {
-//        *signed_squared_distance = relative_query_2.squaredNorm();
-//      }
-//      return p2_;
-//    }
-//    std::cout << "THIS CASE SHOULD NOT OCCUR!";
-//  }
-
   if (dot_product < 0.0) {
     // Query lies behind this line segment, so closest point is p1.
-    if (is_endpoint)
-      *is_endpoint = true;
+    if (is_endpoint) *is_endpoint = true;
 
     if (signed_squared_distance) {
       *signed_squared_distance =
@@ -112,8 +79,7 @@ Point2 LineSegment2::ClosestPoint(const Point2 &query, bool *is_endpoint,
     return p1_;
   } else if (dot_product > length_) {
     // Closest point is p2.
-    if (is_endpoint)
-      *is_endpoint = true;
+    if (is_endpoint) *is_endpoint = true;
 
     if (signed_squared_distance) {
       *signed_squared_distance =
@@ -124,8 +90,7 @@ Point2 LineSegment2::ClosestPoint(const Point2 &query, bool *is_endpoint,
   }
 
   // Closest point is in the interior of the line segment.
-  if (is_endpoint)
-    *is_endpoint = false;
+  if (is_endpoint) *is_endpoint = false;
 
   if (signed_squared_distance)
     *signed_squared_distance =
@@ -134,4 +99,4 @@ Point2 LineSegment2::ClosestPoint(const Point2 &query, bool *is_endpoint,
   return p1_ + dot_product * unit_direction_;
 }
 
-} // namespace ilqgames
+}  // namespace ilqgames

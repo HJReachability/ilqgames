@@ -56,7 +56,6 @@
 #include <ilqgames/cost/quadratic_cost.h>
 #include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_norm_cost.h>
-#include <ilqgames/cost/quadratic_difference_cost.h>
 #include <ilqgames/cost/quadratic_polyline2_cost.h>
 #include <ilqgames/cost/relative_distance_cost.h>
 #include <ilqgames/cost/route_progress_cost.h>

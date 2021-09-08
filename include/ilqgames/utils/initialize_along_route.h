@@ -55,12 +55,11 @@ namespace ilqgames {
 
 // Set the position dimensions of the given operating point to follow the given
 // route at the given speed, starting at the given route position.
-void InitializeAlongRoute(const Polyline2 &route, float initial_route_pos,
+void InitializeAlongRoute(const Polyline2& route, float initial_route_pos,
                           float nominal_speed,
-                          const std::pair<Dimension, Dimension> &position_dims,
-                          const Dimension &heading_dim,
-                          OperatingPoint *operating_point);
+                          const std::pair<Dimension, Dimension>& position_dims,
+                          OperatingPoint* operating_point);
 
-} // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

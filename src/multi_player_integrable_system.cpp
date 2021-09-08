@@ -171,30 +171,4 @@ VectorXf MultiPlayerIntegrableSystem::Integrate(
   return Integrate(t0, time_interval, x0.eval(), eval_us);
 };
 
-OperatingPoint MultiPlayerIntegrableSystem::Stitch(
-    const OperatingPoint& ego, const OperatingPoint& others) const {
-  OperatingPoint stitched(others);
-
-  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
-    stitched.xs[kk] = Stitch(ego.xs[kk], others.xs[kk]);
-
-    // NOTE: assuming ego is first player.
-    stitched.us[kk][0] = others.us[kk][0];
-  }
-
-  return stitched;
-}
-
-std::vector<Strategy> MultiPlayerIntegrableSystem::Stitch(
-    const std::vector<Strategy>& ego,
-    const std::vector<Strategy>& others) const {
-  std::vector<Strategy> stitched(others);
-
-  // NOTE: assuming ego is first player.
-  stitched[0].Ps = ego[0].Ps;
-  stitched[0].alphas = ego[0].alphas;
-
-  return stitched;
-}
-
 }  // namespace ilqgames

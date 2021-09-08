@@ -53,18 +53,18 @@
 
 namespace ilqgames {
 
-void SolutionSplicer::Splice(const SolverLog& log) {
-  Splice(log.FinalOperatingPoint(), log.FinalStrategies());
-}
+SolutionSplicer::SolutionSplicer(const SolverLog& log)
+    : strategies_(log.FinalStrategies()),
+      operating_point_(log.FinalOperatingPoint()) {}
 
-void SolutionSplicer::Splice(const OperatingPoint& op,
-                             const std::vector<Strategy>& strategies) {
+void SolutionSplicer::Splice(const SolverLog& log) {
+  CHECK_GE(log.FinalOperatingPoint().t0, operating_point_.t0);
   CHECK_GE(operating_point_.xs.size(), time::kNumTimeSteps);
-  CHECK_GE(op.t0, operating_point_.t0);
-  CHECK_EQ(op.xs.size(), time::kNumTimeSteps);
+  CHECK_EQ(log.FinalOperatingPoint().xs.size(), time::kNumTimeSteps);
+
   const size_t current_timestep = static_cast<size_t>(
       1e-4 +  // Add a little so that conversion doesn't end up subtracting 1.
-      (op.t0 - operating_point_.t0) / time::kTimeStep);
+      (log.FinalOperatingPoint().t0 - operating_point_.t0) / time::kTimeStep);
 
   // HACK! If we're close enough to the beginning of the old trajectory, just
   // save the first few steps along it in case a lower-level path follower uses
@@ -117,12 +117,13 @@ void SolutionSplicer::Splice(const OperatingPoint& op,
   for (size_t kk = kNumExtraTimeStepsBeforeSplicingIn; kk < time::kNumTimeSteps;
        kk++) {
     const size_t kk_new_solution = current_timestep + kk - initial_timestep;
-    operating_point_.xs[kk_new_solution] = op.xs[kk];
-    operating_point_.us[kk_new_solution] = op.us[kk];
+    operating_point_.xs[kk_new_solution] = log.FinalOperatingPoint().xs[kk];
+    operating_point_.us[kk_new_solution] = log.FinalOperatingPoint().us[kk];
 
-    for (PlayerIndex ii = 0; ii < strategies_.size(); ii++) {
-      strategies_[ii].Ps[kk_new_solution] = strategies[ii].Ps[kk];
-      strategies_[ii].alphas[kk_new_solution] = strategies[ii].alphas[kk];
+    for (PlayerIndex ii = 0; ii < log.NumPlayers(); ii++) {
+      strategies_[ii].Ps[kk_new_solution] = log.FinalStrategies()[ii].Ps[kk];
+      strategies_[ii].alphas[kk_new_solution] =
+          log.FinalStrategies()[ii].alphas[kk];
     }
   }
 }

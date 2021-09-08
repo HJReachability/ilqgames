@@ -43,8 +43,6 @@
 #ifndef ILQGAMES_EXAMPLES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 #define ILQGAMES_EXAMPLES_THREE_PLAYER_INTERSECTION_EXAMPLE_H
 
-#include <ilqgames/dynamics/multi_player_flat_system.h>
-#include <ilqgames/geometry/polyline2.h>
 #include <ilqgames/solver/problem.h>
 #include <ilqgames/solver/solver_params.h>
 #include <ilqgames/solver/top_down_renderable_problem.h>
@@ -52,25 +50,21 @@
 namespace ilqgames {
 
 class ThreePlayerIntersectionExample : public TopDownRenderableProblem {
-public:
+ public:
   ~ThreePlayerIntersectionExample() {}
-  ThreePlayerIntersectionExample(Time adversarial_time = 0.0)
-      : TopDownRenderableProblem(adversarial_time) {}
+  ThreePlayerIntersectionExample() : TopDownRenderableProblem() {}
 
   // Construct dynamics, initial state, and player costs.
   void ConstructDynamics();
   void ConstructInitialState();
   void ConstructPlayerCosts();
-  void ConstructInitialOperatingPoint();
-  //  void SetAdversarialTime(double adv_time);
 
   // Unpack x, y, heading (for each player, potentially) from a given state.
-  std::vector<float> Xs(const VectorXf &x) const;
-  std::vector<float> Ys(const VectorXf &x) const;
-  std::vector<float> Thetas(const VectorXf &x) const;
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class ThreePlayerIntersectionExample
 
-}; // class ThreePlayerIntersectionExample
-
-} // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

@@ -55,12 +55,9 @@
 
 namespace ilqgames {
 
-float Polyline2SignedDistanceConstraint::Evaluate(const VectorXf &input) const {
+float Polyline2SignedDistanceConstraint::Evaluate(const VectorXf& input) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
-
-//  if (polyline_.Segments().size() != 1)
-//    std::cout << "Polyline2SignedDistanceConstraint::Evaluate:\n";
 
   // Compute signed squared distance by finding closest point.
   float signed_distance_sq;
@@ -68,19 +65,13 @@ float Polyline2SignedDistanceConstraint::Evaluate(const VectorXf &input) const {
                          &signed_distance_sq);
 
   const float value = signed_sqrt(signed_distance_sq) - threshold_;
-
-//  if (polyline_.Segments().size() != 1) {
-//    std::cout << "signed_distance_sq: " << signed_distance_sq << "\n";
-//    std::cout << "threshold_:" << threshold_ << "\n";
-//  }
-
   return (keep_left_) ? value : -value;
 }
 
 void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
-                                                     const VectorXf &input,
-                                                     MatrixXf *hess,
-                                                     VectorXf *grad) const {
+                                                     const VectorXf& input,
+                                                     MatrixXf* hess,
+                                                     VectorXf* grad) const {
   CHECK_LT(xidx_, input.size());
   CHECK_LT(yidx_, input.size());
   CHECK_NOTNULL(grad);
@@ -152,4 +143,4 @@ void Polyline2SignedDistanceConstraint::Quadraticize(Time t,
   (*hess)(yidx_, yidx_) += ddy;
 }
 
-} // namespace ilqgames
+}  // namespace ilqgames

@@ -81,11 +81,8 @@ struct SolverParams {
   bool reset_problem = true;
   bool reset_lambdas = true;
   bool reset_mu = true;
-}; // struct SolverParams
+};  // struct SolverParams
 
-// Adersarial time: Pure Cooperative (adversarial_time = 0), or
-// Adversarial-to-Cooperative (adversarial_time != 0)
-// float adversarial_time = 0;
-}; // namespace ilqgames
+}  // namespace ilqgames
 
 #endif

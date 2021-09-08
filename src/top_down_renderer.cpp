@@ -46,9 +46,9 @@
 #include <ilqgames/utils/solver_log.h>
 #include <ilqgames/utils/types.h>
 
-#include <algorithm>
 #include <imgui/imgui.h>
 #include <math.h>
+#include <algorithm>
 #include <vector>
 
 namespace ilqgames {
@@ -57,21 +57,20 @@ namespace {
 // Zoom parameters.
 static constexpr float kPixelsToZoomConversion = 1.0 / 20.0;
 static constexpr float kMinZoom = 2.0;
-} // anonymous namespace
+}  // anonymous namespace
 
 void TopDownRenderer::Render() {
   // Extract current log.
-  const auto &logs = sliders_->LogForEachProblem();
+  const auto& logs = sliders_->LogForEachProblem();
 
   // Do nothing if no iterates yet.
-  if (sliders_->MaxLogIndex() == 1)
-    return;
+  if (sliders_->MaxLogIndex() == 1) return;
 
   // Get the number of agents in each problem.
   std::vector<size_t> num_agents(problems_.size());
   std::transform(
       problems_.begin(), problems_.end(), num_agents.begin(),
-      [](const std::shared_ptr<const TopDownRenderableProblem> &problem) {
+      [](const std::shared_ptr<const TopDownRenderableProblem>& problem) {
         return problem->Dynamics()->NumPlayers();
       });
 
@@ -111,14 +110,14 @@ void TopDownRenderer::Render() {
   }
 
   // Get the draw list for this window.
-  ImDrawList *draw_list = ImGui::GetWindowDrawList();
+  ImDrawList* draw_list = ImGui::GetWindowDrawList();
   const ImU32 trajectory_color = ImColor(ImVec4(1.0, 1.0, 1.0, 0.5));
   const float trajectory_thickness = std::min(1.0f, LengthToPixels(0.5));
 
   // Loop over all problems and render one at a time.
   for (size_t problem_idx = 0; problem_idx < problems_.size(); problem_idx++) {
-    const auto &problem = problems_[problem_idx];
-    const auto &log = logs[problem_idx];
+    const auto& problem = problems_[problem_idx];
+    const auto& log = logs[problem_idx];
 
     // (1) Draw this trajectory iterate.
     std::vector<ImVec2> points(time::kNumTimeSteps);
@@ -146,7 +145,6 @@ void TopDownRenderer::Render() {
     const ImU32 agent_color =
         ImColor(ImVec4(0.15, kMinGreen + color_scaling,
                        kMinGreen + kMaxGreen - color_scaling, 1.0));
-
     const float agent_radius = std::max(5.0f, LengthToPixels(2.5));
     const float agent_base = std::max(6.0f, LengthToPixels(2.5));
     const float agent_height = std::max(10.0f, LengthToPixels(3.0));
@@ -218,8 +216,8 @@ inline ImVec2 TopDownRenderer::PositionToWindowCoordinates(float x,
   return coords;
 }
 
-inline Point2
-TopDownRenderer::WindowCoordinatesToPosition(const ImVec2 &coords) const {
+inline Point2 TopDownRenderer::WindowCoordinatesToPosition(
+    const ImVec2& coords) const {
   const ImVec2 center = WindowCenter();
 
   // NOTE: only correct when "c" key is not down.
@@ -238,4 +236,4 @@ inline ImVec2 TopDownRenderer::WindowCenter() const {
   return ImVec2(center_x, center_y);
 }
 
-} // namespace ilqgames
+}  // namespace ilqgames
