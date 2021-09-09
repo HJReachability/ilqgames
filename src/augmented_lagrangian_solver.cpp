@@ -210,3 +210,4 @@ std::shared_ptr<SolverLog> AugmentedLagrangianSolver::Solve(bool* success,
 }
 
 }  // namespace ilqgames
+
