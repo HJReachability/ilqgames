@@ -59,8 +59,6 @@
 
 namespace ilqgames {
 
-Problem::Problem() : initialized_(false) {}
-
 size_t Problem::SyncToExistingProblem(const VectorXf& x0, Time t0,
                                       Time planner_runtime,
                                       OperatingPoint& op) {

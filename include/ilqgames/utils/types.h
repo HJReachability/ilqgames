@@ -142,6 +142,11 @@ static constexpr size_t kNumTimeSteps =
     static_cast<size_t>((kTimeHorizon + constants::kSmallNumber) / kTimeStep);
 }  // namespace time
 
+// Boolean flags for which time steps are "critical" for each player. Critical
+// times are those for which that player's value function does not depend upon
+// the future.
+enum CriticalTimeType { NOT_CRITICAL, CRITICAL_TARGET, CRITICAL_FAILURE };
+
 // ---------------------------- SIMPLE FUNCTIONS ---------------------------- //
 
 template <typename T, typename... Args>

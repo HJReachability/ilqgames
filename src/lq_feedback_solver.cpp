@@ -180,20 +180,29 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
 
     // Update Zs and zetas.
     for (PlayerIndex ii = 0; ii < dynamics_->NumPlayers(); ii++) {
-      zetas_[kk][ii] =
-          (F_.transpose() * (zetas_[kk + 1][ii] + Zs_[kk + 1][ii] * beta_) +
-           quad[ii].state.grad)
-              .eval();
-      Zs_[kk][ii] =
-          (F_.transpose() * Zs_[kk + 1][ii] * F_ + quad[ii].state.hess).eval();
+      if (!player_costs_ || !(*player_costs_)[ii].IsReachAvoid() ||
+          (*critical_times_)[kk][ii] == CriticalTimeType::NOT_CRITICAL) {
+        zetas_[kk][ii] =
+            (F_.transpose() * (zetas_[kk + 1][ii] + Zs_[kk + 1][ii] * beta_) +
+             quad[ii].state.grad)
+                .eval();
+        Zs_[kk][ii] =
+            (F_.transpose() * Zs_[kk + 1][ii] * F_ + quad[ii].state.hess)
+                .eval();
 
-      // Add terms for nonzero Rijs.
-      for (const auto& Rij_entry : quad[ii].control) {
-        const PlayerIndex jj = Rij_entry.first;
-        const MatrixXf& Rij = Rij_entry.second.hess;
-        const VectorXf& rij = Rij_entry.second.grad;
-        zetas_[kk][ii] += Ps_[jj].transpose() * (Rij * alphas_[jj] - rij);
-        Zs_[kk][ii] += Ps_[jj].transpose() * Rij * Ps_[jj];
+        // Add terms for nonzero Rijs.
+        for (const auto& Rij_entry : quad[ii].control) {
+          const PlayerIndex jj = Rij_entry.first;
+          const MatrixXf& Rij = Rij_entry.second.hess;
+          const VectorXf& rij = Rij_entry.second.grad;
+          zetas_[kk][ii] += Ps_[jj].transpose() * (Rij * alphas_[jj] - rij);
+          Zs_[kk][ii] += Ps_[jj].transpose() * Rij * Ps_[jj];
+        }
+      } else {
+        // Time-consistent reachability backup and this player doesn't care
+        // about later times.
+        zetas_[kk][ii] = quad[ii].state.grad;
+        Zs_[kk][ii] = quad[ii].state.hess;
       }
     }
   }

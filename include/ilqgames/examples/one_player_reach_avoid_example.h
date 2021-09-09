@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, The Regents of the University of California (Regents).
+ * Copyright (c) 2021, The Regents of the University of California (Regents).
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,57 +31,40 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * Please contact the author(s) of this library if you have any questions.
- * Authors: David Fridovich-Keil   ( dfk@eecs.berkeley.edu )
+ * Authors: David Fridovich-Keil   ( dfk@utexas.edu )
+ *          Jaime Fisac            ( jfisac@princeton.edu )
  */
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Parameters for solvers.
+// One player reach-avoid example. Single player choosing control reach target
+// ball while staying clear of failure balls.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ILQGAMES_SOLVER_SOLVER_PARAMS_H
-#define ILQGAMES_SOLVER_SOLVER_PARAMS_H
+#ifndef ILQGAMES_EXAMPLES_ONE_PLAYER_REACH_AVOID_EXAMPLE_H
+#define ILQGAMES_EXAMPLES_ONE_PLAYER_REACH_AVOID_EXAMPLE_H
 
-#include <ilqgames/utils/types.h>
+#include <ilqgames/solver/solver_params.h>
+#include <ilqgames/solver/top_down_renderable_problem.h>
 
 namespace ilqgames {
 
-struct SolverParams {
-  // Consider a solution converged once max elementwise difference is below this
-  // tolerance or solver has exceeded a maximum number of iterations.
-  float convergence_tolerance = 1e-1;
-  size_t max_solver_iters = 20;
+class OnePlayerReachAvoidExample : public TopDownRenderableProblem {
+ public:
+  ~OnePlayerReachAvoidExample() {}
+  OnePlayerReachAvoidExample() : TopDownRenderableProblem() {}
 
-  // Linesearch parameters. If flag is set 'true', then applied initial alpha
-  // scaling to all strategies and backs off geometrically at the given rate for
-  // the specified number of steps.
-  bool linesearch = true;
-  float initial_alpha_scaling = 0.5;
-  float geometric_alpha_scaling = 0.5;
-  size_t max_backtracking_steps = 10;
-  float expected_decrease_fraction = 0.1;
+  // Construct dynamics, initial state, and player costs.
+  void ConstructDynamics();
+  void ConstructInitialState();
+  void ConstructPlayerCosts();
 
-  // Whether solver should shoot for an open loop or feedback Nash.
-  bool open_loop = false;
-
-  // State and control regularization.
-  float state_regularization = 0.0;
-  float control_regularization = 0.0;
-
-  // Augmented Lagrangian parameters.
-  size_t unconstrained_solver_max_iters = 1000;
-  float geometric_mu_scaling = 1.1;
-  float geometric_mu_downscaling = 0.5;
-  float geometric_lambda_downscaling = 0.5;
-  float constraint_error_tolerance = 1e-1;
-
-  // Should the solver reset problem/constraint params to their initial values.
-  // NOTE: defaults to true.
-  bool reset_problem = true;
-  bool reset_lambdas = true;
-  bool reset_mu = true;
-};  // struct SolverParams
+  // Unpack x, y, heading (for each player, potentially) from a given state.
+  std::vector<float> Xs(const VectorXf& x) const;
+  std::vector<float> Ys(const VectorXf& x) const;
+  std::vector<float> Thetas(const VectorXf& x) const;
+};  // class OnePlayerReachAvoidExample
 
 }  // namespace ilqgames
 

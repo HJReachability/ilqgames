@@ -103,8 +103,11 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
   CurrentOperatingPoint(last_operating_point, current_strategies,
                         &current_operating_point);
 
+  //  InitializeAlongRoute(params_.current_operating_point);
+
   // Compute total costs.
   TotalCosts(current_operating_point, &total_costs);
+  last_total_costs_ = total_costs;
 
   // Log current iterate.
   Time elapsed = 0.0;
@@ -156,6 +159,7 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
 
     // Compute total costs and check if we've converged.
     TotalCosts(current_operating_point, &total_costs);
+    last_total_costs_ = total_costs;
 
     // Record loop runtime.
     elapsed += timer_.Toc();
@@ -164,6 +168,12 @@ std::shared_ptr<SolverLog> ILQSolver::Solve(bool* success, Time max_runtime) {
     log->AddSolverIterate(current_operating_point, current_strategies,
                           total_costs, elapsed, has_converged);
   }
+
+  // // DEBUG.
+  // for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+  //   std::cout << "time: " << kk << ", critical: " << critical_times_[kk][0]
+  //             << std::endl;
+  // }
 
   // Handle success flag.
   if (success) *success = true;
@@ -218,32 +228,43 @@ void ILQSolver::CurrentOperatingPoint(
 // }
 
 void ILQSolver::TotalCosts(const OperatingPoint& current_op,
-                           std::vector<float>* total_costs) const {
+                           std::vector<float>* total_costs) {
   // Initialize appropriately.
   if (total_costs->size() != problem_->PlayerCosts().size())
     total_costs->resize(problem_->PlayerCosts().size());
+
+  if (problem_->AnyReachAvoidObjectives()) {
+    critical_times_.resize(
+        time::kNumTimeSteps,
+        std::vector<CriticalTimeType>(problem_->PlayerCosts().size()));
+  }
+
   for (PlayerIndex ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
     if (problem_->PlayerCosts()[ii].IsTimeAdditive())
       (*total_costs)[ii] = 0.0;
     else if (problem_->PlayerCosts()[ii].IsMaxOverTime())
       (*total_costs)[ii] = -constants::kInfinity;
+    else if (problem_->PlayerCosts()[ii].IsMinOverTime())
+      (*total_costs)[ii] = constants::kInfinity;
     else
       (*total_costs)[ii] = constants::kInfinity;
   }
 
-  // Accumulate costs.
-  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+  // Accumulate costs backward in time since that's needed for non-additive
+  // time-consistent solutions.
+  // std::cout << "----------------------------------------" << std::endl;
+  for (int kk = time::kNumTimeSteps - 1; kk >= 0; kk--) {
     const Time t = RelativeTimeTracker::RelativeTime(kk);
 
     for (size_t ii = 0; ii < problem_->PlayerCosts().size(); ii++) {
       const float current_cost = problem_->PlayerCosts()[ii].Evaluate(
           t, current_op.xs[kk], current_op.us[kk]);
 
-      if (problem_->PlayerCosts()[ii].IsTimeAdditive())
+      if (problem_->PlayerCosts()[ii].IsTimeAdditive()) {
         (*total_costs)[ii] += problem_->PlayerCosts()[ii].Evaluate(
             t, current_op.xs[kk], current_op.us[kk]);
-      else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
-               current_cost > (*total_costs)[ii]) {
+      } else if (problem_->PlayerCosts()[ii].IsMaxOverTime() &&
+                 current_cost > (*total_costs)[ii]) {
         (*total_costs)[ii] = current_cost;
         problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
       } else if (problem_->PlayerCosts()[ii].IsMinOverTime()) {
@@ -251,6 +272,27 @@ void ILQSolver::TotalCosts(const OperatingPoint& current_op,
           (*total_costs)[ii] = current_cost;
           problem_->PlayerCosts()[ii].SetTimeOfExtremeCost(kk);
         }
+      } else if (problem_->PlayerCosts()[ii].IsReachAvoid()) {
+        // Backward-time reach-avoid computation of cost + critical times.
+        // NOTE: ignoring control costs.
+        const float target = problem_->PlayerCosts()[ii].EvaluateTargetCost(
+            t, current_op.xs[kk]);
+        const float failure = problem_->PlayerCosts()[ii].EvaluateFailureCost(
+            t, current_op.xs[kk]);
+        (*total_costs)[ii] =
+            std::max(std::min((*total_costs)[ii], target), failure);
+
+        // std::cout << "time: " << kk << ", target = " << target
+        //           << ", failure = " << failure
+        //           << ", total = " << (*total_costs)[ii] << std::endl;
+
+        // Find arg extremum.
+        if ((*total_costs)[ii] == target)
+          critical_times_[kk][ii] = CRITICAL_TARGET;
+        else if ((*total_costs)[ii] == failure)
+          critical_times_[kk][ii] = CRITICAL_FAILURE;
+        else
+          critical_times_[kk][ii] = NOT_CRITICAL;
       }
     }
   }
@@ -318,18 +360,33 @@ bool ILQSolver::ModifyLQStrategies(
   float current_stepsize = params_.initial_alpha_scaling;
   CurrentOperatingPoint(last_operating_point, *strategies,
                         current_operating_point);
-  if (!params_.linesearch) return true;
+
+  // Compute total costs.
+  std::vector<float> total_costs;
+  TotalCosts(*current_operating_point, &total_costs);
+
+  // Compute merit function since this sets next quadraticization.
+  float current_merit_function_value = MeritFunction(*current_operating_point);
+  //  std::cout << current_merit_function_value << std::endl;
+
+  if (!params_.linesearch) {
+    *has_converged = HasConverged(current_merit_function_value, total_costs);
+    last_merit_function_value_ = current_merit_function_value;
+    return true;
+  }
 
   // Keep reducing alphas until we satisfy the Armijo condition.
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
     // Compute merit function value.
-    const float current_merit_function_value =
-        MeritFunction(*current_operating_point);
+    if (ii > 0) {
+      current_merit_function_value = MeritFunction(*current_operating_point);
+      TotalCosts(*current_operating_point, &total_costs);
+    }
 
     // Check Armijo condition.
     if (CheckArmijoCondition(current_merit_function_value, current_stepsize)) {
       // Success! Update cached terms and check convergence.
-      *has_converged = HasConverged(current_merit_function_value);
+      *has_converged = HasConverged(current_merit_function_value, total_costs);
       last_merit_function_value_ = current_merit_function_value;
       return true;
     }
@@ -489,10 +546,34 @@ void ILQSolver::ComputeCostQuadraticization(
       const PlayerCost& cost = problem_->PlayerCosts()[ii];
 
       if (cost.IsTimeAdditive() ||
-          problem_->PlayerCosts()[ii].TimeOfExtremeCost() == kk)
+          ((cost.IsMinOverTime() || cost.IsMaxOverTime()) &&
+           cost.TimeOfExtremeCost() == kk))
         (*q)[kk][ii] = cost.Quadraticize(t, x, us);
-      else
+      else {
+        // Extremum over time cost but not at extreme cost, or in reach-avoid
+        // mode. In these cases, always quadraticize control and state costs
+        // separately.
         (*q)[kk][ii] = cost.QuadraticizeControlCosts(t, x, us);
+
+        if (cost.IsReachAvoid()) {
+          if (critical_times_[kk][ii] == CRITICAL_TARGET) {
+            // std::cout << "Time: " << kk
+            //           << ". Target is active... getting quadraticized."
+            //           << std::endl;
+            CHECK_NOTNULL(cost.TargetStateCost().get());
+            cost.TargetStateCost()->Quadraticize(
+                t, x, &((*q)[kk][ii].state.hess), &((*q)[kk][ii].state.grad));
+          } else if (critical_times_[kk][ii] == CRITICAL_FAILURE) {
+            // std::cout << "Time: " << kk
+            //           << ". Failure is active... getting quadraticized."
+            //           << std::endl;
+            CHECK_NOTNULL(cost.FailureStateCost().get());
+
+            cost.FailureStateCost()->Quadraticize(
+                t, x, &((*q)[kk][ii].state.hess), &((*q)[kk][ii].state.grad));
+          }
+        }
+      }
     }
   }
 }
