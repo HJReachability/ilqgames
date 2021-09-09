@@ -142,9 +142,7 @@ class Problem {
   //    std::unique_ptr<std::vector<Strategy>> strategies_;
 
  protected:
-  // Problem();
-  Problem(Time adversarial_time = 0.0)
-      : initialized_(false), adversarial_time_(adversarial_time) {}
+  Problem() : initialized_(false) {}
 
   // Functions for initialization. By default, operating point and strategies
   // are initialized to zero.
