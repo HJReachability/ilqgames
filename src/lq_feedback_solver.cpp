@@ -160,6 +160,17 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
       cumulative_udim_row += dynamics_->UDim(ii);
     }
 
+    // Regularize `S` to have positive eigenvalues using the Gershgorin circle
+    // theorem (https://en.wikipedia.org/wiki/Gershgorin_circle_theorem). That
+    // is, for column i, compute the 1-norm of non-diagonal entries and ensure
+    // that the ii^th entry of `S` is greater than that norm by adding some
+    // amount to that diagonal entry.
+    for (size_t ii = 0; ii < S_.cols(); ii++) {
+      const float eval_lo =
+          S_(ii, ii) + std::abs(S_(ii, ii)) - S_.col(ii).lpNorm<1>();
+      S_(ii, ii) -= std::min(0.0f, eval_lo);
+    }
+
     // Solve linear matrix equality S X = Y.
     // NOTE: not 100% sure that this avoids dynamic memory allocation.
     X_ = S_.householderQr().solve(Y_);
