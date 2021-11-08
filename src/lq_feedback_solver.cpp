@@ -160,15 +160,19 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
       cumulative_udim_row += dynamics_->UDim(ii);
     }
 
-    // Regularize `S` to have positive eigenvalues using the Gershgorin circle
-    // theorem (https://en.wikipedia.org/wiki/Gershgorin_circle_theorem). That
-    // is, for column i, compute the 1-norm of non-diagonal entries and ensure
-    // that the ii^th entry of `S` is greater than that norm by adding some
-    // amount to that diagonal entry.
-    for (size_t ii = 0; ii < S_.cols(); ii++) {
-      const float eval_lo =
-          S_(ii, ii) + std::abs(S_(ii, ii)) - S_.col(ii).lpNorm<1>();
-      S_(ii, ii) -= std::min(0.0f, eval_lo);
+    if (adaptive_regularization_) {
+      // Regularize `S` to have positive eigenvalues using the Gershgorin circle
+      // theorem (https://en.wikipedia.org/wiki/Gershgorin_circle_theorem). That
+      // is, for column i, compute the 1-norm of non-diagonal entries and ensure
+      // that the ii^th entry of `S` is greater than that norm by adding some
+      // amount to that diagonal entry.
+      for (size_t ii = 0; ii < S_.cols(); ii++) {
+        const float radius = S_.col(ii).lpNorm<1>() - std::abs(S_(ii, ii));
+        const float eval_lo = S_(ii, ii) - radius;
+
+        constexpr float min_eval = 1e-3;
+        if (eval_lo < min_eval) S_(ii, ii) += radius + min_eval;
+      }
     }
 
     // Solve linear matrix equality S X = Y.

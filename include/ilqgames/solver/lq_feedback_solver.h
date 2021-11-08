@@ -72,11 +72,12 @@ class LQFeedbackSolver : public LQSolver {
   ~LQFeedbackSolver() {}
   LQFeedbackSolver(
       const std::shared_ptr<const MultiPlayerIntegrableSystem>& dynamics,
-      size_t num_time_steps)
-      : LQSolver(dynamics, num_time_steps) {
+      size_t num_time_steps, bool adaptive_regularization = true)
+      : LQSolver(dynamics, num_time_steps),
+        adaptive_regularization_(adaptive_regularization) {
     // Cache the total number of control dimensions, since this is inefficient
     // to compute.
-    const Dimension total_udim = dynamics_->TotalUDim();
+    const Dimension total_udim = dynamics_->TotalUDim();  // 2
 
     // Preallocate memory for coupled Riccati solve at each time step and make
     // Eigen::Refs to the solution.
@@ -140,6 +141,9 @@ class LQFeedbackSolver : public LQSolver {
   // Preallocate memory for intermediate variables F, beta.
   MatrixXf F_;
   VectorXf beta_;
+
+  // Adaptive regularization using Gershgorin circle theorem.
+  const bool adaptive_regularization_;
 };  // LQFeedbackSolver
 
 }  // namespace ilqgames
