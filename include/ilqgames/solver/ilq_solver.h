@@ -143,7 +143,8 @@ class ILQSolver : public GameSolver {
   // quadraticization there. To do so efficiently, this will overwrite the
   // current cost quadraticization (and presume it has already been used to
   // compute the expected decrease from the last iterate).
-  float MeritFunction(const OperatingPoint& current_op);
+  float MeritFunction(const OperatingPoint& current_op,
+                      const std::vector<std::vector<VectorXf>>& costates);
 
   // Compute expected decrease based on current cost quadraticization,
   // (player-indexed) strategies, and (time-indexed) lists of delta states and
