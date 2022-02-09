@@ -400,7 +400,8 @@ float ILQSolver::MeritFunction(
   ComputeCostQuadraticization(current_op, &cost_quadraticization_);
 
   // Accumulate gradients of Lagrangian (dynamics automatically satisfied).
-  float merit = 0.0 for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+  float merit = 0.0;
+  for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
     const auto& lin = linearization_[kk];
 
     // Separate x expected decrease per step at each time (saves computation).
