@@ -373,19 +373,21 @@ float ILQSolver::ExpectedDecrease(
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
       const auto& costate = costates[kk][ii];
-      const auto& last_costate =
-          (kk > 0) ? costates[kk - 1][ii] : VectorXf::Zero(xdim);
       const auto& neg_ui =
           strategies[ii].alphas[kk];  // NOTE: could also evaluate delta u on
                                       // delta x to be more precise.
 
       // Accumulate state and control contributions.
-      const VectorXf dLdx =
-          quad.state.grad - lin.A.transpose() * costate + last_costate;
       const VectorXf dLdu =
           quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate;
-      expected_decrease += delta_xs[kk].transpose() * quad.state.hess * dLdx;
       expected_decrease -= neg_ui.transpose() * quad.control.at(ii).hess * dLdu;
+
+      if (kk > 0) {
+        const auto& last_costate = costates[kk - 1][ii];
+        const VectorXf dLdx =
+            quad.state.grad - lin.A.transpose() * costate + last_costate;
+        expected_decrease += delta_xs[kk].transpose() * quad.state.hess * dLdx;
+      }
     }
   }
 
@@ -409,15 +411,18 @@ float ILQSolver::MeritFunction(
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
       const auto& costate = costates[kk][ii];
-      const auto& last_costate =
-          (kk > 0) ? costates[kk - 1][ii] : VectorXf::Zero(xdim);
 
       // Accumulate state and control contributions.
-      const VectorXf dLdx =
-          quad.state.grad - lin.A.transpose() * costate + last_costate;
       const VectorXf dLdu =
           quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate;
-      merit += dLdx.squaredNorm() + dLdu.squaredNorm();
+      merit += dLdu.squaredNorm();
+
+      if (kk > 0) {
+        const auto& last_costate = costates[kk - 1][ii];
+        const VectorXf dLdx =
+            quad.state.grad - lin.A.transpose() * costate + last_costate;
+        merit += dLdx.squaredNorm();
+      }
     }
   }
 
