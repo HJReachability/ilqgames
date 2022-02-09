@@ -29,8 +29,9 @@ list(APPEND ilqgames_LIBRARIES ${GLUT_LIBRARIES})
 # Find GLFW.
 #find_package(PkgConfig REQUIRED)
 #pkg_search_module(GLFW3 REQUIRED glfw)
-#include_directories(${GLFW_INCLUDE_DIRS})
-#list(APPEND ilqgames_LIBRARIES ${GLFW_STATIC_LIBRARIES} ${GLFW_LIBRARIES})
+find_package( GLFW REQUIRED )
+include_directories(${GLFW_INCLUDE_DIRS})
+list(APPEND ilqgames_LIBRARIES ${GLFW_STATIC_LIBRARIES} ${GLFW_LIBRARIES})
 
 # Find Boost functional module.
 #find_package( Boost REQUIRED )

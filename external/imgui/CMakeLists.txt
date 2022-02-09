@@ -9,6 +9,10 @@ link_directories(${imgui_BINARY_DIR})
 #pkg_search_module(GLFW3 REQUIRED glfw)
 #include_directories()
 
+find_package( GLFW REQUIRED )
+include_directories(${GLFW_INCLUDE_DIRS})
+list(APPEND ilqgames_LIBRARIES ${GLFW_STATIC_LIBRARIES} ${GLFW_LIBRARIES})
+
 find_package( OpenGL REQUIRED )
 include_directories(SYSTEM ${OPENGL_INCLUDE_DIRS})
 
