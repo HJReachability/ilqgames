@@ -324,7 +324,7 @@ bool ILQSolver::ModifyLQStrategies(
   for (size_t ii = 0; ii < params_.max_backtracking_steps; ii++) {
     // Compute merit function value.
     const float current_merit_function_value =
-        MeritFunction(*current_operating_point);
+        MeritFunction(*current_operating_point, costates);
 
     // Check Armijo condition.
     if (CheckArmijoCondition(current_merit_function_value, current_stepsize)) {
@@ -370,72 +370,53 @@ float ILQSolver::ExpectedDecrease(
 
     // Separate x expected decrease per step at each time (saves computation).
     const size_t xdim = problem_->Dynamics()->XDim();
-    VectorXf expected_decrease_x = VectorXf::Zero(xdim);
-
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
       const auto& costate = costates[kk][ii];
+      const auto& last_costate =
+          (kk > 0) ? costates[kk - 1][ii] : VectorXf::Zero(xdim);
       const auto& neg_ui =
           strategies[ii].alphas[kk];  // NOTE: could also evaluate delta u on
                                       // delta x to be more precise.
 
-      // Handle control contribution.
-      expected_decrease -=
-          neg_ui.transpose() * quad.control.at(ii).hess *
-          (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
-
-      // // Handle costate contribution (control). Keep this unmultiplied by
-      // // costate for efficiency.
-      // VectorXf expected_decrease_costate =
-      //     -lin.Bs[ii] *
-      //     (quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate);
-
-      // if (kk > 0) {
-      //   // Handle state and costate (state) contributions. Doesn't exist at
-      //   t0.
-      //   // Handle final time separately from intermediate time steps.
-      //   const auto& last_costate = costates[kk - 1][ii];
-
-      //   VectorXf kx = quad.state.grad + last_costate;
-      //   if (kk == time::kNumTimeSteps - 1)
-      //     expected_decrease_costate += kx;
-      //   else {
-      //     kx -= lin.A.transpose() * costate;
-      //     expected_decrease_costate +=
-      //         (MatrixXf::Identity(xdim, xdim) - lin.A) * kx;
-      //   }
-
-      //   expected_decrease_x += quad.state.hess * kx;
-      // }
-
-      // Update expected decrease from costate.
-      // expected_decrease += costate.transpose() * expected_decrease_costate;
+      // Accumulate state and control contributions.
+      const VectorXf dLdx =
+          quad.state.grad - lin.A.transpose() * costate + last_costate;
+      const VectorXf dLdu =
+          quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate;
+      expected_decrease += delta_xs[kk].transpose() * quad.state.hess * dLdx;
+      expected_decrease -= neg_ui.transpose() * quad.control.at(ii).hess * dLdu;
     }
-
-    // Update expected decrease from x.
-    // expected_decrease += delta_xs[kk].transpose() * expected_decrease_x;
   }
 
   return expected_decrease;
 }
 
-float ILQSolver::MeritFunction(const OperatingPoint& current_op) {
+float ILQSolver::MeritFunction(
+    const OperatingPoint& current_op,
+    const std::vector<std::vector<VectorXf>>& costates) {
   // First, quadraticize cost and linearize dynamics around this operating
   // point.
   ComputeCostQuadraticization(current_op, &cost_quadraticization_);
 
-  // Now, accumulate cost gradients (presuming that this operating point is
-  // dynamically feasible so dynamic constraints are all zero).
-  float merit = 0.0;
-  for (size_t kk = 0; kk < cost_quadraticization_.size(); kk++) {
+  // Accumulate gradients of Lagrangian (dynamics automatically satisfied).
+  float merit = 0.0 for (size_t kk = 0; kk < time::kNumTimeSteps; kk++) {
+    const auto& lin = linearization_[kk];
+
+    // Separate x expected decrease per step at each time (saves computation).
+    const size_t xdim = problem_->Dynamics()->XDim();
     for (PlayerIndex ii = 0; ii < problem_->Dynamics()->NumPlayers(); ii++) {
       const auto& quad = cost_quadraticization_[kk][ii];
-      merit += quad.control.at(ii).grad.squaredNorm();
+      const auto& costate = costates[kk][ii];
+      const auto& last_costate =
+          (kk > 0) ? costates[kk - 1][ii] : VectorXf::Zero(xdim);
 
-      if (kk > 0) {
-        // Don't accumulate state derivs at t0 since x0 can't change.
-        merit += quad.state.grad.squaredNorm();
-      }
+      // Accumulate state and control contributions.
+      const VectorXf dLdx =
+          quad.state.grad - lin.A.transpose() * costate + last_costate;
+      const VectorXf dLdu =
+          quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate;
+      merit += dLdx.squaredNorm() + dLdu.squaredNorm();
     }
   }
 
