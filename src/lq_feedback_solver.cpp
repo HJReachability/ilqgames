@@ -153,8 +153,8 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
           BiZi * lin.A;
       Y_.col(dynamics_->XDim())
           .segment(cumulative_udim_row, dynamics_->UDim(ii)) =
-          lin.Bs[ii].transpose() * zetas_[kk + 1][ii] +
-          quad[ii].control.at(ii).grad;
+          lin.Bs[ii].transpose() * zetas_[kk + 1][ii];
+      // + quad[ii].control.at(ii).grad;
 
       // Increment cumulative_udim_row.
       cumulative_udim_row += dynamics_->UDim(ii);
