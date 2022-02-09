@@ -149,12 +149,14 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
       }
 
       // Set appropriate blocks of Y.
+      // NOTE: the term r^{ii} in the final column of Y_ seems mathematically
+      // unnecessary, but Nash checks fail without it.
       Y_.block(cumulative_udim_row, 0, dynamics_->UDim(ii), dynamics_->XDim()) =
           BiZi * lin.A;
       Y_.col(dynamics_->XDim())
           .segment(cumulative_udim_row, dynamics_->UDim(ii)) =
-          lin.Bs[ii].transpose() * zetas_[kk + 1][ii];
-      // + quad[ii].control.at(ii).grad;
+          lin.Bs[ii].transpose() * zetas_[kk + 1][ii] +
+          quad[ii].control.at(ii).grad;
 
       // Increment cumulative_udim_row.
       cumulative_udim_row += dynamics_->UDim(ii);
@@ -225,6 +227,9 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
         else
           (*costates)[kk][ii].setZero();
       }
+
+      // std::cout << "dx = " << x_star.transpose() << std::endl;
+      // std::cout << "p = " << (*costates)[kk][0].transpose() << std::endl;
 
       // Unpack linearization at this time step.
       const auto& lin = linearization[kk];

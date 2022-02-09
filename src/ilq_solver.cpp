@@ -301,6 +301,7 @@ bool ILQSolver::ModifyLQStrategies(
 
   // Precompute expected decrease before we do anything else.
   expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
+  std::cout << expected_decrease_ << std::endl;
 
   // Every computation of the merit function will overwrite the current cost
   // quadraticization, so first swap it with the previous one so we retain a
@@ -378,15 +379,17 @@ float ILQSolver::ExpectedDecrease(
                                       // delta x to be more precise.
 
       // Accumulate state and control contributions.
+      // NOTE: ignoring costate contributions because right now, these are actually
+      //       only changes in costate, so the values here are not quite right.
       const VectorXf dLdu =
-          quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate;
+          quad.control.at(ii).grad; // - lin.Bs[ii].transpose() * costate;
       expected_decrease -= neg_ui.transpose() * quad.control.at(ii).hess * dLdu;
 
       if (kk > 0) {
         const auto& last_costate = costates[kk - 1][ii];
         const VectorXf dLdx =
-            quad.state.grad - lin.A.transpose() * costate + last_costate;
-        expected_decrease += delta_xs[kk].transpose() * quad.state.hess * dLdx;
+            quad.state.grad; // - lin.A.transpose() * costate + last_costate;
+        expected_decrease -= delta_xs[kk].transpose() * quad.state.hess * dLdx;
       }
     }
   }
@@ -413,14 +416,16 @@ float ILQSolver::MeritFunction(
       const auto& costate = costates[kk][ii];
 
       // Accumulate state and control contributions.
+      // NOTE: ignoring costate contributions because right now, these are actually
+      //       only changes in costate, so the values here are not quite right.
       const VectorXf dLdu =
-          quad.control.at(ii).grad - lin.Bs[ii].transpose() * costate;
+          quad.control.at(ii).grad; // - lin.Bs[ii].transpose() * costate;
       merit += dLdu.squaredNorm();
 
       if (kk > 0) {
         const auto& last_costate = costates[kk - 1][ii];
         const VectorXf dLdx =
-            quad.state.grad - lin.A.transpose() * costate + last_costate;
+            quad.state.grad; // - lin.A.transpose() * costate + last_costate;
         merit += dLdx.squaredNorm();
       }
     }
