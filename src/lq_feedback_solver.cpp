@@ -149,8 +149,6 @@ std::vector<Strategy> LQFeedbackSolver::Solve(
       }
 
       // Set appropriate blocks of Y.
-      // NOTE: the term r^{ii} in the final column of Y_ seems mathematically
-      // unnecessary, but Nash checks fail without it.
       Y_.block(cumulative_udim_row, 0, dynamics_->UDim(ii), dynamics_->XDim()) =
           BiZi * lin.A;
       Y_.col(dynamics_->XDim())
