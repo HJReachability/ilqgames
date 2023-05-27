@@ -301,12 +301,12 @@ bool ILQSolver::ModifyLQStrategies(
 
   // Precompute expected decrease before we do anything else.
   expected_decrease_ = ExpectedDecrease(*strategies, delta_xs, costates);
-  std::cout << expected_decrease_ << std::endl;
+  //  std::cout << expected_decrease_ << std::endl;
 
   // Every computation of the merit function will overwrite the current cost
   // quadraticization, so first swap it with the previous one so we retain a
   // copy.
-  last_cost_quadraticization_.swap(cost_quadraticization_);
+  if (params_.linesearch) last_cost_quadraticization_.swap(cost_quadraticization_);
 
   // Initially scale alphas by a fixed amount to avoid unnecessary
   // backtracking.
