@@ -36,10 +36,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// Two Dubins cars. One tries to follow other one, which is trying to get to the
-// origin. Both also have penalties on control input, and we are interested in
-// the difference between open-loop and feedback Nash strategies for this
-// situation. Example conceived by Forrest Laine ( forrest.laine@berkeley.edu ).
+// Two Dubins cars. Player 1 wants player 2 to go to the origin. Player 2 wants
+// to be near player 1. Both also have penalties on control input, and we are 
+// interested in the difference between open-loop and feedback Nash strategies. 
+// Example conceived by Forrest Laine ( forrest.laine@berkeley.edu ).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
